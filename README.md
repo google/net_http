@@ -2,7 +2,7 @@
 
 This project is currently hosted at tensorflow_serving/util/net_http.
 
-We are in the process of moving the library to this new repo as a standalone project.
+We are in the process of moving the library to this new repo as a standalone oss project.
 
 ## Project contacts
 
