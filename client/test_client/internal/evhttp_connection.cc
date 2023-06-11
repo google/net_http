@@ -21,8 +21,6 @@ limitations under the License.
 #include "internal/net_logging.h"
 #include "public/response_code_enum.h"
 
-namespace tensorflow {
-namespace serving {
 namespace net_http {
 
 TestEvHTTPConnection::~TestEvHTTPConnection() {
@@ -254,5 +252,3 @@ void TestEvHTTPConnection::SetExecutor(
 }
 
 }  // namespace net_http
-}  // namespace serving
-}  // namespace tensorflow

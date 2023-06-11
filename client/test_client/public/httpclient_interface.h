@@ -22,8 +22,6 @@ limitations under the License.
 // API for the HTTP Client
 // NOTE: This API is not yet finalized, and should be considered experimental.
 
-namespace tensorflow {
-namespace serving {
 namespace net_http {
 
 // Data to be copied
@@ -80,7 +78,5 @@ class TestHTTPClientInterface {
 };
 
 }  // namespace net_http
-}  // namespace serving
-}  // namespace tensorflow
 
 #endif  // THIRD_PARTY_TENSORFLOW_SERVING_UTIL_NET_HTTP_CLIENT_TEST_CLIENT_PUBLIC_HTTPCLIENT_INTERFACE_H_

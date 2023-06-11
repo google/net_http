@@ -34,9 +34,6 @@ limitations under the License.
 // TODO(wenboz): move EventExecutor to common
 #include "client/test_client/public/httpclient_interface.h"
 #include "server/public/httpserver_interface.h"
-
-namespace tensorflow {
-namespace serving {
 namespace net_http {
 
 // The following types may be moved to an API interface in future.
@@ -96,7 +93,5 @@ class TestEvHTTPConnection final : public TestHTTPClientInterface {
 };
 
 }  // namespace net_http
-}  // namespace serving
-}  // namespace tensorflow
 
 #endif  // TENSORFLOW_SERVING_UTIL_NET_HTTP_CLIENT_TEST_CLIENT_INTERNAL_EVHTTP_CONNECTION_H_

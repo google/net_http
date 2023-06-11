@@ -23,9 +23,6 @@ limitations under the License.
 // Factory to manage internal dependency
 // NOTE: This API is not yet finalized, and should in its current state be
 // considered experimental
-
-namespace tensorflow {
-namespace serving {
 namespace net_http {
 
 // Creates a connection to a server implemented based on the libevents library.
@@ -42,8 +39,6 @@ inline std::unique_ptr<TestHTTPClientInterface> CreateEvHTTPConnection(
 }
 
 }  // namespace net_http
-}  // namespace serving
-}  // namespace tensorflow
 
 #endif  // THIRD_PARTY_TENSORFLOW_SERVING_UTIL_NET_HTTP_CLIENT_TEST_CLIENT_PUBLIC_HTTPCLIENT_H_
 
