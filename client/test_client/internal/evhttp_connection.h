@@ -32,8 +32,8 @@ limitations under the License.
 #include "libevent/include/event2/util.h"
 
 // TODO(wenboz): move EventExecutor to net_http/common
-#include "tensorflow_serving/util/net_http/client/test_client/public/httpclient_interface.h"
-#include "tensorflow_serving/util/net_http/server/public/httpserver_interface.h"
+#include "net_http/client/test_client/public/httpclient_interface.h"
+#include "net_http/server/public/httpserver_interface.h"
 
 namespace tensorflow {
 namespace serving {
