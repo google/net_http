@@ -2,8 +2,8 @@
 
 package(default_visibility = [
     "//tensorflow_serving:internal",
-    "//tensorflow_serving/util/net_http:__subpackages__",
-    "//tensorflow_serving/util/net_http/public:http_server_clients",
+    "//net_http:__subpackages__",
+    "//net_http/public:http_server_clients",
 ])
 
 licenses(["notice"])
@@ -15,7 +15,7 @@ cc_library(
         "server_request_interface.h",
     ],
     deps = [
-        "//tensorflow_serving/util/net_http/public:shared_files",
+        "//net_http/public:shared_files",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/time",
     ],
@@ -28,7 +28,7 @@ cc_library(
     ],
     deps = [
         ":http_server_api",
-        "//tensorflow_serving/util/net_http/server/internal:evhttp_server",
+        "//net_http/server/internal:evhttp_server",
         "@com_google_absl//absl/memory",
     ],
 )

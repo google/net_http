@@ -2,7 +2,7 @@
 
 package(default_visibility = [
     "//tensorflow_serving:internal",
-    "//tensorflow_serving/util/net_http:__subpackages__",
+    "//net_http:__subpackages__",
 ])
 
 licenses(["notice"])
@@ -17,7 +17,7 @@ cc_library(
         "gzip_zlib.h",
     ],
     deps = [
-        "//tensorflow_serving/util/net_http/internal:net_logging",
+        "//net_http/internal:net_logging",
         "@com_google_absl//absl/base",
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/strings",
