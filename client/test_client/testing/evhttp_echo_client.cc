@@ -18,7 +18,7 @@ limitations under the License.
 
 #include <iostream>
 
-#include "net_http/client/test_client/internal/evhttp_connection.h"
+#include "client/test_client/internal/evhttp_connection.h"
 
 namespace {
 
