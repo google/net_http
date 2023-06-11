@@ -17,8 +17,8 @@ limitations under the License.
 #define THIRD_PARTY_TENSORFLOW_SERVING_UTIL_NET_HTTP_CLIENT_TEST_CLIENT_PUBLIC_HTTPCLIENT_H_
 
 #include "absl/memory/memory.h"
-#include "tensorflow_serving/util/net_http/client/test_client/internal/evhttp_connection.h"
-#include "tensorflow_serving/util/net_http/client/test_client/public/httpclient_interface.h"
+#include "net_http/client/test_client/internal/evhttp_connection.h"
+#include "net_http/client/test_client/public/httpclient_interface.h"
 
 // Factory to manage internal dependency
 // NOTE: This API is not yet finalized, and should in its current state be

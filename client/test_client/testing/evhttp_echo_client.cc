@@ -18,13 +18,13 @@ limitations under the License.
 
 #include <iostream>
 
-#include "tensorflow_serving/util/net_http/client/test_client/internal/evhttp_connection.h"
+#include "net_http/client/test_client/internal/evhttp_connection.h"
 
 namespace {
 
-using tensorflow::serving::net_http::TestClientRequest;
-using tensorflow::serving::net_http::TestClientResponse;
-using tensorflow::serving::net_http::TestEvHTTPConnection;
+using net_http::TestClientRequest;
+using net_http::TestClientResponse;
+using net_http::TestEvHTTPConnection;
 
 bool SendRequest(const char* url) {
   auto connection = TestEvHTTPConnection::Connect(url);
