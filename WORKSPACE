@@ -1,7 +1,6 @@
 workspace(name="net_http")
 
-"""All TensorFlow Serving external dependencies."""
-
+"""
 # ===== Bazel skylib dependency =====
 http_archive(
     name = "bazel_skylib",
@@ -112,3 +111,4 @@ http_archive(
     strip_prefix = "yggdrasil-decision-forests-1.4.0",
     urls = ["https://github.com/google/yggdrasil-decision-forests/archive/refs/tags/1.4.0.zip"],
 )
+"""
