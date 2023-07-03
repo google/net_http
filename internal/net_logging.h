@@ -30,8 +30,9 @@ limitations under the License.
 // * make logging pluggable (by TF serving or by adapting external libraries
 
 #define NET_LOG(severity, ...)                                               \
-  do {                                                                       \
-    constexpr const char* net_logging_internal_basename =                    \
+  do                                                                         \
+  {                                                                          \
+    constexpr const char *net_logging_internal_basename =                    \
         ::tensorflow::serving::net_http::Basename(__FILE__,                  \
                                                   sizeof(__FILE__) - 1);     \
     ::tensorflow::serving::net_http::NetLog(NET_LOGGING_INTERNAL_##severity, \
@@ -40,8 +41,10 @@ limitations under the License.
   } while (0)
 
 #define NET_CHECK(condition, message)                             \
-  do {                                                            \
-    if (ABSL_PREDICT_FALSE(!(condition))) {                       \
+  do                                                              \
+  {                                                               \
+    if (ABSL_PREDICT_FALSE(!(condition)))                         \
+    {                                                             \
       NET_LOG(FATAL, "Check %s failed: %s", #condition, message); \
     }                                                             \
   } while (0)
@@ -52,24 +55,21 @@ limitations under the License.
 #define NET_LOGGING_INTERNAL_FATAL ::absl::LogSeverity::kFatal
 #define NET_LOGGING_INTERNAL_LEVEL(severity) \
   ::absl::NormalizeLogSeverity(severity)
+namespace net_http
+{
 
-namespace tensorflow {
-namespace serving {
-namespace net_http {
+  void NetLog(absl::LogSeverity severity, const char *file, int line,
+              const char *format, ...) ABSL_PRINTF_ATTRIBUTE(4, 5);
 
-void NetLog(absl::LogSeverity severity, const char* file, int line,
-            const char* format, ...) ABSL_PRINTF_ATTRIBUTE(4, 5);
+  void SafeWriteToStderr(const char *s, size_t len);
 
-void SafeWriteToStderr(const char* s, size_t len);
+  constexpr const char *Basename(const char *fname, int offset)
+  {
+    return offset == 0 || fname[offset - 1] == '/' || fname[offset - 1] == '\\'
+               ? fname + offset
+               : Basename(fname, offset - 1);
+  }
 
-constexpr const char* Basename(const char* fname, int offset) {
-  return offset == 0 || fname[offset - 1] == '/' || fname[offset - 1] == '\\'
-             ? fname + offset
-             : Basename(fname, offset - 1);
-}
+} // namespace net_http
 
-}  // namespace net_http
-}  // namespace serving
-}  // namespace tensorflow
-
-#endif  // TENSORFLOW_SERVING_UTIL_NET_HTTP_INTERNAL_NET_LOGGING_H_
+#endif // TENSORFLOW_SERVING_UTIL_NET_HTTP_INTERNAL_NET_LOGGING_H_

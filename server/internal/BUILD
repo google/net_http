@@ -40,7 +40,7 @@ cc_test(
     features = ["-layering_check"],
     deps = [
         ":evhttp_server",
-        "//tensorflow_serving/core/test_util:test_main",
+        # "//tensorflow_serving/core/test_util:test_main",
         "//net_http/client/test_client/internal:evhttp_client",
         "//net_http/internal:fixed_thread_pool",
         "//net_http/server/public:http_server",

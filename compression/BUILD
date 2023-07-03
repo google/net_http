@@ -17,7 +17,7 @@ cc_library(
         "gzip_zlib.h",
     ],
     deps = [
-        "//net_http/internal:net_logging",
+        "//internal:net_logging",
         "@com_google_absl//absl/base",
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/strings",
@@ -32,7 +32,7 @@ cc_test(
     features = ["-layering_check"],
     deps = [
         ":gzip_zlib",
-        "//tensorflow_serving/core/test_util:test_main",
+        "//core/test_util:test_main",
         "@com_google_absl//absl/strings",
         "@com_google_googletest//:gtest",
     ],
