@@ -31,7 +31,7 @@ limitations under the License.
 #include "libevent/include/event2/http.h"
 #include "libevent/include/event2/thread.h"
 #include "libevent/include/event2/util.h"
-#include "tensorflow_serving/util/net_http/internal/net_logging.h"
+#include "internal/net_logging.h"
 
 namespace net_http {
 

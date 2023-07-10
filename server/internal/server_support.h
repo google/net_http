@@ -22,7 +22,7 @@ limitations under the License.
 
 #include <functional>
 
-#include "tensorflow_serving/util/net_http/server/public/server_request_interface.h"
+#include "server/public/server_request_interface.h"
 
 namespace net_http {
 

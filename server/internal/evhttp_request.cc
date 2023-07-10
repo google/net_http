@@ -33,9 +33,9 @@ limitations under the License.
 #include "libevent/include/event2/event.h"
 #include "libevent/include/event2/http.h"
 #include "libevent/include/event2/keyvalq_struct.h"
-#include "tensorflow_serving/util/net_http/compression/gzip_zlib.h"
-#include "tensorflow_serving/util/net_http/internal/net_logging.h"
-#include "tensorflow_serving/util/net_http/public/header_names.h"
+#include "compression/gzip_zlib.h"
+#include "internal/net_logging.h"
+#include "public/header_names.h"
 namespace net_http {
 
 ParsedEvRequest::~ParsedEvRequest() {
