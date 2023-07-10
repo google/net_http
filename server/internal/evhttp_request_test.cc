@@ -28,8 +28,6 @@ limitations under the License.
 #include "server/public/httpserver_interface.h"
 #include "server/public/server_request_interface.h"
 
-namespace tensorflow {
-namespace serving {
 namespace net_http {
 namespace {
 
@@ -455,5 +453,3 @@ TEST_F(EvHTTPRequestTest, LargeGzipPost) {
 
 }  // namespace
 }  // namespace net_http
-}  // namespace serving
-}  // namespace tensorflow

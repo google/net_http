@@ -22,17 +22,15 @@ limitations under the License.
 #include <memory>
 #include <string>
 
-#include "tensorflow_serving/util/net_http/server/internal/server_support.h"
-#include "tensorflow_serving/util/net_http/server/public/httpserver_interface.h"
-#include "tensorflow_serving/util/net_http/server/public/server_request_interface.h"
+#include "server/internal/server_support.h"
+#include "server/public/httpserver_interface.h"
+#include "server/public/server_request_interface.h"
 
 struct evbuffer;
 struct evhttp_request;
 struct evhttp_uri;
 struct evkeyvalq;
 
-namespace tensorflow {
-namespace serving {
 namespace net_http {
 
 // Headers only
@@ -136,7 +134,5 @@ class EvHTTPRequest final : public ServerRequestInterface {
 };
 
 }  // namespace net_http
-}  // namespace serving
-}  // namespace tensorflow
 
 #endif  // TENSORFLOW_SERVING_UTIL_NET_HTTP_SERVER_INTERNAL_EVHTTP_REQUEST_H_

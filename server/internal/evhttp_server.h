@@ -38,8 +38,6 @@ struct evhttp;
 struct evhttp_bound_socket;
 struct evhttp_request;
 
-namespace tensorflow {
-namespace serving {
 namespace net_http {
 
 class EvHTTPServer final : public HTTPServerInterface, ServerSupport {
@@ -137,7 +135,5 @@ class EvHTTPServer final : public HTTPServerInterface, ServerSupport {
 };
 
 }  // namespace net_http
-}  // namespace serving
-}  // namespace tensorflow
 
 #endif  // TENSORFLOW_SERVING_UTIL_NET_HTTP_SERVER_INTERNAL_EVHTTP_SERVER_H_

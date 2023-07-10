@@ -24,8 +24,6 @@ limitations under the License.
 
 #include "tensorflow_serving/util/net_http/server/public/server_request_interface.h"
 
-namespace tensorflow {
-namespace serving {
 namespace net_http {
 
 class ServerSupport {
@@ -48,7 +46,5 @@ class ServerSupport {
 };
 
 }  // namespace net_http
-}  // namespace serving
-}  // namespace tensorflow
 
 #endif  // TENSORFLOW_SERVING_UTIL_NET_HTTP_SERVER_INTERNAL_SERVER_SUPPORT_H_

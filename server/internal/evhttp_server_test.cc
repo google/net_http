@@ -13,21 +13,18 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================*/
 
-#include "tensorflow_serving/util/net_http/server/internal/evhttp_server.h"
+#include "server/internal/evhttp_server.h"
 
 #include <memory>
 
 #include <gtest/gtest.h>
 #include "absl/memory/memory.h"
 #include "absl/synchronization/notification.h"
-#include "tensorflow_serving/util/net_http/client/test_client/internal/evhttp_connection.h"
-#include "tensorflow_serving/util/net_http/internal/fixed_thread_pool.h"
-#include "tensorflow_serving/util/net_http/server/public/httpserver.h"
-#include "tensorflow_serving/util/net_http/server/public/httpserver_interface.h"
-#include "tensorflow_serving/util/net_http/server/public/server_request_interface.h"
-
-namespace tensorflow {
-namespace serving {
+#include "client/test_client/internal/evhttp_connection.h"
+#include "internal/fixed_thread_pool.h"
+#include "server/public/httpserver.h"
+#include "server/public/httpserver_interface.h"
+#include "server/public/server_request_interface.h"
 namespace net_http {
 namespace {
 
@@ -339,5 +336,3 @@ TEST_F(EvHTTPServerTest, ActiveRequestCountInShutdown) {
 
 }  // namespace
 }  // namespace net_http
-}  // namespace serving
-}  // namespace tensorflow

@@ -16,8 +16,6 @@ limitations under the License.
 #ifndef TENSORFLOW_SERVING_UTIL_NET_HTTP_PUBLIC_HEADER_NAMES_H_
 #define TENSORFLOW_SERVING_UTIL_NET_HTTP_PUBLIC_HEADER_NAMES_H_
 
-namespace tensorflow {
-namespace serving {
 namespace net_http {
 
 // Standard HTTP Header Names
@@ -179,7 +177,5 @@ class HTTPHeaders {
 };
 
 }  // namespace net_http
-}  // namespace serving
-}  // namespace tensorflow
 
 #endif  // TENSORFLOW_SERVING_UTIL_NET_HTTP_PUBLIC_HEADER_NAMES_H_

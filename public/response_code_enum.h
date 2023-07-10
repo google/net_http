@@ -15,9 +15,6 @@ limitations under the License.
 
 #ifndef TENSORFLOW_SERVING_UTIL_NET_HTTP_PUBLIC_RESPONSE_CODE_ENUM_H_
 #define TENSORFLOW_SERVING_UTIL_NET_HTTP_PUBLIC_RESPONSE_CODE_ENUM_H_
-
-namespace tensorflow {
-namespace serving {
 namespace net_http {
 
 enum class HTTPStatusCode {
@@ -107,7 +104,5 @@ enum class HTTPStatusCode {
 };
 
 }  // namespace net_http
-}  // namespace serving
-}  // namespace tensorflow
 
 #endif  // TENSORFLOW_SERVING_UTIL_NET_HTTP_PUBLIC_RESPONSE_CODE_ENUM_H_

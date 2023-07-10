@@ -33,8 +33,6 @@ limitations under the License.
 #include "libevent/include/event2/util.h"
 #include "tensorflow_serving/util/net_http/internal/net_logging.h"
 
-namespace tensorflow {
-namespace serving {
 namespace net_http {
 
 namespace {
@@ -408,5 +406,3 @@ bool EvHTTPServer::EventLoopSchedule(std::function<void()> fn) {
 }
 
 }  // namespace net_http
-}  // namespace serving
-}  // namespace tensorflow

@@ -15,7 +15,7 @@ limitations under the License.
 
 // libevent based request implementation
 
-#include "tensorflow_serving/util/net_http/server/internal/evhttp_request.h"
+#include "server/internal/evhttp_request.h"
 
 #include <zlib.h>
 
@@ -36,9 +36,6 @@ limitations under the License.
 #include "tensorflow_serving/util/net_http/compression/gzip_zlib.h"
 #include "tensorflow_serving/util/net_http/internal/net_logging.h"
 #include "tensorflow_serving/util/net_http/public/header_names.h"
-
-namespace tensorflow {
-namespace serving {
 namespace net_http {
 
 ParsedEvRequest::~ParsedEvRequest() {
@@ -382,5 +379,3 @@ void EvHTTPRequest::Abort() {
 }
 
 }  // namespace net_http
-}  // namespace serving
-}  // namespace tensorflow

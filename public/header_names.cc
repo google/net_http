@@ -13,7 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================*/
 
-#include "tensorflow_serving/util/net_http/public/header_names.h"
+#include "net_http/public/header_names.h"
 
 namespace tensorflow {
 namespace serving {
@@ -155,5 +155,3 @@ const char HTTPHeaders::WARNING[] = "Warning";
 const char HTTPHeaders::WWW_AUTHENTICATE[] = "WWW-Authenticate";
 
 }  // namespace net_http
-}  // namespace serving
-}  // namespace tensorflow
