@@ -14,9 +14,6 @@ limitations under the License.
 ==============================================================================*/
 
 #include "net_http/public/header_names.h"
-
-namespace tensorflow {
-namespace serving {
 namespace net_http {
 
 // Standard header names
