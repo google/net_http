@@ -1,7 +1,6 @@
 # Description: compression support libraries
 
 package(default_visibility = [
-    "//tensorflow_serving:internal",
     "//net_http:__subpackages__",
 ])
 
