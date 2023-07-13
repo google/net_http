@@ -22,11 +22,9 @@ limitations under the License.
 
 #include "absl/memory/memory.h"
 
-#include "tensorflow_serving/util/net_http/server/internal/evhttp_server.h"
-#include "tensorflow_serving/util/net_http/server/public/httpserver_interface.h"
+#include "server/internal/evhttp_server.h"
+#include "server/public/httpserver_interface.h"
 
-namespace tensorflow {
-namespace serving {
 namespace net_http {
 
 // Creates a server implemented based on the libevents library.
@@ -46,7 +44,5 @@ inline std::unique_ptr<HTTPServerInterface> CreateEvHTTPServer(
 }
 
 }  // namespace net_http
-}  // namespace serving
-}  // namespace tensorflow
 
 #endif  // TENSORFLOW_SERVING_UTIL_NET_HTTP_SERVER_PUBLIC_HTTPSERVER_H_

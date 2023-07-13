@@ -27,10 +27,8 @@ limitations under the License.
 #include "absl/strings/string_view.h"
 #include "absl/time/time.h"
 
-#include "tensorflow_serving/util/net_http/server/public/server_request_interface.h"
+#include "server/public/server_request_interface.h"
 
-namespace tensorflow {
-namespace serving {
 namespace net_http {
 
 // A non-blocking executor for processing I/O polling or callback events.
@@ -200,7 +198,5 @@ class HTTPServerInterface {
 };
 
 }  // namespace net_http
-}  // namespace serving
-}  // namespace tensorflow
 
 #endif  // TENSORFLOW_SERVING_UTIL_NET_HTTP_SERVER_PUBLIC_HTTPSERVER_INTERFACE_H_

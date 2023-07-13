@@ -33,10 +33,8 @@ limitations under the License.
 #include <vector>
 
 #include "absl/strings/string_view.h"
-#include "tensorflow_serving/util/net_http/public/response_code_enum.h"
+#include "public/response_code_enum.h"
 
-namespace tensorflow {
-namespace serving {
 namespace net_http {
 
 class ServerRequestInterface {
@@ -205,7 +203,5 @@ inline void SetContentTypeTEXT(ServerRequestInterface* request) {
 }
 
 }  // namespace net_http
-}  // namespace serving
-}  // namespace tensorflow
 
 #endif  // TENSORFLOW_SERVING_UTIL_NET_HTTP_SERVER_PUBLIC_SERVER_REQUEST_INTERFACE_H_
