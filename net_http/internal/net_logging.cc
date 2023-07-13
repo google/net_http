@@ -13,7 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================*/
 
-#include "internal/net_logging.h"
+#include "net_http/internal/net_logging.h"
 
 #include <stddef.h>
 

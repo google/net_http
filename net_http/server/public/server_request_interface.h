@@ -33,7 +33,7 @@ limitations under the License.
 #include <vector>
 
 #include "absl/strings/string_view.h"
-#include "public/response_code_enum.h"
+#include "net_http/public/response_code_enum.h"
 
 namespace net_http {
 

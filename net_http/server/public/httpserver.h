@@ -22,8 +22,8 @@ limitations under the License.
 
 #include "absl/memory/memory.h"
 
-#include "server/internal/evhttp_server.h"
-#include "server/public/httpserver_interface.h"
+#include "net_http/server/internal/evhttp_server.h"
+#include "net_http/server/public/httpserver_interface.h"
 
 namespace net_http {
 

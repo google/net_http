@@ -29,20 +29,20 @@ limitations under the License.
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 
-#include "tensorflow_serving/util/net_http/server/public/httpserver.h"
-#include "tensorflow_serving/util/net_http/server/public/httpserver_interface.h"
-#include "tensorflow_serving/util/net_http/server/public/server_request_interface.h"
+#include "net_http/server/public/httpserver.h"
+#include "net_http/server/public/httpserver_interface.h"
+#include "net_http/server/public/server_request_interface.h"
 
 namespace {
 
 using absl::StrAppend;
 
-using tensorflow::serving::net_http::EventExecutor;
-using tensorflow::serving::net_http::HTTPServerInterface;
-using tensorflow::serving::net_http::RequestHandlerOptions;
-using tensorflow::serving::net_http::ServerOptions;
-using tensorflow::serving::net_http::ServerRequestInterface;
-using tensorflow::serving::net_http::SetContentTypeHTML;
+using net_http::EventExecutor;
+using net_http::HTTPServerInterface;
+using net_http::RequestHandlerOptions;
+using net_http::ServerOptions;
+using net_http::ServerRequestInterface;
+using net_http::SetContentTypeHTML;
 
 void EchoHandler(ServerRequestInterface* req) {
   std::string response;

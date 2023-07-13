@@ -22,9 +22,9 @@ limitations under the License.
 #include <memory>
 #include <string>
 
-#include "server/internal/server_support.h"
-#include "server/public/httpserver_interface.h"
-#include "server/public/server_request_interface.h"
+#include "net_http/server/internal/server_support.h"
+#include "net_http/server/public/httpserver_interface.h"
+#include "net_http/server/public/server_request_interface.h"
 
 struct evbuffer;
 struct evhttp_request;

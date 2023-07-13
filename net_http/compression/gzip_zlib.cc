@@ -15,7 +15,7 @@ limitations under the License.
 
 // zlib based C++ wrapper to support gzip compression/uncompression
 
-#include "compression/gzip_zlib.h"
+#include "net_http/compression/gzip_zlib.h"
 
 #include <algorithm>
 #include <cassert>

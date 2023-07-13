@@ -29,9 +29,9 @@ limitations under the License.
 
 #include "absl/synchronization/notification.h"
 
-#include "server/internal/evhttp_request.h"
-#include "server/internal/server_support.h"
-#include "server/public/httpserver_interface.h"
+#include "net_http/server/internal/evhttp_request.h"
+#include "net_http/server/internal/server_support.h"
+#include "net_http/server/public/httpserver_interface.h"
 
 struct event_base;
 struct evhttp;

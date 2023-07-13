@@ -20,11 +20,11 @@ limitations under the License.
 #include <gtest/gtest.h>
 #include "absl/memory/memory.h"
 #include "absl/synchronization/notification.h"
-#include "client/test_client/internal/evhttp_connection.h"
-#include "internal/fixed_thread_pool.h"
-#include "server/public/httpserver.h"
-#include "server/public/httpserver_interface.h"
-#include "server/public/server_request_interface.h"
+#include "net_http/client/test_client/internal/evhttp_connection.h"
+#include "net_http/internal/fixed_thread_pool.h"
+#include "net_http/server/public/httpserver.h"
+#include "net_http/server/public/httpserver_interface.h"
+#include "net_http/server/public/server_request_interface.h"
 namespace net_http {
 namespace {
 

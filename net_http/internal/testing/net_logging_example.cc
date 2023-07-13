@@ -16,7 +16,7 @@ limitations under the License.
 #include <cstddef>
 #include <iostream>
 
-#include "internal/net_logging.h"
+#include "net_http/internal/net_logging.h"
 
 int main(int argc, char** argv) {
   NET_LOG(INFO, "started!");

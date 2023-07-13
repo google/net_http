@@ -27,7 +27,7 @@ limitations under the License.
 #include "absl/strings/string_view.h"
 #include "absl/time/time.h"
 
-#include "server/public/server_request_interface.h"
+#include "net_http/server/public/server_request_interface.h"
 
 namespace net_http {
 

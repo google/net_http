@@ -13,7 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================*/
 
-#include "compression/gzip_zlib.h"
+#include "net_http/compression/gzip_zlib.h"
 
 #include <algorithm>
 #include <random>

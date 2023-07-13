@@ -15,7 +15,7 @@ limitations under the License.
 
 // libevent based server implementation
 
-#include "tensorflow_serving/util/net_http/server/internal/evhttp_server.h"
+#include "net_http/server/internal/evhttp_server.h"
 
 #include <netinet/in.h>
 #include <signal.h>
@@ -31,7 +31,7 @@ limitations under the License.
 #include "libevent/include/event2/http.h"
 #include "libevent/include/event2/thread.h"
 #include "libevent/include/event2/util.h"
-#include "internal/net_logging.h"
+#include "net_http/internal/net_logging.h"
 
 namespace net_http {
 
