@@ -12,12 +12,11 @@ http_archive(
     strip_prefix = "abseil-cpp-98eb410c93ad059f9bba1bf43f5bb916fc92a5ea",
 )
 
-
 # ===== Google Test dependency =====
 http_archive(
-  name = "com_google_googletest",
-  urls = ["https://github.com/google/googletest/archive/011959aafddcd30611003de96cfd8d7a7685c700.zip"],
-  strip_prefix = "googletest-011959aafddcd30611003de96cfd8d7a7685c700",
+    name = "com_google_googletest",
+    urls = ["https://github.com/google/googletest/archive/011959aafddcd30611003de96cfd8d7a7685c700.zip"],
+    strip_prefix = "googletest-011959aafddcd30611003de96cfd8d7a7685c700",
 )
 
 # ===== Bazel skylib dependency =====
