@@ -2,7 +2,6 @@
 
 package(default_visibility = [
     ":http_server_clients",
-    "//tensorflow_serving:internal",
     "//net_http:__subpackages__",
 ])
 

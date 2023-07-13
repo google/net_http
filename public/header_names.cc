@@ -13,7 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================*/
 
-#include "net_http/public/header_names.h"
+#include "public/header_names.h"
 namespace net_http {
 
 // Standard header names
