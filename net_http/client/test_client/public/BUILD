@@ -19,8 +19,8 @@ cc_library(
         "httpclient_interface.h",
     ],
     deps = [
-        "//public:shared_files",
-        "//server/public:http_server_api",
+        "//net_http/public:shared_files",
+        "//net_http/server/public:http_server_api",
     ],
 )
 
@@ -31,7 +31,7 @@ cc_library(
     ],
     deps = [
         ":http_client_api",
-        "//client/test_client/internal:evhttp_client",
+        "//net_http/client/test_client/internal:evhttp_client",
         "@com_google_absl//absl/memory",
     ],
 )

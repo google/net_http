@@ -32,8 +32,8 @@ limitations under the License.
 #include "libevent/include/event2/util.h"
 
 // TODO(wenboz): move EventExecutor to common
-#include "client/test_client/public/httpclient_interface.h"
-#include "server/public/httpserver_interface.h"
+#include "net_http/client/test_client/public/httpclient_interface.h"
+#include "net_http/server/public/httpserver_interface.h"
 namespace net_http {
 
 // The following types may be moved to an API interface in future.

@@ -15,11 +15,11 @@ limitations under the License.
 
 // libevent based client implementation
 
-#include "client/test_client/internal/evhttp_connection.h"
+#include "net_http/client/test_client/internal/evhttp_connection.h"
 
-#include "absl/strings/str_cat.h"
-#include "internal/net_logging.h"
-#include "public/response_code_enum.h"
+#include "net_http/absl/strings/str_cat.h"
+#include "net_http/internal/net_logging.h"
+#include "net_http/public/response_code_enum.h"
 
 namespace net_http {
 
