@@ -31,7 +31,7 @@ cc_test(
     features = ["-layering_check"],
     deps = [
         ":gzip_zlib",
-        "//core/test_util:test_main",
+        # "//core/test_util:test_main",
         "@com_google_absl//absl/strings",
         "@com_google_googletest//:gtest",
     ],
