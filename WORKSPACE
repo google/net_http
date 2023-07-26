@@ -78,58 +78,6 @@ http_archive(
     build_file = "@//third_party/libevent:BUILD",
 )
 
-# ===== ICU dependency =====
-# Note: This overrides the dependency from TensorFlow with a version
-# that contains all data.
-http_archive(
-    name = "icu",
-    strip_prefix = "icu-release-64-2",
-    sha256 = "dfc62618aa4bd3ca14a3df548cd65fe393155edd213e49c39f3a30ccd618fc27",
-    urls = [
-        "https://storage.googleapis.com/mirror.tensorflow.org/github.com/unicode-org/icu/archive/release-64-2.zip",
-        "https://github.com/unicode-org/icu/archive/release-64-2.zip",
-    ],
-    build_file = "//third_party/icu:BUILD",
-    patches = ["//third_party/icu:data.patch"],
-    patch_args = ["-p1", "-s"],
-)
-
-# ===== TF.Text dependencies
-# NOTE: Before updating this version, you must update the test model
-# and double check all custom ops have a test:
-# https://github.com/tensorflow/text/blob/master/oss_scripts/model_server/save_models.py
-http_archive(
-    name = "org_tensorflow_text",
-    sha256 = "4e6ec543a1d70a50f0105e0ea69ea8a1edd0b17a38d0244aa3b14f889b2cf74d",
-    strip_prefix = "text-2.12.1",
-    url = "https://github.com/tensorflow/text/archive/v2.12.1.zip",
-    patches = ["@//third_party/tf_text:tftext.patch"],
-    patch_args = ["-p1"],
-    repo_mapping = {"@com_google_re2": "@com_googlesource_code_re2"},
-)
-
-http_archive(
-    name = "com_google_sentencepiece",
-    strip_prefix = "sentencepiece-0.1.96",
-    sha256 = "8409b0126ebd62b256c685d5757150cf7fcb2b92a2f2b98efb3f38fc36719754",
-    urls = [
-        "https://github.com/google/sentencepiece/archive/refs/tags/v0.1.96.zip",
-    ],
-    build_file = "//third_party/sentencepiece:BUILD",
-    patches = ["//third_party/sentencepiece:sentencepiece.patch"],
-    patch_args = ["-p1"],
-)
-
-http_archive(
-    name = "darts_clone",
-    build_file = "//third_party/darts_clone:BUILD",
-    sha256 = "c97f55d05c98da6fcaf7f9ecc6a6dc6bc5b18b8564465f77abff8879d446491c",
-    strip_prefix = "darts-clone-e40ce4627526985a7767444b6ed6893ab6ff8983",
-    urls = [
-        "https://github.com/s-yata/darts-clone/archive/e40ce4627526985a7767444b6ed6893ab6ff8983.zip",
-    ],
-)
-
 http_archive(
     name = "com_google_glog",
     sha256 = "1ee310e5d0a19b9d584a855000434bb724aa744745d5b8ab1855c85bff8a8e21",
@@ -138,16 +86,6 @@ http_archive(
         "https://mirror.bazel.build/github.com/google/glog/archive/028d37889a1e80e8a07da1b8945ac706259e5fd8.tar.gz",
         "https://github.com/google/glog/archive/028d37889a1e80e8a07da1b8945ac706259e5fd8.tar.gz",
     ],
-)
-
-# ==== TensorFlow Decision Forests ===
-http_archive(
-    name = "org_tensorflow_decision_forests",
-    sha256 = "86686bcb03bcf280cf739159fe4c285c667500a332292701259e636f5e1ec110",
-    strip_prefix = "decision-forests-1.3.0",
-    url = "https://github.com/tensorflow/decision-forests/archive/refs/tags/1.3.0.zip",
-    patches = ["@//third_party/tf_decision_forests:tf_decision_forests.patch"],
-    patch_args = ["-p1"],
 )
 
 http_archive(
