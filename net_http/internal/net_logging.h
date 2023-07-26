@@ -33,9 +33,9 @@ limitations under the License.
   do                                                                         \
   {                                                                          \
     constexpr const char *net_logging_internal_basename =                    \
-        ::tensorflow::serving::net_http::Basename(__FILE__,                  \
+        net_http::Basename(__FILE__,                  \
                                                   sizeof(__FILE__) - 1);     \
-    ::tensorflow::serving::net_http::NetLog(NET_LOGGING_INTERNAL_##severity, \
+    net_http::NetLog(NET_LOGGING_INTERNAL_##severity, \
                                             net_logging_internal_basename,   \
                                             __LINE__, __VA_ARGS__);          \
   } while (0)

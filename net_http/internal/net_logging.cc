@@ -141,7 +141,7 @@ namespace
       {
         DoNetLog(&buf, &size, "%s", kTruncated);
       }
-      tensorflow::serving::net_http::SafeWriteToStderr(buffer, strlen(buffer));
+      net_http::SafeWriteToStderr(buffer, strlen(buffer));
     }
 #else
     static_cast<void>(format);
