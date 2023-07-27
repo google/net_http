@@ -24,7 +24,7 @@ limitations under the License.
 
 #include "absl/base/casts.h"
 #include "absl/base/macros.h"
-#include "internal/net_logging.h"
+#include "net_http/internal/net_logging.h"
 namespace net_http
 {
 
