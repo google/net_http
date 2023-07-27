@@ -3,8 +3,6 @@ workspace(name="net_http")
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("@bazel_tools//tools/build_defs/repo:git.bzl", "new_git_repository")
 
-"""All TensorFlow Serving external dependencies."""
-
 http_archive(
     name = "platforms",
     urls = [
@@ -23,9 +21,8 @@ http_archive(
 # ===== Abseil dependency =====
 http_archive(
     name = "com_google_absl",
-    sha256 = "26d3f00c2749899529e5741bf6c07f59a87a96999ffcf72590bc221e565b6720",
-    urls = ["https://github.com/abseil/abseil-cpp/archive/4791df7d1ac966e6c7abdeffafa5030d718500df.zip"],
-    strip_prefix = "abseil-cpp-4791df7d1ac966e6c7abdeffafa5030d718500df",
+    urls = ["https://github.com/abseil/abseil-cpp/archive/b971ac5250ea8de900eae9f95e06548d14cd95fe.tar.gz"],
+    strip_prefix = "abseil-cpp-b971ac5250ea8de900eae9f95e06548d14cd95fe",
 )
 
 # ===== Google Test dependency =====
