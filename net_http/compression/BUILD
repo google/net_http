@@ -32,7 +32,8 @@ cc_test(
     deps = [
         ":gzip_zlib",
         # "//core/test_util:test_main",
+        "@com_google_googletest//:gtest_main",
         "@com_google_absl//absl/strings",
-        "@com_google_googletest//:gtest",
+        # "@com_google_googletest//:gtest",
     ],
 )

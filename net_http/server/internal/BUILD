@@ -41,6 +41,7 @@ cc_test(
     deps = [
         ":evhttp_server",
         # "//tensorflow_serving/core/test_util:test_main",
+        "@com_google_googletest//:gtest_main",
         "//net_http/client/test_client/internal:evhttp_client",
         "//net_http/internal:fixed_thread_pool",
         "//net_http/server/public:http_server",
@@ -58,6 +59,7 @@ cc_test(
     deps = [
         ":evhttp_server",
         # "//tensorflow_serving/core/test_util:test_main",
+        "@com_google_googletest//:gtest_main",
         "//net_http/client/test_client/internal:evhttp_client",
         "//net_http/compression:gzip_zlib",
         "//net_http/internal:fixed_thread_pool",
