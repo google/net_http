@@ -17,7 +17,7 @@ limitations under the License.
 
 #include "net_http/client/test_client/internal/evhttp_connection.h"
 
-#include "net_http/absl/strings/str_cat.h"
+#include "absl/strings/str_cat.h"
 #include "net_http/internal/net_logging.h"
 #include "net_http/public/response_code_enum.h"
 

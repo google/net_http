@@ -15,7 +15,7 @@ limitations under the License.
 
 // libevent based request implementation
 
-#include "server/internal/evhttp_request.h"
+#include "net_http/server/internal/evhttp_request.h"
 
 #include <zlib.h>
 

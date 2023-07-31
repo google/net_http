@@ -13,7 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================*/
 
-#include "server/internal/evhttp_server.h"
+#include "net_http/server/internal/evhttp_server.h"
 
 #include <memory>
 
