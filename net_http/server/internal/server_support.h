@@ -40,7 +40,7 @@ class ServerSupport {
   // Schedules the callback function to run immediately from the event loop.
   // Returns false if any error.
   virtual bool EventLoopSchedule(std::function<void()> fn) = 0;
-
+  virtual void ScheduleReply(std::function<void()> fn) = 0;
  protected:
   ServerSupport() = default;
 };
