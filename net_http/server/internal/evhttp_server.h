@@ -75,7 +75,7 @@ class EvHTTPServer final : public HTTPServerInterface, ServerSupport {
   void DecOps() override;
 
   bool EventLoopSchedule(std::function<void()> fn) override;
-  void ScheduleReply(std::function<void()> fn) override;
+
  private:
   static void DispatchEvRequestFn(struct evhttp_request* req, void* server);
 

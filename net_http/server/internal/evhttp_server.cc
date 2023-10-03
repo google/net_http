@@ -405,8 +405,4 @@ bool EvHTTPServer::EventLoopSchedule(std::function<void()> fn) {
   return result == 0;
 }
 
-void EvHTTPServer::ScheduleReply(std::function<void()> fn) {
-  server_options_->executor()->Schedule(fn);
-}
-
 }  // namespace net_http
