@@ -3,21 +3,6 @@ workspace(name="net_http")
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("@bazel_tools//tools/build_defs/repo:git.bzl", "new_git_repository")
 
-http_archive(
-    name = "platforms",
-    urls = [
-        "https://mirror.bazel.build/github.com/bazelbuild/platforms/releases/download/0.0.2/platforms-0.0.2.tar.gz",
-        "https://github.com/bazelbuild/platforms/releases/download/0.0.2/platforms-0.0.2.tar.gz",
-    ],
-    sha256 = "48a2d8d343863989c232843e01afc8a986eb8738766bfd8611420a7db8f6f0c3",
-)
-
-http_archive(
-    name = "com_googlesource_code_cctz",
-    strip_prefix = "cctz-master",
-    urls = ["https://github.com/google/cctz/archive/master.zip"],
-)
-
 # ===== Abseil dependency =====
 http_archive(
     name = "com_google_absl",
@@ -43,28 +28,11 @@ http_archive(
     ],
 )
 
-# ===== Google Benchmark dependency =====
-http_archive(
-    name = "com_github_google_benchmark",
-    urls = ["https://github.com/google/benchmark/archive/bf585a2789e30585b4e3ce6baf11ef2750b54677.zip"],
-    strip_prefix = "benchmark-bf585a2789e30585b4e3ce6baf11ef2750b54677",
-    sha256 = "2a778d821997df7d8646c9c59b8edb9a573a6e04c534c01892a40aa524a7b68c",
-)
-
 # ===== Bazel package rules dependency =====
 http_archive(
     name = "rules_pkg",
     sha256 = "451e08a4d78988c06fa3f9306ec813b836b1d076d0f055595444ba4ff22b867f",
     url = "https://github.com/bazelbuild/rules_pkg/releases/download/0.7.1/rules_pkg-0.7.1.tar.gz",
-)
-
-# ===== RapidJSON (rapidjson.org) dependency =====
-http_archive(
-    name = "com_github_tencent_rapidjson",
-    url = "https://github.com/Tencent/rapidjson/archive/v1.1.0.zip",
-    sha256 = "8e00c38829d6785a2dfb951bb87c6974fa07dfe488aa5b25deec4b8bc0f6a3ab",
-    strip_prefix = "rapidjson-1.1.0",
-    build_file = "@//third_party/rapidjson:BUILD",
 )
 
 # ===== libevent (libevent.org) dependency =====
@@ -77,22 +45,6 @@ http_archive(
     build_file = "@//third_party/libevent:BUILD",
 )
 
-http_archive(
-    name = "com_google_glog",
-    sha256 = "1ee310e5d0a19b9d584a855000434bb724aa744745d5b8ab1855c85bff8a8e21",
-    strip_prefix = "glog-028d37889a1e80e8a07da1b8945ac706259e5fd8",
-    urls = [
-        "https://mirror.bazel.build/github.com/google/glog/archive/028d37889a1e80e8a07da1b8945ac706259e5fd8.tar.gz",
-        "https://github.com/google/glog/archive/028d37889a1e80e8a07da1b8945ac706259e5fd8.tar.gz",
-    ],
-)
-
-http_archive(
-    name = "ydf",
-    sha256 = "5abb2e440c0b8b13095bd208cfab3a5e569706af9a52b6a702d86ec0e25a7991",
-    strip_prefix = "yggdrasil-decision-forests-1.4.0",
-    urls = ["https://github.com/google/yggdrasil-decision-forests/archive/refs/tags/1.4.0.zip"],
-)
 
 http_archive(
     name = "com_google_protobuf",
@@ -114,15 +66,4 @@ http_archive(
         "https://mirror.bazel.build/zlib.net/zlib-1.2.11.tar.gz",
         "https://zlib.net/zlib-1.2.11.tar.gz",
     ],
-)
-
-# The Boost repo is organized into git sub-modules (see the list at
-# https://github.com/boostorg/boost/tree/master/libs), which requires "new_git_repository".
-new_git_repository(
-    name = "org_boost",
-    commit = "b7b1371294b4bdfc8d85e49236ebced114bc1d8f",  # boost-1.75.0
-    build_file = "//third_party/boost:BUILD",
-    init_submodules = True,
-    recursive_init_submodules = True,
-    remote = "https://github.com/boostorg/boost",
 )
