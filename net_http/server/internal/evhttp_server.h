@@ -15,8 +15,8 @@ limitations under the License.
 
 // libevent based server implementation
 
-#ifndef TENSORFLOW_SERVING_UTIL_NET_HTTP_SERVER_INTERNAL_EVHTTP_SERVER_H_
-#define TENSORFLOW_SERVING_UTIL_NET_HTTP_SERVER_INTERNAL_EVHTTP_SERVER_H_
+#ifndef NET_HTTP_SERVER_INTERNAL_EVHTTP_SERVER_H_
+#define NET_HTTP_SERVER_INTERNAL_EVHTTP_SERVER_H_
 
 #include <cstdint>
 #include <ctime>
@@ -136,4 +136,4 @@ class EvHTTPServer final : public HTTPServerInterface, ServerSupport {
 
 }  // namespace net_http
 
-#endif  // TENSORFLOW_SERVING_UTIL_NET_HTTP_SERVER_INTERNAL_EVHTTP_SERVER_H_
+#endif  // NET_HTTP_SERVER_INTERNAL_EVHTTP_SERVER_H_

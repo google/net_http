@@ -67,3 +67,11 @@ http_archive(
         "https://zlib.net/zlib-1.2.11.tar.gz",
     ],
 )
+
+http_archive(
+    name = "com_github_google_benchmark",
+    strip_prefix = "benchmark-1.6.0",
+    sha256 = "1f71c72ce08d2c1310011ea6436b31e39ccab8c2db94186d26657d41747c85d6",
+    url = "https://github.com/google/benchmark/archive/v1.6.0.tar.gz"
+)
+

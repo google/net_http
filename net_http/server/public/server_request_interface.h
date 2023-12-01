@@ -24,8 +24,8 @@ limitations under the License.
 // Streamed request/response APIs are to be added, which will introduce
 // additional API contract wrt the threading semantics.
 
-#ifndef TENSORFLOW_SERVING_UTIL_NET_HTTP_SERVER_PUBLIC_SERVER_REQUEST_INTERFACE_H_
-#define TENSORFLOW_SERVING_UTIL_NET_HTTP_SERVER_PUBLIC_SERVER_REQUEST_INTERFACE_H_
+#ifndef NET_HTTP_SERVER_PUBLIC_SERVER_REQUEST_INTERFACE_H_
+#define NET_HTTP_SERVER_PUBLIC_SERVER_REQUEST_INTERFACE_H_
 
 #include <cstdlib>
 #include <functional>
@@ -204,4 +204,4 @@ inline void SetContentTypeTEXT(ServerRequestInterface* request) {
 
 }  // namespace net_http
 
-#endif  // TENSORFLOW_SERVING_UTIL_NET_HTTP_SERVER_PUBLIC_SERVER_REQUEST_INTERFACE_H_
+#endif  // NET_HTTP_SERVER_PUBLIC_SERVER_REQUEST_INTERFACE_H_
