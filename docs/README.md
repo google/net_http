@@ -21,10 +21,15 @@ or In our case we want to use Bazel 5.4.0:
 5. Verify Installation:  
 `bazel --version`
 
-### Then Install libvert:  
+### Then Install libvirt:  
 ```
 sudo apt-get update
 sudo apt-get install -y autoconf automake libtool
+```
+
+### Add Google Benchmark:
+```
+sudo apt-get install libbenchmark-dev
 ```
 
 ## To Build:  
