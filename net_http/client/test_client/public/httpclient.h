@@ -13,8 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================*/
 
-#ifndef THIRD_PARTY_NET_HTTP_CLIENT_TEST_CLIENT_PUBLIC_HTTPCLIENT_H_
-#define THIRD_PARTY_NET_HTTP_CLIENT_TEST_CLIENT_PUBLIC_HTTPCLIENT_H_
+#ifndef NET_HTTP_CLIENT_TEST_CLIENT_PUBLIC_HTTPCLIENT_H_
+#define NET_HTTP_CLIENT_TEST_CLIENT_PUBLIC_HTTPCLIENT_H_
 
 #include "absl/memory/memory.h"
 #include "net_http/client/test_client/internal/evhttp_connection.h"
@@ -40,5 +40,5 @@ inline std::unique_ptr<TestHTTPClientInterface> CreateEvHTTPConnection(
 
 }  // namespace net_http
 
-#endif  // THIRD_PARTY_NET_HTTP_CLIENT_TEST_CLIENT_PUBLIC_HTTPCLIENT_H_
+#endif  // NET_HTTP_CLIENT_TEST_CLIENT_PUBLIC_HTTPCLIENT_H_
 
