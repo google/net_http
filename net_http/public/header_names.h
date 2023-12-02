@@ -13,8 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================*/
 
-#ifndef NET_HTTP_PUBLIC_HEADER_NAMES_H_
-#define NET_HTTP_PUBLIC_HEADER_NAMES_H_
+#ifndef TENSORFLOW_SERVING_UTIL_NET_HTTP_PUBLIC_HEADER_NAMES_H_
+#define TENSORFLOW_SERVING_UTIL_NET_HTTP_PUBLIC_HEADER_NAMES_H_
 
 namespace net_http {
 
@@ -178,4 +178,4 @@ class HTTPHeaders {
 
 }  // namespace net_http
 
-#endif  // NET_HTTP_PUBLIC_HEADER_NAMES_H_
+#endif  // TENSORFLOW_SERVING_UTIL_NET_HTTP_PUBLIC_HEADER_NAMES_H_

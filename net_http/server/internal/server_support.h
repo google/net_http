@@ -17,8 +17,8 @@ limitations under the License.
 // server object so the two are properly decoupled.
 // This may turn out to be generally useful with no libevents specifics.
 
-#ifndef NET_HTTP_SERVER_INTERNAL_SERVER_SUPPORT_H_
-#define NET_HTTP_SERVER_INTERNAL_SERVER_SUPPORT_H_
+#ifndef TENSORFLOW_SERVING_UTIL_NET_HTTP_SERVER_INTERNAL_SERVER_SUPPORT_H_
+#define TENSORFLOW_SERVING_UTIL_NET_HTTP_SERVER_INTERNAL_SERVER_SUPPORT_H_
 
 #include <functional>
 
@@ -47,4 +47,4 @@ class ServerSupport {
 
 }  // namespace net_http
 
-#endif  // NET_HTTP_SERVER_INTERNAL_SERVER_SUPPORT_H_
+#endif  // TENSORFLOW_SERVING_UTIL_NET_HTTP_SERVER_INTERNAL_SERVER_SUPPORT_H_

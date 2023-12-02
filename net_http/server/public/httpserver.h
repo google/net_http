@@ -15,8 +15,8 @@ limitations under the License.
 
 // The entry point to access different HTTP server implementations.
 
-#ifndef NET_HTTP_SERVER_PUBLIC_HTTPSERVER_H_
-#define NET_HTTP_SERVER_PUBLIC_HTTPSERVER_H_
+#ifndef TENSORFLOW_SERVING_UTIL_NET_HTTP_SERVER_PUBLIC_HTTPSERVER_H_
+#define TENSORFLOW_SERVING_UTIL_NET_HTTP_SERVER_PUBLIC_HTTPSERVER_H_
 
 #include <memory>
 
@@ -45,4 +45,4 @@ inline std::unique_ptr<HTTPServerInterface> CreateEvHTTPServer(
 
 }  // namespace net_http
 
-#endif  // NET_HTTP_SERVER_PUBLIC_HTTPSERVER_H_
+#endif  // TENSORFLOW_SERVING_UTIL_NET_HTTP_SERVER_PUBLIC_HTTPSERVER_H_

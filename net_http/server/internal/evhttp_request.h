@@ -15,8 +15,8 @@ limitations under the License.
 
 // libevent based request implementation
 
-#ifndef NET_HTTP_SERVER_INTERNAL_EVHTTP_REQUEST_H_
-#define NET_HTTP_SERVER_INTERNAL_EVHTTP_REQUEST_H_
+#ifndef TENSORFLOW_SERVING_UTIL_NET_HTTP_SERVER_INTERNAL_EVHTTP_REQUEST_H_
+#define TENSORFLOW_SERVING_UTIL_NET_HTTP_SERVER_INTERNAL_EVHTTP_REQUEST_H_
 
 #include <cstdint>
 #include <memory>
@@ -135,4 +135,4 @@ class EvHTTPRequest final : public ServerRequestInterface {
 
 }  // namespace net_http
 
-#endif  // NET_HTTP_SERVER_INTERNAL_EVHTTP_REQUEST_H_
+#endif  // TENSORFLOW_SERVING_UTIL_NET_HTTP_SERVER_INTERNAL_EVHTTP_REQUEST_H_
