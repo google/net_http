@@ -13,8 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================*/
 
-#ifndef TENSORFLOW_SERVING_UTIL_NET_HTTP_CLIENT_TEST_CLIENT_INTERNAL_EVHTTP_CONNECTION_H_
-#define TENSORFLOW_SERVING_UTIL_NET_HTTP_CLIENT_TEST_CLIENT_INTERNAL_EVHTTP_CONNECTION_H_
+#ifndef NET_HTTP_CLIENT_TEST_CLIENT_INTERNAL_EVHTTP_CONNECTION_H_
+#define NET_HTTP_CLIENT_TEST_CLIENT_INTERNAL_EVHTTP_CONNECTION_H_
 
 #include <functional>
 #include <memory>
@@ -94,4 +94,4 @@ class TestEvHTTPConnection final : public TestHTTPClientInterface {
 
 }  // namespace net_http
 
-#endif  // TENSORFLOW_SERVING_UTIL_NET_HTTP_CLIENT_TEST_CLIENT_INTERNAL_EVHTTP_CONNECTION_H_
+#endif  // NET_HTTP_CLIENT_TEST_CLIENT_INTERNAL_EVHTTP_CONNECTION_H_
