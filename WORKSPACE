@@ -29,10 +29,10 @@ http_archive(
 # ===== Google Test dependency =====
 http_archive(
     name = "com_google_googletest",
-    urls = ["https://github.com/google/googletest/archive/011959aafddcd30611003de96cfd8d7a7685c700.zip"],
-    strip_prefix = "googletest-011959aafddcd30611003de96cfd8d7a7685c700",
+    sha256 = "1f357c27ca988c3f7c6b4bf68a9395005ac6761f034046e9dde0896e3aba00e4",
+    urls = ["https://github.com/google/googletest/archive/refs/tags/v1.14.0.zip"],
+    strip_prefix = "googletest-1.14.0",
 )
-
 # ===== Bazel skylib dependency =====
 http_archive(
     name = "bazel_skylib",
@@ -70,9 +70,8 @@ http_archive(
 # ===== libevent (libevent.org) dependency =====
 http_archive(
     name = "com_github_libevent_libevent",
-    url = "https://github.com/libevent/libevent/archive/release-2.1.8-stable.zip",
-    sha256 = "70158101eab7ed44fd9cc34e7f247b3cae91a8e4490745d9d6eb7edc184e4d96",
-    strip_prefix = "libevent-release-2.1.8-stable",
+    url = "https://github.com/libevent/libevent/archive/release-2.1.10-stable.zip",
+    strip_prefix = "libevent-release-2.1.10-stable",
     build_file = "@//third_party/libevent:BUILD",
 )
 
