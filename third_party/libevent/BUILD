@@ -7,8 +7,7 @@ package(
 
 licenses(["notice"])  # BSD
 
-exports_files(["LICENSE",
-    "buf_event.patch"])
+exports_files(["LICENSE"])
 
 include_files = [
     "libevent/include/evdns.h",
