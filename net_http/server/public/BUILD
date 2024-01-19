@@ -1,9 +1,6 @@
 # Description: a lightweight http server and related utils to support Web clients
 
-package(default_visibility = [
-    "//net_http:__subpackages__",
-    "//net_http/public:http_server_clients",
-])
+package(default_visibility = ["//visibility:public",])
 
 licenses(["notice"])
 
