@@ -13,8 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================*/
 
-#ifndef TENSORFLOW_SERVING_UTIL_NET_HTTP_INTERNAL_NET_LOGGING_H_
-#define TENSORFLOW_SERVING_UTIL_NET_HTTP_INTERNAL_NET_LOGGING_H_
+#ifndef NET_HTTP_INTERNAL_NET_LOGGING_H_
+#define NET_HTTP_INTERNAL_NET_LOGGING_H_
 
 #include <string>
 
@@ -72,4 +72,4 @@ namespace net_http
 
 } // namespace net_http
 
-#endif // TENSORFLOW_SERVING_UTIL_NET_HTTP_INTERNAL_NET_LOGGING_H_
+#endif // NET_HTTP_INTERNAL_NET_LOGGING_H_

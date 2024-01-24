@@ -28,7 +28,6 @@ cc_test(
     name = "gzip_zlib_test",
     size = "large",
     srcs = ["gzip_zlib_test.cc"],
-    features = ["-layering_check"],
     deps = [
         ":gzip_zlib",
         # "//core/test_util:test_main",

@@ -1,9 +1,6 @@
 # Description: shared files
 
-package(default_visibility = [
-    ":http_server_clients",
-    "//net_http:__subpackages__",
-])
+package(default_visibility = ["//visibility:public",])
 
 package_group(
     name = "http_server_clients",

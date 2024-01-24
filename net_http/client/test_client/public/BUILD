@@ -1,9 +1,7 @@
 # Description: APIs for experimental testing of net_http server instances
 
-package(default_visibility = [
-    ":http_client_users",
-    "//net_http:__subpackages__",
-])
+package(default_visibility = ["//visibility:public",])
+
 
 package_group(
     name = "http_client_users",

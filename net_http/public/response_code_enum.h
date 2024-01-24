@@ -13,8 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================*/
 
-#ifndef TENSORFLOW_SERVING_UTIL_NET_HTTP_PUBLIC_RESPONSE_CODE_ENUM_H_
-#define TENSORFLOW_SERVING_UTIL_NET_HTTP_PUBLIC_RESPONSE_CODE_ENUM_H_
+#ifndef NET_HTTP_PUBLIC_RESPONSE_CODE_ENUM_H_
+#define NET_HTTP_PUBLIC_RESPONSE_CODE_ENUM_H_
 namespace net_http {
 
 enum class HTTPStatusCode {
@@ -105,4 +105,4 @@ enum class HTTPStatusCode {
 
 }  // namespace net_http
 
-#endif  // TENSORFLOW_SERVING_UTIL_NET_HTTP_PUBLIC_RESPONSE_CODE_ENUM_H_
+#endif  // NET_HTTP_PUBLIC_RESPONSE_CODE_ENUM_H_
