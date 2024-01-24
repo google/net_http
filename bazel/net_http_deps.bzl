@@ -46,7 +46,7 @@ def net_http_deps():
         name = "com_github_libevent_libevent",
         url = "https://github.com/libevent/libevent/archive/release-2.1.10-stable.zip",
         strip_prefix = "libevent-release-2.1.10-stable",
-        build_file = "@//third_party/libevent:BUILD",
+        build_file = "@net_http//third_party/libevent:BUILD",
     )
 
 
