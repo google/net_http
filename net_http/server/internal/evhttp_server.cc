@@ -27,10 +27,10 @@ limitations under the License.
 
 #include "absl/base/call_once.h"
 #include "absl/memory/memory.h"
-#include "libevent/include/event2/event.h"
-#include "libevent/include/event2/http.h"
-#include "libevent/include/event2/thread.h"
-#include "libevent/include/event2/util.h"
+#include "event2/event.h"
+#include "event2/http.h"
+#include "event2/thread.h"
+#include "event2/util.h"
 #include "net_http/internal/net_logging.h"
 
 namespace net_http {
