@@ -24,12 +24,12 @@ limitations under the License.
 
 #include "absl/strings/string_view.h"
 #include "absl/synchronization/notification.h"
-#include "libevent/include/event2/buffer.h"
-#include "libevent/include/event2/bufferevent.h"
-#include "libevent/include/event2/event.h"
-#include "libevent/include/event2/http.h"
-#include "libevent/include/event2/keyvalq_struct.h"
-#include "libevent/include/event2/util.h"
+#include "event2/buffer.h"
+#include "event2/bufferevent.h"
+#include "event2/event.h"
+#include "event2/http.h"
+#include "event2/keyvalq_struct.h"
+#include "event2/util.h"
 
 // TODO(wenboz): move EventExecutor to common
 #include "net_http/client/test_client/public/httpclient_interface.h"
