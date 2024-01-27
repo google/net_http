@@ -350,15 +350,7 @@ EvHTTPRequest::PartialReplyWithFlushCallback(std::function<void()> callback) {
 }
 
 void EvHTTPRequest::ReplyWithStatus(HTTPStatusCode status) {
-  bool result =
-      server_->EventLoopSchedule([this, status]() { EvSendReply(status); });
-
-  if (!result) {
-    NET_LOG(ERROR, "Failed to EventLoopSchedule ReplyWithStatus()");
-    Abort();
-    // TODO(wenboz): should have a forced abort that doesn't write back anything
-    // to the event-loop
-  }
+  server_->ScheduleReply([this, status]() { EvSendReply(status); });
 }
 
 void EvHTTPRequest::EvSendReply(HTTPStatusCode status) {
