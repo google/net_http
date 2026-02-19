@@ -2,21 +2,25 @@
 #include <sstream>
 #include <random>
 #include <cstring>
+#include <vector>
 
 #include <wslay/wslay.h>
+#include <event2/bufferevent.h>
+#include <event2/buffer.h>
+#include <event2/event.h>
 
 #include "wish_handler.h"
 
-WishHandler::WishHandler(Socket& socket, bool is_server) 
-    : socket_(socket), is_server_(is_server), ctx_(nullptr) {
-    
+WishHandler::WishHandler(struct bufferevent* bev, bool is_server)
+    : bev_(bev), is_server_(is_server), ctx_(nullptr), state_(HANDSHAKE) {
+
   struct wslay_event_callbacks callbacks = {
     RecvCallback,
     SendCallback,
     GenMaskCallback,
-    NULL, // on_frame_recv_start_callback
-    NULL, // on_frame_recv_chunk_callback
-    NULL, // on_frame_recv_end_callback
+    NULL,
+    NULL,
+    NULL,
     OnMsgRecvCallback
   };
 
@@ -29,31 +33,47 @@ WishHandler::WishHandler(Socket& socket, bool is_server)
 
 WishHandler::~WishHandler() {
   wslay_event_context_free(ctx_);
+  if (bev_) {
+    bufferevent_free(bev_);
+  }
+}
+
+void WishHandler::Start() {
+  bufferevent_setcb(bev_, ReadCallback, NULL, EventCallback, this);
+  bufferevent_enable(bev_, EV_READ | EV_WRITE);
+
+  if (!is_server_) {
+    SendHttpRequest();
+  }
 }
 
 void WishHandler::SetOnMessage(MessageCallback cb) {
   on_message_ = cb;
 }
 
+void WishHandler::SetOnOpen(OpenCallback cb) {
+  on_open_ = cb;
+}
+
 ssize_t WishHandler::RecvCallback(wslay_event_context *ctx, uint8_t *buf, size_t len, int flags, void *user_data) {
   WishHandler* handler = static_cast<WishHandler*>(user_data);
-  // Just return the errno/status directly
-  ssize_t res = handler->socket_.RecvData(buf, len);
-  if (res < 0) {
-    wslay_event_set_error(ctx, WSLAY_ERR_CALLBACK_FAILURE);
+  struct evbuffer *input = bufferevent_get_input(handler->bev_);
+  
+  size_t data_len = evbuffer_get_length(input);
+  if (data_len == 0) {
+    wslay_event_set_error(ctx, WSLAY_ERR_WOULDBLOCK);
     return -1;
   }
-  return res;
+
+  size_t copy_len = std::min(len, data_len);
+  evbuffer_remove(input, buf, copy_len);
+  return copy_len;
 }
 
 ssize_t WishHandler::SendCallback(wslay_event_context *ctx, const uint8_t *data, size_t len, int flags, void *user_data) {
   WishHandler* handler = static_cast<WishHandler*>(user_data);
-  ssize_t res = handler->socket_.SendData(data, len);
-  if (res < 0) {
-    wslay_event_set_error(ctx, WSLAY_ERR_CALLBACK_FAILURE);
-    return -1;
-  }
-  return res;
+  bufferevent_write(handler->bev_, data, len);
+  return len;
 }
 
 int WishHandler::GenMaskCallback(wslay_event_context *ctx, uint8_t *buf, size_t len, void *user_data) {
@@ -73,7 +93,37 @@ void WishHandler::OnMsgRecvCallback(wslay_event_context *ctx, const wslay_event_
   }
 }
 
+void WishHandler::ReadCallback(struct bufferevent *bev, void *ctx) {
+  WishHandler* handler = static_cast<WishHandler*>(ctx);
+  
+  if (handler->state_ == HANDSHAKE) {
+    handler->HandleHandshake();
+  }
+  
+  if (handler->state_ == OPEN) {
+    int err = wslay_event_recv(handler->ctx_);
+    if (err != 0) {
+        std::cerr << "wslay_event_recv failed: " << err << std::endl;
+        // Should we close?
+    }
+  }
+}
+
+void WishHandler::EventCallback(struct bufferevent *bev, short events, void *ctx) {
+  if (events & BEV_EVENT_ERROR) {
+    std::cerr << "Error on socket: " << evutil_socket_error_to_string(EVUTIL_SOCKET_ERROR()) << std::endl;
+  }
+  if (events & (BEV_EVENT_EOF | BEV_EVENT_ERROR)) {
+    // Connection closed
+    std::cout << "Connection closed." << std::endl;
+    WishHandler* handler = static_cast<WishHandler*>(ctx);
+    delete handler;
+  }
+}
+
 int WishHandler::SendMessage(uint8_t opcode, const std::string& msg) {
+  if (state_ != OPEN) return -1;
+  
   struct wslay_event_msg msg_frame = {
     opcode,
     reinterpret_cast<const uint8_t*>(msg.c_str()),
@@ -99,42 +149,43 @@ int WishHandler::SendMetadata(bool is_text, const std::string& msg) {
   return SendMessage(is_text ? 3 : 4, msg);
 }
 
-bool WishHandler::Process() {
-  // This drives the wslay event loop
-  
-  int err = wslay_event_recv(ctx_);
-  if (err != 0) {
-    std::cerr << "Process failed with error: " << err << std::endl;
-    return false; // Error or closed
-  }
-  return true;
-}
-
 // ---------------- Handshake Logic ----------------
 
-bool WishHandler::Handshake() {
+void WishHandler::HandleHandshake() {
   if (is_server_) {
-    // Read Request
-    if (!ReadHttpRequest()) return false;
-    // Send Response
-    return SendHttpResponse("200 OK", "application/web-stream");
+    if (ReadHttpRequest()) {
+        SendHttpResponse("200 OK", "application/web-stream");
+        state_ = OPEN;
+        if (on_open_) on_open_();
+    }
   } else {
-    // Send Request
-    if (!SendHttpRequest()) return false;
-    // Read Response
-    return ReadHttpResponse();
+    // Client waits for response
+    if (ReadHttpResponse()) {
+        state_ = OPEN;
+        // Maybe trigger some on_open callback?
+        std::cout << "Handshake complete!" << std::endl;
+        if (on_open_) on_open_();
+    }
   }
 }
 
 bool WishHandler::ReadHttpRequest() {
-  // Very dummy HTTP reader. Just reads until \r\n\r\n
-  // In reality, should parse headers.
-  char buffer[4096];
-  ssize_t n = socket_.RecvData(buffer, sizeof(buffer) - 1);
-  if (n <= 0) return false;
-  buffer[n] = '\0';
-  std::string data(buffer);
-  
+  struct evbuffer *input = bufferevent_get_input(bev_);
+  size_t len = evbuffer_get_length(input);
+  if (len == 0) return false;
+
+  // Search for \r\n\r\n
+  struct evbuffer_ptr ptr = evbuffer_search(input, "\r\n\r\n", 4, NULL);
+  if (ptr.pos == -1) return false; // Not full headers yet
+
+  // Read up to the end of headers
+  size_t header_len = ptr.pos + 4;
+  char* headers = new char[header_len + 1];
+  evbuffer_remove(input, headers, header_len);
+  headers[header_len] = '\0';
+  std::string data(headers);
+  delete[] headers;
+
   // Check for WiSH specific header
   if (data.find("Content-Type: application/web-stream") == std::string::npos &&
     data.find("content-type: application/web-stream") == std::string::npos) {
@@ -144,33 +195,38 @@ bool WishHandler::ReadHttpRequest() {
   return true;
 }
 
-bool WishHandler::SendHttpResponse(const std::string& status, const std::string& content_type) {
+void WishHandler::SendHttpResponse(const std::string& status, const std::string& content_type) {
   std::stringstream ss;
   ss << "HTTP/1.1 " << status << "\r\n";
   ss << "Content-Type: " << content_type << "\r\n";
   ss << "\r\n"; // End of headers
   std::string data = ss.str();
-  socket_.SendData(data.c_str(), data.length());
-  return true;
+  bufferevent_write(bev_, data.c_str(), data.length());
 }
 
-bool WishHandler::SendHttpRequest() {
+void WishHandler::SendHttpRequest() {
   std::stringstream ss;
   ss << "POST / HTTP/1.1\r\n";
   ss << "Host: localhost\r\n";
   ss << "Content-Type: application/web-stream\r\n";
   ss << "\r\n";
   std::string data = ss.str();
-  socket_.SendData(data.c_str(), data.length());
-  return true;
+  bufferevent_write(bev_, data.c_str(), data.length());
 }
 
 bool WishHandler::ReadHttpResponse() {
-  char buffer[4096];
-  ssize_t n = socket_.RecvData(buffer, sizeof(buffer) - 1);
-  if (n <= 0) return false;
-  buffer[n] = '\0';
-  std::string data(buffer);
+  struct evbuffer *input = bufferevent_get_input(bev_);
+  
+  // Search for \r\n\r\n
+  struct evbuffer_ptr ptr = evbuffer_search(input, "\r\n\r\n", 4, NULL);
+  if (ptr.pos == -1) return false; 
+
+  size_t header_len = ptr.pos + 4;
+  char* headers = new char[header_len + 1];
+  evbuffer_remove(input, headers, header_len);
+  headers[header_len] = '\0';
+  std::string data(headers);
+  delete[] headers;
   
   if (data.find("200 OK") == std::string::npos) {
     std::cerr << "Bad Handy handshake response: " << data << std::endl;

@@ -1,73 +1,59 @@
 #include <iostream>
-#include <thread>
-#include <chrono>
+#include <cstring>
+#include <string>
+
+#include <event2/event.h>
+#include <event2/bufferevent.h>
+#include <event2/dns.h>
 
 #include "../src/wish_handler.h"
 
 int main() {
-  Socket socket;
-  if (socket.Init() != 0) {
-      std::cerr << "Failed to init socket" << std::endl;
-      return 1;
-  }
-
-  std::string host = "127.0.0.1"; // localhost
-  int port = 8080;
-
-  std::cout << "Connecting to " << host << ":" << port << "..." << std::endl;
-  if (socket.Connect(host, port) != 0) {
-      std::cerr << "Failed to connect to " << host << ":" << port << std::endl;
-      return 1;
-  }
-
-  WishHandler handler(socket, false); // is_server = false
-
-  if (!handler.Handshake()) {
-    std::cerr << "Handshake failed." << std::endl;
-    return 1;
-  }
-  std::cout << "Handshake successful." << std::endl;
-
-  handler.SetOnMessage([](uint8_t opcode, const std::string& msg) {
-    std::string type;
-    switch(opcode) {
-      case 1: type = "TEXT"; break;
-      case 2: type = "BINARY"; break;
-      case 3: type = "TEXT_METADATA"; break;
-      case 4: type = "BINARY_METADATA"; break;
-      default: type = "UNKNOWN(" + std::to_string(opcode) + ")"; break;
+    struct event_base *base = event_base_new();
+    if (!base) {
+        std::cerr << "Could not initialize libevent!" << std::endl;
+        return 1;
     }
-    std::cout << "Server says [" << type << "]: " << msg << std::endl;
-  });
 
-  // Send a text message
-  std::string text_msg = "Hello WiSH Text!";
-  std::cout << "Sending Text: " << text_msg << std::endl;
-  if (handler.SendText(text_msg) != 0) {
-      std::cerr << "Failed to send text message" << std::endl;
-  }
+    struct evdns_base *dns_base = evdns_base_new(base, 1);
+    if (!dns_base) {
+        std::cerr << "Could not initialize dns!" << std::endl;
+        return 1;
+    }
 
-  // Send a binary message
-  std::string bin_msg = "Hello WiSH Binary!";
-  std::cout << "Sending Binary: " << bin_msg << std::endl;
-  if (handler.SendBinary(bin_msg) != 0) {
-      std::cerr << "Failed to send binary message" << std::endl;
-  }
+    struct bufferevent *bev = bufferevent_socket_new(base, -1, BEV_OPT_CLOSE_ON_FREE);
+    if (!bev) {
+        std::cerr << "Could not create bufferevent!" << std::endl;
+        return 1;
+    }
 
-  // Send a metadata message
-  std::string meta_msg = "Hello WiSH Metadata!";
-  std::cout << "Sending Metadata: " << meta_msg << std::endl;
-  if (handler.SendMetadata(true, meta_msg) != 0) { // Text metadata
-      std::cerr << "Failed to send metadata message" << std::endl;
-  }
+    if (bufferevent_socket_connect_hostname(bev, dns_base, AF_INET, "127.0.0.1", 8080) < 0) {
+        std::cerr << "Could not connect!" << std::endl;
+        return 1;
+    }
 
-  // Process loop to receive echo
-  // Run for a bit then exit
-  auto start = std::chrono::steady_clock::now();
-  while (std::chrono::steady_clock::now() - start < std::chrono::seconds(5)) {
-    if (!handler.Process()) break;
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
-  }
+    // Handler manages its own lifecycle (deletes itself on close)
+    WishHandler* handler = new WishHandler(bev, false); // is_server = false
+    
+    handler->SetOnOpen([handler]() {
+        std::cout << "Connected and Handshake Complete!" << std::endl;
+        
+        handler->SendText("Hello WiSH Text!");
+        handler->SendBinary("Hello WiSH Binary!");
+        handler->SendMetadata(true, "Hello WiSH Metadata!");
+    });
 
-  return 0;
+    handler->SetOnMessage([](uint8_t opcode, const std::string& msg) {
+        std::cout << "Server says [opcode " << (int)opcode << "]: " << msg << std::endl;
+    });
+
+    handler->Start();
+
+    std::cout << "Client running..." << std::endl;
+    event_base_dispatch(base);
+
+    evdns_base_free(dns_base, 0);
+    event_base_free(base);
+    
+    return 0;
 }
