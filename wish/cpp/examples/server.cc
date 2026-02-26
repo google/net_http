@@ -2,7 +2,7 @@
 
 #include <cstring>
 #include <iostream>
-#include <string>  // Added for std::to_string
+#include <string> // Added for std::to_string
 
 // To use BoringSSL
 #define EVENT__HAVE_OPENSSL 1
@@ -15,22 +15,23 @@
 #include "../src/tls_context.h"
 #include "../src/wish_handler.h"
 
-void accept_conn_cb(struct evconnlistener* listener, evutil_socket_t fd,
-                    struct sockaddr* address, int socklen, void* ctx) {
-  struct event_base* base = evconnlistener_get_base(listener);
-  TlsContext* tls_ctx = static_cast<TlsContext*>(ctx);
+void accept_conn_cb(struct evconnlistener *listener, evutil_socket_t fd,
+                    struct sockaddr *address, int socklen, void *ctx) {
+    struct event_base *base = evconnlistener_get_base(listener);
+    TlsContext *tls_ctx = static_cast<TlsContext *>(ctx);
 
-  SSL* ssl = SSL_new(tls_ctx->ssl_ctx());
-  struct bufferevent* bev =
-      bufferevent_openssl_socket_new(base, fd, ssl, BUFFEREVENT_SSL_ACCEPTING,
-                                     BEV_OPT_CLOSE_ON_FREE);
+    SSL *ssl = SSL_new(tls_ctx->ssl_ctx());
+    struct bufferevent *bev =
+        bufferevent_openssl_socket_new(base, fd, ssl, BUFFEREVENT_SSL_ACCEPTING,
+                                       BEV_OPT_CLOSE_ON_FREE);
 
-  std::cout << "Client connected." << std::endl;
+    std::cout << "Client connected." << std::endl;
 
-  // Handler manages its own lifecycle (deletes itself on close)
-  WishHandler* handler = new WishHandler(bev, true);
+    // Handler manages its own lifecycle (deletes itself on close)
+    WishHandler *handler = new WishHandler(bev, true);
 
-  handler->SetOnMessage([handler](uint8_t opcode, const std::string& msg) {
+    handler->SetOnMessage([handler](uint8_t opcode, const std::string &msg)
+                          {
     std::string type;
     switch (opcode) {
       case 1:
@@ -62,65 +63,69 @@ void accept_conn_cb(struct evconnlistener* listener, evutil_socket_t fd,
 
     if (res != 0) {
       std::cerr << "Failed to send echo." << std::endl;
+    } });
+
+    handler->Start();
+}
+
+void accept_error_cb(struct evconnlistener *listener, void *ctx)
+{
+    struct event_base *base = evconnlistener_get_base(listener);
+    int err = EVUTIL_SOCKET_ERROR();
+    std::cerr << "Got an error " << err << " ("
+              << evutil_socket_error_to_string(err)
+              << ") on the listener. Shutting down." << std::endl;
+    event_base_loopexit(base, NULL);
+}
+
+int main(int argc, char **argv)
+{
+    // Initialize OpenSSL
+    SSL_library_init();
+    SSL_load_error_strings();
+
+    TlsContext tls_ctx;
+    tls_ctx.set_ca_path("../certs/ca.crt");
+    tls_ctx.set_identity_certificate_path("../certs/server.crt");
+    tls_ctx.set_private_key_path("../certs/server.key");
+    if (!tls_ctx.Init(true))
+    {
+        std::cerr << "Failed to init TLS context" << std::endl;
+        return 1;
     }
-  });
 
-  handler->Start();
-}
+    struct event_base *base;
+    struct evconnlistener *listener;
+    struct sockaddr_in sin;
+    int port = 8080;
 
-void accept_error_cb(struct evconnlistener* listener, void* ctx) {
-  struct event_base* base = evconnlistener_get_base(listener);
-  int err = EVUTIL_SOCKET_ERROR();
-  std::cerr << "Got an error " << err << " ("
-            << evutil_socket_error_to_string(err)
-            << ") on the listener. Shutting down." << std::endl;
-  event_base_loopexit(base, NULL);
-}
+    base = event_base_new();
+    if (!base)
+    {
+        std::cerr << "Could not initialize libevent!" << std::endl;
+        return 1;
+    }
 
-int main(int argc, char** argv) {
-  // Initialize OpenSSL
-  SSL_library_init();
-  SSL_load_error_strings();
+    memset(&sin, 0, sizeof(sin));
+    sin.sin_family = AF_INET;
+    sin.sin_addr.s_addr = htonl(0);
+    sin.sin_port = htons(port);
 
-  TlsContext tls_ctx;
-  tls_ctx.set_ca_path("../certs/ca.crt");
-  tls_ctx.set_identity_certificate_path("../certs/server.crt");
-  tls_ctx.set_private_key_path("../certs/server.key");
-  if (!tls_ctx.Init(true)) {
-    std::cerr << "Failed to init TLS context" << std::endl;
-    return 1;
-  }
+    listener = evconnlistener_new_bind(base, accept_conn_cb, &tls_ctx,
+                                       LEV_OPT_CLOSE_ON_FREE | LEV_OPT_REUSEABLE,
+                                       -1, (struct sockaddr *)&sin, sizeof(sin));
 
-  struct event_base* base;
-  struct evconnlistener* listener;
-  struct sockaddr_in sin;
-  int port = 8080;
+    if (!listener)
+    {
+        std::cerr << "Could not create a listener!" << std::endl;
+        return 1;
+    }
 
-  base = event_base_new();
-  if (!base) {
-    std::cerr << "Could not initialize libevent!" << std::endl;
-    return 1;
-  }
+    std::cout << "Server listening on port " << port << "..." << std::endl;
+    event_base_dispatch(base);
 
-  memset(&sin, 0, sizeof(sin));
-  sin.sin_family = AF_INET;
-  sin.sin_addr.s_addr = htonl(0);
-  sin.sin_port = htons(port);
+    evconnlistener_free(listener);
+    event_base_free(base);
 
-  listener = evconnlistener_new_bind(base, accept_conn_cb, &tls_ctx,
-                                     LEV_OPT_CLOSE_ON_FREE | LEV_OPT_REUSEABLE,
-                                     -1, (struct sockaddr*)&sin, sizeof(sin));
-
-  if (!listener) {
-    std::cerr << "Could not create a listener!" << std::endl;
-    return 1;
-  }
-
-  std::cout << "Server listening on port " << port << "..." << std::endl;
-  event_base_dispatch(base);
-
-  evconnlistener_free(listener);
-  event_base_free(base);
-
-  return 0;
+    return 0;
 }
