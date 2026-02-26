@@ -30,40 +30,40 @@ void accept_conn_cb(struct evconnlistener *listener, evutil_socket_t fd,
     // Handler manages its own lifecycle (deletes itself on close)
     WishHandler *handler = new WishHandler(bev, true);
 
-    handler->SetOnMessage([handler](uint8_t opcode, const std::string &msg)
-                          {
-    std::string type;
-    switch (opcode) {
-      case 1:
-        type = "TEXT";
-        break;
-      case 2:
-        type = "BINARY";
-        break;
-      case 3:
-        type = "TEXT_METADATA";
-        break;
-      case 4:
-        type = "BINARY_METADATA";
-        break;
-      default:
-        type = "UNKNOWN(" + std::to_string(opcode) + ")";
-        break;
-    }
-    std::cout << "Received [" << type << "]: " << msg << std::endl;
+    handler->SetOnMessage([handler](uint8_t opcode, const std::string &msg) {
+        std::string type;
+        switch (opcode) {
+        case 1:
+            type = "TEXT";
+            break;
+        case 2:
+            type = "BINARY";
+            break;
+        case 3:
+            type = "TEXT_METADATA";
+            break;
+        case 4:
+            type = "BINARY_METADATA";
+            break;
+        default:
+            type = "UNKNOWN(" + std::to_string(opcode) + ")";
+            break;
+        }
+        std::cout << "Received [" << type << "]: " << msg << std::endl;
 
-    // Echo back
-    int res = 0;
-    if (opcode == 1)
-      res = handler->SendText("Echo: " + msg);
-    else if (opcode == 2)
-      res = handler->SendBinary("Echo: " + msg);
-    else if (opcode == 3 || opcode == 4)
-      res = handler->SendMetadata(opcode == 3, "Echo: " + msg);
+        // Echo back
+        int res = 0;
+        if (opcode == 1)
+        res = handler->SendText("Echo: " + msg);
+        else if (opcode == 2)
+        res = handler->SendBinary("Echo: " + msg);
+        else if (opcode == 3 || opcode == 4)
+        res = handler->SendMetadata(opcode == 3, "Echo: " + msg);
 
-    if (res != 0) {
-      std::cerr << "Failed to send echo." << std::endl;
-    } });
+        if (res != 0) {
+        std::cerr << "Failed to send echo." << std::endl;
+        }
+    });
 
     handler->Start();
 }
@@ -88,8 +88,7 @@ int main(int argc, char **argv)
     tls_ctx.set_ca_path("../certs/ca.crt");
     tls_ctx.set_identity_certificate_path("../certs/server.crt");
     tls_ctx.set_private_key_path("../certs/server.key");
-    if (!tls_ctx.Init(true))
-    {
+    if (!tls_ctx.Init(true)) {
         std::cerr << "Failed to init TLS context" << std::endl;
         return 1;
     }
@@ -100,8 +99,7 @@ int main(int argc, char **argv)
     int port = 8080;
 
     base = event_base_new();
-    if (!base)
-    {
+    if (!base) {
         std::cerr << "Could not initialize libevent!" << std::endl;
         return 1;
     }
@@ -115,8 +113,7 @@ int main(int argc, char **argv)
                                        LEV_OPT_CLOSE_ON_FREE | LEV_OPT_REUSEABLE,
                                        -1, (struct sockaddr *)&sin, sizeof(sin));
 
-    if (!listener)
-    {
+    if (!listener){
         std::cerr << "Could not create a listener!" << std::endl;
         return 1;
     }

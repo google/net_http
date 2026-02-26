@@ -14,7 +14,7 @@
 #include "../src/wish_handler.h"
 
 int main() {
-    // Initialize OpenSSL
+    // Initialize BoringSSL
     SSL_library_init();
     SSL_load_error_strings();
 
@@ -22,21 +22,18 @@ int main() {
     tls_ctx.set_ca_path("../certs/ca.crt");
     tls_ctx.set_identity_certificate_path("../certs/client.crt");
     tls_ctx.set_private_key_path("../certs/client.key");
-    if (!tls_ctx.Init(false))
-    {
+    if (!tls_ctx.Init(false)) {
         std::cerr << "Failed to init TLS context" << std::endl;
         return 1;
     }
     struct event_base *base = event_base_new();
-    if (!base)
-    {
+    if (!base) {
         std::cerr << "Could not initialize libevent!" << std::endl;
         return 1;
     }
 
     struct evdns_base *dns_base = evdns_base_new(base, 1);
-    if (!dns_base)
-    {
+    if (!dns_base) {
         std::cerr << "Could not initialize dns!" << std::endl;
         return 1;
     }
@@ -45,15 +42,13 @@ int main() {
     struct bufferevent *bev =
         bufferevent_openssl_socket_new(base, -1, ssl, BUFFEREVENT_SSL_CONNECTING,
                                        BEV_OPT_CLOSE_ON_FREE);
-    if (!bev)
-    {
+    if (!bev) {
         std::cerr << "Could not create bufferevent!" << std::endl;
         return 1;
     }
 
     if (bufferevent_socket_connect_hostname(bev, dns_base, AF_INET, "127.0.0.1",
-                                            8080) < 0)
-    {
+                                            8080) < 0) {
         std::cerr << "Could not connect!" << std::endl;
         return 1;
     }
