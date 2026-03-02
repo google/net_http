@@ -11,13 +11,13 @@ class TlsContext {
   TlsContext();
   ~TlsContext();
 
-  void set_identity_certificate_path(const std::string& identity_certificate_path);
-  void set_private_key_path(const std::string& private_key_path);
-  void set_ca_path(const std::string& ca_path);
+  void set_certificate_file(const std::string& identity_certificate_path);
+  void set_private_key_file(const std::string& private_key_path);
+  void set_ca_file(const std::string& ca_path);
 
-  const std::string& identity_certificate_path() const;
-  const std::string& private_key_path() const;
-  const std::string& ca_path() const;
+  const std::string& certificate_file() const;
+  const std::string& private_key_file() const;
+  const std::string& ca_file() const;
 
   // Initialize the SSL_CTX. If is_server is true, it is configured for a server
   // and requires client certificates (mTLS). If is_server is false, it is
@@ -27,9 +27,9 @@ class TlsContext {
   SSL_CTX* ssl_ctx() const;
 
  private:
-  std::string identity_certificate_path_;
-  std::string private_key_path_;
-  std::string ca_path_;
+  std::string certificate_file_;
+  std::string private_key_file_;
+  std::string ca_file_;
 
   SSL_CTX* ssl_ctx_;
 };

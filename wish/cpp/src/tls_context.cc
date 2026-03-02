@@ -10,13 +10,13 @@ TlsContext::~TlsContext() {
   }
 }
 
-void TlsContext::set_identity_certificate_path(const std::string& path) { identity_certificate_path_ = path; }
-void TlsContext::set_private_key_path(const std::string& path) { private_key_path_ = path; }
-void TlsContext::set_ca_path(const std::string& path) { ca_path_ = path; }
+void TlsContext::set_certificate_file(const std::string& file) { certificate_file_ = file; }
+void TlsContext::set_private_key_file(const std::string& file) { private_key_file_ = file; }
+void TlsContext::set_ca_file(const std::string& file) { ca_file_ = file; }
 
-const std::string& TlsContext::identity_certificate_path() const { return identity_certificate_path_; }
-const std::string& TlsContext::private_key_path() const { return private_key_path_; }
-const std::string& TlsContext::ca_path() const { return ca_path_; }
+const std::string& TlsContext::certificate_file() const { return certificate_file_; }
+const std::string& TlsContext::private_key_file() const { return private_key_file_; }
+const std::string& TlsContext::ca_file() const { return ca_file_; }
 
 bool TlsContext::Init(bool is_server) {
   if (ssl_ctx_) {
@@ -34,10 +34,10 @@ bool TlsContext::Init(bool is_server) {
   }
 
   // Load CA certificate for verifying the peer
-  if (!ca_path_.empty()) {
-    if (SSL_CTX_load_verify_locations(ssl_ctx_, ca_path_.c_str(), nullptr) !=
+  if (!ca_file_.empty()) {
+    if (SSL_CTX_load_verify_locations(ssl_ctx_, ca_file_.c_str(), nullptr) !=
         1) {
-      std::cerr << "Error loading CA file: " << ca_path_ << std::endl;
+      std::cerr << "Error loading CA file: " << ca_file_ << std::endl;
       return false;
     }
   }
@@ -52,17 +52,17 @@ bool TlsContext::Init(bool is_server) {
   }
 
   // Load own certificate and key
-  if (!identity_certificate_path_.empty() && !private_key_path_.empty()) {
-    if (SSL_CTX_use_certificate_file(ssl_ctx_, identity_certificate_path_.c_str(),
+  if (!certificate_file_.empty() && !private_key_file_.empty()) {
+    if (SSL_CTX_use_certificate_file(ssl_ctx_, certificate_file_.c_str(),
                                      SSL_FILETYPE_PEM) <= 0) {
-      std::cerr << "Error loading certificate file: " << identity_certificate_path_
+      std::cerr << "Error loading certificate file: " << certificate_file_
                 << std::endl;
       return false;
     }
 
-    if (SSL_CTX_use_PrivateKey_file(ssl_ctx_, private_key_path_.c_str(),
+    if (SSL_CTX_use_PrivateKey_file(ssl_ctx_, private_key_file_.c_str(),
                                     SSL_FILETYPE_PEM) <= 0) {
-      std::cerr << "Error loading key file: " << private_key_path_ << std::endl;
+      std::cerr << "Error loading key file: " << private_key_file_ << std::endl;
       return false;
     }
 

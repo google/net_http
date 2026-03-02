@@ -19,9 +19,9 @@ int main() {
     SSL_load_error_strings();
 
     TlsContext tls_ctx;
-    tls_ctx.set_ca_path("../certs/ca.crt");
-    tls_ctx.set_identity_certificate_path("../certs/client.crt");
-    tls_ctx.set_private_key_path("../certs/client.key");
+    tls_ctx.set_ca_file("../certs/ca.crt");
+    tls_ctx.set_certificate_file("../certs/client.crt");
+    tls_ctx.set_private_key_file("../certs/client.key");
     if (!tls_ctx.Init(false)) {
         std::cerr << "Failed to init TLS context" << std::endl;
         return 1;
