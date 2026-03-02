@@ -15,6 +15,11 @@ struct wslay_event_context;
 struct wslay_event_on_msg_recv_arg;
 }
 
+// WishHandler implements the WiSH Procotol defined at https://datatracker.ietf.org/doc/html/draft-yoshino-wish
+//
+// It manages the lifecycle of a single WiSH connection, including the initial HTTP handshake and subsequent message framing/parsing.
+//
+// It uses libevent's bufferevent for async I/O. The underlying transport should be provided through it.
 class WishHandler {
  public:
   using MessageCallback =
