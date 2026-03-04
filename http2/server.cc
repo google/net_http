@@ -53,7 +53,7 @@ static ssize_t echo_data_provider_callback(nghttp2_session* session, int32_t str
 
 static int on_frame_recv_callback(nghttp2_session* session, const nghttp2_frame* frame, void* user_data) {
   struct ClientSession* client = (struct ClientSession*)user_data;
-  LOG(INFO) << "Server received frame type " << static_cast<int>(frame->hd.type);
+//   LOG(INFO) << "Server received frame type " << static_cast<int>(frame->hd.type);
   switch (frame->hd.type) {
     case NGHTTP2_HEADERS:
       if (frame->headers.cat == NGHTTP2_HCAT_REQUEST) {
@@ -64,9 +64,9 @@ static int on_frame_recv_callback(nghttp2_session* session, const nghttp2_frame*
       }
       break;
     case NGHTTP2_DATA:
-      LOG(INFO) << "Server logic: DATA frame on stream " << frame->hd.stream_id << ", flags " << static_cast<int>(frame->hd.flags);
+    //   LOG(INFO) << "Server logic: DATA frame on stream " << frame->hd.stream_id << ", flags " << static_cast<int>(frame->hd.flags);
       if (frame->hd.flags & NGHTTP2_FLAG_END_STREAM) {
-        LOG(INFO) << "Server logic: END_STREAM seen";
+        // LOG(INFO) << "Server logic: END_STREAM seen";
         const nghttp2_nv hdrs[] = {
             MAKE_NV(":status", "200")};
         struct stream_data* sd = (struct stream_data*)nghttp2_session_get_stream_user_data(session, frame->hd.stream_id);
@@ -75,7 +75,7 @@ static int on_frame_recv_callback(nghttp2_session* session, const nghttp2_frame*
           data_prd.source.ptr = sd;
           data_prd.read_callback = echo_data_provider_callback;
           int rv = nghttp2_submit_response(session, frame->hd.stream_id, hdrs, 1, &data_prd);
-          LOG(INFO) << "nghttp2_submit_response returned " << rv;
+        //   LOG(INFO) << "nghttp2_submit_response returned " << rv;
           nghttp2_session_send(session);  // flush to output
         } else {
           LOG(ERROR) << "Server logic: No stream data found!";
@@ -150,7 +150,7 @@ static void readcb(struct bufferevent* bev, void* ptr) {
   struct evbuffer* input = bufferevent_get_input(bev);
 
   size_t datalen = evbuffer_get_length(input);
-  LOG(INFO) << "Server readcb: got " << datalen << " bytes";
+//   LOG(INFO) << "Server readcb: got " << datalen << " bytes";
   if (datalen == 0) return;
 
   unsigned char* data = evbuffer_pullup(input, -1);
@@ -161,7 +161,7 @@ static void readcb(struct bufferevent* bev, void* ptr) {
     bufferevent_free(bev);
     return;
   }
-  LOG(INFO) << "Server readcb: consumed " << readlen << " bytes";
+//   LOG(INFO) << "Server readcb: consumed " << readlen << " bytes";
   evbuffer_drain(input, readlen);
   nghttp2_session_send(client->session);
 }
@@ -194,9 +194,11 @@ static void acceptcb(struct evconnlistener* listener, evutil_socket_t fd, struct
   nghttp2_session_server_new(&client->session, callbacks, client);
   nghttp2_session_callbacks_del(callbacks);
 
-  nghttp2_settings_entry iv[1] = {
-      {NGHTTP2_SETTINGS_MAX_CONCURRENT_STREAMS, 100}};
-  nghttp2_submit_settings(client->session, NGHTTP2_FLAG_NONE, iv, 1);
+  nghttp2_settings_entry iv[2] = {
+      {NGHTTP2_SETTINGS_MAX_CONCURRENT_STREAMS, 100},
+      {NGHTTP2_SETTINGS_INITIAL_WINDOW_SIZE, 128 * 1024 * 1024}};
+  nghttp2_submit_settings(client->session, NGHTTP2_FLAG_NONE, iv, 2);
+  nghttp2_submit_window_update(client->session, NGHTTP2_FLAG_NONE, 0, 128 * 1024 * 1024);
   nghttp2_session_send(client->session);
 
   bufferevent_setcb(bev, readcb, NULL, eventcb, client);

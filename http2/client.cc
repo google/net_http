@@ -28,14 +28,17 @@
 
 ABSL_FLAG(std::string, host, "127.0.0.1", "Server host to connect to");
 ABSL_FLAG(int, port, 8080, "Server port to connect to");
+ABSL_FLAG(int, num_requests, 5000, "Total number of requests to send");
+ABSL_FLAG(int, payload_size, 1024 * 1024, "Size of the request payload in bytes");
+ABSL_FLAG(int, report_interval, 1000, "Frequency of progress reports");
+ABSL_FLAG(int, concurrent_requests, 100, "Number of concurrent requests");
 
 #define MAKE_NV(name, value)                                            \
   {                                                                     \
       (uint8_t*)(name), (uint8_t*)(value), strlen(name), strlen(value), \
       NGHTTP2_NV_FLAG_NONE}
 
-const std::string REQUEST_PAYLOAD_DATA(1024, 'A');
-#define CONCURRENT_REQUESTS 100
+std::string request_payload_data;
 
 struct ClientSession {
   struct bufferevent* bev;
@@ -68,7 +71,8 @@ static int on_frame_recv_callback(nghttp2_session* session, const nghttp2_frame*
     client->requests_completed++;
     client->requests_in_flight--;
 
-    if (client->requests_completed % 1000 == 0) {
+    int report_interval = absl::GetFlag(FLAGS_report_interval);
+    if (report_interval > 0 && client->requests_completed % report_interval == 0) {
       struct timeval now;
       gettimeofday(&now, NULL);
       double elapsed = (now.tv_sec - client->start_time.tv_sec) +
@@ -85,7 +89,7 @@ static int on_frame_recv_callback(nghttp2_session* session, const nghttp2_frame*
       client->request_start_times.erase(it);
     }
 
-    if (client->requests_completed < 50000) {  // Limit total requests for bench
+    if (client->requests_completed < absl::GetFlag(FLAGS_num_requests)) {  // Limit total requests for bench
       submit_request(client);
     } else if (client->requests_in_flight == 0) {
       event_base_loopexit(client->evbase, NULL);
@@ -99,7 +103,7 @@ static int on_frame_recv_callback(nghttp2_session* session, const nghttp2_frame*
 
 static ssize_t data_provider_callback(nghttp2_session* session, int32_t stream_id, uint8_t* buf, size_t length, uint32_t* data_flags, nghttp2_data_source* source, void* user_data) {
   int* bytes_sent = (int*)source->ptr;
-  size_t payload_len = REQUEST_PAYLOAD_DATA.length();
+  size_t payload_len = request_payload_data.length();
 
   if (*bytes_sent >= payload_len) {
     *data_flags |= NGHTTP2_DATA_FLAG_EOF;
@@ -108,7 +112,7 @@ static ssize_t data_provider_callback(nghttp2_session* session, int32_t stream_i
 
   size_t remaining = payload_len - *bytes_sent;
   size_t send_len = remaining < length ? remaining : length;
-  memcpy(buf, REQUEST_PAYLOAD_DATA.data() + *bytes_sent, send_len);
+  memcpy(buf, request_payload_data.data() + *bytes_sent, send_len);
 
   *bytes_sent += send_len;
 
@@ -197,13 +201,15 @@ static void eventcb(struct bufferevent* bev, short events, void* ptr) {
     nghttp2_session_callbacks_del(callbacks);
 
     // Send connection preface and initial settings
-    nghttp2_settings_entry iv[1] = {
-        {NGHTTP2_SETTINGS_MAX_CONCURRENT_STREAMS, CONCURRENT_REQUESTS}};
-    nghttp2_submit_settings(client->session, NGHTTP2_FLAG_NONE, iv, 1);
+    nghttp2_settings_entry iv[2] = {
+        {NGHTTP2_SETTINGS_MAX_CONCURRENT_STREAMS, static_cast<uint32_t>(absl::GetFlag(FLAGS_concurrent_requests))},
+        {NGHTTP2_SETTINGS_INITIAL_WINDOW_SIZE, 128 * 1024 * 1024}};
+    nghttp2_submit_settings(client->session, NGHTTP2_FLAG_NONE, iv, 2);
+    nghttp2_submit_window_update(client->session, NGHTTP2_FLAG_NONE, 0, 128 * 1024 * 1024);
 
     gettimeofday(&client->start_time, NULL);
 
-    for (int i = 0; i < CONCURRENT_REQUESTS; i++) {
+    for (int i = 0; i < absl::GetFlag(FLAGS_concurrent_requests); i++) {
       submit_request(client);
     }
 
@@ -220,6 +226,8 @@ int main(int argc, char** argv) {
   absl::ParseCommandLine(argc, argv);
 
   absl::InitializeLog();
+
+  request_payload_data = std::string(absl::GetFlag(FLAGS_payload_size), 'A');
 
   LOG(INFO) << "Starting HTTP/2 benchmark client...";
 
@@ -253,6 +261,14 @@ int main(int argc, char** argv) {
   }
 
   event_base_dispatch(base);
+
+  struct timeval end_time;
+  gettimeofday(&end_time, NULL);
+  double total_elapsed = (end_time.tv_sec - client.start_time.tv_sec) +
+                         (end_time.tv_usec - client.start_time.tv_usec) / 1000000.0;
+
+  LOG(INFO) << "Finished benchmark.";
+  LOG(INFO) << "Total RPS: " << client.requests_completed / total_elapsed;
 
   if (!client.latencies.empty()) {
     double sum = std::accumulate(client.latencies.begin(), client.latencies.end(), 0.0);

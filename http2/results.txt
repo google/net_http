@@ -1,0 +1,342 @@
+=== Benchmark for 1KiB payload (1024 bytes), 131072 requests ===
+
+--- Raw HTTP/2 ---
+I0304 23:07:31.630222  667691 client.cc:232] Starting HTTP/2 benchmark client...
+I0304 23:07:31.630441  667691 client.cc:193] Connected to server.
+I0304 23:07:31.641636  667691 client.cc:80] Completed 1000 requests. RPS: 89839.2
+I0304 23:07:31.652396  667691 client.cc:80] Completed 2000 requests. RPS: 91361.7
+I0304 23:07:31.663099  667691 client.cc:80] Completed 3000 requests. RPS: 92041.5
+I0304 23:07:31.673957  667691 client.cc:80] Completed 4000 requests. RPS: 92055.6
+I0304 23:07:31.684318  667691 client.cc:80] Completed 5000 requests. RPS: 92912.6
+I0304 23:07:31.742711  667691 client.cc:80] Completed 6000 requests. RPS: 53473.1
+I0304 23:07:31.757169  667691 client.cc:80] Completed 7000 requests. RPS: 55264.3
+I0304 23:07:31.770137  667691 client.cc:80] Completed 8000 requests. RPS: 57293.5
+I0304 23:07:31.781884  667691 client.cc:80] Completed 9000 requests. RPS: 59453.4
+I0304 23:07:31.792564  667691 client.cc:80] Completed 10000 requests. RPS: 61705.9
+I0304 23:07:31.803119  667691 client.cc:80] Completed 11000 requests. RPS: 63726
+I0304 23:07:31.813764  667691 client.cc:80] Completed 12000 requests. RPS: 65481.1
+I0304 23:07:31.824275  667691 client.cc:80] Completed 13000 requests. RPS: 67089.8
+I0304 23:07:31.835100  667691 client.cc:80] Completed 14000 requests. RPS: 68428.2
+I0304 23:07:31.846390  667691 client.cc:80] Completed 15000 requests. RPS: 69481.4
+I0304 23:07:31.860161  667691 client.cc:80] Completed 16000 requests. RPS: 69669.4
+I0304 23:07:31.871403  667691 client.cc:80] Completed 17000 requests. RPS: 70569.6
+I0304 23:07:31.882367  667691 client.cc:80] Completed 18000 requests. RPS: 71467.7
+I0304 23:07:31.892463  667691 client.cc:80] Completed 19000 requests. RPS: 72530.7
+I0304 23:07:31.902932  667691 client.cc:80] Completed 20000 requests. RPS: 73414.2
+I0304 23:07:31.913294  667691 client.cc:80] Completed 21000 requests. RPS: 74260.3
+I0304 23:07:31.923325  667691 client.cc:80] Completed 22000 requests. RPS: 75131.5
+I0304 23:07:31.933994  667691 client.cc:80] Completed 23000 requests. RPS: 75785.3
+I0304 23:07:31.944703  667691 client.cc:80] Completed 24000 requests. RPS: 76385
+I0304 23:07:31.955531  667691 client.cc:80] Completed 25000 requests. RPS: 76916.9
+I0304 23:07:31.966201  667691 client.cc:80] Completed 26000 requests. RPS: 77451
+I0304 23:07:31.975323  667691 client.cc:80] Completed 27000 requests. RPS: 78302.2
+I0304 23:07:31.986282  667691 client.cc:80] Completed 28000 requests. RPS: 78701
+I0304 23:07:31.996856  667691 client.cc:80] Completed 29000 requests. RPS: 79159.1
+I0304 23:07:32.007565  667691 client.cc:80] Completed 30000 requests. RPS: 79563.1
+I0304 23:07:32.017819  667691 client.cc:80] Completed 31000 requests. RPS: 80038.4
+I0304 23:07:32.028279  667691 client.cc:80] Completed 32000 requests. RPS: 80447.9
+I0304 23:07:32.039044  667691 client.cc:80] Completed 33000 requests. RPS: 80775.6
+I0304 23:07:32.049690  667691 client.cc:80] Completed 34000 requests. RPS: 81109.8
+I0304 23:07:32.060586  667691 client.cc:80] Completed 35000 requests. RPS: 81380
+I0304 23:07:32.072105  667691 client.cc:80] Completed 36000 requests. RPS: 81521.7
+I0304 23:07:32.083564  667691 client.cc:80] Completed 37000 requests. RPS: 81667.1
+I0304 23:07:32.093292  667691 client.cc:80] Completed 38000 requests. RPS: 82111.2
+I0304 23:07:32.103533  667691 client.cc:80] Completed 39000 requests. RPS: 82447.4
+I0304 23:07:32.114522  667691 client.cc:80] Completed 40000 requests. RPS: 82641.7
+I0304 23:07:32.125329  667691 client.cc:80] Completed 41000 requests. RPS: 82857.7
+I0304 23:07:32.137327  667691 client.cc:80] Completed 42000 requests. RPS: 82869.3
+I0304 23:07:32.147627  667691 client.cc:80] Completed 43000 requests. RPS: 83152.5
+I0304 23:07:32.158657  667691 client.cc:80] Completed 44000 requests. RPS: 83309.5
+I0304 23:07:32.169122  667691 client.cc:80] Completed 45000 requests. RPS: 83547.3
+I0304 23:07:32.180805  667691 client.cc:80] Completed 46000 requests. RPS: 83590.8
+I0304 23:07:32.196706  667691 client.cc:80] Completed 47000 requests. RPS: 83009.2
+I0304 23:07:32.212370  667691 client.cc:80] Completed 48000 requests. RPS: 82493.4
+I0304 23:07:32.231072  667691 client.cc:80] Completed 49000 requests. RPS: 81589.7
+I0304 23:07:32.249891  667691 client.cc:80] Completed 50000 requests. RPS: 80725.2
+I0304 23:07:32.265070  667691 client.cc:80] Completed 51000 requests. RPS: 80370.1
+I0304 23:07:32.281121  667691 client.cc:80] Completed 52000 requests. RPS: 79924.3
+I0304 23:07:32.296718  667691 client.cc:80] Completed 53000 requests. RPS: 79554.1
+I0304 23:07:32.313345  667691 client.cc:80] Completed 54000 requests. RPS: 79081.5
+I0304 23:07:32.328728  667691 client.cc:80] Completed 55000 requests. RPS: 78771.4
+I0304 23:07:32.343118  667691 client.cc:80] Completed 56000 requests. RPS: 78584
+I0304 23:07:32.357046  667691 client.cc:80] Completed 57000 requests. RPS: 78453.9
+I0304 23:07:32.375396  667691 client.cc:80] Completed 58000 requests. RPS: 77863.7
+I0304 23:07:32.391062  667691 client.cc:80] Completed 59000 requests. RPS: 77574.7
+I0304 23:07:32.402106  667691 client.cc:80] Completed 60000 requests. RPS: 77760.4
+I0304 23:07:32.415283  667691 client.cc:80] Completed 61000 requests. RPS: 77728.9
+I0304 23:07:32.430409  667691 client.cc:80] Completed 62000 requests. RPS: 77509.3
+I0304 23:07:32.446591  667691 client.cc:80] Completed 63000 requests. RPS: 77197.7
+I0304 23:07:32.464049  667691 client.cc:80] Completed 64000 requests. RPS: 76780.6
+I0304 23:07:32.481754  667691 client.cc:80] Completed 65000 requests. RPS: 76358.4
+I0304 23:07:32.502107  667691 client.cc:80] Completed 66000 requests. RPS: 75722.6
+I0304 23:07:32.518280  667691 client.cc:80] Completed 67000 requests. RPS: 75469.6
+I0304 23:07:32.531422  667691 client.cc:80] Completed 68000 requests. RPS: 75478.7
+I0304 23:07:32.542076  667691 client.cc:80] Completed 69000 requests. RPS: 75693.5
+I0304 23:07:32.552728  667691 client.cc:80] Completed 70000 requests. RPS: 75903.6
+I0304 23:07:32.563335  667691 client.cc:80] Completed 71000 requests. RPS: 76112.5
+I0304 23:07:32.573918  667691 client.cc:80] Completed 72000 requests. RPS: 76318.7
+I0304 23:07:32.584070  667691 client.cc:80] Completed 73000 requests. RPS: 76554.8
+I0304 23:07:32.594665  667691 client.cc:80] Completed 74000 requests. RPS: 76750.7
+I0304 23:07:32.604918  667691 client.cc:80] Completed 75000 requests. RPS: 76969.4
+I0304 23:07:32.618271  667691 client.cc:80] Completed 76000 requests. RPS: 76941.3
+I0304 23:07:32.630072  667691 client.cc:80] Completed 77000 requests. RPS: 77033.4
+I0304 23:07:32.640643  667691 client.cc:80] Completed 78000 requests. RPS: 77217.1
+I0304 23:07:32.651414  667691 client.cc:80] Completed 79000 requests. RPS: 77382
+I0304 23:07:32.662529  667691 client.cc:80] Completed 80000 requests. RPS: 77517.6
+I0304 23:07:32.672832  667691 client.cc:80] Completed 81000 requests. RPS: 77710.7
+I0304 23:07:32.683629  667691 client.cc:80] Completed 82000 requests. RPS: 77863.6
+I0304 23:07:32.694551  667691 client.cc:80] Completed 83000 requests. RPS: 78004.1
+I0304 23:07:32.705737  667691 client.cc:80] Completed 84000 requests. RPS: 78122.7
+I0304 23:07:32.715848  667691 client.cc:80] Completed 85000 requests. RPS: 78316.3
+I0304 23:07:32.727226  667691 client.cc:80] Completed 86000 requests. RPS: 78415.6
+I0304 23:07:32.737672  667691 client.cc:80] Completed 87000 requests. RPS: 78578.9
+I0304 23:07:32.752378  667691 client.cc:80] Completed 88000 requests. RPS: 78440.3
+I0304 23:07:32.766345  667691 client.cc:80] Completed 89000 requests. RPS: 78356.1
+I0304 23:07:32.781565  667691 client.cc:80] Completed 90000 requests. RPS: 78188.9
+I0304 23:07:32.794316  667691 client.cc:80] Completed 91000 requests. RPS: 78191.4
+I0304 23:07:32.804837  667691 client.cc:80] Completed 92000 requests. RPS: 78342.4
+I0304 23:07:32.815776  667691 client.cc:80] Completed 93000 requests. RPS: 78463.1
+I0304 23:07:32.826522  667691 client.cc:80] Completed 94000 requests. RPS: 78594.2
+I0304 23:07:32.837720  667691 client.cc:80] Completed 95000 requests. RPS: 78693.5
+I0304 23:07:32.848456  667691 client.cc:80] Completed 96000 requests. RPS: 78820.9
+I0304 23:07:32.859484  667691 client.cc:80] Completed 97000 requests. RPS: 78927.3
+I0304 23:07:32.870378  667691 client.cc:80] Completed 98000 requests. RPS: 79040.4
+I0304 23:07:32.881089  667691 client.cc:80] Completed 99000 requests. RPS: 79163
+I0304 23:07:32.891588  667691 client.cc:80] Completed 100000 requests. RPS: 79296.9
+I0304 23:07:32.901980  667691 client.cc:80] Completed 101000 requests. RPS: 79435.3
+I0304 23:07:32.912543  667691 client.cc:80] Completed 102000 requests. RPS: 79560.8
+I0304 23:07:32.923144  667691 client.cc:80] Completed 103000 requests. RPS: 79682
+I0304 23:07:32.933672  667691 client.cc:80] Completed 104000 requests. RPS: 79805.6
+I0304 23:07:32.944107  667691 client.cc:80] Completed 105000 requests. RPS: 79932.9
+I0304 23:07:32.954852  667691 client.cc:80] Completed 106000 requests. RPS: 80039.4
+I0304 23:07:32.965278  667691 client.cc:80] Completed 107000 requests. RPS: 80163.5
+I0304 23:07:32.975228  667691 client.cc:80] Completed 108000 requests. RPS: 80313.9
+I0304 23:07:32.985895  667691 client.cc:80] Completed 109000 requests. RPS: 80419.7
+I0304 23:07:32.995696  667691 client.cc:80] Completed 110000 requests. RPS: 80574.8
+I0304 23:07:33.006598  667691 client.cc:80] Completed 111000 requests. RPS: 80663.2
+I0304 23:07:33.016797  667691 client.cc:80] Completed 112000 requests. RPS: 80791.1
+I0304 23:07:33.027461  667691 client.cc:80] Completed 113000 requests. RPS: 80890.2
+I0304 23:07:33.037453  667691 client.cc:80] Completed 114000 requests. RPS: 81026.4
+I0304 23:07:33.047933  667691 client.cc:80] Completed 115000 requests. RPS: 81132.9
+I0304 23:07:33.058532  667691 client.cc:80] Completed 116000 requests. RPS: 81231
+I0304 23:07:33.069538  667691 client.cc:80] Completed 117000 requests. RPS: 81304.6
+I0304 23:07:33.080295  667691 client.cc:80] Completed 118000 requests. RPS: 81391.2
+I0304 23:07:33.094522  667691 client.cc:80] Completed 119000 requests. RPS: 81283.2
+I0304 23:07:33.108479  667691 client.cc:80] Completed 120000 requests. RPS: 81192.3
+I0304 23:07:33.119314  667691 client.cc:80] Completed 121000 requests. RPS: 81273.1
+I0304 23:07:33.131857  667691 client.cc:80] Completed 122000 requests. RPS: 81260.1
+I0304 23:07:33.142385  667691 client.cc:80] Completed 123000 requests. RPS: 81355.7
+I0304 23:07:33.152501  667691 client.cc:80] Completed 124000 requests. RPS: 81472
+I0304 23:07:33.167888  667691 client.cc:80] Completed 125000 requests. RPS: 81307
+I0304 23:07:33.179734  667691 client.cc:80] Completed 126000 requests. RPS: 81330.8
+I0304 23:07:33.190778  667691 client.cc:80] Completed 127000 requests. RPS: 81396
+I0304 23:07:33.201050  667691 client.cc:80] Completed 128000 requests. RPS: 81500.4
+I0304 23:07:33.211751  667691 client.cc:80] Completed 129000 requests. RPS: 81581.2
+I0304 23:07:33.222787  667691 client.cc:80] Completed 130000 requests. RPS: 81643.9
+I0304 23:07:33.233321  667691 client.cc:80] Completed 131000 requests. RPS: 81731.2
+I0304 23:07:33.235277  667691 client.cc:270] Finished benchmark.
+I0304 23:07:33.235303  667691 client.cc:271] Total RPS: 81738.1
+I0304 23:07:33.237597  667691 client.cc:280] Latency Stats (ms):
+I0304 23:07:33.237616  667691 client.cc:281]   Average: 1.22245
+I0304 23:07:33.237629  667691 client.cc:282]   StdDev:  1.24862
+I0304 23:07:33.237642  667691 client.cc:283]   Min:     0.39262
+I0304 23:07:33.239020  667691 client.cc:284]   Max:     44.3385
+I0304 23:07:33.240416  667691 client.cc:285]   Samples: 131171
+
+--- gRPC ---
+I0304 23:07:34.250352  667737 grpc_client.cc:138] Starting gRPC benchmark client connecting to 127.0.0.1:50051
+I0304 23:07:35.202939  667737 grpc_client.cc:79] Completed 1000 requests. RPS: 1049.84
+I0304 23:07:35.876758  667737 grpc_client.cc:79] Completed 2000 requests. RPS: 1229.75
+I0304 23:07:36.526937  667737 grpc_client.cc:79] Completed 3000 requests. RPS: 1317.8
+I0304 23:07:37.328684  667737 grpc_client.cc:79] Completed 4000 requests. RPS: 1299.43
+I0304 23:07:38.046229  667737 grpc_client.cc:79] Completed 5000 requests. RPS: 1317.24
+I0304 23:07:38.710680  667737 grpc_client.cc:79] Completed 6000 requests. RPS: 1345.21
+I0304 23:07:39.452755  667737 grpc_client.cc:79] Completed 7000 requests. RPS: 1345.55
+I0304 23:07:40.097255  667737 grpc_client.cc:79] Completed 8000 requests. RPS: 1368.26
+I0304 23:07:40.719035  667737 grpc_client.cc:79] Completed 9000 requests. RPS: 1391.33
+I0304 23:07:41.513083  667737 grpc_client.cc:79] Completed 10000 requests. RPS: 1376.9
+I0304 23:07:42.175608  667737 grpc_client.cc:79] Completed 11000 requests. RPS: 1387.98
+I0304 23:07:42.812219  667737 grpc_client.cc:79] Completed 12000 requests. RPS: 1401.57
+I0304 23:07:43.459427  667737 grpc_client.cc:79] Completed 13000 requests. RPS: 1411.66
+I0304 23:07:44.328171  667737 grpc_client.cc:79] Completed 14000 requests. RPS: 1389.2
+I0304 23:07:44.973639  667737 grpc_client.cc:79] Completed 15000 requests. RPS: 1398.83
+I0304 23:07:45.647511  667737 grpc_client.cc:79] Completed 16000 requests. RPS: 1403.87
+I0304 23:07:46.446071  667737 grpc_client.cc:79] Completed 17000 requests. RPS: 1393.94
+I0304 23:07:47.093907  667737 grpc_client.cc:79] Completed 18000 requests. RPS: 1401.49
+I0304 23:07:47.752782  667737 grpc_client.cc:79] Completed 19000 requests. RPS: 1407.16
+I0304 23:07:48.540169  667737 grpc_client.cc:79] Completed 20000 requests. RPS: 1399.6
+I0304 23:07:49.193279  667737 grpc_client.cc:79] Completed 21000 requests. RPS: 1405.35
+I0304 23:07:49.839413  667737 grpc_client.cc:79] Completed 22000 requests. RPS: 1411.25
+I0304 23:07:50.616201  667737 grpc_client.cc:79] Completed 23000 requests. RPS: 1405.37
+I0304 23:07:51.252940  667737 grpc_client.cc:79] Completed 24000 requests. RPS: 1411.55
+I0304 23:07:51.954539  667737 grpc_client.cc:79] Completed 25000 requests. RPS: 1412.1
+I0304 23:07:52.854834  667737 grpc_client.cc:79] Completed 26000 requests. RPS: 1397.52
+I0304 23:07:53.504959  667737 grpc_client.cc:79] Completed 27000 requests. RPS: 1402.27
+I0304 23:07:54.120568  667737 grpc_client.cc:79] Completed 28000 requests. RPS: 1409.15
+I0304 23:07:54.825343  667737 grpc_client.cc:79] Completed 29000 requests. RPS: 1409.48
+I0304 23:07:55.662921  667737 grpc_client.cc:79] Completed 30000 requests. RPS: 1401.05
+I0304 23:07:56.304239  667737 grpc_client.cc:79] Completed 31000 requests. RPS: 1405.65
+I0304 23:07:57.005467  667737 grpc_client.cc:79] Completed 32000 requests. RPS: 1406.28
+I0304 23:07:57.720517  667737 grpc_client.cc:79] Completed 33000 requests. RPS: 1406.04
+I0304 23:07:58.367471  667737 grpc_client.cc:79] Completed 34000 requests. RPS: 1409.79
+I0304 23:07:59.068381  667737 grpc_client.cc:79] Completed 35000 requests. RPS: 1410.27
+I0304 23:07:59.768737  667737 grpc_client.cc:79] Completed 36000 requests. RPS: 1410.75
+I0304 23:08:00.389417  667737 grpc_client.cc:79] Completed 37000 requests. RPS: 1415.51
+I0304 23:08:01.104789  667737 grpc_client.cc:79] Completed 38000 requests. RPS: 1415.04
+I0304 23:08:01.803486  667737 grpc_client.cc:79] Completed 39000 requests. RPS: 1415.45
+I0304 23:08:02.435291  667737 grpc_client.cc:79] Completed 40000 requests. RPS: 1419.2
+I0304 23:08:03.125524  667737 grpc_client.cc:79] Completed 41000 requests. RPS: 1419.91
+I0304 23:08:03.879788  667737 grpc_client.cc:79] Completed 42000 requests. RPS: 1417.51
+I0304 23:08:04.636322  667737 grpc_client.cc:79] Completed 43000 requests. RPS: 1415.13
+I0304 23:08:05.272142  667737 grpc_client.cc:79] Completed 44000 requests. RPS: 1418.36
+I0304 23:08:06.051901  667737 grpc_client.cc:79] Completed 45000 requests. RPS: 1415.03
+I0304 23:08:06.663394  667737 grpc_client.cc:79] Completed 46000 requests. RPS: 1419.18
+I0304 23:08:07.304379  667737 grpc_client.cc:79] Completed 47000 requests. RPS: 1421.92
+I0304 23:08:08.011028  667737 grpc_client.cc:79] Completed 48000 requests. RPS: 1421.77
+I0304 23:08:08.697559  667737 grpc_client.cc:79] Completed 49000 requests. RPS: 1422.47
+I0304 23:08:09.333567  667737 grpc_client.cc:79] Completed 50000 requests. RPS: 1425.19
+I0304 23:08:10.013917  667737 grpc_client.cc:79] Completed 51000 requests. RPS: 1426.03
+I0304 23:08:10.677106  667737 grpc_client.cc:79] Completed 52000 requests. RPS: 1427.52
+I0304 23:08:11.316212  667737 grpc_client.cc:79] Completed 53000 requests. RPS: 1429.89
+I0304 23:08:12.100242  667737 grpc_client.cc:79] Completed 54000 requests. RPS: 1426.69
+I0304 23:08:12.778315  667737 grpc_client.cc:79] Completed 55000 requests. RPS: 1427.54
+I0304 23:08:13.433796  667737 grpc_client.cc:79] Completed 56000 requests. RPS: 1429.18
+I0304 23:08:14.135368  667737 grpc_client.cc:79] Completed 57000 requests. RPS: 1429.11
+I0304 23:08:15.026987  667737 grpc_client.cc:79] Completed 58000 requests. RPS: 1422.39
+I0304 23:08:15.722337  667737 grpc_client.cc:79] Completed 59000 requests. RPS: 1422.65
+I0304 23:08:16.358392  667737 grpc_client.cc:79] Completed 60000 requests. RPS: 1424.91
+I0304 23:08:17.090471  667737 grpc_client.cc:79] Completed 61000 requests. RPS: 1423.9
+I0304 23:08:17.767442  667737 grpc_client.cc:79] Completed 62000 requests. RPS: 1424.73
+I0304 23:08:18.392541  667737 grpc_client.cc:79] Completed 63000 requests. RPS: 1427.21
+I0304 23:08:19.149457  667737 grpc_client.cc:79] Completed 64000 requests. RPS: 1425.42
+I0304 23:08:19.803117  667737 grpc_client.cc:79] Completed 65000 requests. RPS: 1426.92
+I0304 23:08:20.454220  667737 grpc_client.cc:79] Completed 66000 requests. RPS: 1428.45
+I0304 23:08:21.148702  667737 grpc_client.cc:79] Completed 67000 requests. RPS: 1428.62
+I0304 23:08:21.793122  667737 grpc_client.cc:79] Completed 68000 requests. RPS: 1430.29
+I0304 23:08:22.434554  667737 grpc_client.cc:79] Completed 69000 requests. RPS: 1432.01
+I0304 23:08:23.107526  667737 grpc_client.cc:79] Completed 70000 requests. RPS: 1432.75
+I0304 23:08:23.797159  667737 grpc_client.cc:79] Completed 71000 requests. RPS: 1432.99
+I0304 23:08:24.452724  667737 grpc_client.cc:79] Completed 72000 requests. RPS: 1434.2
+I0304 23:08:25.128332  667737 grpc_client.cc:79] Completed 73000 requests. RPS: 1434.81
+I0304 23:08:26.100596  667737 grpc_client.cc:79] Completed 74000 requests. RPS: 1427.19
+I0304 23:08:26.722591  667737 grpc_client.cc:79] Completed 75000 requests. RPS: 1429.33
+I0304 23:08:27.360895  667737 grpc_client.cc:79] Completed 76000 requests. RPS: 1430.98
+I0304 23:08:28.134244  667737 grpc_client.cc:79] Completed 77000 requests. RPS: 1429
+I0304 23:08:28.790277  667737 grpc_client.cc:79] Completed 78000 requests. RPS: 1430.15
+I0304 23:08:29.428883  667737 grpc_client.cc:79] Completed 79000 requests. RPS: 1431.72
+I0304 23:08:30.177049  667737 grpc_client.cc:79] Completed 80000 requests. RPS: 1430.45
+I0304 23:08:30.804466  667737 grpc_client.cc:79] Completed 81000 requests. RPS: 1432.26
+I0304 23:08:31.467579  667737 grpc_client.cc:79] Completed 82000 requests. RPS: 1433.14
+I0304 23:08:32.192100  667737 grpc_client.cc:79] Completed 83000 requests. RPS: 1432.47
+I0304 23:08:32.871613  667737 grpc_client.cc:79] Completed 84000 requests. RPS: 1432.93
+I0304 23:08:33.519821  667737 grpc_client.cc:79] Completed 85000 requests. RPS: 1434.13
+I0304 23:08:34.197341  667737 grpc_client.cc:79] Completed 86000 requests. RPS: 1434.6
+I0304 23:08:34.900917  667737 grpc_client.cc:79] Completed 87000 requests. RPS: 1434.45
+I0304 23:08:35.541115  667737 grpc_client.cc:79] Completed 88000 requests. RPS: 1435.78
+I0304 23:08:36.380994  667737 grpc_client.cc:79] Completed 89000 requests. RPS: 1432.47
+I0304 23:08:37.233217  667737 grpc_client.cc:79] Completed 90000 requests. RPS: 1428.96
+I0304 23:08:37.901217  667737 grpc_client.cc:79] Completed 91000 requests. RPS: 1429.68
+I0304 23:08:38.541196  667737 grpc_client.cc:79] Completed 92000 requests. RPS: 1431
+I0304 23:08:39.397644  667737 grpc_client.cc:79] Completed 93000 requests. RPS: 1427.54
+I0304 23:08:40.224556  667737 grpc_client.cc:79] Completed 94000 requests. RPS: 1424.8
+I0304 23:08:40.929085  667737 grpc_client.cc:79] Completed 95000 requests. RPS: 1424.74
+I0304 23:08:41.631023  667737 grpc_client.cc:79] Completed 96000 requests. RPS: 1424.74
+I0304 23:08:42.239745  667737 grpc_client.cc:79] Completed 97000 requests. RPS: 1426.69
+I0304 23:08:42.897142  667737 grpc_client.cc:79] Completed 98000 requests. RPS: 1427.6
+I0304 23:08:43.655720  667737 grpc_client.cc:79] Completed 99000 requests. RPS: 1426.4
+I0304 23:08:44.266496  667737 grpc_client.cc:79] Completed 100000 requests. RPS: 1428.24
+I0304 23:08:44.902970  667737 grpc_client.cc:79] Completed 101000 requests. RPS: 1429.53
+I0304 23:08:45.638381  667737 grpc_client.cc:79] Completed 102000 requests. RPS: 1428.81
+I0304 23:08:46.518213  667737 grpc_client.cc:79] Completed 103000 requests. RPS: 1425.25
+I0304 23:08:47.591785  667737 grpc_client.cc:79] Completed 104000 requests. RPS: 1418.03
+I0304 23:08:48.673178  667737 grpc_client.cc:79] Completed 105000 requests. RPS: 1410.86
+I0304 23:08:49.377706  667737 grpc_client.cc:79] Completed 106000 requests. RPS: 1410.94
+I0304 23:08:50.151447  667737 grpc_client.cc:79] Completed 107000 requests. RPS: 1409.73
+I0304 23:08:50.800095  667737 grpc_client.cc:79] Completed 108000 requests. RPS: 1410.85
+I0304 23:08:51.422334  667737 grpc_client.cc:79] Completed 109000 requests. RPS: 1412.43
+I0304 23:08:52.132030  667737 grpc_client.cc:79] Completed 110000 requests. RPS: 1412.4
+I0304 23:08:52.798607  667737 grpc_client.cc:79] Completed 111000 requests. RPS: 1413.15
+I0304 23:08:53.462203  667737 grpc_client.cc:79] Completed 112000 requests. RPS: 1413.93
+I0304 23:08:54.143149  667737 grpc_client.cc:79] Completed 113000 requests. RPS: 1414.4
+I0304 23:08:54.829747  667737 grpc_client.cc:79] Completed 114000 requests. RPS: 1414.75
+I0304 23:08:55.478785  667737 grpc_client.cc:79] Completed 115000 requests. RPS: 1415.76
+I0304 23:08:56.205015  667737 grpc_client.cc:79] Completed 116000 requests. RPS: 1415.42
+I0304 23:08:56.903509  667737 grpc_client.cc:79] Completed 117000 requests. RPS: 1415.55
+I0304 23:08:57.531544  667737 grpc_client.cc:79] Completed 118000 requests. RPS: 1416.89
+I0304 23:08:58.357008  667737 grpc_client.cc:79] Completed 119000 requests. RPS: 1414.87
+I0304 23:08:59.077845  667737 grpc_client.cc:79] Completed 120000 requests. RPS: 1414.64
+I0304 23:08:59.890843  667737 grpc_client.cc:79] Completed 121000 requests. RPS: 1412.88
+I0304 23:09:00.764171  667737 grpc_client.cc:79] Completed 122000 requests. RPS: 1410.18
+I0304 23:09:01.824526  667737 grpc_client.cc:79] Completed 123000 requests. RPS: 1404.52
+I0304 23:09:03.181870  667737 grpc_client.cc:79] Completed 124000 requests. RPS: 1394.33
+I0304 23:09:04.004467  667737 grpc_client.cc:79] Completed 125000 requests. RPS: 1392.69
+I0304 23:09:04.896066  667737 grpc_client.cc:79] Completed 126000 requests. RPS: 1390.03
+I0304 23:09:05.589202  667737 grpc_client.cc:79] Completed 127000 requests. RPS: 1390.43
+I0304 23:09:06.256667  667737 grpc_client.cc:79] Completed 128000 requests. RPS: 1391.21
+I0304 23:09:06.905709  667737 grpc_client.cc:79] Completed 129000 requests. RPS: 1392.26
+I0304 23:09:07.794396  667737 grpc_client.cc:79] Completed 130000 requests. RPS: 1389.72
+I0304 23:09:08.452801  667737 grpc_client.cc:79] Completed 131000 requests. RPS: 1390.62
+I0304 23:09:08.478474  667737 grpc_client.cc:94] Finished benchmark.
+I0304 23:09:08.478523  667737 grpc_client.cc:95] Total RPS: 1391.01
+I0304 23:09:08.480908  667737 grpc_client.cc:103] Latency Stats (ms):
+I0304 23:09:08.480923  667737 grpc_client.cc:104]   Average: 71.7912
+I0304 23:09:08.480937  667737 grpc_client.cc:105]   StdDev:  22.6731
+I0304 23:09:08.480947  667737 grpc_client.cc:106]   Min:     1.76114
+I0304 23:09:08.482389  667737 grpc_client.cc:107]   Max:     252.318
+I0304 23:09:08.483842  667737 grpc_client.cc:108]   Samples: 131072
+
+
+=== Benchmark for 128KiB payload (131072 bytes), 1024 requests ===
+
+--- Raw HTTP/2 ---
+I0304 23:09:09.494452  743731 client.cc:232] Starting HTTP/2 benchmark client...
+I0304 23:09:09.494718  743731 client.cc:193] Connected to server.
+I0304 23:09:09.954262  743731 client.cc:80] Completed 1000 requests. RPS: 2177.05
+I0304 23:09:09.980207  743731 client.cc:270] Finished benchmark.
+I0304 23:09:09.980259  743731 client.cc:271] Total RPS: 2314.11
+I0304 23:09:09.980319  743731 client.cc:280] Latency Stats (ms):
+I0304 23:09:09.980330  743731 client.cc:281]   Average: 42.5598
+I0304 23:09:09.980348  743731 client.cc:282]   StdDev:  13.0792
+I0304 23:09:09.980361  743731 client.cc:283]   Min:     17.7423
+I0304 23:09:09.980394  743731 client.cc:284]   Max:     70.7927
+I0304 23:09:09.980426  743731 client.cc:285]   Samples: 1123
+
+--- gRPC ---
+I0304 23:09:10.990232  743774 grpc_client.cc:138] Starting gRPC benchmark client connecting to 127.0.0.1:50051
+I0304 23:09:12.037748  743774 grpc_client.cc:79] Completed 1000 requests. RPS: 954.708
+I0304 23:09:12.059107  743774 grpc_client.cc:94] Finished benchmark.
+I0304 23:09:12.059150  743774 grpc_client.cc:95] Total RPS: 958.084
+I0304 23:09:12.059210  743774 grpc_client.cc:103] Latency Stats (ms):
+I0304 23:09:12.059222  743774 grpc_client.cc:104]   Average: 99.1384
+I0304 23:09:12.059234  743774 grpc_client.cc:105]   StdDev:  38.9064
+I0304 23:09:12.059245  743774 grpc_client.cc:106]   Min:     23.9131
+I0304 23:09:12.059277  743774 grpc_client.cc:107]   Max:     252.077
+I0304 23:09:12.059309  743774 grpc_client.cc:108]   Samples: 1024
+
+
+=== Benchmark for 1MiB payload (1048576 bytes), 128 requests ===
+
+--- Raw HTTP/2 ---
+I0304 23:09:13.073443  744427 client.cc:232] Starting HTTP/2 benchmark client...
+I0304 23:09:13.073683  744427 client.cc:193] Connected to server.
+I0304 23:09:13.882539  744427 client.cc:270] Finished benchmark.
+I0304 23:09:13.882602  744427 client.cc:271] Total RPS: 280.664
+I0304 23:09:13.882681  744427 client.cc:280] Latency Stats (ms):
+I0304 23:09:13.882692  744427 client.cc:281]   Average: 335.413
+I0304 23:09:13.882705  744427 client.cc:282]   StdDev:  135.811
+I0304 23:09:13.882715  744427 client.cc:283]   Min:     175.332
+I0304 23:09:13.882733  744427 client.cc:284]   Max:     599.52
+I0304 23:09:13.882748  744427 client.cc:285]   Samples: 227
+
+--- gRPC ---
+I0304 23:09:14.907154  744462 grpc_client.cc:138] Starting gRPC benchmark client connecting to 127.0.0.1:50051
+I0304 23:09:15.462439  744462 grpc_client.cc:94] Finished benchmark.
+I0304 23:09:15.462512  744462 grpc_client.cc:95] Total RPS: 230.681
+I0304 23:09:15.462667  744462 grpc_client.cc:103] Latency Stats (ms):
+I0304 23:09:15.462685  744462 grpc_client.cc:104]   Average: 265.167
+I0304 23:09:15.462704  744462 grpc_client.cc:105]   StdDev:  78.8764
+I0304 23:09:15.462755  744462 grpc_client.cc:106]   Min:     32.9336
+I0304 23:09:15.462776  744462 grpc_client.cc:107]   Max:     510.218
+I0304 23:09:15.462794  744462 grpc_client.cc:108]   Samples: 128
+
+
