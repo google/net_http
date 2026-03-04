@@ -12,12 +12,29 @@
 #include <time.h>
 #include <unistd.h>
 
+#include <algorithm>
+#include <chrono>
+#include <cmath>
+#include <map>
+#include <numeric>
+#include <string>
+#include <vector>
+
+#include "absl/flags/flag.h"
+#include "absl/flags/parse.h"
+#include "absl/log/flags.h"
+#include "absl/log/initialize.h"
+#include "absl/log/log.h"
+
+ABSL_FLAG(std::string, host, "127.0.0.1", "Server host to connect to");
+ABSL_FLAG(int, port, 8080, "Server port to connect to");
+
 #define MAKE_NV(name, value)                                            \
   {                                                                     \
       (uint8_t*)(name), (uint8_t*)(value), strlen(name), strlen(value), \
       NGHTTP2_NV_FLAG_NONE}
 
-#define REQUEST_PAYLOAD "Hello, HTTP/2 echo server!"
+const std::string REQUEST_PAYLOAD_DATA(1024, 'A');
 #define CONCURRENT_REQUESTS 100
 
 struct ClientSession {
@@ -26,7 +43,10 @@ struct ClientSession {
   struct event_base* evbase;
   int requests_completed;
   int requests_in_flight;
+  int total_requests_submitted;
   struct timeval start_time;
+  std::map<int32_t, std::chrono::steady_clock::time_point> request_start_times;
+  std::vector<double> latencies;
 };
 
 static void submit_request(struct ClientSession* client);
@@ -41,48 +61,70 @@ static ssize_t send_callback(nghttp2_session* session, const uint8_t* data, size
 
 static int on_frame_recv_callback(nghttp2_session* session, const nghttp2_frame* frame, void* user_data) {
   struct ClientSession* client = (struct ClientSession*)user_data;
-  printf("Client received frame type %d on stream %d\n", frame->hd.type, frame->hd.stream_id);
+
+  VLOG(2) << "Client received frame type " << static_cast<int>(frame->hd.type) << " on stream " << frame->hd.stream_id;
+
   if (frame->hd.type == NGHTTP2_DATA && (frame->hd.flags & NGHTTP2_FLAG_END_STREAM)) {
     client->requests_completed++;
     client->requests_in_flight--;
-    submit_request(client);  // Submit another request to keep pipeline full
 
     if (client->requests_completed % 1000 == 0) {
       struct timeval now;
       gettimeofday(&now, NULL);
       double elapsed = (now.tv_sec - client->start_time.tv_sec) +
                        (now.tv_usec - client->start_time.tv_usec) / 1000000.0;
-      printf("Completed %d requests. RPS: %.2f\n",
-             client->requests_completed, client->requests_completed / elapsed);
+      LOG(INFO) << "Completed " << client->requests_completed << " requests. RPS: "
+                << client->requests_completed / elapsed;
+    }
+
+    auto it = client->request_start_times.find(frame->hd.stream_id);
+    if (it != client->request_start_times.end()) {
+      auto end_time = std::chrono::steady_clock::now();
+      double duration = std::chrono::duration<double, std::milli>(end_time - it->second).count();
+      client->latencies.push_back(duration);
+      client->request_start_times.erase(it);
+    }
+
+    if (client->requests_completed < 50000) {  // Limit total requests for bench
+      submit_request(client);
+    } else if (client->requests_in_flight == 0) {
+      event_base_loopexit(client->evbase, NULL);
     }
   } else if (frame->hd.type == NGHTTP2_HEADERS && (frame->hd.flags & NGHTTP2_FLAG_END_STREAM)) {
     // If server sent end stream on headers (e.g., error without body)
-    printf("Client received END_STREAM on headers\n");
+    LOG(INFO) << "Client received END_STREAM on headers";
   }
   return 0;
 }
 
 static ssize_t data_provider_callback(nghttp2_session* session, int32_t stream_id, uint8_t* buf, size_t length, uint32_t* data_flags, nghttp2_data_source* source, void* user_data) {
-  int* sent = (int*)source->ptr;
-  size_t payload_len = strlen(REQUEST_PAYLOAD);
+  int* bytes_sent = (int*)source->ptr;
+  size_t payload_len = REQUEST_PAYLOAD_DATA.length();
 
-  if (*sent) {
+  if (*bytes_sent >= payload_len) {
     *data_flags |= NGHTTP2_DATA_FLAG_EOF;
-    free(sent);
     return 0;
   }
 
-  size_t send_len = payload_len < length ? payload_len : length;
-  memcpy(buf, REQUEST_PAYLOAD, send_len);
+  size_t remaining = payload_len - *bytes_sent;
+  size_t send_len = remaining < length ? remaining : length;
+  memcpy(buf, REQUEST_PAYLOAD_DATA.data() + *bytes_sent, send_len);
 
-  if (send_len == payload_len) {
+  *bytes_sent += send_len;
+
+  if (*bytes_sent >= payload_len) {
     *data_flags |= NGHTTP2_DATA_FLAG_EOF;
-    free(sent);
-  } else {
-    *sent = 1;  // Simplification: assume we send it all in one go or it's a bug in our tiny benchmark
   }
 
   return send_len;
+}
+
+static int on_stream_close_callback(nghttp2_session* session, int32_t stream_id, uint32_t error_code, void* user_data) {
+  int* bytes_sent = (int*)nghttp2_session_get_stream_user_data(session, stream_id);
+  if (bytes_sent) {
+    delete bytes_sent;
+  }
+  return 0;
 }
 
 static void submit_request(struct ClientSession* client) {
@@ -93,18 +135,21 @@ static void submit_request(struct ClientSession* client) {
       MAKE_NV(":authority", "127.0.0.1:8080"),
   };
 
-  int* sent = malloc(sizeof(int));
-  *sent = 0;
+  int* bytes_sent = new int;
+  *bytes_sent = 0;
 
   nghttp2_data_provider data_prd;
-  data_prd.source.ptr = sent;
+  data_prd.source.ptr = bytes_sent;
   data_prd.read_callback = data_provider_callback;
 
-  int32_t stream_id = nghttp2_submit_request(client->session, NULL, hdrs, 4, &data_prd, NULL);
+  int32_t stream_id = nghttp2_submit_request(client->session, NULL, hdrs, 4, &data_prd, bytes_sent);
   if (stream_id < 0) {
-    printf("nghttp2_submit_request error\n");
+    LOG(ERROR) << "nghttp2_submit_request error";
+    delete bytes_sent;
   } else {
     client->requests_in_flight++;
+    client->total_requests_submitted++;
+    client->request_start_times[stream_id] = std::chrono::steady_clock::now();
   }
   nghttp2_session_send(client->session);
 }
@@ -112,6 +157,7 @@ static void submit_request(struct ClientSession* client) {
 static void setup_nghttp2_callbacks(nghttp2_session_callbacks* callbacks) {
   nghttp2_session_callbacks_set_send_callback(callbacks, send_callback);
   nghttp2_session_callbacks_set_on_frame_recv_callback(callbacks, on_frame_recv_callback);
+  nghttp2_session_callbacks_set_on_stream_close_callback(callbacks, on_stream_close_callback);
 }
 
 static void readcb(struct bufferevent* bev, void* ptr) {
@@ -119,21 +165,18 @@ static void readcb(struct bufferevent* bev, void* ptr) {
 
   struct evbuffer* input = bufferevent_get_input(bev);
   size_t datalen = evbuffer_get_length(input);
-  printf("Client readcb: got %zu bytes\n", datalen);
-  fflush(stdout);
+  VLOG(2) << "Client readcb: got " << datalen << " bytes";
 
   if (datalen == 0) return;
 
   unsigned char* data = evbuffer_pullup(input, -1);
   ssize_t readlen = nghttp2_session_mem_recv(client->session, data, datalen);
   if (readlen < 0) {
-    printf("Client: nghttp2_session_mem_recv error: %s\n", nghttp2_strerror((int)readlen));
-    fflush(stdout);
+    LOG(ERROR) << "Client: nghttp2_session_mem_recv error: " << nghttp2_strerror(static_cast<int>(readlen));
     return;
   }
 
-  printf("Client readcb: consumed %zd bytes\n", readlen);
-  fflush(stdout);
+  VLOG(2) << "Client readcb: consumed " << readlen << " bytes";
 
   evbuffer_drain(input, readlen);
   nghttp2_session_send(client->session);
@@ -143,7 +186,7 @@ static void eventcb(struct bufferevent* bev, short events, void* ptr) {
   struct ClientSession* client = (struct ClientSession*)ptr;
 
   if (events & BEV_EVENT_CONNECTED) {
-    printf("Connected to server.\n");
+    LOG(INFO) << "Connected to server.";
 
     nghttp2_session_callbacks* callbacks;
     nghttp2_session_callbacks_new(&callbacks);
@@ -168,14 +211,22 @@ static void eventcb(struct bufferevent* bev, short events, void* ptr) {
   }
 
   if (events & (BEV_EVENT_EOF | BEV_EVENT_ERROR)) {
-    printf("Connection closed or error.\n");
+    LOG(INFO) << "Connection closed or error.";
     event_base_loopexit(client->evbase, NULL);
   }
 }
 
 int main(int argc, char** argv) {
-  struct ClientSession client;
-  memset(&client, 0, sizeof(client));
+  absl::ParseCommandLine(argc, argv);
+
+  absl::InitializeLog();
+
+  LOG(INFO) << "Starting HTTP/2 benchmark client...";
+
+  ClientSession client = {};
+  client.requests_completed = 0;
+  client.requests_in_flight = 0;
+  client.total_requests_submitted = 0;
 
   struct event_base* base = event_base_new();
   client.evbase = base;
@@ -183,12 +234,8 @@ int main(int argc, char** argv) {
   struct sockaddr_in sin;
   memset(&sin, 0, sizeof(sin));
 
-  const char* host = "127.0.0.1";
-  int port = 8080;
-  if (argc >= 3) {
-    host = argv[1];
-    port = atoi(argv[2]);
-  }
+  const char* host = absl::GetFlag(FLAGS_host).c_str();
+  int port = absl::GetFlag(FLAGS_port);
 
   sin.sin_family = AF_INET;
   sin.sin_addr.s_addr = inet_addr(host);
@@ -201,11 +248,26 @@ int main(int argc, char** argv) {
   bufferevent_enable(bev, EV_READ | EV_WRITE);
 
   if (bufferevent_socket_connect(bev, (struct sockaddr*)&sin, sizeof(sin)) < 0) {
-    printf("Connect failed\n");
+    LOG(ERROR) << "Connect failed";
     return 1;
   }
 
   event_base_dispatch(base);
+
+  if (!client.latencies.empty()) {
+    double sum = std::accumulate(client.latencies.begin(), client.latencies.end(), 0.0);
+    double avg = sum / client.latencies.size();
+
+    double sq_sum = std::inner_product(client.latencies.begin(), client.latencies.end(), client.latencies.begin(), 0.0);
+    double stdev = std::sqrt(sq_sum / client.latencies.size() - avg * avg);
+
+    LOG(INFO) << "Latency Stats (ms):";
+    LOG(INFO) << "  Average: " << avg;
+    LOG(INFO) << "  StdDev:  " << stdev;
+    LOG(INFO) << "  Min:     " << *std::min_element(client.latencies.begin(), client.latencies.end());
+    LOG(INFO) << "  Max:     " << *std::max_element(client.latencies.begin(), client.latencies.end());
+    LOG(INFO) << "  Samples: " << client.latencies.size();
+  }
 
   if (client.session) nghttp2_session_del(client.session);
   bufferevent_free(bev);

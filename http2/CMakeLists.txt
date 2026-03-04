@@ -1,7 +1,16 @@
 cmake_minimum_required(VERSION 3.10)
-project(http2_echo_server C)
+project(http2_echo_server CXX)
 
-set(CMAKE_C_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+include(FetchContent)
+FetchContent_Declare(
+  absl
+  GIT_REPOSITORY https://github.com/abseil/abseil-cpp.git
+  GIT_TAG        20260107.1
+)
+FetchContent_MakeAvailable(absl)
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(LIBEVENT REQUIRED libevent)
@@ -17,8 +26,8 @@ link_directories(
     ${LIBNGHTTP2_LIBRARY_DIRS}
 )
 
-add_executable(h2_echo_server server.c)
-target_link_libraries(h2_echo_server ${LIBEVENT_LIBRARIES} ${LIBNGHTTP2_LIBRARIES})
+add_executable(h2_echo_server server.cc)
+target_link_libraries(h2_echo_server ${LIBEVENT_LIBRARIES} ${LIBNGHTTP2_LIBRARIES} absl::log absl::log_initialize absl::flags absl::flags_parse "$<LINK_LIBRARY:WHOLE_ARCHIVE,absl::log_flags>")
 
-add_executable(h2_bench_client client.c)
-target_link_libraries(h2_bench_client ${LIBEVENT_LIBRARIES} ${LIBNGHTTP2_LIBRARIES})
+add_executable(h2_bench_client client.cc)
+target_link_libraries(h2_bench_client ${LIBEVENT_LIBRARIES} ${LIBNGHTTP2_LIBRARIES} absl::log absl::log_initialize absl::flags absl::flags_parse "$<LINK_LIBRARY:WHOLE_ARCHIVE,absl::log_flags>")

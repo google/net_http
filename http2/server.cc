@@ -13,6 +13,9 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
+#include "absl/log/initialize.h"
+#include "absl/log/log.h"
+
 #define MAKE_NV(name, value)                                            \
   {                                                                     \
       (uint8_t*)(name), (uint8_t*)(value), strlen(name), strlen(value), \
@@ -50,32 +53,32 @@ static ssize_t echo_data_provider_callback(nghttp2_session* session, int32_t str
 
 static int on_frame_recv_callback(nghttp2_session* session, const nghttp2_frame* frame, void* user_data) {
   struct ClientSession* client = (struct ClientSession*)user_data;
-  printf("Server received frame type %d\n", frame->hd.type);
+  LOG(INFO) << "Server received frame type " << static_cast<int>(frame->hd.type);
   switch (frame->hd.type) {
     case NGHTTP2_HEADERS:
       if (frame->headers.cat == NGHTTP2_HCAT_REQUEST) {
-        struct stream_data* sd = malloc(sizeof(struct stream_data));
+        struct stream_data* sd = new stream_data;
         sd->stream_id = frame->hd.stream_id;
         sd->req_body = evbuffer_new();
         nghttp2_session_set_stream_user_data(session, frame->hd.stream_id, sd);
       }
       break;
     case NGHTTP2_DATA:
-      printf("Server logic: DATA frame on stream %d, flags %x\n", frame->hd.stream_id, frame->hd.flags);
+      LOG(INFO) << "Server logic: DATA frame on stream " << frame->hd.stream_id << ", flags " << static_cast<int>(frame->hd.flags);
       if (frame->hd.flags & NGHTTP2_FLAG_END_STREAM) {
-        printf("Server logic: END_STREAM seen\n");
+        LOG(INFO) << "Server logic: END_STREAM seen";
         const nghttp2_nv hdrs[] = {
             MAKE_NV(":status", "200")};
-        struct stream_data* sd = nghttp2_session_get_stream_user_data(session, frame->hd.stream_id);
+        struct stream_data* sd = (struct stream_data*)nghttp2_session_get_stream_user_data(session, frame->hd.stream_id);
         if (sd) {
           nghttp2_data_provider data_prd;
           data_prd.source.ptr = sd;
           data_prd.read_callback = echo_data_provider_callback;
           int rv = nghttp2_submit_response(session, frame->hd.stream_id, hdrs, 1, &data_prd);
-          printf("nghttp2_submit_response returned %d\n", rv);
+          LOG(INFO) << "nghttp2_submit_response returned " << rv;
           nghttp2_session_send(session);  // flush to output
         } else {
-          printf("Server logic: No stream data found!\n");
+          LOG(ERROR) << "Server logic: No stream data found!";
         }
       }
       break;
@@ -84,7 +87,7 @@ static int on_frame_recv_callback(nghttp2_session* session, const nghttp2_frame*
 }
 
 static int on_data_chunk_recv_callback(nghttp2_session* session, uint8_t flags, int32_t stream_id, const uint8_t* data, size_t len, void* user_data) {
-  struct stream_data* sd = nghttp2_session_get_stream_user_data(session, stream_id);
+  struct stream_data* sd = (struct stream_data*)nghttp2_session_get_stream_user_data(session, stream_id);
   if (sd) {
     evbuffer_add(sd->req_body, data, len);
   }
@@ -104,7 +107,7 @@ static ssize_t echo_data_provider_callback(nghttp2_session* session, int32_t str
   if (evbuffer_get_length(sd->req_body) == 0) {
     *data_flags |= NGHTTP2_DATA_FLAG_EOF;
     evbuffer_free(sd->req_body);
-    free(sd);
+    delete sd;
     nghttp2_session_set_stream_user_data(session, stream_id, NULL);
   }
 
@@ -112,10 +115,10 @@ static ssize_t echo_data_provider_callback(nghttp2_session* session, int32_t str
 }
 
 static int on_stream_close_callback(nghttp2_session* session, int32_t stream_id, uint32_t error_code, void* user_data) {
-  struct stream_data* sd = nghttp2_session_get_stream_user_data(session, stream_id);
+  struct stream_data* sd = (struct stream_data*)nghttp2_session_get_stream_user_data(session, stream_id);
   if (sd) {
     evbuffer_free(sd->req_body);
-    free(sd);
+    delete sd;
     nghttp2_session_set_stream_user_data(session, stream_id, NULL);
   }
   return 0;
@@ -147,21 +150,18 @@ static void readcb(struct bufferevent* bev, void* ptr) {
   struct evbuffer* input = bufferevent_get_input(bev);
 
   size_t datalen = evbuffer_get_length(input);
-  printf("Server readcb: got %zu bytes\n", datalen);
-  fflush(stdout);
+  LOG(INFO) << "Server readcb: got " << datalen << " bytes";
   if (datalen == 0) return;
 
   unsigned char* data = evbuffer_pullup(input, -1);
 
   ssize_t readlen = nghttp2_session_mem_recv(client->session, data, datalen);
   if (readlen < 0) {
-    printf("Server: nghttp2_session_mem_recv error: %s\n", nghttp2_strerror((int)readlen));
-    fflush(stdout);
+    LOG(ERROR) << "Server: nghttp2_session_mem_recv error: " << nghttp2_strerror(static_cast<int>(readlen));
     bufferevent_free(bev);
     return;
   }
-  printf("Server readcb: consumed %zd bytes\n", readlen);
-  fflush(stdout);
+  LOG(INFO) << "Server readcb: consumed " << readlen << " bytes";
   evbuffer_drain(input, readlen);
   nghttp2_session_send(client->session);
 }
@@ -169,12 +169,12 @@ static void readcb(struct bufferevent* bev, void* ptr) {
 static void eventcb(struct bufferevent* bev, short events, void* ptr) {
   struct ClientSession* client = (struct ClientSession*)ptr;
   if (events & BEV_EVENT_ERROR) {
-    printf("Error from bufferevent\n");
+    LOG(ERROR) << "Error from bufferevent";
   }
   if (events & (BEV_EVENT_EOF | BEV_EVENT_ERROR)) {
     nghttp2_session_del(client->session);
     bufferevent_free(bev);
-    free(client);
+    delete client;
   }
 }
 
@@ -183,7 +183,7 @@ static void acceptcb(struct evconnlistener* listener, evutil_socket_t fd, struct
   struct event_base* base = app_ctx->evbase;
   struct bufferevent* bev = bufferevent_socket_new(base, fd, BEV_OPT_CLOSE_ON_FREE);
 
-  struct ClientSession* client = malloc(sizeof(struct ClientSession));
+  struct ClientSession* client = new ClientSession;
   client->bev = bev;
   client->app_ctx = app_ctx;
 
@@ -204,6 +204,8 @@ static void acceptcb(struct evconnlistener* listener, evutil_socket_t fd, struct
 }
 
 int main(int argc, char** argv) {
+  absl::InitializeLog();
+
   struct event_base* base;
   struct evconnlistener* listener;
   struct sockaddr_in sin;
@@ -211,7 +213,7 @@ int main(int argc, char** argv) {
 
   base = event_base_new();
   if (!base) {
-    fprintf(stderr, "Could not initialize libevent!\n");
+    LOG(FATAL) << "Could not initialize libevent!";
     return 1;
   }
 
@@ -226,11 +228,11 @@ int main(int argc, char** argv) {
                                      LEV_OPT_CLOSE_ON_FREE | LEV_OPT_REUSEABLE, -1,
                                      (struct sockaddr*)&sin, sizeof(sin));
   if (!listener) {
-    fprintf(stderr, "Could not create a listener!\n");
+    LOG(FATAL) << "Could not create a listener!";
     return 1;
   }
 
-  printf("Listening on port %d...\n", PORT);
+  LOG(INFO) << "Listening on port " << PORT << "...";
 
   event_base_dispatch(base);
 
