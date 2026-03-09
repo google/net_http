@@ -15,7 +15,7 @@ def run_benchmark():
         for name, size in PAYLOAD_SIZES.items():
             num_requests = TOTAL_DATA_BYTES // size
             f.write(f"=== Benchmark for {name} payload ({size} bytes), {num_requests} requests ===\n\n")
-            
+
             f.write("--- Raw HTTP/2 ---\n")
             print(f"Running Raw HTTP/2 bench for {name}...")
             server_process = subprocess.Popen(["./build/h2_echo_server"])
@@ -36,28 +36,6 @@ def run_benchmark():
                 server_process.terminate()
                 server_process.wait()
 
-            f.write("\n")
-            
-            f.write("--- gRPC ---\n")
-            print(f"Running gRPC bench for {name}...")
-            grpc_server_process = subprocess.Popen(["./build/grpc_echo_server"])
-            time.sleep(1) # wait for server to start
-            try:
-                grpc_client_output = subprocess.check_output([
-                    "./build/grpc_bench_client", 
-                    f"--payload_size={size}", 
-                    f"--num_requests={num_requests}",
-                    "--stderrthreshold=0",
-                ], stderr=subprocess.STDOUT, text=True)
-                f.write(grpc_client_output)
-            except subprocess.CalledProcessError as e:
-                f.write(f"Error running gRPC client:\n{e.output}\n")
-            except Exception as e:
-                f.write(f"Failed to start/run gRPC client: {e}\n")
-            finally:
-                grpc_server_process.terminate()
-                grpc_server_process.wait()
-            
             f.write("\n\n")
 
 if __name__ == "__main__":
