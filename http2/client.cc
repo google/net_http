@@ -25,25 +25,24 @@
 #include "absl/log/flags.h"
 #include "absl/log/initialize.h"
 #include "absl/log/log.h"
+#include "benchmark/benchmark.h"
 
 ABSL_FLAG(std::string, host, "127.0.0.1", "Server host to connect to");
 ABSL_FLAG(int, port, 8080, "Server port to connect to");
-ABSL_FLAG(int, num_requests, 5000, "Total number of requests to send");
-ABSL_FLAG(int, payload_size, 1024 * 1024, "Size of the request payload in bytes");
 ABSL_FLAG(int, report_interval, 1000, "Frequency of progress reports");
-ABSL_FLAG(int, concurrent_requests, 100, "Number of concurrent requests");
 
 #define MAKE_NV(name, value)                                            \
   {                                                                     \
       (uint8_t*)(name), (uint8_t*)(value), strlen(name), strlen(value), \
       NGHTTP2_NV_FLAG_NONE}
 
-std::string request_payload_data;
+std::string payload;
 
 struct ClientSession {
   struct bufferevent* bev;
   nghttp2_session* session;
   struct event_base* evbase;
+
   int requests_completed;
   int requests_in_flight;
   int total_requests_submitted;
@@ -71,16 +70,6 @@ static int on_frame_recv_callback(nghttp2_session* session, const nghttp2_frame*
     client->requests_completed++;
     client->requests_in_flight--;
 
-    int report_interval = absl::GetFlag(FLAGS_report_interval);
-    if (report_interval > 0 && client->requests_completed % report_interval == 0) {
-      struct timeval now;
-      gettimeofday(&now, NULL);
-      double elapsed = (now.tv_sec - client->start_time.tv_sec) +
-                       (now.tv_usec - client->start_time.tv_usec) / 1000000.0;
-      LOG(INFO) << "Completed " << client->requests_completed << " requests. RPS: "
-                << client->requests_completed / elapsed;
-    }
-
     auto it = client->request_start_times.find(frame->hd.stream_id);
     if (it != client->request_start_times.end()) {
       auto end_time = std::chrono::steady_clock::now();
@@ -89,11 +78,7 @@ static int on_frame_recv_callback(nghttp2_session* session, const nghttp2_frame*
       client->request_start_times.erase(it);
     }
 
-    if (client->requests_completed < absl::GetFlag(FLAGS_num_requests)) {  // Limit total requests for bench
-      submit_request(client);
-    } else if (client->requests_in_flight == 0) {
-      event_base_loopexit(client->evbase, NULL);
-    }
+    event_base_loopexit(client->evbase, NULL);
   } else if (frame->hd.type == NGHTTP2_HEADERS && (frame->hd.flags & NGHTTP2_FLAG_END_STREAM)) {
     // If server sent end stream on headers (e.g., error without body)
     LOG(INFO) << "Client received END_STREAM on headers";
@@ -103,7 +88,7 @@ static int on_frame_recv_callback(nghttp2_session* session, const nghttp2_frame*
 
 static ssize_t data_provider_callback(nghttp2_session* session, int32_t stream_id, uint8_t* buf, size_t length, uint32_t* data_flags, nghttp2_data_source* source, void* user_data) {
   int* bytes_sent = (int*)source->ptr;
-  size_t payload_len = request_payload_data.length();
+  size_t payload_len = payload.length();
 
   if (*bytes_sent >= payload_len) {
     *data_flags |= NGHTTP2_DATA_FLAG_EOF;
@@ -112,7 +97,7 @@ static ssize_t data_provider_callback(nghttp2_session* session, int32_t stream_i
 
   size_t remaining = payload_len - *bytes_sent;
   size_t send_len = remaining < length ? remaining : length;
-  memcpy(buf, request_payload_data.data() + *bytes_sent, send_len);
+  memcpy(buf, payload.data() + *bytes_sent, send_len);
 
   *bytes_sent += send_len;
 
@@ -148,7 +133,7 @@ static void submit_request(struct ClientSession* client) {
 
   int32_t stream_id = nghttp2_submit_request(client->session, NULL, hdrs, 4, &data_prd, bytes_sent);
   if (stream_id < 0) {
-    LOG(ERROR) << "nghttp2_submit_request error";
+    LOG(FATAL) << "nghttp2_submit_request error";
     delete bytes_sent;
   } else {
     client->requests_in_flight++;
@@ -156,12 +141,6 @@ static void submit_request(struct ClientSession* client) {
     client->request_start_times[stream_id] = std::chrono::steady_clock::now();
   }
   nghttp2_session_send(client->session);
-}
-
-static void setup_nghttp2_callbacks(nghttp2_session_callbacks* callbacks) {
-  nghttp2_session_callbacks_set_send_callback(callbacks, send_callback);
-  nghttp2_session_callbacks_set_on_frame_recv_callback(callbacks, on_frame_recv_callback);
-  nghttp2_session_callbacks_set_on_stream_close_callback(callbacks, on_stream_close_callback);
 }
 
 static void readcb(struct bufferevent* bev, void* ptr) {
@@ -176,7 +155,7 @@ static void readcb(struct bufferevent* bev, void* ptr) {
   unsigned char* data = evbuffer_pullup(input, -1);
   ssize_t readlen = nghttp2_session_mem_recv(client->session, data, datalen);
   if (readlen < 0) {
-    LOG(ERROR) << "Client: nghttp2_session_mem_recv error: " << nghttp2_strerror(static_cast<int>(readlen));
+    LOG(FATAL) << "Client: nghttp2_session_mem_recv error: " << nghttp2_strerror(static_cast<int>(readlen));
     return;
   }
 
@@ -190,46 +169,39 @@ static void eventcb(struct bufferevent* bev, short events, void* ptr) {
   struct ClientSession* client = (struct ClientSession*)ptr;
 
   if (events & BEV_EVENT_CONNECTED) {
-    LOG(INFO) << "Connected to server.";
-
     nghttp2_session_callbacks* callbacks;
     nghttp2_session_callbacks_new(&callbacks);
-    setup_nghttp2_callbacks(callbacks);
+
+    nghttp2_session_callbacks_set_send_callback(callbacks, send_callback);
+    nghttp2_session_callbacks_set_on_frame_recv_callback(callbacks, on_frame_recv_callback);
+    nghttp2_session_callbacks_set_on_stream_close_callback(callbacks, on_stream_close_callback);
 
     nghttp2_session_client_new(&client->session, callbacks, client);
 
     nghttp2_session_callbacks_del(callbacks);
 
     // Send connection preface and initial settings
-    nghttp2_settings_entry iv[2] = {
-        {NGHTTP2_SETTINGS_MAX_CONCURRENT_STREAMS, static_cast<uint32_t>(absl::GetFlag(FLAGS_concurrent_requests))},
+    nghttp2_settings_entry iv[1] = {
         {NGHTTP2_SETTINGS_INITIAL_WINDOW_SIZE, 128 * 1024 * 1024}};
-    nghttp2_submit_settings(client->session, NGHTTP2_FLAG_NONE, iv, 2);
+    nghttp2_submit_settings(client->session, NGHTTP2_FLAG_NONE, iv, 1);
     nghttp2_submit_window_update(client->session, NGHTTP2_FLAG_NONE, 0, 128 * 1024 * 1024);
 
     gettimeofday(&client->start_time, NULL);
 
-    for (int i = 0; i < absl::GetFlag(FLAGS_concurrent_requests); i++) {
-      submit_request(client);
-    }
+    event_base_loopexit(client->evbase, NULL);
 
     return;
   }
 
   if (events & (BEV_EVENT_EOF | BEV_EVENT_ERROR)) {
-    LOG(INFO) << "Connection closed or error.";
-    event_base_loopexit(client->evbase, NULL);
+    LOG(FATAL) << "Connection closed or error.";
   }
 }
 
-int main(int argc, char** argv) {
-  absl::ParseCommandLine(argc, argv);
+static void BM_HTTP2Client(benchmark::State& state) {
+  const int payload_size = state.range(0);
 
-  absl::InitializeLog();
-
-  request_payload_data = std::string(absl::GetFlag(FLAGS_payload_size), 'A');
-
-  LOG(INFO) << "Starting HTTP/2 benchmark client...";
+  payload = std::string(payload_size, 'A');
 
   ClientSession client = {};
   client.requests_completed = 0;
@@ -252,42 +224,53 @@ int main(int argc, char** argv) {
   struct bufferevent* bev = bufferevent_socket_new(base, -1, BEV_OPT_CLOSE_ON_FREE);
   client.bev = bev;
 
-  bufferevent_setcb(bev, readcb, NULL, eventcb, &client);
   bufferevent_enable(bev, EV_READ | EV_WRITE);
+  bufferevent_setcb(bev, readcb, NULL, eventcb, &client);
 
   if (bufferevent_socket_connect(bev, (struct sockaddr*)&sin, sizeof(sin)) < 0) {
-    LOG(ERROR) << "Connect failed";
-    return 1;
+    LOG(FATAL) << "Connect failed";
   }
 
   event_base_dispatch(base);
 
-  struct timeval end_time;
-  gettimeofday(&end_time, NULL);
-  double total_elapsed = (end_time.tv_sec - client.start_time.tv_sec) +
-                         (end_time.tv_usec - client.start_time.tv_usec) / 1000000.0;
-
-  LOG(INFO) << "Finished benchmark.";
-  LOG(INFO) << "Total RPS: " << client.requests_completed / total_elapsed;
+  for (auto _ : state) {
+    submit_request(&client);
+    event_base_dispatch(base);
+  }
 
   if (!client.latencies.empty()) {
-    double sum = std::accumulate(client.latencies.begin(), client.latencies.end(), 0.0);
-    double avg = sum / client.latencies.size();
+    std::sort(client.latencies.begin(), client.latencies.end());
 
-    double sq_sum = std::inner_product(client.latencies.begin(), client.latencies.end(), client.latencies.begin(), 0.0);
-    double stdev = std::sqrt(sq_sum / client.latencies.size() - avg * avg);
+    state.counters["p10_latency_ms"] = client.latencies[client.latencies.size() * 0.10];
+    state.counters["p50_latency_ms"] = client.latencies[client.latencies.size() * 0.50];
+    state.counters["p90_latency_ms"] = client.latencies[client.latencies.size() * 0.90];
+    state.counters["p99_latency_ms"] = client.latencies[client.latencies.size() * 0.99];
 
-    LOG(INFO) << "Latency Stats (ms):";
-    LOG(INFO) << "  Average: " << avg;
-    LOG(INFO) << "  StdDev:  " << stdev;
-    LOG(INFO) << "  Min:     " << *std::min_element(client.latencies.begin(), client.latencies.end());
-    LOG(INFO) << "  Max:     " << *std::max_element(client.latencies.begin(), client.latencies.end());
-    LOG(INFO) << "  Samples: " << client.latencies.size();
+    // Calculates QPS.
+    state.SetItemsProcessed(client.latencies.size());
   }
 
   if (client.session) nghttp2_session_del(client.session);
+
   bufferevent_free(bev);
   event_base_free(base);
+}
+
+BENCHMARK(BM_HTTP2Client)
+    ->Args({0})
+    ->Args({1 << 10})
+    ->Args({128 << 10});
+
+int main(int argc, char** argv) {
+  benchmark::MaybeReenterWithoutASLR(argc, argv);
+  benchmark::Initialize(&argc, argv);
+
+  absl::ParseCommandLine(argc, argv);
+  absl::InitializeLog();
+
+  benchmark::RunSpecifiedBenchmarks();
+
+  benchmark::Shutdown();
 
   return 0;
 }
