@@ -132,15 +132,19 @@ int WishHandler::SendMessage(uint8_t opcode, const std::string& msg) {
 }
 
 int WishHandler::SendText(const std::string& msg) {
-  return SendMessage(1, msg);
+  return SendMessage(WISH_OPCODE_TEXT, msg);
 }
 
 int WishHandler::SendBinary(const std::string& msg) {
-  return SendMessage(2, msg);
+  return SendMessage(WISH_OPCODE_BINARY, msg);
 }
 
-int WishHandler::SendMetadata(bool is_text, const std::string& msg) {
-  return SendMessage(is_text ? 3 : 4, msg);
+int WishHandler::SendTextMetadata(const std::string& msg) {
+  return SendMessage(WISH_OPCODE_TEXT_METADATA, msg);
+}
+
+int WishHandler::SendBinaryMetadata(const std::string& msg) {
+  return SendMessage(WISH_OPCODE_BINARY_METADATA, msg);
 }
 
 // ---------------- Handshake Logic ----------------

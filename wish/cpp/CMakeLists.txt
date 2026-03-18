@@ -51,12 +51,19 @@ add_library(wish_handler
     ${libevent_SOURCE_DIR}/bufferevent_ssl.c
     src/tls_context.cc
     src/tls_context.h
+    src/tls_server.cc
+    src/tls_server.h
+    src/tls_client.cc
+    src/tls_client.h
 )
 # BoringSSL targets: ssl and crypto
 target_link_libraries(wish_handler wslay event ssl crypto)
 
-add_executable(wish-server examples/server.cc)
-target_link_libraries(wish-server wish_handler)
+add_executable(echo_server examples/echo_server.cc)
+target_link_libraries(echo_server wish_handler)
 
-add_executable(wish-client examples/client.cc)
-target_link_libraries(wish-client wish_handler)
+add_executable(hello_client examples/hello_client.cc)
+target_link_libraries(hello_client wish_handler)
+
+add_executable(benchmark_client examples/benchmark_client.cc)
+target_link_libraries(benchmark_client wish_handler)
