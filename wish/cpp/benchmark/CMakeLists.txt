@@ -16,4 +16,10 @@ add_executable(tls_benchmark_client
 )
 target_link_libraries(tls_benchmark_client
     wish_handler
+    absl::flags
+    absl::flags_parse
+    absl::log
+    absl::log_initialize
+    "$<LINK_LIBRARY:WHOLE_ARCHIVE,absl::log_flags>"
+    benchmark::benchmark
 )
