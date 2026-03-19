@@ -63,6 +63,7 @@ def run_benchmark(remote_host=None):
             CLIENT_BINARY_PATH,
             "--stderrthreshold=0",
             "--benchmark_counters_tabular=true",
+            "--benchmark_min_time=5.0s",
             f"--host={client_host}",
         ], capture_output=False, text=True, check=True)
     except subprocess.CalledProcessError as e:
