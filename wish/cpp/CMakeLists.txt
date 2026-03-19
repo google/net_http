@@ -82,13 +82,6 @@ add_library(wish_handler
 # BoringSSL targets: ssl and crypto
 target_link_libraries(wish_handler wslay event ssl crypto)
 
-add_executable(echo_server examples/echo_server.cc)
-target_link_libraries(echo_server wish_handler)
-
-add_executable(hello_client examples/hello_client.cc)
-target_link_libraries(hello_client wish_handler)
-
-add_executable(benchmark_client examples/benchmark_client.cc)
-target_link_libraries(benchmark_client wish_handler)
+add_subdirectory(examples)
 
 add_subdirectory(benchmark)

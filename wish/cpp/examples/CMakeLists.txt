@@ -1,0 +1,25 @@
+add_executable(echo_server
+    echo_server.cc
+)
+target_link_libraries(echo_server
+    wish_handler
+    absl::flags
+    absl::flags_parse
+    absl::log
+    absl::log_initialize
+    "$<LINK_LIBRARY:WHOLE_ARCHIVE,absl::log_flags>"
+)
+
+add_executable(tls_echo_server
+    tls_echo_server.cc
+)
+target_link_libraries(tls_echo_server
+    wish_handler
+)
+
+add_executable(tls_hello_client
+    tls_hello_client.cc
+)
+target_link_libraries(tls_hello_client
+    wish_handler
+)
