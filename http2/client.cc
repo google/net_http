@@ -75,7 +75,7 @@ static void complete_request(struct ClientSession* client, int32_t stream_id) {
   auto it = client->request_start_times.find(stream_id);
   if (it != client->request_start_times.end()) {
     auto end_time = std::chrono::steady_clock::now();
-    double duration = std::chrono::duration<double, std::milli>(end_time - it->second).count();
+    double duration = std::chrono::duration<double, std::micro>(end_time - it->second).count();
     client->latencies.push_back(duration);
     client->request_start_times.erase(it);
   }
@@ -294,10 +294,10 @@ static void BM_HTTP2Client(benchmark::State& state) {
   if (!client.latencies.empty()) {
     std::sort(client.latencies.begin(), client.latencies.end());
 
-    state.counters["p10_latency_ms"] = client.latencies[client.latencies.size() * 0.10];
-    state.counters["p50_latency_ms"] = client.latencies[client.latencies.size() * 0.50];
-    state.counters["p90_latency_ms"] = client.latencies[client.latencies.size() * 0.90];
-    state.counters["p99_latency_ms"] = client.latencies[client.latencies.size() * 0.99];
+    state.counters["p10_latency_us"] = client.latencies[client.latencies.size() * 0.10];
+    state.counters["p50_latency_us"] = client.latencies[client.latencies.size() * 0.50];
+    state.counters["p90_latency_us"] = client.latencies[client.latencies.size() * 0.90];
+    state.counters["p99_latency_us"] = client.latencies[client.latencies.size() * 0.99];
 
     // Calculates QPS.
     state.SetItemsProcessed(client.latencies.size());
@@ -310,6 +310,8 @@ static void BM_HTTP2Client(benchmark::State& state) {
 }
 
 BENCHMARK(BM_HTTP2Client)
+    ->UseRealTime()
+    ->Unit(benchmark::kMicrosecond)
     ->Args({0})
     ->Args({1 << 10})
     ->Args({2 << 10})
