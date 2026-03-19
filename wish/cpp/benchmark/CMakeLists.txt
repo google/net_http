@@ -1,0 +1,24 @@
+add_executable(wish_echo_server
+    server.cc
+)
+target_link_libraries(wish_echo_server
+    wish_handler
+    absl::flags
+    absl::flags_parse
+    absl::log
+    absl::log_initialize
+    "$<LINK_LIBRARY:WHOLE_ARCHIVE,absl::log_flags>"
+)
+
+add_executable(wish_bench_client
+    client.cc
+)
+target_link_libraries(wish_bench_client
+    wish_handler
+    absl::flags
+    absl::flags_parse
+    absl::log
+    absl::log_initialize
+    "$<LINK_LIBRARY:WHOLE_ARCHIVE,absl::log_flags>"
+    benchmark::benchmark
+)

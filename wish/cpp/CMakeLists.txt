@@ -6,11 +6,30 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 include(FetchContent)
 
+set(ABSL_ENABLE_INSTALL OFF CACHE BOOL "" FORCE)
+set(ABSL_PROPAGATE_CXX_STD ON)
+FetchContent_Declare(
+    abseil
+    GIT_REPOSITORY https://github.com/abseil/abseil-cpp.git
+    GIT_TAG        20260107.1
+)
+
+set(WSLAY_TESTS OFF CACHE BOOL "" FORCE)
+set(WSLAY_EXAMPLES OFF CACHE BOOL "" FORCE)
 FetchContent_Declare(
     wslay
     GIT_REPOSITORY https://github.com/tatsuhiro-t/wslay.git
     GIT_TAG        master
 )
+
+# Disable OpenSSL and Mbed TLS. We use BoringSSL instead.
+set(EVENT__DISABLE_OPENSSL ON CACHE BOOL "" FORCE)
+set(EVENT__DISABLE_MBEDTLS ON CACHE BOOL "" FORCE)
+
+set(EVENT__DISABLE_BENCHMARKS ON CACHE BOOL "" FORCE)
+set(EVENT__DISABLE_TESTS ON CACHE BOOL "" FORCE)
+set(EVENT__DISABLE_REGRESS ON CACHE BOOL "" FORCE)
+set(EVENT__DISABLE_SAMPLES ON CACHE BOOL "" FORCE)
 
 FetchContent_Declare(
     libevent
@@ -21,20 +40,24 @@ FetchContent_Declare(
 FetchContent_Declare(
     boringssl
     GIT_REPOSITORY https://boringssl.googlesource.com/boringssl
+    GIT_TAG        0.20260211.0
+)
+
+set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "" FORCE)
+set(BENCHMARK_ENABLE_GTEST_TESTS OFF CACHE BOOL "" FORCE)
+set(BENCHMARK_ENABLE_INSTALL OFF CACHE BOOL "" FORCE)
+set(BENCHMARK_INSTALL_DOCS OFF CACHE BOOL "" FORCE)
+set(BENCHMARK_DOWNLOAD_DEPENDENCIES OFF CACHE BOOL "" FORCE)
+FetchContent_Declare(
+    googlebenchmark
+    GIT_REPOSITORY https://github.com/google/benchmark.git
     GIT_TAG        main
 )
 
-# Disable OpenSSL and Mbed TLS. We use BoringSSL instead.
-set(EVENT__DISABLE_OPENSSL ON CACHE BOOL "" FORCE)
-set(EVENT__DISABLE_MBEDTLS ON CACHE BOOL "" FORCE)
+# Exclude tests, benchmarks, sample files, etc. from dependencies.
+set(BUILD_TESTING OFF CACHE BOOL "" FORCE)
 
-# Exclude tests, sample files, etc. that we don't need.
-set(EVENT__DISABLE_BENCHMARKS ON CACHE BOOL "" FORCE)
-set(EVENT__DISABLE_TESTS ON CACHE BOOL "" FORCE)
-set(EVENT__DISABLE_REGRESS ON CACHE BOOL "" FORCE)
-set(EVENT__DISABLE_SAMPLES ON CACHE BOOL "" FORCE)
-
-FetchContent_MakeAvailable(wslay libevent boringssl)
+FetchContent_MakeAvailable(wslay libevent boringssl googlebenchmark abseil)
 
 include_directories(${wslay_SOURCE_DIR}/lib/includes)
 include_directories(${libevent_SOURCE_DIR}/include)
@@ -67,3 +90,5 @@ target_link_libraries(hello_client wish_handler)
 
 add_executable(benchmark_client examples/benchmark_client.cc)
 target_link_libraries(benchmark_client wish_handler)
+
+add_subdirectory(benchmark)
