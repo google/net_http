@@ -47,7 +47,7 @@ struct ClientSession {
   int total_requests_submitted;
   std::map<int32_t, std::chrono::steady_clock::time_point> request_start_times;
   std::map<int32_t, size_t> response_sizes;
-  std::vector<double> latencies;
+  std::vector<double> latencies_us;
 };
 
 static void submit_request(struct ClientSession* client);
@@ -76,7 +76,7 @@ static void complete_request(struct ClientSession* client, int32_t stream_id) {
   if (it != client->request_start_times.end()) {
     auto end_time = std::chrono::steady_clock::now();
     double duration = std::chrono::duration<double, std::micro>(end_time - it->second).count();
-    client->latencies.push_back(duration);
+    client->latencies_us.push_back(duration);
     client->request_start_times.erase(it);
   }
 
@@ -291,16 +291,16 @@ static void BM_HTTP2Client(benchmark::State& state) {
     event_base_dispatch(base);
   }
 
-  if (!client.latencies.empty()) {
-    std::sort(client.latencies.begin(), client.latencies.end());
+  if (!client.latencies_us.empty()) {
+    std::sort(client.latencies_us.begin(), client.latencies_us.end());
 
-    state.counters["p10_latency_us"] = client.latencies[client.latencies.size() * 0.10];
-    state.counters["p50_latency_us"] = client.latencies[client.latencies.size() * 0.50];
-    state.counters["p90_latency_us"] = client.latencies[client.latencies.size() * 0.90];
-    state.counters["p99_latency_us"] = client.latencies[client.latencies.size() * 0.99];
+    state.counters["p10_latency_us"] = client.latencies_us[client.latencies_us.size() * 0.10];
+    state.counters["p50_latency_us"] = client.latencies_us[client.latencies_us.size() * 0.50];
+    state.counters["p90_latency_us"] = client.latencies_us[client.latencies_us.size() * 0.90];
+    state.counters["p99_latency_us"] = client.latencies_us[client.latencies_us.size() * 0.99];
 
     // Calculates QPS.
-    state.SetItemsProcessed(client.latencies.size());
+    state.SetItemsProcessed(client.latencies_us.size());
   }
 
   if (client.session) nghttp2_session_del(client.session);
