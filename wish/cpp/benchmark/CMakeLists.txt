@@ -1,19 +1,7 @@
-add_executable(wish_echo_server
-    server.cc
-)
-target_link_libraries(wish_echo_server
-    wish_handler
-    absl::flags
-    absl::flags_parse
-    absl::log
-    absl::log_initialize
-    "$<LINK_LIBRARY:WHOLE_ARCHIVE,absl::log_flags>"
-)
-
-add_executable(wish_bench_client
+add_executable(benchmark_client
     client.cc
 )
-target_link_libraries(wish_bench_client
+target_link_libraries(benchmark_client
     wish_handler
     absl::flags
     absl::flags_parse
@@ -21,4 +9,11 @@ target_link_libraries(wish_bench_client
     absl::log_initialize
     "$<LINK_LIBRARY:WHOLE_ARCHIVE,absl::log_flags>"
     benchmark::benchmark
+)
+
+add_executable(tls_benchmark_client
+    tls_client.cc
+)
+target_link_libraries(tls_benchmark_client
+    wish_handler
 )

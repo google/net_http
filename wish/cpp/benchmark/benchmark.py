@@ -6,8 +6,8 @@ import os
 import signal
 
 BUILD_DIR = "./build"
-SERVER_BINARY_NAME = "benchmark/wish_echo_server"
-CLIENT_BINARY_NAME = "benchmark/wish_bench_client"
+SERVER_BINARY_NAME = "examples/echo_server"
+CLIENT_BINARY_NAME = "benchmark/benchmark_client"
 SERVER_BINARY_PATH = os.path.join(BUILD_DIR, SERVER_BINARY_NAME)
 CLIENT_BINARY_PATH = os.path.join(BUILD_DIR, CLIENT_BINARY_NAME)
 
