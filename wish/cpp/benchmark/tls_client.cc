@@ -26,10 +26,10 @@
 
 ABSL_FLAG(std::string, host, "127.0.0.1", "Server host to connect to");
 ABSL_FLAG(int, port, 8080, "Server port to connect to");
-ABSL_FLAG(std::string, ca_cert, "../certs/ca.crt", "Path to CA certificate");
-ABSL_FLAG(std::string, client_cert, "../certs/client.crt",
+ABSL_FLAG(std::string, ca_cert, "certs/ca.crt", "Path to CA certificate");
+ABSL_FLAG(std::string, client_cert, "certs/client.crt",
           "Path to client certificate");
-ABSL_FLAG(std::string, client_key, "../certs/client.key",
+ABSL_FLAG(std::string, client_key, "certs/client.key",
           "Path to client private key");
 
 namespace {
@@ -101,7 +101,10 @@ bool InitConnection(ClientState* client) {
     const int fd = bufferevent_getfd(client->bev);
     if (fd >= 0) {
       int nodelay = 1;
-      setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &nodelay, sizeof(nodelay));
+      int result = setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &nodelay, sizeof(nodelay));
+      if (result != 0) {
+        LOG(FATAL) << "setsockopt(TCP_NODELAY) failed";
+      }
     }
 
     client->connected = true;

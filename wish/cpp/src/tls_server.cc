@@ -1,8 +1,10 @@
 #include "tls_server.h"
 
-#include <iostream>
-#include <cstring>
 #include <arpa/inet.h>
+#include <netinet/tcp.h>
+
+#include <cstring>
+#include <iostream>
 
 // To use BoringSSL
 #define EVENT__HAVE_OPENSSL 1
@@ -10,7 +12,7 @@
 #include <openssl/ssl.h>
 
 TlsServer::TlsServer(const std::string& ca_file, const std::string& cert_file,
-                       const std::string& key_file, int port)
+                     const std::string& key_file, int port)
     : ca_file_(ca_file),
       cert_file_(cert_file),
       key_file_(key_file),
@@ -78,10 +80,15 @@ void TlsServer::SetOnConnection(ConnectCallback cb) {
 }
 
 void TlsServer::AcceptConnCb(struct evconnlistener* listener,
-                              evutil_socket_t fd, struct sockaddr* address,
-                              int socklen, void* ctx) {
+                             evutil_socket_t fd, struct sockaddr* address,
+                             int socklen, void* ctx) {
   struct event_base* base = evconnlistener_get_base(listener);
   TlsServer* server = static_cast<TlsServer*>(ctx);
+
+  int one = 1;
+  if (setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &one, sizeof(one)) < 0) {
+    std::cerr << "Failed to set TCP_NODELAY: " << strerror(errno) << std::endl;
+  }
 
   SSL* ssl = SSL_new(server->tls_ctx_.ssl_ctx());
   struct bufferevent* bev = bufferevent_openssl_socket_new(

@@ -6,10 +6,13 @@ import os
 import signal
 
 BUILD_DIR = "./build"
-SERVER_BINARY_NAME = "examples/echo_server"
-CLIENT_BINARY_NAME = "benchmark/benchmark_client"
-SERVER_BINARY_PATH = os.path.join(BUILD_DIR, SERVER_BINARY_NAME)
-CLIENT_BINARY_PATH = os.path.join(BUILD_DIR, CLIENT_BINARY_NAME)
+CERTS_DIR = "./certs"
+
+TLS_SERVER_BINARY_NAME = "examples/tls_echo_server"
+TLS_CLIENT_BINARY_NAME = "benchmark/tls_benchmark_client"
+
+PLAIN_SERVER_BINARY_NAME = "examples/echo_server"
+PLAIN_CLIENT_BINARY_NAME = "benchmark/benchmark_client"
 
 
 def _client_host_from_remote_target(remote_host):
@@ -18,32 +21,48 @@ def _client_host_from_remote_target(remote_host):
     return remote_host
 
 
-def _start_server(remote_host):
+def _start_server(remote_host, server_binary_path, server_binary_name, certs_dir=None):
     if not remote_host:
-        return subprocess.Popen([SERVER_BINARY_PATH])
+        return subprocess.Popen([server_binary_path])
 
-    remote_binary_path = f"/tmp/{SERVER_BINARY_NAME}"
+    remote_binary_path = f"/tmp/{os.path.basename(server_binary_name)}"
 
     subprocess.run(
         ["ssh", remote_host, f"rm -f {shlex.quote(remote_binary_path)}"],
         check=True,
     )
     subprocess.run(
-        ["scp", SERVER_BINARY_PATH, f"{remote_host}:{remote_binary_path}"],
+        ["scp", server_binary_path, f"{remote_host}:{remote_binary_path}"],
         check=True,
     )
 
+    if certs_dir:
+        remote_certs_dir = "/tmp/certs"
+        subprocess.run(
+            ["ssh", remote_host, f"rm -rf {shlex.quote(remote_certs_dir)}"],
+            check=True,
+        )
+        subprocess.run(
+            ["scp", "-r", certs_dir, f"{remote_host}:{remote_certs_dir}"],
+            check=True,
+        )
+
     remote_command = (
         f"chmod +x {shlex.quote(remote_binary_path)} && "
-        f"{shlex.quote(remote_binary_path)}"
+        f"cd /tmp && {shlex.quote(remote_binary_path)}"
     )
 
     # Pass the `-t` option multiple times to ensure a pseudo-terminal is allocated, so that we can send a SIGTERM signal to the remote process, not the `ssh` process itself. This allows us to properly terminate the remote server when the benchmark is done.
     return subprocess.Popen(["ssh", "-tt", remote_host, remote_command], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=0)
 
 
-def run_benchmark(remote_host=None):
-    print("Running benchmark ...")
+def run_benchmark(remote_host=None, tls=True):
+    server_binary_name = TLS_SERVER_BINARY_NAME if tls else PLAIN_SERVER_BINARY_NAME
+    client_binary_name = TLS_CLIENT_BINARY_NAME if tls else PLAIN_CLIENT_BINARY_NAME
+    server_binary_path = os.path.join(BUILD_DIR, server_binary_name)
+    client_binary_path = os.path.join(BUILD_DIR, client_binary_name)
+
+    print(f"Running {'TLS' if tls else 'plain'} benchmark ...")
 
     client_host = "127.0.0.1"
     if remote_host:
@@ -52,15 +71,15 @@ def run_benchmark(remote_host=None):
     else:
         print("Starting local server ...")
 
-    server_process = _start_server(remote_host)
+    server_process = _start_server(remote_host, server_binary_path, server_binary_name, certs_dir=CERTS_DIR if tls else None)
     time.sleep(2)  # wait for server to start
 
     if server_process.poll() is not None:
-        raise RuntimeError(f"{SERVER_BINARY_NAME} failed to start")
+        raise RuntimeError(f"{server_binary_name} failed to start")
 
     try:
         subprocess.run([
-            CLIENT_BINARY_PATH,
+            client_binary_path,
             "--stderrthreshold=0",
             "--benchmark_counters_tabular=true",
             "--benchmark_min_time=5.0s",
@@ -82,19 +101,30 @@ if __name__ == "__main__":
         "--remote-host",
         help="SSH target for remote server, e.g. user@10.0.0.5",
     )
+    parser.add_argument(
+        "--tls",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Use TLS (default: enabled). Pass --no-tls for plain HTTP.",
+    )
     args = parser.parse_args()
+
+    server_binary_name = TLS_SERVER_BINARY_NAME if args.tls else PLAIN_SERVER_BINARY_NAME
+    client_binary_name = TLS_CLIENT_BINARY_NAME if args.tls else PLAIN_CLIENT_BINARY_NAME
+    server_binary_path = os.path.join(BUILD_DIR, server_binary_name)
+    client_binary_path = os.path.join(BUILD_DIR, client_binary_name)
 
     if not os.path.isdir(BUILD_DIR):
         print("Error: 'build' directory not found. Please compile the project first.")
         exit(1)
 
-    if not os.path.isfile(SERVER_BINARY_PATH):
-        print(f"Error: '{SERVER_BINARY_PATH}' not found. Please compile the project first.")
+    if not os.path.isfile(server_binary_path):
+        print(f"Error: '{server_binary_path}' not found. Please compile the project first.")
         exit(1)
 
-    if not os.path.isfile(CLIENT_BINARY_PATH):
-        print(f"Error: '{CLIENT_BINARY_PATH}' not found. Please compile the project first.")
+    if not os.path.isfile(client_binary_path):
+        print(f"Error: '{client_binary_path}' not found. Please compile the project first.")
         exit(1)
-    
+
     print("Starting benchmarks...")
-    run_benchmark(remote_host=args.remote_host)
+    run_benchmark(remote_host=args.remote_host, tls=args.tls)
