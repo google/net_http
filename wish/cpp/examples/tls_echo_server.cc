@@ -1,22 +1,35 @@
-#include <iostream>
 #include <string>
 
 #include "../src/tls_server.h"
 #include "../src/wish_handler.h"
+#include "absl/flags/flag.h"
+#include "absl/flags/parse.h"
+#include "absl/log/initialize.h"
+#include "absl/log/log.h"
+
+ABSL_FLAG(int, port, 8080, "Port to listen on");
+ABSL_FLAG(std::string, ca_cert, "certs/ca.crt", "Path to CA certificate file");
+ABSL_FLAG(std::string, server_cert, "certs/server.crt", "Path to server certificate file");
+ABSL_FLAG(std::string, server_key, "certs/server.key", "Path to server private key file");
 
 int main(int argc, char** argv) {
-  int port = 8080;
+  absl::ParseCommandLine(argc, argv);
+  absl::InitializeLog();
 
-  TlsServer server("../certs/ca.crt", "../certs/server.crt",
-                   "../certs/server.key", port);
+  const int port = absl::GetFlag(FLAGS_port);
+  const std::string ca_cert = absl::GetFlag(FLAGS_ca_cert);
+  const std::string server_cert = absl::GetFlag(FLAGS_server_cert);
+  const std::string server_key = absl::GetFlag(FLAGS_server_key);
+
+  TlsServer server(ca_cert, server_cert, server_key, port);
 
   if (!server.Init()) {
-    std::cerr << "Failed to initialize server" << std::endl;
+    LOG(ERROR) << "Failed to initialize server";
     return 1;
   }
 
   server.SetOnConnection([](struct bufferevent* bev) {
-    std::cout << "Client connected." << std::endl;
+    LOG(INFO) << "Client connected.";
 
     WishHandler* handler = new WishHandler(bev, true);
 
@@ -39,7 +52,7 @@ int main(int argc, char** argv) {
           type = "UNKNOWN(" + std::to_string(opcode) + ")";
           break;
       }
-      std::cout << "Received [" << type << "]: " << msg << std::endl;
+      LOG(INFO) << "Received [" << type << "]: " << msg;
 
       // Echo back
       if (opcode == WISH_OPCODE_TEXT)
@@ -51,7 +64,7 @@ int main(int argc, char** argv) {
       else if (opcode == WISH_OPCODE_BINARY_METADATA)
         handler->SendBinaryMetadata(msg);
       else {
-        std::cerr << "Unknown opcode, cannot echo." << std::endl;
+        LOG(WARNING) << "Unknown opcode, cannot echo.";
       }
     });
 

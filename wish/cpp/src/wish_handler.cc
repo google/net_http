@@ -1,21 +1,21 @@
 #include "wish_handler.h"
 
+#include <event2/buffer.h>
+#include <event2/bufferevent.h>
+#include <event2/event.h>
+#include <wslay/wslay.h>
+
 #include <cstring>
 #include <iostream>
 #include <random>
 #include <sstream>
 #include <vector>
 
-#include <event2/buffer.h>
-#include <event2/bufferevent.h>
-#include <event2/event.h>
-#include <wslay/wslay.h>
-
 WishHandler::WishHandler(struct bufferevent* bev, bool is_server)
     : bev_(bev), is_server_(is_server), ctx_(nullptr), state_(HANDSHAKE) {
   struct wslay_event_callbacks callbacks = {
-      RecvCallback, SendCallback, GenMaskCallback,  NULL,
-      NULL,         NULL,         OnMsgRecvCallback};
+      RecvCallback, SendCallback, GenMaskCallback, NULL,
+      NULL, NULL, OnMsgRecvCallback};
 
   if (is_server_) {
     wslay_event_context_server_init(&ctx_, &callbacks, this);

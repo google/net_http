@@ -15,6 +15,11 @@ add_executable(tls_echo_server
 )
 target_link_libraries(tls_echo_server
     wish_handler
+    absl::flags
+    absl::flags_parse
+    absl::log
+    absl::log_initialize
+    "$<LINK_LIBRARY:WHOLE_ARCHIVE,absl::log_flags>"
 )
 
 add_executable(tls_hello_client

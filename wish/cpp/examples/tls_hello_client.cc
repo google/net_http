@@ -5,8 +5,8 @@
 #include "../src/wish_handler.h"
 
 int main() {
-  TlsClient client("../certs/ca.crt", "../certs/client.crt",
-                    "../certs/client.key", "127.0.0.1", 8080);
+  TlsClient client("certs/ca.crt", "certs/client.crt",
+                   "certs/client.key", "127.0.0.1", 8080);
 
   if (!client.Init()) {
     std::cerr << "Failed to initialize client" << std::endl;
