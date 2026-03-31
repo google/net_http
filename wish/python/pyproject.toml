@@ -1,0 +1,18 @@
+[build-system]
+requires = ["scikit-build-core", "nanobind"]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "wish"
+version = "0.1.0"
+description = "Python bindings for WiSH Protocol"
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = []
+
+[tool.scikit-build]
+cmake.version = ">=3.14"
+ninja.version = ">=1.5"
+
+[tool.scikit-build.cmake.define]
+CMAKE_CXX_STANDARD = "17"
