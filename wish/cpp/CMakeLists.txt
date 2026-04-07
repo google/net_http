@@ -57,7 +57,13 @@ FetchContent_Declare(
 # Exclude tests, benchmarks, sample files, etc. from dependencies.
 set(BUILD_TESTING OFF CACHE BOOL "" FORCE)
 
-FetchContent_MakeAvailable(wslay libevent boringssl googlebenchmark abseil)
+FetchContent_Declare(
+    googletest
+    GIT_REPOSITORY https://github.com/google/googletest.git
+    GIT_TAG        v1.17.0
+)
+
+FetchContent_MakeAvailable(wslay libevent boringssl googlebenchmark abseil googletest)
 
 include_directories(${wslay_SOURCE_DIR}/lib/includes)
 include_directories(${libevent_SOURCE_DIR}/include)
@@ -78,6 +84,8 @@ add_library(wish_handler
     src/tls_server.h
     src/tls_client.cc
     src/tls_client.h
+    src/plain_client.cc
+    src/plain_client.h
 )
 # BoringSSL targets: ssl and crypto
 target_link_libraries(wish_handler wslay event ssl crypto)
@@ -85,3 +93,8 @@ target_link_libraries(wish_handler wslay event ssl crypto)
 add_subdirectory(examples)
 
 add_subdirectory(benchmark)
+
+enable_testing()
+add_executable(wish_handler_test src/wish_handler_test.cc)
+target_link_libraries(wish_handler_test wish_handler gtest_main gtest event wslay)
+add_test(NAME wish_handler_test COMMAND wish_handler_test)
