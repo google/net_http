@@ -4,10 +4,9 @@
 #include <functional>
 #include <string>
 
-#include <event2/bufferevent.h>
-#include <event2/event.h>
-#include <event2/dns.h>
-
+#include "event2/bufferevent.h"
+#include "event2/dns.h"
+#include "event2/event.h"
 #include "tls_context.h"
 #include "wish_handler.h"
 
@@ -17,7 +16,7 @@ class TlsClient {
   using MessageCallback = std::function<void(uint8_t, const std::string&)>;
 
   TlsClient(const std::string& ca_file, const std::string& cert_file,
-             const std::string& key_file, const std::string& host, int port);
+            const std::string& key_file, const std::string& host, int port);
   ~TlsClient();
 
   bool Init();
@@ -34,6 +33,7 @@ class TlsClient {
   int port_;
 
   TlsContext tls_ctx_;
+
   struct event_base* base_;
   struct evdns_base* dns_base_;
 

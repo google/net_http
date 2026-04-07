@@ -5,12 +5,15 @@ from urllib.parse import urlparse
 from . import wish_ext
 
 class WishConnection:
-    def __init__(self, host, port, ca_file, cert_file, key_file):
+    def __init__(self, host, port, tls, ca_file="", cert_file="", key_file=""):
         self._host = host
         self._port = port
-        self._client = wish_ext.TlsClient(ca_file, cert_file, key_file, host, port)
+        if tls:
+            self._client = wish_ext.TlsClient(ca_file, cert_file, key_file, host, port)
+        else:
+            self._client = wish_ext.PlainClient(host, port)
         if not self._client.init():
-            raise RuntimeError(f"Failed to initialize TlsClient for {host}:{port}")
+            raise RuntimeError(f"Failed to initialize client for {host}:{port}")
         
         self._loop = asyncio.get_running_loop()
         self._recv_queue = asyncio.Queue()
@@ -60,15 +63,17 @@ class WishConnection:
 class _ConnectContextManager:
     def __init__(self, uri, ca_file="", cert_file="", key_file=""):
         parsed = urlparse(uri)
+        self.tls = parsed.scheme in ("wishs", "wss", "https")
         self.host = parsed.hostname
-        self.port = parsed.port or (443 if parsed.scheme in ["wishs", "wss", "https"] else 80)
+        self.port = parsed.port or (443 if self.tls else 80)
         self.ca_file = ca_file
         self.cert_file = cert_file
         self.key_file = key_file
         self.conn = None
 
     async def __aenter__(self):
-        self.conn = WishConnection(self.host, self.port, self.ca_file, self.cert_file, self.key_file)
+        self.conn = WishConnection(self.host, self.port, self.tls,
+                                   self.ca_file, self.cert_file, self.key_file)
         await self.conn.connect()
         return self.conn
 

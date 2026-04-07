@@ -8,8 +8,8 @@
 #include <openssl/ssl.h>
 
 TlsClient::TlsClient(const std::string& ca_file, const std::string& cert_file,
-                       const std::string& key_file, const std::string& host,
-                       int port)
+                     const std::string& key_file, const std::string& host,
+                     int port)
     : ca_file_(ca_file),
       cert_file_(cert_file),
       key_file_(key_file),
@@ -59,7 +59,6 @@ bool TlsClient::Init() {
   SSL* ssl = SSL_new(tls_ctx_.ssl_ctx());
   struct bufferevent* bev = bufferevent_openssl_socket_new(
       base_, -1, ssl, BUFFEREVENT_SSL_CONNECTING, BEV_OPT_CLOSE_ON_FREE);
-
   if (!bev) {
     std::cerr << "Could not create bufferevent!" << std::endl;
     return false;
