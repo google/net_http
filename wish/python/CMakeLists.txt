@@ -13,6 +13,9 @@ set(EVENT__LIBRARY_TYPE STATIC CACHE STRING "" FORCE)
 
 # Exclude examples and tests from cpp/CMakeLists.txt
 set(BUILD_TESTING OFF CACHE BOOL "" FORCE)
+set(WISH_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(WISH_BUILD_BENCHMARKS OFF CACHE BOOL "" FORCE)
+set(WISH_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 add_subdirectory(../cpp wish_cpp_build)
 
 nanobind_add_module(wish_ext src/wish_ext.cc)
