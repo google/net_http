@@ -1,49 +1,24 @@
-#include "tls_client.h"
+#include "plain_client.h"
 
 #include <iostream>
 
-// To use BoringSSL
-#define EVENT__HAVE_OPENSSL 1
-#include <event2/bufferevent_ssl.h>
-#include <openssl/ssl.h>
-
-TlsClient::TlsClient(const std::string& ca_file, const std::string& cert_file,
-                     const std::string& key_file, const std::string& host,
-                     int port)
-    : ca_file_(ca_file),
-      cert_file_(cert_file),
-      key_file_(key_file),
-      host_(host),
+PlainClient::PlainClient(const std::string& host, int port)
+    : host_(host),
       port_(port),
       base_(nullptr),
       dns_base_(nullptr),
       handler_(nullptr) {}
 
-TlsClient::~TlsClient() {
+PlainClient::~PlainClient() {
   if (dns_base_) {
     evdns_base_free(dns_base_, 0);
   }
   if (base_) {
     event_base_free(base_);
   }
-  // WishHandler deletes itself when the connection closes
-  // But if it wasn't started, we might need to delete it.
-  // Assuming it manages its own lifecycle for now.
 }
 
-bool TlsClient::Init() {
-  SSL_library_init();
-  SSL_load_error_strings();
-
-  tls_ctx_.set_ca_file(ca_file_);
-  tls_ctx_.set_certificate_file(cert_file_);
-  tls_ctx_.set_private_key_file(key_file_);
-
-  if (!tls_ctx_.Init(false)) {
-    std::cerr << "Failed to init TLS context" << std::endl;
-    return false;
-  }
-
+bool PlainClient::Init() {
   base_ = event_base_new();
   if (!base_) {
     std::cerr << "Could not initialize libevent!" << std::endl;
@@ -56,9 +31,8 @@ bool TlsClient::Init() {
     return false;
   }
 
-  SSL* ssl = SSL_new(tls_ctx_.ssl_ctx());
-  struct bufferevent* bev = bufferevent_openssl_socket_new(
-      base_, -1, ssl, BUFFEREVENT_SSL_CONNECTING, BEV_OPT_CLOSE_ON_FREE);
+  struct bufferevent* bev =
+      bufferevent_socket_new(base_, -1, BEV_OPT_CLOSE_ON_FREE);
   if (!bev) {
     std::cerr << "Could not create bufferevent!" << std::endl;
     return false;
@@ -85,21 +59,21 @@ bool TlsClient::Init() {
   return true;
 }
 
-void TlsClient::SetOnOpen(OpenCallback cb) {
+void PlainClient::SetOnOpen(OpenCallback cb) {
   on_open_ = cb;
   if (handler_) {
     handler_->SetOnOpen([this]() { on_open_(handler_); });
   }
 }
 
-void TlsClient::SetOnMessage(MessageCallback cb) {
+void PlainClient::SetOnMessage(MessageCallback cb) {
   on_message_ = cb;
   if (handler_) {
     handler_->SetOnMessage(on_message_);
   }
 }
 
-void TlsClient::Run() {
+void PlainClient::Run() {
   std::cout << "Client running..." << std::endl;
 
   event_base_dispatch(base_);
