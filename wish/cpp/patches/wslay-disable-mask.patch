@@ -1,0 +1,49 @@
+diff --git a/lib/wslay_event.c b/lib/wslay_event.c
+index 4c29fe4..93e9255 100644
+--- a/lib/wslay_event.c
++++ b/lib/wslay_event.c
+@@ -509,7 +509,7 @@ int wslay_event_recv(wslay_event_context_ptr ctx) {
+           (wslay_get_rsv1(iocb.rsv) &&
+            (wslay_is_ctrl_frame(iocb.opcode) ||
+             iocb.opcode == WSLAY_CONTINUATION_FRAME)) ||
+-          (ctx->server && !iocb.mask) || (!ctx->server && iocb.mask)) {
++          iocb.mask) {
+         if ((r = wslay_event_queue_close_wrapper(ctx, WSLAY_CODE_PROTOCOL_ERROR,
+                                                  NULL, 0)) != 0) {
+           return (int)r;
+@@ -775,7 +775,7 @@ int wslay_event_send(wslay_event_context_ptr ctx) {
+       iocb.fin = 1;
+       iocb.opcode = ctx->omsg->opcode;
+       iocb.rsv = ctx->omsg->rsv;
+-      iocb.mask = ctx->server ^ 1;
++      iocb.mask = 0;
+       iocb.data = ctx->omsg->data;
+       iocb.data_length = ctx->opayloadlen;
+       if (ctx->opayloadoff) {
+@@ -835,7 +835,7 @@ int wslay_event_send(wslay_event_context_ptr ctx) {
+       iocb.fin = ctx->omsg->fin;
+       iocb.opcode = ctx->omsg->opcode;
+       iocb.rsv = ctx->omsg->rsv;
+-      iocb.mask = ctx->server ? 0 : 1;
++      iocb.mask = 0;
+       iocb.data = ctx->obufmark;
+       iocb.data_length = (size_t)(ctx->obuflimit - ctx->obufmark);
+       iocb.payload_length = ctx->opayloadlen;
+@@ -908,7 +908,7 @@ ssize_t wslay_event_write(wslay_event_context_ptr ctx, uint8_t *buf,
+       iocb.fin = 1;
+       iocb.opcode = ctx->omsg->opcode;
+       iocb.rsv = ctx->omsg->rsv;
+-      iocb.mask = ctx->server ^ 1;
++      iocb.mask = 0;
+       iocb.data = ctx->omsg->data;
+       iocb.data_length = ctx->opayloadlen;
+       if (ctx->opayloadoff) {
+@@ -971,7 +971,7 @@ ssize_t wslay_event_write(wslay_event_context_ptr ctx, uint8_t *buf,
+       iocb.fin = ctx->omsg->fin;
+       iocb.opcode = ctx->omsg->opcode;
+       iocb.rsv = ctx->omsg->rsv;
+-      iocb.mask = ctx->server ? 0 : 1;
++      iocb.mask = 0;
+       iocb.data = ctx->obufmark;
+       iocb.data_length = (size_t)(ctx->obuflimit - ctx->obufmark);
+       iocb.payload_length = ctx->opayloadlen;
