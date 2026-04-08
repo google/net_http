@@ -10,8 +10,7 @@ The `libevent` event loop runs in a background thread, integrated with the Pytho
 This sub-project is intended to be used with a Python virtual environment (`venv`).
 
 ### Prerequisites
-- Python 3.9+
-  - *Required for `asyncio.to_thread()`, which is used to run the C++ libevent loop concurrently.*
+- Python 3.8+
 - CMake 3.14+
 - A working C++17 compiler
 - Background libraries like BoringSSL and libevent
@@ -71,7 +70,7 @@ if __name__ == "__main__":
 
 To provide maximum throughput without blocking the Python event loop, these bindings rely on several specific architectural choices:
 
-- **Background C++ Event Loop:** The core networking operations and TLS data streaming are handled natively by `libevent`. The `wish/client.py` module uses `asyncio.to_thread()` to spawn this C++ event loop in a background thread.
+- **Background C++ Event Loop:** The core networking operations and TLS data streaming are handled natively by `libevent`. The `wish/client.py` module uses `loop.run_in_executor()` to spawn this C++ event loop in a background thread.
 - **GIL Management:** The C++ extension releases the Python GIL while running its `libevent` dispatch loop and when performing heavy network I/O. The Python interpreter only re-acquires the GIL for split seconds to process incoming messages or to initiate send operations.
 - **Micro-Bindings:** `nanobind` is deliberately chosen for its modern, zero-overhead approach to creating C++ bindings. It has a small binary footprint and fast execution speed when crossing the C++/Python boundary.
 - **Thread-safe Asyncio Bridging:** When the C++ connection layer has an event (like a successful connection or a received message), it safely bridges back to the Python thread by triggering `loop.call_soon_threadsafe()`. Data is seamlessly funneled into an `asyncio.Queue` so that the Python user processes it using standard, non-blocking asynchronous loops.

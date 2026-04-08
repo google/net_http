@@ -32,9 +32,7 @@ class WishConnection:
 
     async def connect(self):
         # Run the C++ event loop in a background thread.
-        # Must use create_task() so it's actually scheduled and runs
-        # concurrently while we await the open_future below.
-        asyncio.create_task(asyncio.to_thread(self._client.run))
+        self._loop.run_in_executor(None, self._client.run)
         # Wait until the on_open callback fires
         await self._open_future
         return self
