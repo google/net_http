@@ -1,8 +1,10 @@
 #include "wish_handler.h"
-#include <gtest/gtest.h>
+
 #include <event2/buffer.h>
 #include <event2/bufferevent.h>
 #include <event2/event.h>
+#include <gtest/gtest.h>
+
 #include <cstring>
 #include <string>
 
@@ -81,7 +83,7 @@ static void DrainInput(struct bufferevent* bev) {
 }
 
 // Tests that the client does NOT mask frames when sending.
-// WiSH over HTTP/2 prohibits masking (unlike standard WebSocket over TCP).
+// WiSH doesn't use masking (unlike WebSocket over TCP).
 //
 // Strategy: use a raw bufferevent on one end of a pair as a fake server.
 // Inject a valid HTTP 200 response to move the WishHandler into OPEN state,
@@ -91,7 +93,8 @@ TEST_F(WishHandlerTest, ClientSendsUnmasked) {
   struct bufferevent* pair[2];
   int res = bufferevent_pair_new(base_, BEV_OPT_CLOSE_ON_FREE, pair);
   ASSERT_EQ(res, 0);
-  // pair[0]: WishHandler client bev  pair[1]: raw observer (fake server)
+  // pair[0]: WishHandler client bev
+  // pair[1]: raw observer (fake server)
   bufferevent_enable(pair[1], EV_READ | EV_WRITE);
 
   WishHandler* client = new WishHandler(pair[0], false /* is_server */);
@@ -125,12 +128,13 @@ TEST_F(WishHandlerTest, ClientSendsUnmasked) {
   EXPECT_EQ(bytes[0], 0x81u);
 
   // Second byte: mask bit (0x80) + payload length.
-  // WiSH over HTTP/2 MUST NOT use masking.
+  // WiSH doesn't use masking.
   bool is_masked = (bytes[1] & 0x80) != 0;
   EXPECT_FALSE(is_masked) << "Client sent a masked frame! WiSH must not use masking.";
 
-  // WishHandler destructor frees pair[0]; free pair[1] manually.
+  // WishHandler destructor frees pair[0].
   delete client;
+  // free pair[1] manually.
   bufferevent_free(pair[1]);
 }
 
@@ -139,7 +143,8 @@ TEST_F(WishHandlerTest, ServerSendsUnmasked) {
   struct bufferevent* pair[2];
   int res = bufferevent_pair_new(base_, BEV_OPT_CLOSE_ON_FREE, pair);
   ASSERT_EQ(res, 0);
-  // pair[0]: WishHandler server bev  pair[1]: raw observer (fake client)
+  // pair[0]: WishHandler server bev
+  // pair[1]: raw observer (fake client)
   bufferevent_enable(pair[1], EV_READ | EV_WRITE);
 
   WishHandler* server = new WishHandler(pair[0], true /* is_server */);
