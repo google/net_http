@@ -24,6 +24,7 @@ FetchContent_Declare(
     wslay
     GIT_REPOSITORY https://github.com/tatsuhiro-t/wslay.git
     GIT_TAG        master
+    PATCH_COMMAND  git apply --reverse --check ${CMAKE_CURRENT_SOURCE_DIR}/patches/wslay-disable-mask.patch || git apply ${CMAKE_CURRENT_SOURCE_DIR}/patches/wslay-disable-mask.patch
 )
 
 # Disable OpenSSL and Mbed TLS. We use BoringSSL instead.
