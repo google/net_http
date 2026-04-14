@@ -13,6 +13,7 @@ TLS_CLIENT_BINARY_NAME = "benchmark/tls_benchmark_client"
 
 PLAIN_SERVER_BINARY_NAME = "examples/echo_server"
 PLAIN_CLIENT_BINARY_NAME = "benchmark/benchmark_client"
+HIGH_QPS_CLIENT_BINARY_NAME = "benchmark/high_qps_benchmark_client"
 
 
 def _client_host_from_remote_target(remote_host):
@@ -56,13 +57,21 @@ def _start_server(remote_host, server_binary_path, server_binary_name, certs_dir
     return subprocess.Popen(["ssh", "-tt", remote_host, remote_command], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=0)
 
 
-def run_benchmark(remote_host=None, tls=True):
-    server_binary_name = TLS_SERVER_BINARY_NAME if tls else PLAIN_SERVER_BINARY_NAME
-    client_binary_name = TLS_CLIENT_BINARY_NAME if tls else PLAIN_CLIENT_BINARY_NAME
+def run_benchmark(remote_host=None, tls=True, high_qps=False):
+    # The high-QPS client is plain only (no TLS variant).
+    if high_qps:
+        server_binary_name = PLAIN_SERVER_BINARY_NAME
+        client_binary_name = HIGH_QPS_CLIENT_BINARY_NAME
+    else:
+        server_binary_name = TLS_SERVER_BINARY_NAME if tls else PLAIN_SERVER_BINARY_NAME
+        client_binary_name = TLS_CLIENT_BINARY_NAME if tls else PLAIN_CLIENT_BINARY_NAME
     server_binary_path = os.path.join(BUILD_DIR, server_binary_name)
     client_binary_path = os.path.join(BUILD_DIR, client_binary_name)
 
-    print(f"Running {'TLS' if tls else 'plain'} benchmark ...")
+    if high_qps:
+        print("Running high-QPS benchmark (plain) ...")
+    else:
+        print(f"Running {'TLS' if tls else 'plain'} benchmark ...")
 
     client_host = "127.0.0.1"
     if remote_host:
@@ -71,20 +80,25 @@ def run_benchmark(remote_host=None, tls=True):
     else:
         print("Starting local server ...")
 
-    server_process = _start_server(remote_host, server_binary_path, server_binary_name, certs_dir=CERTS_DIR if tls else None)
+    server_process = _start_server(remote_host, server_binary_path, server_binary_name, certs_dir=CERTS_DIR if (tls and not high_qps) else None)
     time.sleep(2)  # wait for server to start
 
     if server_process.poll() is not None:
         raise RuntimeError(f"{server_binary_name} failed to start")
 
+    # The high-QPS client uses Iterations() to control measurement time, so
+    # --benchmark_min_time must be omitted to avoid conflicting with it.
+    client_cmd = [
+        client_binary_path,
+        "--stderrthreshold=0",
+        "--benchmark_counters_tabular=true",
+        f"--host={client_host}",
+    ]
+    if not high_qps:
+        client_cmd.append("--benchmark_min_time=5.0s")
+
     try:
-        subprocess.run([
-            client_binary_path,
-            "--stderrthreshold=0",
-            "--benchmark_counters_tabular=true",
-            "--benchmark_min_time=5.0s",
-            f"--host={client_host}",
-        ], capture_output=False, text=True, check=True)
+        subprocess.run(client_cmd, capture_output=False, text=True, check=True)
     except subprocess.CalledProcessError as e:
         print(f"Error running client: {e}")
     except Exception as e:
@@ -105,12 +119,22 @@ if __name__ == "__main__":
         "--tls",
         action=argparse.BooleanOptionalAction,
         default=True,
-        help="Use TLS (default: enabled). Pass --no-tls for plain HTTP.",
+        help="Use TLS (default: enabled). Pass --no-tls for plain HTTP. Ignored when --high-qps is set.",
+    )
+    parser.add_argument(
+        "--high-qps",
+        action="store_true",
+        default=False,
+        help="Run the high-QPS (target-QPS) benchmark instead of the default latency sweep. Always uses the plain server.",
     )
     args = parser.parse_args()
 
-    server_binary_name = TLS_SERVER_BINARY_NAME if args.tls else PLAIN_SERVER_BINARY_NAME
-    client_binary_name = TLS_CLIENT_BINARY_NAME if args.tls else PLAIN_CLIENT_BINARY_NAME
+    if args.high_qps:
+        server_binary_name = PLAIN_SERVER_BINARY_NAME
+        client_binary_name = HIGH_QPS_CLIENT_BINARY_NAME
+    else:
+        server_binary_name = TLS_SERVER_BINARY_NAME if args.tls else PLAIN_SERVER_BINARY_NAME
+        client_binary_name = TLS_CLIENT_BINARY_NAME if args.tls else PLAIN_CLIENT_BINARY_NAME
     server_binary_path = os.path.join(BUILD_DIR, server_binary_name)
     client_binary_path = os.path.join(BUILD_DIR, client_binary_name)
 
@@ -127,4 +151,4 @@ if __name__ == "__main__":
         exit(1)
 
     print("Starting benchmarks...")
-    run_benchmark(remote_host=args.remote_host, tls=args.tls)
+    run_benchmark(remote_host=args.remote_host, tls=args.tls, high_qps=args.high_qps)
