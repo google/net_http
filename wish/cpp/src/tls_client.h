@@ -23,6 +23,7 @@ class TlsClient {
   void SetOnOpen(OpenCallback cb);
   void SetOnMessage(MessageCallback cb);
   void Run();
+  void Stop();
 
  private:
   std::string ca_file_;

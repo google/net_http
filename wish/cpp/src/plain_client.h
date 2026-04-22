@@ -22,6 +22,7 @@ class PlainClient {
   void SetOnOpen(OpenCallback cb);
   void SetOnMessage(MessageCallback cb);
   void Run();
+  void Stop();
 
  private:
   std::string host_;

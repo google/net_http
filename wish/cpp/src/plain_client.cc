@@ -78,3 +78,9 @@ void PlainClient::Run() {
 
   event_base_dispatch(base_);
 }
+
+void PlainClient::Stop() {
+  if (base_) {
+    event_base_loopexit(base_, nullptr);
+  }
+}

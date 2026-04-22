@@ -18,6 +18,7 @@ class WishConnection:
         self._loop = asyncio.get_running_loop()
         self._recv_queue = asyncio.Queue()
         self._open_future = self._loop.create_future()
+        self._run_future = None
         self._handler = None
         
         def on_open(handler):
@@ -32,10 +33,18 @@ class WishConnection:
 
     async def connect(self):
         # Run the C++ event loop in a background thread.
-        self._loop.run_in_executor(None, self._client.run)
+        # Keep the Future so we can await thread completion on close.
+        self._run_future = self._loop.run_in_executor(None, self._client.run)
         # Wait until the on_open callback fires
         await self._open_future
         return self
+
+    async def close(self):
+        """Stop the C++ event loop and wait for the background thread to exit."""
+        self._client.stop()
+        if self._run_future is not None:
+            await self._run_future
+            self._run_future = None
 
     async def send(self, data):
         """Sends data over the WiSH connection. If data is bytes, sends as binary, else text."""
@@ -76,10 +85,7 @@ class _ConnectContextManager:
         return self.conn
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
-        # We don't have explicit close method on TlsClient yet,
-        # but the connection would drop if the process exits,
-        # or we could add a shutdown mechanism.
-        pass
+        await self.conn.close()
 
 def connect(uri, ca_file="", cert_file="", key_file=""):
     return _ConnectContextManager(uri, ca_file, cert_file, key_file)
