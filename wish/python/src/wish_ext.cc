@@ -115,14 +115,24 @@ NB_MODULE(wish_ext, m) {
         // is destroyed (either by tp_clear or ~TlsClient).
         self.client.SetOnOpen([&self](WishHandler* handler) {
           nb::gil_scoped_acquire acquire;
-          self.on_open_cb(nb::cast(handler, nb::rv_policy::reference));
+          try {
+            self.on_open_cb(nb::cast(handler, nb::rv_policy::reference));
+          } catch (nb::python_error& e) {
+            e.restore();
+            PyErr_WriteUnraisable(nullptr);
+          }
         });
       })
       .def("set_on_message", [](TlsClientPy& self, nb::object cb) {
         self.on_message_cb = cb;
         self.client.SetOnMessage([&self](uint8_t opcode, const std::string& msg) {
           nb::gil_scoped_acquire acquire;
-          self.on_message_cb(opcode, msg);
+          try {
+            self.on_message_cb(opcode, msg);
+          } catch (nb::python_error& e) {
+            e.restore();
+            PyErr_WriteUnraisable(nullptr);
+          }
         });
       })
       .def("run", [](TlsClientPy& self) { self.client.Run(); }, nb::call_guard<nb::gil_scoped_release>())
@@ -144,14 +154,24 @@ NB_MODULE(wish_ext, m) {
         self.on_open_cb = cb;
         self.client.SetOnOpen([&self](WishHandler* handler) {
           nb::gil_scoped_acquire acquire;
-          self.on_open_cb(nb::cast(handler, nb::rv_policy::reference));
+          try {
+            self.on_open_cb(nb::cast(handler, nb::rv_policy::reference));
+          } catch (nb::python_error& e) {
+            e.restore();
+            PyErr_WriteUnraisable(nullptr);
+          }
         });
       })
       .def("set_on_message", [](PlainClientPy& self, nb::object cb) {
         self.on_message_cb = cb;
         self.client.SetOnMessage([&self](uint8_t opcode, const std::string& msg) {
           nb::gil_scoped_acquire acquire;
-          self.on_message_cb(opcode, msg);
+          try {
+            self.on_message_cb(opcode, msg);
+          } catch (nb::python_error& e) {
+            e.restore();
+            PyErr_WriteUnraisable(nullptr);
+          }
         });
       })
       .def("run", [](PlainClientPy& self) { self.client.Run(); }, nb::call_guard<nb::gil_scoped_release>())
