@@ -104,3 +104,9 @@ void TlsClient::Run() {
 
   event_base_dispatch(base_);
 }
+
+void TlsClient::Stop() {
+  if (base_) {
+    event_base_loopexit(base_, nullptr);
+  }
+}
