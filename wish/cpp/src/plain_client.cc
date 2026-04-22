@@ -54,6 +54,10 @@ bool PlainClient::Init() {
     handler_->SetOnMessage(on_message_);
   }
 
+  if (on_close_) {
+    handler_->SetOnClose(on_close_);
+  }
+
   handler_->Start();
 
   return true;
@@ -70,6 +74,13 @@ void PlainClient::SetOnMessage(MessageCallback cb) {
   on_message_ = cb;
   if (handler_) {
     handler_->SetOnMessage(on_message_);
+  }
+}
+
+void PlainClient::SetOnClose(CloseCallback cb) {
+  on_close_ = cb;
+  if (handler_) {
+    handler_->SetOnClose(on_close_);
   }
 }
 

@@ -44,6 +44,8 @@ void WishHandler::SetOnMessage(MessageCallback cb) { on_message_ = cb; }
 
 void WishHandler::SetOnOpen(OpenCallback cb) { on_open_ = cb; }
 
+void WishHandler::SetOnClose(CloseCallback cb) { on_close_ = cb; }
+
 ssize_t WishHandler::RecvCallback(wslay_event_context* ctx, uint8_t* buf,
                                   size_t len, int flags, void* user_data) {
   WishHandler* handler = static_cast<WishHandler*>(user_data);
@@ -114,6 +116,9 @@ void WishHandler::EventCallback(struct bufferevent* bev, short events,
     // Connection closed
     std::cout << "Connection closed." << std::endl;
     WishHandler* handler = static_cast<WishHandler*>(ctx);
+    // Notify before self-deletion so Python-side handles can be invalidated
+    // while the pointer is still valid.
+    if (handler->on_close_) handler->on_close_();
     delete handler;
   }
 }

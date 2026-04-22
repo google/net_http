@@ -3,11 +3,41 @@
 #include <nanobind/stl/function.h>
 #include <nanobind/stl/string.h>
 
+#include <memory>
+#include <mutex>
+
 #include "plain_client.h"
 #include "tls_client.h"
 #include "wish_handler.h"
 
 namespace nb = nanobind;
+
+// ---------------------------------------------------------------------------
+// WishHandlerRef: a shared, nullable handle to WishHandler.
+//
+// The raw WishHandler* lives only as long as the connection is open.
+// WishHandler::EventCallback fires on_close_ BEFORE self-deleting; our
+// on_close hook nullifies ptr under the mutex so any concurrent call from
+// the Python thread via send_text/send_binary sees nullptr and raises
+// RuntimeError rather than dereferencing freed memory.
+// ---------------------------------------------------------------------------
+
+struct WishHandlerRef {
+  std::mutex mu;
+  WishHandler* ptr = nullptr;
+
+  int send_text(const std::string& msg) {
+    std::lock_guard<std::mutex> lock(mu);
+    if (!ptr) throw std::runtime_error("Connection is closed");
+    return ptr->SendText(msg);
+  }
+
+  int send_binary(const std::string& msg) {
+    std::lock_guard<std::mutex> lock(mu);
+    if (!ptr) throw std::runtime_error("Connection is closed");
+    return ptr->SendBinary(msg);
+  }
+};
 
 // ---------------------------------------------------------------------------
 // Wrapper structs
@@ -24,16 +54,18 @@ struct TlsClientPy {
   TlsClient client;
   nb::object on_open_cb;
   nb::object on_message_cb;
+  std::shared_ptr<WishHandlerRef> handler_ref;
 
   TlsClientPy(const std::string& ca, const std::string& cert,
               const std::string& key, const std::string& host, int port)
-      : client(ca, cert, key, host, port) {}
+      : client(ca, cert, key, host, port) {};
 };
 
 struct PlainClientPy {
   PlainClient client;
   nb::object on_open_cb;
   nb::object on_message_cb;
+  std::shared_ptr<WishHandlerRef> handler_ref;
 
   PlainClientPy(const std::string& host, int port)
       : client(host, port) {}
@@ -55,7 +87,14 @@ static int tls_clear(PyObject* self) {
   // Clear the C++ callbacks first so the lambda (which captures &*w) is
   // dropped before we invalidate on_open_cb / on_message_cb.
   w->client.SetOnOpen({});
+  w->client.SetOnClose({});
   w->client.SetOnMessage({});
+  // Invalidate the safe handle so Python code can no longer call through it.
+  if (w->handler_ref) {
+    std::lock_guard<std::mutex> lock(w->handler_ref->mu);
+    w->handler_ref->ptr = nullptr;
+  }
+  w->handler_ref.reset();
   w->on_open_cb = nb::object();
   w->on_message_cb = nb::object();
   return 0;
@@ -75,7 +114,14 @@ static int plain_traverse(PyObject* self, visitproc visit, void* arg) {
 static int plain_clear(PyObject* self) {
   PlainClientPy* w = nb::inst_ptr<PlainClientPy>(nb::handle(self));
   w->client.SetOnOpen({});
+  w->client.SetOnClose({});
   w->client.SetOnMessage({});
+  // Invalidate the safe handle so Python code can no longer call through it.
+  if (w->handler_ref) {
+    std::lock_guard<std::mutex> lock(w->handler_ref->mu);
+    w->handler_ref->ptr = nullptr;
+  }
+  w->handler_ref.reset();
   w->on_open_cb = nb::object();
   w->on_message_cb = nb::object();
   return 0;
@@ -91,9 +137,9 @@ NB_MODULE(wish_ext, m) {
   evthread_use_pthreads();
 #endif
 
-  nb::class_<WishHandler>(m, "WishHandler")
-      .def("send_text", &WishHandler::SendText)
-      .def("send_binary", &WishHandler::SendBinary);
+  nb::class_<WishHandlerRef, std::shared_ptr<WishHandlerRef>>(m, "WishHandler")
+      .def("send_text", &WishHandlerRef::send_text)
+      .def("send_binary", &WishHandlerRef::send_binary);
 
   // ---- TlsClient --------------------------------------------------------
   static PyType_Slot tls_slots[] = {
@@ -110,13 +156,26 @@ NB_MODULE(wish_ext, m) {
       })
       .def("set_on_open", [](TlsClientPy& self, nb::object cb) {
         self.on_open_cb = cb;
+        // Create a fresh WishHandlerRef for this connection attempt.
+        auto ref = std::make_shared<WishHandlerRef>();
+        self.handler_ref = ref;
+        // Wire the close notification: nullify ptr before WishHandler is
+        // deleted so Python cannot reach freed memory.
+        self.client.SetOnClose([ref]() {
+          std::lock_guard<std::mutex> lock(ref->mu);
+          ref->ptr = nullptr;
+        });
         // Capture self by pointer; lifetime is safe because the lambda
         // lives inside self.client and is always cleared before self
         // is destroyed (either by tp_clear or ~TlsClient).
-        self.client.SetOnOpen([&self](WishHandler* handler) {
+        self.client.SetOnOpen([&self, ref](WishHandler* handler) {
+          {
+            std::lock_guard<std::mutex> lock(ref->mu);
+            ref->ptr = handler;
+          }
           nb::gil_scoped_acquire acquire;
           try {
-            self.on_open_cb(nb::cast(handler, nb::rv_policy::reference));
+            self.on_open_cb(ref);
           } catch (nb::python_error& e) {
             e.restore();
             PyErr_WriteUnraisable(nullptr);
@@ -152,10 +211,21 @@ NB_MODULE(wish_ext, m) {
       })
       .def("set_on_open", [](PlainClientPy& self, nb::object cb) {
         self.on_open_cb = cb;
-        self.client.SetOnOpen([&self](WishHandler* handler) {
+        // Create a fresh WishHandlerRef for this connection attempt.
+        auto ref = std::make_shared<WishHandlerRef>();
+        self.handler_ref = ref;
+        self.client.SetOnClose([ref]() {
+          std::lock_guard<std::mutex> lock(ref->mu);
+          ref->ptr = nullptr;
+        });
+        self.client.SetOnOpen([&self, ref](WishHandler* handler) {
+          {
+            std::lock_guard<std::mutex> lock(ref->mu);
+            ref->ptr = handler;
+          }
           nb::gil_scoped_acquire acquire;
           try {
-            self.on_open_cb(nb::cast(handler, nb::rv_policy::reference));
+            self.on_open_cb(ref);
           } catch (nb::python_error& e) {
             e.restore();
             PyErr_WriteUnraisable(nullptr);
