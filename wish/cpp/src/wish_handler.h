@@ -1,13 +1,13 @@
 #ifndef WISH_CPP_SRC_WISH_HANDLER_H_
 #define WISH_CPP_SRC_WISH_HANDLER_H_
 
+#include <event2/buffer.h>
+#include <event2/bufferevent.h>
+
 #include <functional>
 #include <memory>
 #include <string>
 #include <vector>
-
-#include <event2/buffer.h>
-#include <event2/bufferevent.h>
 
 // wslay forward decl
 extern "C" {
@@ -30,6 +30,7 @@ class WishHandler {
   using MessageCallback =
       std::function<void(uint8_t opcode, const std::string&)>;
   using OpenCallback = std::function<void()>;
+  using CloseCallback = std::function<void()>;
 
   // Constructor takes an already created bufferevent
   WishHandler(struct bufferevent* bev, bool is_server);
@@ -46,6 +47,7 @@ class WishHandler {
 
   void SetOnMessage(MessageCallback cb);
   void SetOnOpen(OpenCallback cb);
+  void SetOnClose(CloseCallback cb);
 
  private:
   struct bufferevent* bev_;
@@ -53,8 +55,11 @@ class WishHandler {
   struct wslay_event_context* ctx_;
   MessageCallback on_message_;
   OpenCallback on_open_;
+  CloseCallback on_close_;
 
-  enum State { HANDSHAKE, OPEN, CLOSED };
+  enum State { HANDSHAKE,
+               OPEN,
+               CLOSED };
   State state_;
 
   // wslay callbacks

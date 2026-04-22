@@ -14,6 +14,7 @@ class TlsClient {
  public:
   using OpenCallback = std::function<void(WishHandler*)>;
   using MessageCallback = std::function<void(uint8_t, const std::string&)>;
+  using CloseCallback = std::function<void()>;
 
   TlsClient(const std::string& ca_file, const std::string& cert_file,
             const std::string& key_file, const std::string& host, int port);
@@ -22,6 +23,7 @@ class TlsClient {
   bool Init();
   void SetOnOpen(OpenCallback cb);
   void SetOnMessage(MessageCallback cb);
+  void SetOnClose(CloseCallback cb);
   void Run();
   void Stop();
 
@@ -42,6 +44,7 @@ class TlsClient {
 
   OpenCallback on_open_;
   MessageCallback on_message_;
+  CloseCallback on_close_;
 };
 
 #endif  // WISH_CPP_SRC_TLS_CLIENT_H_
