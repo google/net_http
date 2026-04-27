@@ -20,15 +20,18 @@ TlsClient::TlsClient(const std::string& ca_file, const std::string& cert_file,
       handler_(nullptr) {}
 
 TlsClient::~TlsClient() {
+  // Signal the event loop to exit before freeing it.  If Run() is still
+  // executing in another thread (e.g. the caller forgot to call Stop()),
+  // event_base_loopbreak wakes it up immediately so event_base_free is safe.
+  if (base_) {
+    event_base_loopbreak(base_);
+  }
   if (dns_base_) {
     evdns_base_free(dns_base_, 0);
   }
   if (base_) {
     event_base_free(base_);
   }
-  // WishHandler deletes itself when the connection closes
-  // But if it wasn't started, we might need to delete it.
-  // Assuming it manages its own lifecycle for now.
 }
 
 bool TlsClient::Init() {
