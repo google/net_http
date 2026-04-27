@@ -12,8 +12,7 @@ class WishConnection:
             self._client = wish_ext.TlsClient(ca_file, cert_file, key_file, host, port)
         else:
             self._client = wish_ext.PlainClient(host, port)
-        if not self._client.init():
-            raise RuntimeError(f"Failed to initialize client for {host}:{port}")
+        self._client.init()  # raises RuntimeError on failure
         
         self._loop = asyncio.get_running_loop()
         self._recv_queue = asyncio.Queue()

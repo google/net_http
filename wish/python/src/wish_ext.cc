@@ -228,7 +228,9 @@ NB_MODULE(wish_ext, m) {
       .def(nb::init<const std::string&, const std::string&,
                     const std::string&, const std::string&, int>())
       .def("init", [](TlsClientPy& self) {
-        return self.client.Init();
+        if (!self.client.Init()) {
+          throw std::runtime_error("TlsClient.init() failed");
+        }
       })
       .def("set_on_open", [](TlsClientPy& self, nb::object cb) {
         self.on_open_cb = cb;
@@ -291,7 +293,9 @@ NB_MODULE(wish_ext, m) {
   nb::class_<PlainClientPy>(m, "PlainClient", nb::type_slots(plain_slots))
       .def(nb::init<const std::string&, int>())
       .def("init", [](PlainClientPy& self) {
-        return self.client.Init();
+        if (!self.client.Init()) {
+          throw std::runtime_error("PlainClient.init() failed");
+        }
       })
       .def("set_on_open", [](PlainClientPy& self, nb::object cb) {
         self.on_open_cb = cb;
