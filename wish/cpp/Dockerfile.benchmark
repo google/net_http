@@ -1,0 +1,54 @@
+# syntax=docker/dockerfile:1
+# ---------------------------------------------------------------------------
+# Stage 1: Build
+# ---------------------------------------------------------------------------
+FROM debian:bookworm AS builder
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        build-essential \
+        cmake \
+        git \
+        ninja-build \
+        ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /src
+
+# Copy CMakeLists, patches, and source files before configure.
+# CMake validates source file existence during the configure phase,
+# so src/ must be present before `cmake -B build` runs.
+# FetchContent downloads are still cached as long as CMakeLists.txt,
+# patches/, src/, and benchmark/ are unchanged.
+COPY CMakeLists.txt .
+COPY patches/ patches/
+COPY src/ src/
+COPY benchmark/ benchmark/
+
+# Configure: triggers FetchContent downloads (cached as a Docker layer).
+RUN cmake -B build -G Ninja \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DWISH_BUILD_TESTS=OFF \
+        -DWISH_BUILD_BENCHMARKS=ON \
+        -DWISH_BUILD_EXAMPLES=OFF
+
+RUN cmake --build build \
+        --target benchmark_client tls_benchmark_client high_qps_benchmark_client \
+        -- -j"$(nproc)"
+
+# ---------------------------------------------------------------------------
+# Stage 2: Runtime
+# ---------------------------------------------------------------------------
+FROM debian:bookworm-slim AS runtime
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        libstdc++6 \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=builder /src/build/benchmark/benchmark_client          /usr/local/bin/benchmark_client
+COPY --from=builder /src/build/benchmark/tls_benchmark_client      /usr/local/bin/tls_benchmark_client
+COPY --from=builder /src/build/benchmark/high_qps_benchmark_client /usr/local/bin/high_qps_benchmark_client
+
+# Default: latency benchmark client.
+# Override the ENTRYPOINT or CMD in the Job spec to switch clients.
+ENTRYPOINT ["/usr/local/bin/benchmark_client"]
+CMD ["--host=wish-echo-server", "--port=8080"]
