@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wish-echo-server
+  labels:
+    app: wish-echo-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: wish-echo-server
+  template:
+    metadata:
+      labels:
+        app: wish-echo-server
+    spec:
+      containers:
+        - name: server
+          image: us-central1-docker.pkg.dev/black-outlet-487003-v4/wish/echo-server:latest
+          args:
+            - "--port=8080"
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          readinessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 2
+            periodSeconds: 5
+          resources:
+            requests:
+              cpu: "1"
+              memory: "500Mi"
+            limits:
+              cpu: "1"
+              memory: "500Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: wish-echo-server
+spec:
+  selector:
+    app: wish-echo-server
+  ports:
+    - port: 8080
+      targetPort: 8080
+      protocol: TCP
+  type: ClusterIP

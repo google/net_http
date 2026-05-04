@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wish-tls-echo-server
+  labels:
+    app: wish-tls-echo-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: wish-tls-echo-server
+  template:
+    metadata:
+      labels:
+        app: wish-tls-echo-server
+    spec:
+      containers:
+        - name: server
+          image: us-central1-docker.pkg.dev/black-outlet-487003-v4/wish/tls-echo-server:latest
+          args:
+            - "--port=8443"
+          ports:
+            - name: https
+              containerPort: 8443
+              protocol: TCP
+          readinessProbe:
+            tcpSocket:
+              port: 8443
+            initialDelaySeconds: 2
+            periodSeconds: 5
+          resources:
+            requests:
+              cpu: "1"
+              memory: "500Mi"
+            limits:
+              cpu: "1"
+              memory: "500Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: wish-tls-echo-server
+spec:
+  selector:
+    app: wish-tls-echo-server
+  ports:
+    - port: 8443
+      targetPort: 8443
+      protocol: TCP
+  type: ClusterIP

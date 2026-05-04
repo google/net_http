@@ -1,0 +1,29 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  # Append a unique suffix (e.g. timestamp) to run multiple benchmarks:
+  #   kubectl create job wish-benchmark-$(date +%s) --from=job/wish-benchmark-client
+  name: wish-benchmark
+spec:
+  # Do not retry on failure so a broken binary doesn't loop.
+  backoffLimit: 0
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: client
+          image: us-central1-docker.pkg.dev/black-outlet-487003-v4/wish/benchmark:latest
+          command: ["high_qps_benchmark_client"]
+          args:
+            - "--stderrthreshold=0"
+            - "--benchmark_counters_tabular=true"
+            - "--host=wish-echo-server"
+            - "--port=8080"
+            - "--benchmark_min_time=5s"
+          resources:
+            requests:
+              cpu: "0.5"
+              memory: "500Mi"
+            limits:
+              cpu: "0.5"
+              memory: "500Mi"

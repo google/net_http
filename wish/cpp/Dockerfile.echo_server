@@ -1,0 +1,54 @@
+# syntax=docker/dockerfile:1
+# ---------------------------------------------------------------------------
+# Stage 1: Build
+# ---------------------------------------------------------------------------
+FROM debian:bookworm AS builder
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        build-essential \
+        cmake \
+        git \
+        ninja-build \
+        ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /src
+
+# Copy CMakeLists, patches, and source files before configure.
+# CMake validates source file existence during the configure phase,
+# so src/ must be present before `cmake -B build` runs.
+# FetchContent downloads are still cached as long as CMakeLists.txt,
+# patches/, and src/ are unchanged.
+COPY CMakeLists.txt .
+COPY patches/ patches/
+COPY src/ src/
+COPY examples/ examples/
+
+# Configure: triggers FetchContent downloads (cached as a Docker layer).
+RUN cmake -B build -G Ninja \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DWISH_BUILD_TESTS=OFF \
+        -DWISH_BUILD_BENCHMARKS=OFF \
+        -DWISH_BUILD_EXAMPLES=ON
+
+RUN cmake --build build \
+        --target echo_server tls_echo_server \
+        -- -j"$(nproc)"
+
+# ---------------------------------------------------------------------------
+# Stage 2: Runtime
+# ---------------------------------------------------------------------------
+FROM debian:bookworm-slim AS runtime
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        libstdc++6 \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=builder /src/build/examples/echo_server      /usr/local/bin/echo_server
+COPY --from=builder /src/build/examples/tls_echo_server  /usr/local/bin/tls_echo_server
+
+EXPOSE 8080
+
+# Default: plain-text echo server. Override CMD in the Pod spec for TLS.
+ENTRYPOINT ["/usr/local/bin/echo_server"]
+CMD ["--port=8080"]
