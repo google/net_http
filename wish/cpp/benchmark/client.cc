@@ -1,6 +1,7 @@
 #include <arpa/inet.h>
 #include <event2/bufferevent.h>
 #include <event2/event.h>
+#include <netdb.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <sys/socket.h>
@@ -49,30 +50,34 @@ bool InitConnection(ClientState* client) {
     return false;
   }
 
-  struct sockaddr_in sin;
-  std::memset(&sin, 0, sizeof(sin));
-  sin.sin_family = AF_INET;
-  sin.sin_port = htons(absl::GetFlag(FLAGS_port));
-
   const std::string host = absl::GetFlag(FLAGS_host);
+  const std::string port_str = std::to_string(absl::GetFlag(FLAGS_port));
 
-  if (inet_pton(AF_INET, host.c_str(), &sin.sin_addr) != 1) {
-    LOG(ERROR) << "Invalid IPv4 host: " << host;
+  struct addrinfo hints{};
+  hints.ai_family = AF_UNSPEC;
+  hints.ai_socktype = SOCK_STREAM;
+  struct addrinfo* res = nullptr;
+  const int gai_err = getaddrinfo(host.c_str(), port_str.c_str(), &hints, &res);
+  if (gai_err != 0) {
+    LOG(ERROR) << "getaddrinfo failed for " << host << ": "
+               << gai_strerror(gai_err);
     return false;
   }
 
   client->bev = bufferevent_socket_new(client->base, -1, BEV_OPT_CLOSE_ON_FREE);
   if (!client->bev) {
     LOG(ERROR) << "bufferevent_socket_new() failed";
+    freeaddrinfo(res);
     return false;
   }
 
-  if (bufferevent_socket_connect(client->bev,
-                                 reinterpret_cast<struct sockaddr*>(&sin),
-                                 sizeof(sin)) < 0) {
+  if (bufferevent_socket_connect(client->bev, res->ai_addr,
+                                 static_cast<int>(res->ai_addrlen)) < 0) {
     LOG(ERROR) << "bufferevent_socket_connect() failed";
+    freeaddrinfo(res);
     return false;
   }
+  freeaddrinfo(res);
 
   client->handler = new WishHandler(client->bev, false);
   client->handler->SetOnOpen([client]() {
