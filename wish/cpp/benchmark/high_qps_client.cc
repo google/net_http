@@ -24,6 +24,7 @@
 #include "absl/flags/parse.h"
 #include "absl/log/initialize.h"
 #include "absl/log/log.h"
+#include "absl/log/vlog_is_on.h"
 #include "benchmark/benchmark.h"
 
 ABSL_FLAG(std::string, host, "127.0.0.1", "Server host to connect to");
