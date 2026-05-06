@@ -7,12 +7,12 @@
 #   (or: gcloud auth login && gcloud auth application-default login)
 #
 # Usage:
-#   cd wish/cpp
 #   REGION=asia-northeast1 PROJECT=my-gcp-project REPOSITORY=wish ./scripts/build-and-push.sh
 #
 # Optional env vars:
 #   TAG          – image tag (default: git short SHA or "latest")
 #   PUSH         – set to "false" to build only without pushing
+#   FRESH        – set to "true" to bypass all caches (re-downloads FetchContent deps)
 
 set -euo pipefail
 
@@ -30,14 +30,16 @@ else
 fi
 TAG="${TAG:-${DEFAULT_TAG}}"
 PUSH="${PUSH:-true}"
+FRESH="${FRESH:-false}"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# The build context is wish/cpp (one level above scripts/).
+# The build context is one level above scripts/.
 CTX="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
 echo "==> Build context : ${CTX}"
 echo "==> Registry      : ${REGISTRY}"
 echo "==> Tag           : ${TAG}"
+echo "==> Fresh build   : ${FRESH}"
 echo ""
 
 build_and_push() {
@@ -47,10 +49,13 @@ build_and_push() {
     local latest_tag="${REGISTRY}/${name}:latest"
 
     echo "==> Building ${full_tag} ..."
+    local extra_flags=()
+    [[ "${FRESH}" == "true" ]] && extra_flags+=(--no-cache)
     DOCKER_BUILDKIT=1 docker build \
         --file "${CTX}/${dockerfile}" \
         --tag "${full_tag}" \
         --tag "${latest_tag}" \
+        "${extra_flags[@]}" \
         "${CTX}"
 
     if [[ "${PUSH}" == "true" ]]; then
@@ -60,5 +65,5 @@ build_and_push() {
     fi
 }
 
-build_and_push "echo-server"       "Dockerfile.echo_server"
+build_and_push "echo-server" "Dockerfile.echo_server"
 build_and_push "benchmark" "Dockerfile.benchmark"
