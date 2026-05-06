@@ -491,7 +491,7 @@ BENCHMARK(BM_PlainText_HighQPS)
     ->UseManualTime()
     ->Unit(benchmark::kMicrosecond)
     ->Args({1 << 10, 1'800})
-    ->Iterations(800 * 10);
+    ->Iterations(1'800 * 10);
 BENCHMARK(BM_PlainText_HighQPS)
     ->UseManualTime()
     ->Unit(benchmark::kMicrosecond)
