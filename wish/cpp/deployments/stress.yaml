@@ -20,11 +20,11 @@ spec:
       containers:
         - name: client
           image: us-central1-docker.pkg.dev/black-outlet-487003-v4/wish/benchmark:latest
-          command: ["benchmark_client"]
+          command: ["high_qps_benchmark_client"]
           args:
             - "--stderrthreshold=0"
             - "--host=wish-echo-server"
-            - "--port=50051"
+            - "--port=8080"
           resources:
             requests:
               cpu: "0.5"
