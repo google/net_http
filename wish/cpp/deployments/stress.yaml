@@ -1,0 +1,34 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: wish-stress
+spec:
+  completions: 4
+  parallelism: 4
+  # Do not retry on failure so a broken binary doesn't loop.
+  backoffLimit: 0
+  template:
+    spec:
+      restartPolicy: Never
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  app: wish-echo-server
+              topologyKey: kubernetes.io/hostname
+      containers:
+        - name: client
+          image: us-central1-docker.pkg.dev/black-outlet-487003-v4/wish/benchmark:latest
+          command: ["benchmark_client"]
+          args:
+            - "--stderrthreshold=0"
+            - "--host=wish-echo-server"
+            - "--port=50051"
+          resources:
+            requests:
+              cpu: "0.5"
+              memory: "500Mi"
+            limits:
+              cpu: "0.5"
+              memory: "500Mi"
