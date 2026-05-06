@@ -348,8 +348,10 @@ static void BM_PlainText_HighQPS(benchmark::State& state) {
 
   double prev_qps = 0.0;
 
-  for (int w = 0; w < kMaxWindows &&
-                  near_target_count < kStableNeeded && plateau_count < kPlateauLimit;
+  for (int w = 0;
+       w < kMaxWindows &&
+       near_target_count < kStableNeeded &&
+       plateau_count < kPlateauLimit;
        ++w) {
     ss.completed.store(0, std::memory_order_relaxed);
     {
@@ -357,9 +359,29 @@ static void BM_PlainText_HighQPS(benchmark::State& state) {
       ss.results.clear();
     }
 
+    VLOG(2) << "Measuring QPS in the warmup phase ...";
+
     const double measured = MeasureQps(ss.completed, kWindowMs);
-    VLOG(2) << "[warmup] QPS: " << static_cast<int>(measured)
-            << " / target: " << static_cast<int>(target_qps);
+
+    VLOG(2) << "Measured";
+    VLOG(2) << "  Current interval: " << ss.dispenser.GetInterval() << " us";
+    VLOG(2) << "  Measured QPS: " << static_cast<int>(measured);
+    VLOG(2) << "  Target QPS: " << static_cast<int>(target_qps);
+
+    if (VLOG_IS_ON(2)) {
+      std::vector<double> rtt_snap;
+      {
+        std::lock_guard<std::mutex> lk(ss.result_mu);
+        rtt_snap.assign(ss.results.begin(), ss.results.end());
+      }
+      if (!rtt_snap.empty()) {
+        std::sort(rtt_snap.begin(), rtt_snap.end());
+        VLOG(2) << "  RTT samples: " << rtt_snap.size()
+                << "  p50=" << PercentileFromSorted(rtt_snap, 0.50) << " us"
+                << "  p90=" << PercentileFromSorted(rtt_snap, 0.90) << " us"
+                << "  p99=" << PercentileFromSorted(rtt_snap, 0.99) << " us";
+      }
+    }
 
     // Adjust only the interval knob. Workers are fixed in number; the interval
     // is the sole rate-control lever.
@@ -369,6 +391,9 @@ static void BM_PlainText_HighQPS(benchmark::State& state) {
           0, current_us + static_cast<int64_t>(
                               (1.0 / target_qps - 1.0 / measured) * 1e6));
       ss.dispenser.SetInterval(new_us);
+
+      VLOG(2) << "Adjusting interval: " << current_us << " -> "
+              << new_us << " us";
     }
 
     const bool near_target =
@@ -386,8 +411,10 @@ static void BM_PlainText_HighQPS(benchmark::State& state) {
     else
       plateau_count = 0;
 
-    VLOG(2) << "[warmup] near_target_count=" << near_target_count
-            << " plateau_count=" << plateau_count;
+    VLOG(2) << "Warm up condition check";
+    VLOG(2) << "  Near-target count: " << near_target_count;
+    VLOG(2) << "  Plateau count: " << plateau_count;
+
     prev_qps = measured;
   }
 
