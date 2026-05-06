@@ -24,16 +24,27 @@ COPY patches/ patches/
 COPY src/ src/
 COPY benchmark/ benchmark/
 
-# Configure: triggers FetchContent downloads (cached as a Docker layer).
-RUN cmake -B build -G Ninja \
-        -DCMAKE_BUILD_TYPE=Release \
-        -DWISH_BUILD_TESTS=OFF \
-        -DWISH_BUILD_BENCHMARKS=ON \
-        -DWISH_BUILD_EXAMPLES=OFF
-
-RUN cmake --build build \
-        --target benchmark_client tls_benchmark_client high_qps_benchmark_client \
-        -- -j"$(nproc)"
+# Two persistent BuildKit cache volumes:
+#   /cmake-cache  – FetchContent downloads (git repos, tarballs)
+#   /cmake-build  – full cmake build tree (object files, compiled libs)
+# Both survive Docker layer invalidations; only changed sources are
+# recompiled on subsequent builds.
+# The binary is copied into the image layer at the end of the step.
+RUN --mount=type=cache,target=/cmake-cache,sharing=locked \
+    --mount=type=cache,target=/cmake-build,sharing=locked \
+        cmake -S . -B /cmake-build -G Ninja \
+            -DFETCHCONTENT_BASE_DIR=/cmake-cache \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DWISH_BUILD_TESTS=OFF \
+            -DWISH_BUILD_BENCHMARKS=ON \
+            -DWISH_BUILD_EXAMPLES=OFF \
+        && cmake --build /cmake-build \
+            --target benchmark_client tls_benchmark_client high_qps_benchmark_client \
+            -- -j"$(nproc)" \
+        && mkdir -p build \
+        && cp /cmake-build/benchmark/benchmark_client          build/benchmark_client \
+        && cp /cmake-build/benchmark/tls_benchmark_client      build/tls_benchmark_client \
+        && cp /cmake-build/benchmark/high_qps_benchmark_client build/high_qps_benchmark_client
 
 # ---------------------------------------------------------------------------
 # Stage 2: Runtime
@@ -44,9 +55,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         libstdc++6 \
     && rm -rf /var/lib/apt/lists/*
 
-COPY --from=builder /src/build/benchmark/benchmark_client          /usr/local/bin/benchmark_client
-COPY --from=builder /src/build/benchmark/tls_benchmark_client      /usr/local/bin/tls_benchmark_client
-COPY --from=builder /src/build/benchmark/high_qps_benchmark_client /usr/local/bin/high_qps_benchmark_client
+COPY --from=builder /src/build/benchmark_client          /usr/local/bin/benchmark_client
+COPY --from=builder /src/build/tls_benchmark_client      /usr/local/bin/tls_benchmark_client
+COPY --from=builder /src/build/high_qps_benchmark_client /usr/local/bin/high_qps_benchmark_client
 
 # Default: latency benchmark client.
 # Override the ENTRYPOINT or CMD in the Job spec to switch clients.

@@ -24,16 +24,26 @@ COPY patches/ patches/
 COPY src/ src/
 COPY examples/ examples/
 
-# Configure: triggers FetchContent downloads (cached as a Docker layer).
-RUN cmake -B build -G Ninja \
-        -DCMAKE_BUILD_TYPE=Release \
-        -DWISH_BUILD_TESTS=OFF \
-        -DWISH_BUILD_BENCHMARKS=OFF \
-        -DWISH_BUILD_EXAMPLES=ON
-
-RUN cmake --build build \
-        --target echo_server tls_echo_server \
-        -- -j"$(nproc)"
+# Two persistent BuildKit cache volumes:
+#   /cmake-cache  – FetchContent downloads (git repos, tarballs)
+#   /cmake-build  – full cmake build tree (object files, compiled libs)
+# Both survive Docker layer invalidations; only changed sources are
+# recompiled on subsequent builds.
+# The binary is copied into the image layer at the end of the step.
+RUN --mount=type=cache,target=/cmake-cache,sharing=locked \
+    --mount=type=cache,target=/cmake-build,sharing=locked \
+        cmake -S . -B /cmake-build -G Ninja \
+            -DFETCHCONTENT_BASE_DIR=/cmake-cache \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DWISH_BUILD_TESTS=OFF \
+            -DWISH_BUILD_BENCHMARKS=OFF \
+            -DWISH_BUILD_EXAMPLES=ON \
+        && cmake --build /cmake-build \
+            --target echo_server tls_echo_server \
+            -- -j"$(nproc)" \
+        && mkdir -p build \
+        && cp /cmake-build/examples/echo_server      build/echo_server \
+        && cp /cmake-build/examples/tls_echo_server  build/tls_echo_server
 
 # ---------------------------------------------------------------------------
 # Stage 2: Runtime
@@ -44,8 +54,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         libstdc++6 \
     && rm -rf /var/lib/apt/lists/*
 
-COPY --from=builder /src/build/examples/echo_server      /usr/local/bin/echo_server
-COPY --from=builder /src/build/examples/tls_echo_server  /usr/local/bin/tls_echo_server
+COPY --from=builder /src/build/echo_server      /usr/local/bin/echo_server
+COPY --from=builder /src/build/tls_echo_server  /usr/local/bin/tls_echo_server
 
 EXPOSE 8080
 
