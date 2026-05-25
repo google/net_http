@@ -30,6 +30,8 @@ FetchContent_Declare(
 # Disable OpenSSL and Mbed TLS. We use BoringSSL instead.
 set(EVENT__DISABLE_OPENSSL ON CACHE BOOL "" FORCE)
 set(EVENT__DISABLE_MBEDTLS ON CACHE BOOL "" FORCE)
+# Build libevent as a static library so executables are self-contained.
+set(EVENT__LIBRARY_TYPE STATIC CACHE STRING "" FORCE)
 
 set(EVENT__DISABLE_BENCHMARKS ON CACHE BOOL "" FORCE)
 set(EVENT__DISABLE_TESTS ON CACHE BOOL "" FORCE)
@@ -46,6 +48,27 @@ FetchContent_Declare(
     boringssl
     GIT_REPOSITORY https://boringssl.googlesource.com/boringssl
     GIT_TAG        0.20260211.0
+)
+
+# nghttp2: build only the core library (no TLS apps, no examples).
+set(ENABLE_LIB_ONLY         ON  CACHE BOOL "" FORCE)
+set(ENABLE_APP              OFF CACHE BOOL "" FORCE)
+set(ENABLE_HPACK_TOOLS      OFF CACHE BOOL "" FORCE)
+set(ENABLE_DOC              OFF CACHE BOOL "" FORCE)
+set(ENABLE_PYTHON_BINDINGS  OFF CACHE BOOL "" FORCE)
+set(ENABLE_EXAMPLES         OFF CACHE BOOL "" FORCE)
+set(ENABLE_FAILMALLOC       OFF CACHE BOOL "" FORCE)
+set(WITH_JEMALLOC           OFF CACHE BOOL "" FORCE)
+set(WITH_LIBEVENT_OPENSSL   OFF CACHE BOOL "" FORCE)
+set(WITH_OPENSSL            OFF CACHE BOOL "" FORCE)
+set(WITH_LIBXML2            OFF CACHE BOOL "" FORCE)
+set(WITH_SYSTEMD            OFF CACHE BOOL "" FORCE)
+set(WITH_MRUBY              OFF CACHE BOOL "" FORCE)
+set(WITH_NEVERBLEED         OFF CACHE BOOL "" FORCE)
+FetchContent_Declare(
+    nghttp2
+    GIT_REPOSITORY https://github.com/nghttp2/nghttp2.git
+    GIT_TAG        v1.65.0
 )
 
 if(WISH_BUILD_BENCHMARKS)
@@ -72,7 +95,7 @@ if(WISH_BUILD_TESTS)
     )
 endif()
 
-FetchContent_MakeAvailable(wslay libevent boringssl abseil)
+FetchContent_MakeAvailable(wslay libevent boringssl abseil nghttp2)
 
 if(WISH_BUILD_BENCHMARKS)
     FetchContent_MakeAvailable(googlebenchmark)
@@ -86,11 +109,15 @@ include_directories(${wslay_SOURCE_DIR}/lib/includes)
 include_directories(${libevent_SOURCE_DIR}/include)
 include_directories(${libevent_BINARY_DIR}/include)
 include_directories(${boringssl_SOURCE_DIR}/include)
+include_directories(${nghttp2_SOURCE_DIR}/lib/includes)
+include_directories(${nghttp2_BINARY_DIR}/lib/includes)
 include_directories(src)
 
 # We will compile libevent's bufferevent_openssl.c inside our library
 # since we disabled it in libevent's own build.
-add_library(wish_handler
+# Build as a static library: libevent is also static and was not compiled with
+# -fPIC, so it cannot be linked into a shared object.
+add_library(wish_handler STATIC
     src/wish_handler.cc
     src/wish_handler.h
     ${libevent_SOURCE_DIR}/bufferevent_openssl.c
@@ -103,9 +130,19 @@ add_library(wish_handler
     src/tls_client.h
     src/plain_client.cc
     src/plain_client.h
+    src/h2_wish_stream.cc
+    src/h2_wish_stream.h
+    src/h2_server.cc
+    src/h2_server.h
+    src/h2_tls_server.cc
+    src/h2_tls_server.h
+    src/h2_client.cc
+    src/h2_client.h
+    src/h2_tls_client.cc
+    src/h2_tls_client.h
 )
-# BoringSSL targets: ssl and crypto
-target_link_libraries(wish_handler wslay event ssl crypto)
+# BoringSSL targets: ssl and crypto.  nghttp2 for HTTP/2 framing.
+target_link_libraries(wish_handler wslay event ssl crypto nghttp2)
 
 if(WISH_BUILD_EXAMPLES)
     add_subdirectory(examples)
