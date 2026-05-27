@@ -22,6 +22,7 @@ int main(int argc, char** argv) {
 
   if (!client.Init()) {
     LOG(INFO) << "Init() failed";
+
     return 1;
   }
 

@@ -39,7 +39,8 @@ int main(int argc, char** argv) {
                    server_key);
 
   if (!server.Init()) {
-    LOG(ERROR) << "Failed to initialize server";
+    LOG(ERROR) << "Init() failed";
+
     return 1;
   }
 
@@ -64,7 +65,8 @@ int main(int argc, char** argv) {
           type = "UNKNOWN(" + std::to_string(opcode) + ")";
           break;
       }
-      LOG(INFO) << "Received [" << type << "]: " << msg;
+
+      LOG(INFO) << "OnMessage (opcode: " << type << ", message: " << msg << ")";
 
       // Echo back
       if (opcode == WEB_STREAM_OPCODE_TEXT) {
