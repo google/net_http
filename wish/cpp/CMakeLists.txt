@@ -206,14 +206,14 @@ if(WISH_BUILD_TESTS)
     enable_testing()
 
     add_executable(buffer_event_web_stream_test src/buffer_event_web_stream_test.cc)
-    target_link_libraries(buffer_event_web_stream_test buffer_event_web_stream gtest_main gtest event wslay)
+    target_link_libraries(buffer_event_web_stream_test buffer_event_web_stream gtest_main gtest)
     add_test(NAME buffer_event_web_stream_test COMMAND buffer_event_web_stream_test)
 
     add_executable(nghttp2_web_stream_test src/nghttp2_web_stream_test.cc)
-    target_link_libraries(nghttp2_web_stream_test buffer_event_web_stream gtest_main gtest nghttp2_static wslay)
+    target_link_libraries(nghttp2_web_stream_test buffer_event_web_stream gtest_main gtest)
     add_test(NAME nghttp2_web_stream_test COMMAND nghttp2_web_stream_test)
 
     add_executable(handshake_test src/handshake_test.cc)
-    target_link_libraries(handshake_test buffer_event_web_stream gtest_main gtest event wslay)
+    target_link_libraries(handshake_test buffer_event_web_stream gtest_main gtest event)
     add_test(NAME handshake_test COMMAND handshake_test)
 endif()
