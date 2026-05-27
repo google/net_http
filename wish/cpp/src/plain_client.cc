@@ -24,26 +24,24 @@ PlainClient::~PlainClient() {
 bool PlainClient::Init() {
   base_ = event_base_new();
   if (!base_) {
-    std::cerr << "Could not initialize libevent!" << std::endl;
+    std::cerr << "event_base_new() failed" << std::endl;
     return false;
   }
 
   dns_base_ = evdns_base_new(base_, 1);
   if (!dns_base_) {
-    std::cerr << "Could not initialize dns!" << std::endl;
+    std::cerr << "evdns_base_new() failed" << std::endl;
     return false;
   }
 
   struct bufferevent* bev =
       bufferevent_socket_new(base_, -1, BEV_OPT_CLOSE_ON_FREE);
   if (!bev) {
-    std::cerr << "Could not create bufferevent!" << std::endl;
+    std::cerr << "bufferevent_socket_new() failed" << std::endl;
     return false;
   }
 
-  if (bufferevent_socket_connect_hostname(bev, dns_base_, AF_INET,
-                                          host_.c_str(), port_) < 0) {
-    std::cerr << "Could not connect!" << std::endl;
+    std::cerr << "bufferevent_socket_connect_hostname() failed" << std::endl;
     return false;
   }
 
