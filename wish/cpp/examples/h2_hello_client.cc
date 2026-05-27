@@ -26,7 +26,7 @@ int main(int argc, char** argv) {
     return 1;
   }
 
-  client.SetOnOpen([](WebStream* stream) {
+  client.SetOnOpen([&client](WebStream* stream) {
     LOG(INFO) << "OnOpen";
 
     stream->SetOnMessage([](uint8_t opcode, const std::string& msg) {
@@ -49,8 +49,10 @@ int main(int argc, char** argv) {
       LOG(INFO) << "Message (opcode: " << type << ", message: " << msg << ")";
     });
 
-    stream->SetOnClose([]() {
+    stream->SetOnClose([&client]() {
       LOG(INFO) << "OnClose";
+
+      client.Stop();
     });
 
     stream->SendText("Hello web-stream text over HTTP/2!");
