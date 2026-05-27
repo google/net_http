@@ -72,6 +72,12 @@ int main(int argc, char** argv) {
       return 1;
     }
 
+    client.SetOnError([&client]() {
+      LOG(ERROR) << "Client error or handshake failed";
+
+      client.Stop();
+    });
+
     client.SetOnOpen([&client](WebStream* stream) {
       LOG(INFO) << "OnOpen";
 
@@ -97,6 +103,12 @@ int main(int argc, char** argv) {
 
       stream->SetOnClose([&client]() {
         LOG(INFO) << "OnClose";
+
+        client.Stop();
+      });
+
+      stream->SetOnError([&client]() {
+        LOG(ERROR) << "Stream error";
 
         client.Stop();
       });

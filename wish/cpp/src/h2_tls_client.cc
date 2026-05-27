@@ -153,6 +153,8 @@ bool H2TlsClient::Init() {
 
 void H2TlsClient::SetOnOpen(OpenCallback cb) { on_open_ = cb; }
 
+void H2TlsClient::SetOnError(ErrorCallback cb) { on_error_ = cb; }
+
 int H2TlsClient::Run() {
   return event_base_dispatch(base_);
 }
@@ -261,8 +263,8 @@ void H2TlsClient::EventCallback(bufferevent* bev,
       sess->h2session = nullptr;
     }
 
-    if (sess->client->Stop() != 0) {
-      VLOG(2) << "H2TlsClient::Stop failed";
+    if (sess->client->on_error_) {
+      sess->client->on_error_();
     }
 
     bufferevent_free(bev);
@@ -291,8 +293,8 @@ void H2TlsClient::HandleSessionError(Session* sess) {
     sess->bev = nullptr;
   }
 
-  if (Stop() != 0) {
-    VLOG(2) << "H2TlsClient::Stop failed";
+  if (on_error_) {
+    on_error_();
   }
 
   if (session_ == sess) {

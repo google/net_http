@@ -117,6 +117,8 @@ bool H2Client::Init() {
 
 void H2Client::SetOnOpen(OpenCallback cb) { on_open_ = cb; }
 
+void H2Client::SetOnError(ErrorCallback cb) { on_error_ = cb; }
+
 int H2Client::Run() {
   return event_base_dispatch(base_);
 }
@@ -225,8 +227,8 @@ void H2Client::EventCallback(bufferevent* bev,
       sess->h2session = nullptr;
     }
 
-    if (sess->client->Stop() != 0) {
-      VLOG(2) << "H2Client::Stop failed";
+    if (sess->client->on_error_) {
+      sess->client->on_error_();
     }
 
     bufferevent_free(bev);
@@ -255,8 +257,8 @@ void H2Client::HandleSessionError(Session* sess) {
     sess->bev = nullptr;
   }
 
-  if (Stop() != 0) {
-    VLOG(2) << "H2Client::Stop failed";
+  if (on_error_) {
+    on_error_();
   }
 
   if (session_ == sess) {

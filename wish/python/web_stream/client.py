@@ -1,4 +1,5 @@
 import asyncio
+import threading
 from urllib.parse import urlparse
 
 from . import web_stream_ext
@@ -19,7 +20,7 @@ class WebStreamConnection:
 
         self._recv_queue = asyncio.Queue()
         self._open_future = self._loop.create_future()
-        self._run_future = None
+        self._thread = None
         self._handler = None
 
         def on_open(handler):
@@ -31,23 +32,29 @@ class WebStreamConnection:
         def on_message(opcode, msg):
             self._loop.call_soon_threadsafe(self._recv_queue.put_nowait, (opcode, msg))
 
+        def on_error():
+            def set_error():
+                if not self._open_future.done():
+                    self._open_future.set_exception(ConnectionError("Connection failed or lost"))
+            self._loop.call_soon_threadsafe(set_error)
+
         self._client.set_on_open(on_open)
         self._client.set_on_message(on_message)
+        self._client.set_on_error(on_error)
 
     async def connect(self):
-        # Run the C++ event loop in a background thread.
-        # Keep the Future so we can await thread completion on close.
-        self._run_future = self._loop.run_in_executor(None, self._client.run)
+        # Run the C++ event loop in a background daemon thread.
+        self._thread = threading.Thread(target=self._client.run, daemon=True)
+        self._thread.start()
         # Wait until the on_open callback fires
         await self._open_future
         return self
 
     async def close(self):
-        """Stop the C++ event loop and wait for the background thread to exit."""
-        self._client.stop()
-        if self._run_future is not None:
-            await self._run_future
-            self._run_future = None
+        """Sends EoF (Close) over the WebStream connection."""
+        if self._handler:
+            self._handler.close()
+        self._client = None
 
     async def send(self, data):
         """Sends data over the WebStream connection. If data is bytes, sends as binary, else text."""

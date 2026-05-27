@@ -111,8 +111,15 @@ bool TlsClient::Init() {
         }
 
         stream_ = std::move(s);
+
         stream_->SetCleanupCallback([this](BufferEventWebStream* s) {
           stream_.reset();
+        });
+
+        stream_->SetOnError([this]() {
+          if (on_error_) {
+            on_error_();
+          }
         });
 
         if (on_open_) {
@@ -126,6 +133,10 @@ bool TlsClient::Init() {
         VLOG(1) << "Client handshake failed";
 
         handshake_.reset();
+
+        if (on_error_) {
+          on_error_();
+        }
       });
 
   handshake_->Start();
@@ -135,6 +146,10 @@ bool TlsClient::Init() {
 
 void TlsClient::SetOnOpen(OpenCallback cb) {
   on_open_ = cb;
+}
+
+void TlsClient::SetOnError(ErrorCallback cb) {
+  on_error_ = cb;
 }
 
 int TlsClient::Run() {

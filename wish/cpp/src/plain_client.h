@@ -33,6 +33,7 @@ class PlainClient {
   using OpenCallback = std::function<void(WebStream*)>;
   using MessageCallback = std::function<void(uint8_t, const std::string&)>;
   using CloseCallback = std::function<void()>;
+  using ErrorCallback = std::function<void()>;
 
   PlainClient(event_base* base,
               const std::string& host,
@@ -42,6 +43,7 @@ class PlainClient {
   bool Init();
 
   void SetOnOpen(OpenCallback cb);
+  void SetOnError(ErrorCallback cb);
 
   int Run();
   int Stop();
@@ -58,6 +60,7 @@ class PlainClient {
   std::unique_ptr<BufferEventWebStream> stream_;
 
   OpenCallback on_open_;
+  ErrorCallback on_error_;
 };
 
 #endif  // WISH_CPP_SRC_PLAIN_CLIENT_H_
