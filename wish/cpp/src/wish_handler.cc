@@ -138,7 +138,9 @@ void WishHandler::EventCallback(bufferevent* bev,
     WishHandler* handler = static_cast<WishHandler*>(ctx);
     // Notify before self-deletion so Python-side handles can be invalidated
     // while the pointer is still valid.
-    if (handler->on_close_) handler->on_close_();
+    if (handler->on_close_) {
+      handler->on_close_();
+    }
     delete handler;
   }
 }
@@ -179,7 +181,9 @@ void WishHandler::HandleHandshake() {
     if (ReadHttpRequest()) {
       SendHttpResponse("200 OK", "application/web-stream");
       state_ = OPEN;
-      if (on_open_) on_open_();
+      if (on_open_) {
+        on_open_();
+      }
     }
   } else {
     // Client waits for response
@@ -187,7 +191,8 @@ void WishHandler::HandleHandshake() {
       state_ = OPEN;
       // Maybe trigger some on_open callback?
       std::cout << "Handshake complete!" << std::endl;
-      if (on_open_) on_open_();
+    if (on_open_) {
+      on_open_();
     }
   }
 }

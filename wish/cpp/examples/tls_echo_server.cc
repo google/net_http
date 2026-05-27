@@ -55,15 +55,15 @@ int main(int argc, char** argv) {
       LOG(INFO) << "Received [" << type << "]: " << msg;
 
       // Echo back
-      if (opcode == WISH_OPCODE_TEXT)
+      if (opcode == WISH_OPCODE_TEXT) {
         handler->SendText(msg);
-      else if (opcode == WISH_OPCODE_BINARY)
+      } else if (opcode == WISH_OPCODE_BINARY) {
         handler->SendBinary(msg);
-      else if (opcode == WISH_OPCODE_TEXT_METADATA)
+      } else if (opcode == WISH_OPCODE_TEXT_METADATA) {
         handler->SendTextMetadata(msg);
-      else if (opcode == WISH_OPCODE_BINARY_METADATA)
+      } else if (opcode == WISH_OPCODE_BINARY_METADATA) {
         handler->SendBinaryMetadata(msg);
-      else {
+      } else {
         LOG(WARNING) << "Unknown opcode, cannot echo.";
       }
     });
