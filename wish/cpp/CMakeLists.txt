@@ -61,7 +61,7 @@ set(EVENT__DISABLE_SAMPLES ON CACHE BOOL "" FORCE)
 FetchContent_Declare(
     libevent
     GIT_REPOSITORY https://github.com/libevent/libevent.git
-    GIT_TAG        master
+    GIT_TAG        780acfe8b2495949f0dc3ebd6f18eea2dec605a6
 )
 
 
@@ -128,7 +128,7 @@ if(WISH_BUILD_BENCHMARKS)
     FetchContent_Declare(
         googlebenchmark
         GIT_REPOSITORY https://github.com/google/benchmark.git
-        GIT_TAG        main
+        GIT_TAG        192ef10025eb2c4cdd392bc502f0c852196baa48 # v1.9.5
     )
     FetchContent_MakeAvailable(googlebenchmark)
 endif()
