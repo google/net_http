@@ -1,7 +1,7 @@
-add_executable(benchmark_client
-    client.cc
+add_executable(plain_benchmark_client
+    plain_client.cc
 )
-target_link_libraries(benchmark_client
+target_link_libraries(plain_benchmark_client
     wish_handler
     absl::flags
     absl::flags_parse

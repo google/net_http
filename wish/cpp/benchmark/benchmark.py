@@ -12,7 +12,7 @@ TLS_SERVER_BINARY_NAME = "examples/tls_echo_server"
 TLS_CLIENT_BINARY_NAME = "benchmark/tls_benchmark_client"
 
 PLAIN_SERVER_BINARY_NAME = "examples/echo_server"
-PLAIN_CLIENT_BINARY_NAME = "benchmark/benchmark_client"
+PLAIN_CLIENT_BINARY_NAME = "benchmark/plain_benchmark_client"
 HIGH_QPS_CLIENT_BINARY_NAME = "benchmark/high_qps_benchmark_client"
 
 
