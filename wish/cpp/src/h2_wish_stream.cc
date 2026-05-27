@@ -1,5 +1,6 @@
 #include "h2_wish_stream.h"
 
+#include <absl/base/optimization.h>
 #include <nghttp2/nghttp2.h>
 #include <wslay/wslay.h>
 
@@ -168,11 +169,7 @@ int H2WishStream::WslayGenmaskCallback(wslay_event_context* /*ctx*/,
                                        uint8_t* buf,
                                        size_t len,
                                        void* /*user_data*/) {
-  static std::mt19937 rng(std::random_device{}());
-  std::uniform_int_distribution<unsigned int> dist(0, 255);
-  for (size_t i = 0; i < len; ++i) {
-    buf[i] = static_cast<uint8_t>(dist(rng));
-  }
+  ABSL_UNREACHABLE();
   return 0;
 }
 
