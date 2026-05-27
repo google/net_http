@@ -84,8 +84,6 @@ void PlainClient::SetOnOpen(OpenCallback cb) {
 }
 
 void PlainClient::Run() {
-  LOG(INFO) << "Client running...";
-
   event_base_dispatch(base_);
 }
 

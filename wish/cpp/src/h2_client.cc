@@ -109,8 +109,6 @@ bool H2Client::Init() {
 void H2Client::SetOnOpen(OpenCallback cb) { on_open_ = cb; }
 
 void H2Client::Run() {
-  LOG(INFO) << "Running...";
-
   event_base_dispatch(base_);
 }
 

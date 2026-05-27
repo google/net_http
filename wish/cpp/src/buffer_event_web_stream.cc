@@ -205,9 +205,6 @@ void BufferEventWebStream::EventCallback(bufferevent* bev,
   }
 
   if (what & (BEV_EVENT_EOF | BEV_EVENT_ERROR)) {
-    // Connection closed
-    LOG(INFO) << "Connection closed.";
-
     BufferEventWebStream* stream = static_cast<BufferEventWebStream*>(ctx);
 
     // If the stream is still in OPEN state, the underlying connection closed
