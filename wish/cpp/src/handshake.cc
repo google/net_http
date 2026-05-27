@@ -13,6 +13,15 @@
 
 namespace {
 
+bool EqualsIgnoreCase(std::string_view a, std::string_view b) {
+  if (a.size() != b.size()) {
+    return false;
+  }
+  return std::equal(a.begin(), a.end(), b.begin(), [](char char_a, char char_b) {
+    return std::tolower(static_cast<unsigned char>(char_a)) == std::tolower(static_cast<unsigned char>(char_b));
+  });
+}
+
 bool CheckHeader(const phr_header* headers,
                  size_t num_headers,
                  std::string_view target_name,
@@ -20,19 +29,147 @@ bool CheckHeader(const phr_header* headers,
   for (size_t i = 0; i < num_headers; ++i) {
     std::string_view name(headers[i].name, headers[i].name_len);
     std::string_view value(headers[i].value, headers[i].value_len);
-    if (name.size() == target_name.size() &&
-        std::equal(name.begin(), name.end(), target_name.begin(), [](char a, char b) {
-          return std::tolower(static_cast<unsigned char>(a)) == std::tolower(static_cast<unsigned char>(b));
-        })) {
-      if (value.size() == target_value.size() &&
-          std::equal(value.begin(), value.end(), target_value.begin(), [](char a, char b) {
-            return std::tolower(static_cast<unsigned char>(a)) == std::tolower(static_cast<unsigned char>(b));
-          })) {
+    if (EqualsIgnoreCase(name, target_name) && EqualsIgnoreCase(value, target_value)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool HasHeader(const phr_header* headers,
+               size_t num_headers,
+               std::string_view target_name) {
+  for (size_t i = 0; i < num_headers; ++i) {
+    std::string_view name(headers[i].name, headers[i].name_len);
+    if (EqualsIgnoreCase(name, target_name)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+std::string_view GetHeaderValue(const phr_header* headers,
+                                size_t num_headers,
+                                std::string_view target_name) {
+  for (size_t i = 0; i < num_headers; ++i) {
+    std::string_view name(headers[i].name, headers[i].name_len);
+    if (EqualsIgnoreCase(name, target_name)) {
+      return std::string_view(headers[i].value, headers[i].value_len);
+    }
+  }
+  return {};
+}
+
+bool CheckHeaderContains(const phr_header* headers,
+                         size_t num_headers,
+                         std::string_view target_name,
+                         std::string_view target_substring) {
+  std::string sub_lower(target_substring);
+  std::transform(sub_lower.begin(), sub_lower.end(), sub_lower.begin(), ::tolower);
+
+  for (size_t i = 0; i < num_headers; ++i) {
+    std::string_view name(headers[i].name, headers[i].name_len);
+    if (EqualsIgnoreCase(name, target_name)) {
+      std::string_view value(headers[i].value, headers[i].value_len);
+      std::string val_lower(value);
+      std::transform(val_lower.begin(), val_lower.end(), val_lower.begin(), ::tolower);
+      if (val_lower.find(sub_lower) != std::string::npos) {
         return true;
       }
     }
   }
   return false;
+}
+
+bool IsHttpWhitespace(char c) {
+  return c == ' ' || c == '\t';
+}
+
+std::vector<std::string_view> SplitAndTrim(std::string_view s) {
+  std::vector<std::string_view> result;
+  size_t start = 0;
+  while (start < s.size()) {
+    size_t comma = s.find(',', start);
+    std::string_view token = (comma == std::string_view::npos) ? s.substr(start) : s.substr(start, comma - start);
+    // Trim whitespace
+    while (!token.empty() && IsHttpWhitespace(token.front())) {
+      token.remove_prefix(1);
+    }
+    while (!token.empty() && IsHttpWhitespace(token.back())) {
+      token.remove_suffix(1);
+    }
+    if (!token.empty()) {
+      result.push_back(token);
+    }
+    if (comma == std::string_view::npos) {
+      break;
+    }
+    start = comma + 1;
+  }
+  return result;
+}
+
+bool ValidateTransferEncoding(const phr_header* headers, size_t num_headers) {
+  for (size_t i = 0; i < num_headers; ++i) {
+    std::string_view name(headers[i].name, headers[i].name_len);
+    if (EqualsIgnoreCase(name, "transfer-encoding")) {
+      std::string_view value(headers[i].value, headers[i].value_len);
+      std::vector<std::string_view> tokens = SplitAndTrim(value);
+      if (tokens.empty()) {
+        LOG(ERROR) << "Empty Transfer-Encoding header value";
+        return false;
+      }
+      for (std::string_view token : tokens) {
+        if (EqualsIgnoreCase(token, "chunked")) {
+          // Valid chunked token
+        } else {
+          LOG(ERROR) << "Unsupported Transfer-Encoding token: " << token;
+
+          return false;
+        }
+      }
+    }
+  }
+  return true;
+}
+
+bool ValidateHeaders(const phr_header* headers, size_t num_headers) {
+  bool has_content_encoding = HasHeader(headers, num_headers, "content-encoding");
+  if (has_content_encoding) {
+    LOG(ERROR) << "Content-Encoding support is not implemented yet";
+    return false;
+  }
+
+  bool has_content_length = HasHeader(headers, num_headers, "content-length");
+  if (has_content_length) {
+    LOG(ERROR) << "Content-Length support is not implemented yet";
+    return false;
+  }
+
+  bool has_connection_close = CheckHeaderContains(headers, num_headers, "connection", "close");
+  if (has_connection_close) {
+    LOG(ERROR) << "Connection: close support is not implemented yet";
+    return false;
+  }
+
+  bool has_connection_upgrade = CheckHeaderContains(headers, num_headers, "connection", "upgrade");
+  if (has_connection_upgrade) {
+    LOG(ERROR) << "Connection: upgrade is not supported by web-stream";
+    return false;
+  }
+
+  bool has_upgrade = HasHeader(headers, num_headers, "upgrade");
+  if (has_upgrade) {
+    LOG(ERROR) << "Upgrade header is not supported by web-stream";
+    return false;
+  }
+
+  bool te_valid = ValidateTransferEncoding(headers, num_headers);
+  if (!te_valid) {
+    return false;
+  }
+
+  return true;
 }
 
 }  // namespace
@@ -127,9 +264,25 @@ void ClientHandshake::HandleRead() {
     return;
   }
 
-  if (!CheckHeader(headers, num_headers, "content-type", "application/web-stream")) {
+  if (minor_version < 1) {
+    LOG(ERROR) << "HTTP version must be at least 1.1, got 1." << minor_version;
+
+    InvokeError();
+
+    return;
+  }
+
+  bool has_valid_ct = CheckHeader(headers, num_headers, "content-type", "application/web-stream");
+  if (!has_valid_ct) {
     LOG(ERROR) << "Client handshake response missing web-stream Content-Type!";
 
+    InvokeError();
+
+    return;
+  }
+
+  bool headers_valid = ValidateHeaders(headers, num_headers);
+  if (!headers_valid) {
     InvokeError();
 
     return;
@@ -251,9 +404,25 @@ void ServerHandshake::HandleRead() {
     return;  // Incomplete headers, wait for more data
   }
 
-  if (!CheckHeader(headers, num_headers, "content-type", "application/web-stream")) {
+  if (minor_version < 1) {
+    LOG(ERROR) << "HTTP version must be at least 1.1, got 1." << minor_version;
+
+    InvokeError();
+
+    return;
+  }
+
+  bool has_valid_ct = CheckHeader(headers, num_headers, "content-type", "application/web-stream");
+  if (!has_valid_ct) {
     LOG(ERROR) << "Missing web-stream Content-Type!";
 
+    InvokeError();
+
+    return;
+  }
+
+  bool headers_valid = ValidateHeaders(headers, num_headers);
+  if (!headers_valid) {
     InvokeError();
 
     return;

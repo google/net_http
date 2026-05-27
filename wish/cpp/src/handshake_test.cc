@@ -319,3 +319,321 @@ TEST_F(HandshakeTest, ServerHandshakeEventError) {
   EXPECT_FALSE(open_called);
   EXPECT_TRUE(error_called);
 }
+
+TEST_F(HandshakeTest, ClientHandshakeRejectsContentEncoding) {
+  bufferevent* pair[2];
+  int rv = bufferevent_pair_new(base_, BEV_OPT_CLOSE_ON_FREE | BEV_OPT_DEFER_CALLBACKS, pair);
+  ASSERT_EQ(rv, 0);
+  bufferevent_enable(pair[1], EV_READ | EV_WRITE);
+
+  bool open_called = false;
+  bool error_called = false;
+  auto client = std::make_unique<ClientHandshake>(
+      pair[0],
+      [&](bufferevent* bev) { open_called = true; bufferevent_free(bev); event_base_loopbreak(base_); },
+      [&]() { error_called = true; event_base_loopbreak(base_); });
+  client->Start();
+
+  int limit = 100;
+  while (evbuffer_get_length(bufferevent_get_input(pair[1])) == 0 && --limit > 0) {
+    event_base_loop(base_, EVLOOP_NONBLOCK);
+  }
+  std::string req = ReadAllData(pair[1]); (void)req;
+
+  const char* response = "HTTP/1.1 200 OK\r\nContent-Type: application/web-stream\r\nContent-Encoding: gzip\r\nTransfer-Encoding: chunked\r\n\r\n";
+  bufferevent_write(pair[1], response, strlen(response));
+  event_base_dispatch(base_);
+
+  EXPECT_FALSE(open_called);
+  EXPECT_TRUE(error_called);
+  bufferevent_free(pair[1]);
+}
+
+TEST_F(HandshakeTest, ClientHandshakeRejectsContentLength) {
+  bufferevent* pair[2];
+  int rv = bufferevent_pair_new(base_, BEV_OPT_CLOSE_ON_FREE | BEV_OPT_DEFER_CALLBACKS, pair);
+  ASSERT_EQ(rv, 0);
+  bufferevent_enable(pair[1], EV_READ | EV_WRITE);
+
+  bool open_called = false;
+  bool error_called = false;
+  auto client = std::make_unique<ClientHandshake>(
+      pair[0],
+      [&](bufferevent* bev) { open_called = true; bufferevent_free(bev); event_base_loopbreak(base_); },
+      [&]() { error_called = true; event_base_loopbreak(base_); });
+  client->Start();
+
+  int limit = 100;
+  while (evbuffer_get_length(bufferevent_get_input(pair[1])) == 0 && --limit > 0) {
+    event_base_loop(base_, EVLOOP_NONBLOCK);
+  }
+  std::string req = ReadAllData(pair[1]); (void)req;
+
+  const char* response = "HTTP/1.1 200 OK\r\nContent-Type: application/web-stream\r\nContent-Length: 10\r\nTransfer-Encoding: chunked\r\n\r\n";
+  bufferevent_write(pair[1], response, strlen(response));
+  event_base_dispatch(base_);
+
+  EXPECT_FALSE(open_called);
+  EXPECT_TRUE(error_called);
+  bufferevent_free(pair[1]);
+}
+
+TEST_F(HandshakeTest, ClientHandshakeRejectsConnectionClose) {
+  bufferevent* pair[2];
+  int rv = bufferevent_pair_new(base_, BEV_OPT_CLOSE_ON_FREE | BEV_OPT_DEFER_CALLBACKS, pair);
+  ASSERT_EQ(rv, 0);
+  bufferevent_enable(pair[1], EV_READ | EV_WRITE);
+
+  bool open_called = false;
+  bool error_called = false;
+  auto client = std::make_unique<ClientHandshake>(
+      pair[0],
+      [&](bufferevent* bev) { open_called = true; bufferevent_free(bev); event_base_loopbreak(base_); },
+      [&]() { error_called = true; event_base_loopbreak(base_); });
+  client->Start();
+
+  int limit = 100;
+  while (evbuffer_get_length(bufferevent_get_input(pair[1])) == 0 && --limit > 0) {
+    event_base_loop(base_, EVLOOP_NONBLOCK);
+  }
+  std::string req = ReadAllData(pair[1]); (void)req;
+
+  const char* response = "HTTP/1.1 200 OK\r\nContent-Type: application/web-stream\r\nConnection: close\r\nTransfer-Encoding: chunked\r\n\r\n";
+  bufferevent_write(pair[1], response, strlen(response));
+  event_base_dispatch(base_);
+
+  EXPECT_FALSE(open_called);
+  EXPECT_TRUE(error_called);
+  bufferevent_free(pair[1]);
+}
+
+TEST_F(HandshakeTest, ClientHandshakeRejectsNonChunkedTransferEncoding) {
+  bufferevent* pair[2];
+  int rv = bufferevent_pair_new(base_, BEV_OPT_CLOSE_ON_FREE | BEV_OPT_DEFER_CALLBACKS, pair);
+  ASSERT_EQ(rv, 0);
+  bufferevent_enable(pair[1], EV_READ | EV_WRITE);
+
+  bool open_called = false;
+  bool error_called = false;
+  auto client = std::make_unique<ClientHandshake>(
+      pair[0],
+      [&](bufferevent* bev) { open_called = true; bufferevent_free(bev); event_base_loopbreak(base_); },
+      [&]() { error_called = true; event_base_loopbreak(base_); });
+  client->Start();
+
+  int limit = 100;
+  while (evbuffer_get_length(bufferevent_get_input(pair[1])) == 0 && --limit > 0) {
+    event_base_loop(base_, EVLOOP_NONBLOCK);
+  }
+  std::string req = ReadAllData(pair[1]); (void)req;
+
+  const char* response = "HTTP/1.1 200 OK\r\nContent-Type: application/web-stream\r\nTransfer-Encoding: gzip\r\n\r\n";
+  bufferevent_write(pair[1], response, strlen(response));
+  event_base_dispatch(base_);
+
+  EXPECT_FALSE(open_called);
+  EXPECT_TRUE(error_called);
+  bufferevent_free(pair[1]);
+}
+
+TEST_F(HandshakeTest, ClientHandshakeRejectsUpgradeHeader) {
+  bufferevent* pair[2];
+  int rv = bufferevent_pair_new(base_, BEV_OPT_CLOSE_ON_FREE | BEV_OPT_DEFER_CALLBACKS, pair);
+  ASSERT_EQ(rv, 0);
+  bufferevent_enable(pair[1], EV_READ | EV_WRITE);
+
+  bool open_called = false;
+  bool error_called = false;
+  auto client = std::make_unique<ClientHandshake>(
+      pair[0],
+      [&](bufferevent* bev) { open_called = true; bufferevent_free(bev); event_base_loopbreak(base_); },
+      [&]() { error_called = true; event_base_loopbreak(base_); });
+  client->Start();
+
+  int limit = 100;
+  while (evbuffer_get_length(bufferevent_get_input(pair[1])) == 0 && --limit > 0) {
+    event_base_loop(base_, EVLOOP_NONBLOCK);
+  }
+  std::string req = ReadAllData(pair[1]); (void)req;
+
+  const char* response = "HTTP/1.1 200 OK\r\nContent-Type: application/web-stream\r\nUpgrade: websocket\r\nTransfer-Encoding: chunked\r\n\r\n";
+  bufferevent_write(pair[1], response, strlen(response));
+  event_base_dispatch(base_);
+
+  EXPECT_FALSE(open_called);
+  EXPECT_TRUE(error_called);
+  bufferevent_free(pair[1]);
+}
+
+TEST_F(HandshakeTest, ClientHandshakeRejectsHTTP10) {
+  bufferevent* pair[2];
+  int rv = bufferevent_pair_new(base_, BEV_OPT_CLOSE_ON_FREE | BEV_OPT_DEFER_CALLBACKS, pair);
+  ASSERT_EQ(rv, 0);
+  bufferevent_enable(pair[1], EV_READ | EV_WRITE);
+
+  bool open_called = false;
+  bool error_called = false;
+  auto client = std::make_unique<ClientHandshake>(
+      pair[0],
+      [&](bufferevent* bev) { open_called = true; bufferevent_free(bev); event_base_loopbreak(base_); },
+      [&]() { error_called = true; event_base_loopbreak(base_); });
+  client->Start();
+
+  int limit = 100;
+  while (evbuffer_get_length(bufferevent_get_input(pair[1])) == 0 && --limit > 0) {
+    event_base_loop(base_, EVLOOP_NONBLOCK);
+  }
+  std::string req = ReadAllData(pair[1]); (void)req;
+
+  const char* response = "HTTP/1.0 200 OK\r\nContent-Type: application/web-stream\r\nTransfer-Encoding: chunked\r\n\r\n";
+  bufferevent_write(pair[1], response, strlen(response));
+  event_base_dispatch(base_);
+
+  EXPECT_FALSE(open_called);
+  EXPECT_TRUE(error_called);
+  bufferevent_free(pair[1]);
+}
+
+TEST_F(HandshakeTest, ClientHandshakeRejectsMultipleTransferEncodings) {
+  bufferevent* pair[2];
+  int rv = bufferevent_pair_new(base_, BEV_OPT_CLOSE_ON_FREE | BEV_OPT_DEFER_CALLBACKS, pair);
+  ASSERT_EQ(rv, 0);
+  bufferevent_enable(pair[1], EV_READ | EV_WRITE);
+
+  bool open_called = false;
+  bool error_called = false;
+  auto client = std::make_unique<ClientHandshake>(
+      pair[0],
+      [&](bufferevent* bev) { open_called = true; bufferevent_free(bev); event_base_loopbreak(base_); },
+      [&]() { error_called = true; event_base_loopbreak(base_); });
+  client->Start();
+
+  int limit = 100;
+  while (evbuffer_get_length(bufferevent_get_input(pair[1])) == 0 && --limit > 0) {
+    event_base_loop(base_, EVLOOP_NONBLOCK);
+  }
+  std::string req = ReadAllData(pair[1]); (void)req;
+
+  const char* response = "HTTP/1.1 200 OK\r\nContent-Type: application/web-stream\r\nTransfer-Encoding: chunked, gzip\r\n\r\n";
+  bufferevent_write(pair[1], response, strlen(response));
+  event_base_dispatch(base_);
+
+  EXPECT_FALSE(open_called);
+  EXPECT_TRUE(error_called);
+  bufferevent_free(pair[1]);
+}
+
+TEST_F(HandshakeTest, ServerHandshakeRejectsContentEncoding) {
+  bufferevent* pair[2];
+  int rv = bufferevent_pair_new(base_, BEV_OPT_CLOSE_ON_FREE | BEV_OPT_DEFER_CALLBACKS, pair);
+  ASSERT_EQ(rv, 0);
+  bufferevent_enable(pair[1], EV_READ | EV_WRITE);
+
+  bool open_called = false;
+  bool error_called = false;
+  auto* server = new ServerHandshake(
+      pair[0],
+      [&](bufferevent* bev) { open_called = true; bufferevent_free(bev); event_base_loopbreak(base_); },
+      [&]() { error_called = true; event_base_loopbreak(base_); });
+  server->Start();
+
+  const char* request = "POST / HTTP/1.1\r\nHost: localhost\r\nContent-Type: application/web-stream\r\nContent-Encoding: gzip\r\n\r\n";
+  bufferevent_write(pair[1], request, strlen(request));
+  event_base_dispatch(base_);
+
+  EXPECT_FALSE(open_called);
+  EXPECT_TRUE(error_called);
+  bufferevent_free(pair[1]);
+}
+
+TEST_F(HandshakeTest, ServerHandshakeRejectsContentLength) {
+  bufferevent* pair[2];
+  int rv = bufferevent_pair_new(base_, BEV_OPT_CLOSE_ON_FREE | BEV_OPT_DEFER_CALLBACKS, pair);
+  ASSERT_EQ(rv, 0);
+  bufferevent_enable(pair[1], EV_READ | EV_WRITE);
+
+  bool open_called = false;
+  bool error_called = false;
+  auto* server = new ServerHandshake(
+      pair[0],
+      [&](bufferevent* bev) { open_called = true; bufferevent_free(bev); event_base_loopbreak(base_); },
+      [&]() { error_called = true; event_base_loopbreak(base_); });
+  server->Start();
+
+  const char* request = "POST / HTTP/1.1\r\nHost: localhost\r\nContent-Type: application/web-stream\r\nContent-Length: 100\r\n\r\n";
+  bufferevent_write(pair[1], request, strlen(request));
+  event_base_dispatch(base_);
+
+  EXPECT_FALSE(open_called);
+  EXPECT_TRUE(error_called);
+  bufferevent_free(pair[1]);
+}
+
+TEST_F(HandshakeTest, ServerHandshakeRejectsConnectionClose) {
+  bufferevent* pair[2];
+  int rv = bufferevent_pair_new(base_, BEV_OPT_CLOSE_ON_FREE | BEV_OPT_DEFER_CALLBACKS, pair);
+  ASSERT_EQ(rv, 0);
+  bufferevent_enable(pair[1], EV_READ | EV_WRITE);
+
+  bool open_called = false;
+  bool error_called = false;
+  auto* server = new ServerHandshake(
+      pair[0],
+      [&](bufferevent* bev) { open_called = true; bufferevent_free(bev); event_base_loopbreak(base_); },
+      [&]() { error_called = true; event_base_loopbreak(base_); });
+  server->Start();
+
+  const char* request = "POST / HTTP/1.1\r\nHost: localhost\r\nContent-Type: application/web-stream\r\nConnection: close\r\n\r\n";
+  bufferevent_write(pair[1], request, strlen(request));
+  event_base_dispatch(base_);
+
+  EXPECT_FALSE(open_called);
+  EXPECT_TRUE(error_called);
+  bufferevent_free(pair[1]);
+}
+
+TEST_F(HandshakeTest, ServerHandshakeRejectsNonChunkedTransferEncoding) {
+  bufferevent* pair[2];
+  int rv = bufferevent_pair_new(base_, BEV_OPT_CLOSE_ON_FREE | BEV_OPT_DEFER_CALLBACKS, pair);
+  ASSERT_EQ(rv, 0);
+  bufferevent_enable(pair[1], EV_READ | EV_WRITE);
+
+  bool open_called = false;
+  bool error_called = false;
+  auto* server = new ServerHandshake(
+      pair[0],
+      [&](bufferevent* bev) { open_called = true; bufferevent_free(bev); event_base_loopbreak(base_); },
+      [&]() { error_called = true; event_base_loopbreak(base_); });
+  server->Start();
+
+  const char* request = "POST / HTTP/1.1\r\nHost: localhost\r\nContent-Type: application/web-stream\r\nTransfer-Encoding: gzip\r\n\r\n";
+  bufferevent_write(pair[1], request, strlen(request));
+  event_base_dispatch(base_);
+
+  EXPECT_FALSE(open_called);
+  EXPECT_TRUE(error_called);
+  bufferevent_free(pair[1]);
+}
+
+TEST_F(HandshakeTest, ServerHandshakeRejectsHTTP10) {
+  bufferevent* pair[2];
+  int rv = bufferevent_pair_new(base_, BEV_OPT_CLOSE_ON_FREE | BEV_OPT_DEFER_CALLBACKS, pair);
+  ASSERT_EQ(rv, 0);
+  bufferevent_enable(pair[1], EV_READ | EV_WRITE);
+
+  bool open_called = false;
+  bool error_called = false;
+  auto* server = new ServerHandshake(
+      pair[0],
+      [&](bufferevent* bev) { open_called = true; bufferevent_free(bev); event_base_loopbreak(base_); },
+      [&]() { error_called = true; event_base_loopbreak(base_); });
+  server->Start();
+
+  const char* request = "POST / HTTP/1.0\r\nHost: localhost\r\nContent-Type: application/web-stream\r\n\r\n";
+  bufferevent_write(pair[1], request, strlen(request));
+  event_base_dispatch(base_);
+
+  EXPECT_FALSE(open_called);
+  EXPECT_TRUE(error_called);
+  bufferevent_free(pair[1]);
+}
