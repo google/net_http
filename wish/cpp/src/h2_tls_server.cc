@@ -238,12 +238,19 @@ void H2TlsServer::ReadCallback(bufferevent* bev, void* ctx) {
     bufferevent_free(bev);
     return;
   }
-  evbuffer_drain(input, static_cast<size_t>(recv_len));
 
-  int rv = nghttp2_session_send(sess->h2session);
-  if (rv < 0) {
+  int drain_rv = evbuffer_drain(input, static_cast<size_t>(recv_len));
+  if (drain_rv != 0) {
+    LOG(ERROR) << "H2TlsServer: evbuffer_drain() failed";
+
+    bufferevent_free(bev);
+    return;
+  }
+
+  int session_send_rv = nghttp2_session_send(sess->h2session);
+  if (session_send_rv < 0) {
     LOG(ERROR) << "H2TlsServer: nghttp2_session_send() failed: "
-               << nghttp2_strerror(rv);
+               << nghttp2_strerror(session_send_rv);
   }
 }
 

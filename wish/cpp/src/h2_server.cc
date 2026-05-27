@@ -198,7 +198,12 @@ void H2Server::ReadCallback(bufferevent* bev, void* ctx) {
     bufferevent_free(bev);
     return;
   }
-  evbuffer_drain(input, static_cast<size_t>(readlen));
+  int drain_rv = evbuffer_drain(input, static_cast<size_t>(readlen));
+  if (drain_rv != 0) {
+    LOG(ERROR) << "H2Server: evbuffer_drain() failed";
+    bufferevent_free(bev);
+    return;
+  }
 
   int session_send_rv = nghttp2_session_send(sess->h2session);
   if (session_send_rv < 0) {
