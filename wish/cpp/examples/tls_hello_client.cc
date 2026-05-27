@@ -1,3 +1,4 @@
+#include <absl/flags/flag.h>
 #include <absl/flags/parse.h>
 #include <absl/log/initialize.h>
 #include <absl/log/log.h>
@@ -7,15 +8,38 @@
 #include "../src/buffer_event_web_stream.h"
 #include "../src/tls_client.h"
 
+ABSL_FLAG(std::string, host, "127.0.0.1", "Server host address");
+ABSL_FLAG(int, port, 8080, "Server port");
+
+ABSL_FLAG(std::string,
+          ca_cert,
+          "certs/ca.crt",
+          "Path to CA certificate file");
+ABSL_FLAG(std::string,
+          client_cert,
+          "certs/client.crt",
+          "Path to client certificate file");
+ABSL_FLAG(std::string,
+          client_key,
+          "certs/client.key",
+          "Path to client private key file");
+
 int main(int argc, char** argv) {
   absl::ParseCommandLine(argc, argv);
   absl::InitializeLog();
 
-  TlsClient client("127.0.0.1",
-                   8080,
-                   "certs/ca.crt",
-                   "certs/client.crt",
-                   "certs/client.key");
+  const std::string host = absl::GetFlag(FLAGS_host);
+  const int port = absl::GetFlag(FLAGS_port);
+
+  const std::string ca_cert = absl::GetFlag(FLAGS_ca_cert);
+  const std::string client_cert = absl::GetFlag(FLAGS_client_cert);
+  const std::string client_key = absl::GetFlag(FLAGS_client_key);
+
+  TlsClient client(host,
+                   port,
+                   ca_cert,
+                   client_cert,
+                   client_key);
 
   if (!client.Init()) {
     LOG(INFO) << "Init() failed";
