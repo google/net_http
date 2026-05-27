@@ -7,6 +7,7 @@ target_link_libraries(echo_server
     absl::flags_parse
     absl::log
     absl::log_initialize
+    # Based on https://github.com/abseil/abseil-cpp/discussions/1474
     "$<LINK_LIBRARY:WHOLE_ARCHIVE,absl::log_flags>"
 )
 
