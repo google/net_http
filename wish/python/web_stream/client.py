@@ -23,8 +23,10 @@ class WebStreamConnection:
         self._handler = None
 
         def on_open(handler):
-            self._handler = handler
-            self._loop.call_soon_threadsafe(self._open_future.set_result, True)
+            def set_handler():
+                self._handler = handler
+                self._open_future.set_result(True)
+            self._loop.call_soon_threadsafe(set_handler)
 
         def on_message(opcode, msg):
             self._loop.call_soon_threadsafe(self._recv_queue.put_nowait, (opcode, msg))
