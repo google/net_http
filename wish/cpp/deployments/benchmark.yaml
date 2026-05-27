@@ -17,6 +17,13 @@ spec:
                 matchLabels:
                   app: wish-echo-server
               topologyKey: kubernetes.io/hostname
+            - labelSelector:
+                matchExpressions:
+                  - key: job-name
+                    operator: In
+                    values:
+                      - wish-stress
+              topologyKey: kubernetes.io/hostname
       containers:
         - name: client
           image: us-central1-docker.pkg.dev/black-outlet-487003-v4/wish/benchmark:latest
