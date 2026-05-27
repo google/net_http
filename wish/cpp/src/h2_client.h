@@ -67,9 +67,9 @@ class H2Client {
   static int OnStreamCloseCallback(nghttp2_session*, int32_t, uint32_t, void*);
 
   // nghttp2 data-source read callback
-  static ssize_t DataSourceReadCallback(nghttp2_session*, int32_t, uint8_t*,
-                                        size_t, uint32_t*,
-                                        nghttp2_data_source*, void*);
+  static nghttp2_ssize DataSourceReadCallback(nghttp2_session*, int32_t, uint8_t*,
+                                              size_t, uint32_t*,
+                                              nghttp2_data_source*, void*);
 
   // Initialise nghttp2 and submit the web-stream request.
   // Called inside BEV_EVENT_CONNECTED so that TCP_NODELAY can be set first.

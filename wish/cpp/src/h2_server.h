@@ -63,9 +63,9 @@ class H2Server {
   static int OnStreamCloseCallback(nghttp2_session*, int32_t, uint32_t, void*);
 
   // nghttp2 data-source read callback (feeds NGHTTP2WebStream output to H2 DATA)
-  static ssize_t DataSourceReadCallback(nghttp2_session*, int32_t, uint8_t*,
-                                        size_t, uint32_t*,
-                                        nghttp2_data_source*, void*);
+  static nghttp2_ssize DataSourceReadCallback(nghttp2_session*, int32_t, uint8_t*,
+                                              size_t, uint32_t*,
+                                              nghttp2_data_source*, void*);
 
   // Helper: initialise an nghttp2 server session for a new connection.
   static nghttp2_session* CreateH2Session(Session* sess);

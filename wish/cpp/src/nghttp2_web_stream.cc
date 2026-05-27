@@ -84,9 +84,9 @@ void NGHTTP2WebStream::OnClose() {
 
 // ---- nghttp2 data-source read callback ----
 
-ssize_t NGHTTP2WebStream::ReadSendData(uint8_t* buf,
-                                       size_t length,
-                                       uint32_t* data_flags) {
+nghttp2_ssize NGHTTP2WebStream::ReadSendData(uint8_t* buf,
+                                             size_t length,
+                                             uint32_t* data_flags) {
   size_t avail = evbuffer_get_length(output_buf_);
   if (avail == 0) {
     // Deferred: wake up with nghttp2_session_resume_data when data arrives.
@@ -102,7 +102,7 @@ ssize_t NGHTTP2WebStream::ReadSendData(uint8_t* buf,
   }
 
   // Never set NGHTTP2_DATA_FLAG_EOF: the web-stream stream is long-lived.
-  return static_cast<ssize_t>(send_len);
+  return static_cast<nghttp2_ssize>(send_len);
 }
 
 // ---- wslay callbacks ----

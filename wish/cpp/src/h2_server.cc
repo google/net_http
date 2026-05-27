@@ -284,13 +284,13 @@ int H2Server::OnFrameRecvCallback(nghttp2_session* session,
   auto it = sess->stream_is_wish.find(stream_id);
   if (it == sess->stream_is_wish.end() || !it->second) {
     const nghttp2_nv hdrs[] = {H2S_MAKE_NV(":status", "415")};
-    int submit_response_rv = nghttp2_submit_response(session,
-                                                     stream_id,
-                                                     hdrs,
-                                                     1,
-                                                     nullptr);
+    int submit_response_rv = nghttp2_submit_response2(session,
+                                                      stream_id,
+                                                      hdrs,
+                                                      1,
+                                                      nullptr);
     if (submit_response_rv != 0) {
-      std::cerr << "H2Server: nghttp2_submit_response() failed: "
+      std::cerr << "H2Server: nghttp2_submit_response2() failed: "
                 << nghttp2_strerror(submit_response_rv) << std::endl;
 
       // nghttp2_on_frame_recv_callback spec: any nonzero value signals a fatal error.
@@ -313,20 +313,20 @@ int H2Server::OnFrameRecvCallback(nghttp2_session* session,
   sess->streams[stream_id] = web_stream;
 
   // Set up the data provider so we can push web-stream DATA frames to the client.
-  nghttp2_data_provider data_prd;
+  nghttp2_data_provider2 data_prd;
   data_prd.source.ptr = web_stream;
   data_prd.read_callback = DataSourceReadCallback;
 
   const nghttp2_nv hdrs[] = {
       H2S_MAKE_NV(":status", "200"),
       H2S_MAKE_NV("content-type", "application/web-stream")};
-  int submit_response_rv = nghttp2_submit_response(session,
-                                                   stream_id,
-                                                   hdrs,
-                                                   2,
-                                                   &data_prd);
+  int submit_response_rv = nghttp2_submit_response2(session,
+                                                    stream_id,
+                                                    hdrs,
+                                                    2,
+                                                    &data_prd);
   if (submit_response_rv != 0) {
-    std::cerr << "H2Server: nghttp2_submit_response() failed: "
+    std::cerr << "H2Server: nghttp2_submit_response2() failed: "
               << nghttp2_strerror(submit_response_rv) << std::endl;
 
     delete web_stream;
@@ -399,13 +399,13 @@ int H2Server::OnStreamCloseCallback(nghttp2_session* /*session*/,
   return 0;
 }
 
-ssize_t H2Server::DataSourceReadCallback(nghttp2_session* /*session*/,
-                                         int32_t /*stream_id*/,
-                                         uint8_t* buf,
-                                         size_t length,
-                                         uint32_t* data_flags,
-                                         nghttp2_data_source* source,
-                                         void* /*user_data*/) {
+nghttp2_ssize H2Server::DataSourceReadCallback(nghttp2_session* /*session*/,
+                                               int32_t /*stream_id*/,
+                                               uint8_t* buf,
+                                               size_t length,
+                                               uint32_t* data_flags,
+                                               nghttp2_data_source* source,
+                                               void* /*user_data*/) {
   NGHTTP2WebStream* web_stream = static_cast<NGHTTP2WebStream*>(source->ptr);
   return web_stream->ReadSendData(buf,
                                   length,

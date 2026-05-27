@@ -58,7 +58,7 @@ class NGHTTP2WebStream {
 
   // nghttp2 data-source read callback: drains output_buf_ into the HTTP/2
   // DATA frame buffer.  Returns NGHTTP2_ERR_DEFERRED when no data is ready.
-  ssize_t ReadSendData(uint8_t* buf, size_t length, uint32_t* data_flags);
+  nghttp2_ssize ReadSendData(uint8_t* buf, size_t length, uint32_t* data_flags);
 
  private:
   nghttp2_session* h2session_;
