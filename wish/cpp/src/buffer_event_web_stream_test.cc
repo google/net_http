@@ -234,3 +234,64 @@ TEST_F(BufferEventWebStreamTest, CloseSignalsEOF) {
   // Only delete server.
   delete server;
 }
+
+// Verify that metadata frames (opcode = 3) can be sent and received correctly by both client and server.
+TEST_F(BufferEventWebStreamTest, HandshakeAndMetadataExchange) {
+  bufferevent* pair[2];
+  int rv = bufferevent_pair_new(base_,
+                                BEV_OPT_CLOSE_ON_FREE | BEV_OPT_DEFER_CALLBACKS,
+                                pair);
+  ASSERT_EQ(rv, 0);
+
+  BufferEventWebStream* server = new BufferEventWebStream(pair[0], true /* is_server */);
+  BufferEventWebStream* client = new BufferEventWebStream(pair[1], false /* is_server */);
+
+  bool server_opened = false;
+  bool client_opened = false;
+  std::string metadata_from_client;
+  std::string metadata_from_server;
+
+  server->SetOnOpen([&]() {
+    server_opened = true;
+    server->SendMetadata("Server Metadata");
+  });
+
+  client->SetOnOpen([&]() {
+    client_opened = true;
+    client->SendMetadata("Client Metadata");
+  });
+
+  auto check_done = [&]() {
+    if (!metadata_from_client.empty() && !metadata_from_server.empty()) {
+      event_base_loopbreak(base_);
+    }
+  };
+
+  server->SetOnMessage([&](uint8_t opcode, const std::string& msg) {
+    if (opcode == WEB_STREAM_OPCODE_METADATA) {
+      metadata_from_client = msg;
+    }
+    check_done();
+  });
+
+  client->SetOnMessage([&](uint8_t opcode, const std::string& msg) {
+    if (opcode == WEB_STREAM_OPCODE_METADATA) {
+      metadata_from_server = msg;
+    }
+    check_done();
+  });
+
+  server->Start();
+  client->Start();
+
+  event_base_dispatch(base_);
+
+  EXPECT_TRUE(client_opened);
+  EXPECT_TRUE(server_opened);
+  EXPECT_EQ(metadata_from_client, "Client Metadata");
+  EXPECT_EQ(metadata_from_server, "Server Metadata");
+
+  delete server;
+  delete client;
+}
+
