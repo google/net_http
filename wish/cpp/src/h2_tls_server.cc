@@ -92,6 +92,7 @@ void H2TlsServer::SetOnStream(StreamCallback cb) { on_stream_ = cb; }
 
 void H2TlsServer::Run() {
   std::cout << "H2TlsServer listening on port " << port_ << "..." << std::endl;
+
   event_base_dispatch(base_);
 }
 
@@ -103,6 +104,7 @@ void H2TlsServer::AcceptConnCb(evconnlistener* listener,
                                int /*socklen*/,
                                void* ctx) {
   H2TlsServer* server = static_cast<H2TlsServer*>(ctx);
+
   event_base* base = evconnlistener_get_base(listener);
 
   int one = 1;
@@ -169,6 +171,7 @@ void H2TlsServer::ReadCallback(bufferevent* bev, void* ctx) {
   Session* sess = static_cast<Session*>(ctx);
 
   evbuffer* input = bufferevent_get_input(bev);
+
   size_t len = evbuffer_get_length(input);
   if (len == 0) {
     return;
@@ -194,19 +197,20 @@ void H2TlsServer::ReadCallback(bufferevent* bev, void* ctx) {
 }
 
 void H2TlsServer::EventCallback(bufferevent* bev,
-                                short events,  // NOLINT(runtime/int)
+                                short what,  // NOLINT(runtime/int)
                                 void* ctx) {
   Session* sess = static_cast<Session*>(ctx);
 
-  if (events & BEV_EVENT_ERROR) {
+  if (what & BEV_EVENT_ERROR) {
     std::cerr << "H2TlsServer: connection error" << std::endl;
   }
 
-  if (events & (BEV_EVENT_EOF | BEV_EVENT_ERROR)) {
+  if (what & (BEV_EVENT_EOF | BEV_EVENT_ERROR)) {
     for (auto& [sid, stream] : sess->streams) {
       stream->OnClose();
       delete stream;
     }
+
     nghttp2_session_del(sess->h2session);
     bufferevent_free(bev);
     delete sess;
@@ -221,9 +225,11 @@ ssize_t H2TlsServer::SendCallback(nghttp2_session* /*session*/,
                                   int /*flags*/,
                                   void* user_data) {
   Session* sess = static_cast<Session*>(user_data);
+
   bufferevent_write(sess->bev,
                     data,
                     length);
+
   return static_cast<ssize_t>(length);
 }
 
@@ -239,7 +245,9 @@ int H2TlsServer::OnHeaderCallback(nghttp2_session* /*session*/,
       frame->headers.cat != NGHTTP2_HCAT_REQUEST) {
     return 0;
   }
+
   Session* sess = static_cast<Session*>(user_data);
+
   int32_t stream_id = frame->hd.stream_id;
 
   std::string hdr_name(reinterpret_cast<const char*>(name), namelen);
@@ -260,6 +268,7 @@ int H2TlsServer::OnFrameRecvCallback(nghttp2_session* session,
   }
 
   Session* sess = static_cast<Session*>(user_data);
+
   int32_t stream_id = frame->hd.stream_id;
 
   auto it = sess->stream_is_wish.find(stream_id);
@@ -296,6 +305,7 @@ int H2TlsServer::OnFrameRecvCallback(nghttp2_session* session,
   }
 
   web_stream->OnOpen();
+
   return 0;
 }
 
@@ -306,11 +316,13 @@ int H2TlsServer::OnDataChunkRecvCallback(nghttp2_session* session,
                                          size_t len,
                                          void* user_data) {
   Session* sess = static_cast<Session*>(user_data);
+
   auto it = sess->streams.find(stream_id);
   if (it != sess->streams.end()) {
     it->second->OnDataChunk(data, len);
     nghttp2_session_send(session);
   }
+
   return 0;
 }
 
@@ -319,6 +331,7 @@ int H2TlsServer::OnStreamCloseCallback(nghttp2_session* /*session*/,
                                        uint32_t /*error_code*/,
                                        void* user_data) {
   Session* sess = static_cast<Session*>(user_data);
+
   auto it = sess->streams.find(stream_id);
   if (it != sess->streams.end()) {
     it->second->OnClose();
@@ -326,6 +339,7 @@ int H2TlsServer::OnStreamCloseCallback(nghttp2_session* /*session*/,
     sess->streams.erase(it);
   }
   sess->stream_is_wish.erase(stream_id);
+
   return 0;
 }
 

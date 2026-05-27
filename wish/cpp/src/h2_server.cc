@@ -57,6 +57,7 @@ void H2Server::SetOnStream(StreamCallback cb) { on_stream_ = cb; }
 
 void H2Server::Run() {
   std::cout << "H2Server listening on port " << port_ << "..." << std::endl;
+
   event_base_dispatch(base_);
 }
 
@@ -111,7 +112,11 @@ void H2Server::AcceptConnCb(struct evconnlistener* listener,
                                         1 << 20);
   nghttp2_session_send(sess->h2session);
 
-  bufferevent_setcb(bev, ReadCallback, nullptr, EventCallback, sess);
+  bufferevent_setcb(bev,
+                    ReadCallback,
+                    nullptr,
+                    EventCallback,
+                    sess);
 
   int enable_rv = bufferevent_enable(bev, EV_READ | EV_WRITE);
   if (enable_rv != 0) {
@@ -122,7 +127,8 @@ void H2Server::AcceptConnCb(struct evconnlistener* listener,
   }
 }
 
-void H2Server::AcceptErrorCb(struct evconnlistener* listener, void* /*ctx*/) {
+void H2Server::AcceptErrorCb(struct evconnlistener* listener,
+                             void* /*ctx*/) {
   struct event_base* base = evconnlistener_get_base(listener);
   int err = EVUTIL_SOCKET_ERROR();
   std::cerr << "H2Server: listener error " << err << " ("
@@ -136,6 +142,7 @@ void H2Server::ReadCallback(struct bufferevent* bev, void* ctx) {
   Session* sess = static_cast<Session*>(ctx);
 
   struct evbuffer* input = bufferevent_get_input(bev);
+
   size_t len = evbuffer_get_length(input);
   if (len == 0) {
     return;
@@ -174,6 +181,7 @@ void H2Server::EventCallback(struct bufferevent* bev,
       stream->OnClose();
       delete stream;
     }
+
     nghttp2_session_del(sess->h2session);
     bufferevent_free(bev);
     delete sess;
@@ -188,9 +196,11 @@ ssize_t H2Server::SendCallback(nghttp2_session* /*session*/,
                                int /*flags*/,
                                void* user_data) {
   Session* sess = static_cast<Session*>(user_data);
+
   bufferevent_write(sess->bev,
                     data,
                     length);
+
   return static_cast<ssize_t>(length);
 }
 
@@ -206,7 +216,9 @@ int H2Server::OnHeaderCallback(nghttp2_session* /*session*/,
       frame->headers.cat != NGHTTP2_HCAT_REQUEST) {
     return 0;
   }
+
   Session* sess = static_cast<Session*>(user_data);
+
   int32_t stream_id = frame->hd.stream_id;
 
   std::string hdr_name(reinterpret_cast<const char*>(name), namelen);
@@ -227,6 +239,7 @@ int H2Server::OnFrameRecvCallback(nghttp2_session* session,
   }
 
   Session* sess = static_cast<Session*>(user_data);
+
   int32_t stream_id = frame->hd.stream_id;
 
   // Reject non-web-stream requests with 415 Unsupported Media Type.
@@ -268,6 +281,7 @@ int H2Server::OnFrameRecvCallback(nghttp2_session* session,
   }
 
   web_stream->OnOpen();
+
   return 0;
 }
 
@@ -278,11 +292,13 @@ int H2Server::OnDataChunkRecvCallback(nghttp2_session* session,
                                       size_t len,
                                       void* user_data) {
   Session* sess = static_cast<Session*>(user_data);
+
   auto it = sess->streams.find(stream_id);
   if (it != sess->streams.end()) {
     it->second->OnDataChunk(data, len);
     nghttp2_session_send(session);
   }
+
   return 0;
 }
 
@@ -291,6 +307,7 @@ int H2Server::OnStreamCloseCallback(nghttp2_session* /*session*/,
                                     uint32_t /*error_code*/,
                                     void* user_data) {
   Session* sess = static_cast<Session*>(user_data);
+
   auto it = sess->streams.find(stream_id);
   if (it != sess->streams.end()) {
     it->second->OnClose();
@@ -298,6 +315,7 @@ int H2Server::OnStreamCloseCallback(nghttp2_session* /*session*/,
     sess->streams.erase(it);
   }
   sess->stream_is_wish.erase(stream_id);
+
   return 0;
 }
 
@@ -331,7 +349,9 @@ nghttp2_session* H2Server::CreateH2Session(Session* sess) {
                                                          OnStreamCloseCallback);
 
   nghttp2_session* session;
-  nghttp2_session_server_new(&session, cbs, sess);
+  nghttp2_session_server_new(&session,
+                             cbs,
+                             sess);
   nghttp2_session_callbacks_del(cbs);
   return session;
 }
