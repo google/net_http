@@ -16,13 +16,16 @@ class PlainClient {
   using MessageCallback = std::function<void(uint8_t, const std::string&)>;
   using CloseCallback = std::function<void()>;
 
-  PlainClient(const std::string& host, int port);
+  PlainClient(const std::string& host,
+              int port);
   ~PlainClient();
 
   bool Init();
+
   void SetOnOpen(OpenCallback cb);
   void SetOnMessage(MessageCallback cb);
   void SetOnClose(CloseCallback cb);
+
   void Run();
   void Stop();
 

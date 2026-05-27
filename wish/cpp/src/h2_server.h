@@ -41,38 +41,66 @@ class H2Server {
   };
 
   // libevent listener callbacks
-  static void AcceptConnCb(evconnlistener*, evutil_socket_t,
-                           sockaddr*, int, void*);
-  static void AcceptErrorCb(evconnlistener*, void*);
+  static void AcceptConnCb(evconnlistener*,
+                           evutil_socket_t,
+                           sockaddr*,
+                           int,
+                           void*);
+  static void AcceptErrorCb(evconnlistener*,
+                            void*);
 
   // libevent bufferevent callbacks
-  static void ReadCallback(bufferevent*, void*);
+  static void ReadCallback(bufferevent*,
+                           void*);
   static void EventCallback(bufferevent*,
                             short,  // NOLINT(runtime/int)
                             void*);
 
   // nghttp2 session callbacks
-  static nghttp2_ssize SendCallback(nghttp2_session*, const uint8_t*, size_t,
-                                    int, void*);
-  static int OnHeaderCallback(nghttp2_session*, const nghttp2_frame*,
-                              const uint8_t*, size_t, const uint8_t*, size_t,
-                              uint8_t, void*);
-  static int OnFrameRecvCallback(nghttp2_session*, const nghttp2_frame*, void*);
-  static int OnDataChunkRecvCallback(nghttp2_session*, uint8_t, int32_t,
-                                     const uint8_t*, size_t, void*);
-  static int OnStreamCloseCallback(nghttp2_session*, int32_t, uint32_t, void*);
+  static nghttp2_ssize SendCallback(nghttp2_session*,
+                                    const uint8_t*,
+                                    size_t,
+                                    int,
+                                    void*);
+  static int OnHeaderCallback(nghttp2_session*,
+                              const nghttp2_frame*,
+                              const uint8_t*,
+                              size_t,
+                              const uint8_t*,
+                              size_t,
+                              uint8_t,
+                              void*);
+  static int OnFrameRecvCallback(nghttp2_session*,
+                                 const nghttp2_frame*,
+                                 void*);
+  static int OnDataChunkRecvCallback(nghttp2_session*,
+                                     uint8_t,
+                                     int32_t,
+                                     const uint8_t*,
+                                     size_t,
+                                     void*);
+  static int OnStreamCloseCallback(nghttp2_session*,
+                                   int32_t,
+                                   uint32_t,
+                                   void*);
 
   // nghttp2 data-source read callback (feeds NGHTTP2WebStream output to H2 DATA)
-  static nghttp2_ssize DataSourceReadCallback(nghttp2_session*, int32_t, uint8_t*,
-                                              size_t, uint32_t*,
-                                              nghttp2_data_source*, void*);
+  static nghttp2_ssize DataSourceReadCallback(nghttp2_session*,
+                                              int32_t,
+                                              uint8_t*,
+                                              size_t,
+                                              uint32_t*,
+                                              nghttp2_data_source*,
+                                              void*);
 
   // Helper: initialise an nghttp2 server session for a new connection.
   static nghttp2_session* CreateH2Session(Session* sess);
 
   int port_;
+
   event_base* base_;
   evconnlistener* listener_;
+
   StreamCallback on_stream_;
 };
 

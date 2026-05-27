@@ -21,11 +21,16 @@ class PlainServer {
   void Run();
 
  private:
-  static void AcceptConnCb(evconnlistener* listener, evutil_socket_t fd,
-                           sockaddr* address, int socklen, void* ctx);
-  static void AcceptErrorCb(evconnlistener* listener, void* ctx);
+  static void AcceptConnCb(evconnlistener* listener,
+                           evutil_socket_t fd,
+                           sockaddr* address,
+                           int socklen,
+                           void* ctx);
+  static void AcceptErrorCb(evconnlistener* listener,
+                            void* ctx);
 
   int port_;
+
   event_base* base_;
   evconnlistener* listener_;
 

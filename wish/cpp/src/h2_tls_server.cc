@@ -77,8 +77,13 @@ bool H2TlsServer::Init() {
   sin.sin_addr.s_addr = htonl(INADDR_ANY);
   sin.sin_port = htons(port_);
 
-  listener_ = evconnlistener_new_bind(
-      base_, AcceptConnCb, this, LEV_OPT_CLOSE_ON_FREE | LEV_OPT_REUSEABLE, -1, reinterpret_cast<sockaddr*>(&sin), sizeof(sin));
+  listener_ = evconnlistener_new_bind(base_,
+                                      AcceptConnCb,
+                                      this,
+                                      LEV_OPT_CLOSE_ON_FREE | LEV_OPT_REUSEABLE,
+                                      -1,
+                                      reinterpret_cast<sockaddr*>(&sin),
+                                      sizeof(sin));
   if (!listener_) {
     std::cerr << "H2TlsServer: evconnlistener_new_bind() failed" << std::endl;
     return false;
@@ -222,7 +227,7 @@ void H2TlsServer::ReadCallback(bufferevent* bev, void* ctx) {
                                               data,
                                               len);
   if (recv_len < 0) {
-    std::cerr << "H2TlsServer: nghttp2_session_mem_recv failed: "
+    std::cerr << "H2TlsServer: nghttp2_session_mem_recv() failed: "
               << nghttp2_strerror(static_cast<int>(recv_len)) << std::endl;
     bufferevent_free(bev);
     return;
@@ -231,7 +236,7 @@ void H2TlsServer::ReadCallback(bufferevent* bev, void* ctx) {
 
   int rv = nghttp2_session_send(sess->h2session);
   if (rv < 0) {
-    std::cerr << "H2TlsServer: nghttp2_session_send failed: "
+    std::cerr << "H2TlsServer: nghttp2_session_send() failed: "
               << nghttp2_strerror(rv) << std::endl;
   }
 }
