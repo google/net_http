@@ -74,7 +74,12 @@ ssize_t WishHandler::RecvCallback(wslay_event_context* ctx,
   }
 
   size_t copy_len = std::min(len, data_len);
-  evbuffer_remove(input, buf, copy_len);
+  int rv = evbuffer_remove(input, buf, copy_len);
+  if (rv < 0) {
+    std::cerr << "evbuffer_remove() failed" << std::endl;
+    wslay_event_set_error(ctx, WSLAY_ERR_CALLBACK_FAILURE);
+    return -1;
+  }
   return copy_len;
 }
 
@@ -84,7 +89,14 @@ ssize_t WishHandler::SendCallback(wslay_event_context* ctx,
                                   int flags,
                                   void* user_data) {
   WishHandler* handler = static_cast<WishHandler*>(user_data);
-  bufferevent_write(handler->bev_, data, len);
+
+  int rv = bufferevent_write(handler->bev_, data, len);
+  if (rv != 0) {
+    std::cerr << "bufferevent_write() failed" << std::endl;
+    wslay_event_set_error(ctx, WSLAY_ERR_CALLBACK_FAILURE);
+    return -1;
+  }
+
   return len;
 }
 
