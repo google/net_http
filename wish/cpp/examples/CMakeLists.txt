@@ -16,6 +16,7 @@ add_executable(plain_hello_client
 )
 target_link_libraries(plain_hello_client
     buffer_event_web_stream
+    absl::flags
     absl::flags_parse
     absl::log
     absl::log_initialize
@@ -39,6 +40,7 @@ add_executable(tls_hello_client
 )
 target_link_libraries(tls_hello_client
     buffer_event_web_stream
+    absl::flags
     absl::flags_parse
     absl::log
     absl::log_initialize
@@ -76,6 +78,7 @@ add_executable(h2_hello_client
 )
 target_link_libraries(h2_hello_client
     buffer_event_web_stream
+    absl::flags
     absl::flags_parse
     absl::log
     absl::log_initialize
@@ -87,6 +90,7 @@ add_executable(h2_tls_hello_client
 )
 target_link_libraries(h2_tls_hello_client
     buffer_event_web_stream
+    absl::flags
     absl::flags_parse
     absl::log
     absl::log_initialize

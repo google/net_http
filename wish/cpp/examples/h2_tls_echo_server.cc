@@ -7,10 +7,18 @@
 #include "../src/h2_tls_server.h"
 
 ABSL_FLAG(int, port, 8080, "Port to listen on");
-ABSL_FLAG(std::string, ca_cert, "certs/ca.crt", "Path to CA certificate file");
-ABSL_FLAG(std::string, server_cert, "certs/server.crt",
+
+ABSL_FLAG(std::string,
+          ca_cert,
+          "certs/ca.crt",
+          "Path to CA certificate file");
+ABSL_FLAG(std::string,
+          server_cert,
+          "certs/server.crt",
           "Path to server certificate file");
-ABSL_FLAG(std::string, server_key, "certs/server.key",
+ABSL_FLAG(std::string,
+          server_key,
+          "certs/server.key",
           "Path to server private key file");
 
 int main(int argc, char** argv) {

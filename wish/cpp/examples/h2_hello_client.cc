@@ -1,3 +1,4 @@
+#include <absl/flags/flag.h>
 #include <absl/flags/parse.h>
 #include <absl/log/initialize.h>
 #include <absl/log/log.h>
@@ -7,11 +8,17 @@
 #include "../src/buffer_event_web_stream.h"
 #include "../src/h2_client.h"
 
+ABSL_FLAG(std::string, host, "127.0.0.1", "Server host address");
+ABSL_FLAG(int, port, 8080, "Server port");
+
 int main(int argc, char** argv) {
   absl::ParseCommandLine(argc, argv);
   absl::InitializeLog();
 
-  H2Client client("127.0.0.1", 8080);
+  const std::string host = absl::GetFlag(FLAGS_host);
+  const int port = absl::GetFlag(FLAGS_port);
+
+  H2Client client(host, port);
 
   if (!client.Init()) {
     LOG(INFO) << "Init() failed";
