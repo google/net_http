@@ -293,7 +293,8 @@ int H2Server::OnFrameRecvCallback(nghttp2_session* session,
       std::cerr << "H2Server: nghttp2_submit_response() failed: "
                 << nghttp2_strerror(submit_response_rv) << std::endl;
 
-      return NGHTTP2_ERR_CALLBACK_FAILURE;
+      // nghttp2_on_frame_recv_callback spec: any nonzero value signals a fatal error.
+      return -1;
     }
 
     int session_send_rv = nghttp2_session_send(session);
@@ -301,7 +302,8 @@ int H2Server::OnFrameRecvCallback(nghttp2_session* session,
       std::cerr << "H2Server: nghttp2_session_send() failed: "
                 << nghttp2_strerror(session_send_rv) << std::endl;
 
-      return NGHTTP2_ERR_CALLBACK_FAILURE;
+      // nghttp2_on_frame_recv_callback spec: any nonzero value signals a fatal error.
+      return -1;
     }
     return 0;
   }
@@ -330,7 +332,8 @@ int H2Server::OnFrameRecvCallback(nghttp2_session* session,
     delete web_stream;
     sess->streams.erase(stream_id);
 
-    return NGHTTP2_ERR_CALLBACK_FAILURE;
+    // nghttp2_on_frame_recv_callback spec: any nonzero value signals a fatal error.
+    return -1;
   }
 
   int session_send_rv = nghttp2_session_send(session);
@@ -341,7 +344,8 @@ int H2Server::OnFrameRecvCallback(nghttp2_session* session,
     delete web_stream;
     sess->streams.erase(stream_id);
 
-    return NGHTTP2_ERR_CALLBACK_FAILURE;
+    // nghttp2_on_frame_recv_callback spec: any nonzero value signals a fatal error.
+    return -1;
   }
 
   // Notify the application.  The callback should register its own on_message /
