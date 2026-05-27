@@ -210,14 +210,12 @@ void BufferEventWebStream::EventCallback(bufferevent* bev,
 
     BufferEventWebStream* stream = static_cast<BufferEventWebStream*>(ctx);
 
-    // Guard against double-close: ReadCallback may have already called
-    // on_close_() and deleted the stream via the terminal-chunk path.
-    // state_ == CLOSED or DRAINING means on_close_() was already fired.
-    if (stream->state_ != CLOSED && stream->state_ != DRAINING) {
-      // Notify before self-deletion so Python-side handles can be invalidated
-      // while the pointer is still valid.
-      if (stream->on_close_) {
-        stream->on_close_();
+    // If the stream is still in OPEN state, the underlying connection closed
+    // before we received the clean chunked terminal chunk ("0\r\n\r\n").
+    // This is always treated as a premature termination/error.
+    if (stream->state_ == OPEN) {
+      if (stream->on_error_) {
+        stream->on_error_();
       }
     }
     delete stream;

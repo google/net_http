@@ -207,12 +207,7 @@ void H2Client::EventCallback(bufferevent* bev,
 
   if (what & (BEV_EVENT_EOF | BEV_EVENT_ERROR)) {
     if (sess->web_stream) {
-      if (what & BEV_EVENT_ERROR) {
-        sess->web_stream->OnError();
-      } else {
-        sess->web_stream->OnClose();
-      }
-
+      sess->web_stream->OnError();
       delete sess->web_stream;
       sess->web_stream = nullptr;
     }
