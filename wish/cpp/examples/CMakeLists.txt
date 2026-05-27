@@ -61,10 +61,10 @@ target_link_libraries(h2_echo_server
     "$<LINK_LIBRARY:WHOLE_ARCHIVE,absl::log_flags>"
 )
 
-add_executable(h2_tls_echo_server
-    h2_tls_echo_server.cc
+add_executable(h2_hello_client
+    h2_hello_client.cc
 )
-target_link_libraries(h2_tls_echo_server
+target_link_libraries(h2_hello_client
     buffer_event_web_stream
     absl::flags
     absl::flags_parse
@@ -73,10 +73,10 @@ target_link_libraries(h2_tls_echo_server
     "$<LINK_LIBRARY:WHOLE_ARCHIVE,absl::log_flags>"
 )
 
-add_executable(h2_hello_client
-    h2_hello_client.cc
+add_executable(h2_tls_echo_server
+    h2_tls_echo_server.cc
 )
-target_link_libraries(h2_hello_client
+target_link_libraries(h2_tls_echo_server
     buffer_event_web_stream
     absl::flags
     absl::flags_parse
