@@ -98,45 +98,6 @@ ssize_t H2WishStream::ReadSendData(uint8_t* buf,
   return static_cast<ssize_t>(send_len);
 }
 
-// ---- Private helpers ----
-
-int H2WishStream::SendMessage(uint8_t opcode,
-                              const std::string& msg) {
-  wslay_event_msg msg_frame = {
-      opcode,
-      reinterpret_cast<const uint8_t*>(msg.c_str()),
-      msg.length()};
-  int queue_msg_rv = wslay_event_queue_msg(ctx_, &msg_frame);
-  if (queue_msg_rv != 0) {
-    return queue_msg_rv;
-  }
-
-  // wslay sends to output_buf_ via WslaySendCallback.
-  int ws_send_rv = wslay_event_send(ctx_);
-  if (ws_send_rv != 0) {
-    return ws_send_rv;
-  }
-
-  // Resume the deferred data source and flush the nghttp2 session.
-  // NGHTTP2_ERR_INVALID_ARGUMENT is returned when the stream is not deferred,
-  // meaning the data provider is already active – that is not an error here.
-  int resume_data_rv = nghttp2_session_resume_data(h2session_, stream_id_);
-  if (resume_data_rv < 0 && resume_data_rv != NGHTTP2_ERR_INVALID_ARGUMENT) {
-    std::cerr << "H2WishStream: nghttp2_session_resume_data failed: "
-              << nghttp2_strerror(resume_data_rv) << std::endl;
-    return resume_data_rv;
-  }
-
-  int h2_send_rv = nghttp2_session_send(h2session_);
-  if (h2_send_rv < 0) {
-    std::cerr << "H2WishStream: nghttp2_session_send failed: "
-              << nghttp2_strerror(h2_send_rv) << std::endl;
-    return h2_send_rv;
-  }
-
-  return 0;
-}
-
 // ---- wslay callbacks ----
 
 ssize_t H2WishStream::WslayRecvCallback(wslay_event_context* ctx,
@@ -195,4 +156,43 @@ void H2WishStream::WslayOnMsgRecvCallback(wslay_event_context* /*ctx*/,
     std::string msg(reinterpret_cast<const char*>(arg->msg), arg->msg_length);
     s->on_message_(arg->opcode, msg);
   }
+}
+
+// ---- Private helpers ----
+
+int H2WishStream::SendMessage(uint8_t opcode,
+                              const std::string& msg) {
+  wslay_event_msg msg_frame = {
+      opcode,
+      reinterpret_cast<const uint8_t*>(msg.c_str()),
+      msg.length()};
+  int queue_msg_rv = wslay_event_queue_msg(ctx_, &msg_frame);
+  if (queue_msg_rv != 0) {
+    return queue_msg_rv;
+  }
+
+  // wslay sends to output_buf_ via WslaySendCallback.
+  int ws_send_rv = wslay_event_send(ctx_);
+  if (ws_send_rv != 0) {
+    return ws_send_rv;
+  }
+
+  // Resume the deferred data source and flush the nghttp2 session.
+  // NGHTTP2_ERR_INVALID_ARGUMENT is returned when the stream is not deferred,
+  // meaning the data provider is already active – that is not an error here.
+  int resume_data_rv = nghttp2_session_resume_data(h2session_, stream_id_);
+  if (resume_data_rv < 0 && resume_data_rv != NGHTTP2_ERR_INVALID_ARGUMENT) {
+    std::cerr << "H2WishStream: nghttp2_session_resume_data failed: "
+              << nghttp2_strerror(resume_data_rv) << std::endl;
+    return resume_data_rv;
+  }
+
+  int h2_send_rv = nghttp2_session_send(h2session_);
+  if (h2_send_rv < 0) {
+    std::cerr << "H2WishStream: nghttp2_session_send failed: "
+              << nghttp2_strerror(h2_send_rv) << std::endl;
+    return h2_send_rv;
+  }
+
+  return 0;
 }

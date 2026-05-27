@@ -64,13 +64,13 @@ class H2WishStream {
   nghttp2_session* h2session_;
   int32_t stream_id_;
 
-  bool is_server_;
-  wslay_event_context* ctx_;
-
   // Bytes received from HTTP/2 DATA frames, consumed by wslay recv.
   evbuffer* input_buf_;
   // Bytes produced by wslay send, consumed by the nghttp2 data provider.
   evbuffer* output_buf_;
+
+  bool is_server_;
+  wslay_event_context* ctx_;
 
   MessageCallback on_message_;
   OpenCallback on_open_;
