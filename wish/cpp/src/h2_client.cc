@@ -108,7 +108,7 @@ void H2Client::Stop() {
 
 // ---- libevent bufferevent callbacks ----
 
-void H2Client::ReadCallback(struct bufferevent* bev,
+void H2Client::ReadCallback(bufferevent* bev,
                             void* ctx) {
   Session* sess = static_cast<Session*>(ctx);
 
@@ -116,7 +116,7 @@ void H2Client::ReadCallback(struct bufferevent* bev,
     return;
   }
 
-  struct evbuffer* input = bufferevent_get_input(bev);
+  evbuffer* input = bufferevent_get_input(bev);
 
   size_t len = evbuffer_get_length(input);
   if (len == 0) {
@@ -153,7 +153,7 @@ void H2Client::ReadCallback(struct bufferevent* bev,
   }
 }
 
-void H2Client::EventCallback(struct bufferevent* bev,
+void H2Client::EventCallback(bufferevent* bev,
                              short what,  // NOLINT(runtime/int)
                              void* ctx) {
   Session* sess = static_cast<Session*>(ctx);

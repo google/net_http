@@ -140,7 +140,7 @@ void H2TlsClient::Stop() {
 
 // ---- libevent bufferevent callbacks ----
 
-void H2TlsClient::ReadCallback(struct bufferevent* bev,
+void H2TlsClient::ReadCallback(bufferevent* bev,
                                void* ctx) {
   Session* sess = static_cast<Session*>(ctx);
 
@@ -148,7 +148,7 @@ void H2TlsClient::ReadCallback(struct bufferevent* bev,
     return;
   }
 
-  struct evbuffer* input = bufferevent_get_input(bev);
+  evbuffer* input = bufferevent_get_input(bev);
 
   size_t len = evbuffer_get_length(input);
   if (len == 0) {
@@ -186,7 +186,7 @@ void H2TlsClient::ReadCallback(struct bufferevent* bev,
   }
 }
 
-void H2TlsClient::EventCallback(struct bufferevent* bev,
+void H2TlsClient::EventCallback(bufferevent* bev,
                                 short what,  // NOLINT(runtime/int)
                                 void* arg) {
   Session* sess = static_cast<Session*>(arg);

@@ -174,6 +174,7 @@ void H2TlsServer::AcceptConnCb(evconnlistener* listener,
 
     return;
   }
+
   int send_rv = nghttp2_session_send(sess->h2session);
   if (send_rv != 0) {
     LOG(ERROR) << "H2TlsServer: nghttp2_session_send() failed: "
@@ -349,10 +350,10 @@ int H2TlsServer::OnFrameRecvCallback(nghttp2_session* session,
       return -1;
     }
 
-    int send_rv = nghttp2_session_send(session);
-    if (send_rv != 0) {
+    int session_send_rv = nghttp2_session_send(session);
+    if (session_send_rv != 0) {
       LOG(ERROR) << "H2TlsServer: nghttp2_session_send() failed: "
-                 << nghttp2_strerror(send_rv);
+                 << nghttp2_strerror(session_send_rv);
 
       // nghttp2_on_frame_recv_callback spec: any nonzero value signals a fatal error.
       return -1;
@@ -386,10 +387,10 @@ int H2TlsServer::OnFrameRecvCallback(nghttp2_session* session,
     return -1;
   }
 
-  int send_rv = nghttp2_session_send(session);
-  if (send_rv != 0) {
+  int session_send_rv = nghttp2_session_send(session);
+  if (session_send_rv != 0) {
     LOG(ERROR) << "H2TlsServer: nghttp2_session_send() failed: "
-               << nghttp2_strerror(send_rv);
+               << nghttp2_strerror(session_send_rv);
 
     delete web_stream;
     sess->streams.erase(stream_id);
@@ -436,6 +437,7 @@ int H2TlsServer::OnStreamCloseCallback(nghttp2_session* /*session*/,
   auto it = sess->streams.find(stream_id);
   if (it != sess->streams.end()) {
     it->second->OnClose();
+
     delete it->second;
     sess->streams.erase(it);
   }
@@ -452,6 +454,7 @@ nghttp2_ssize H2TlsServer::DataSourceReadCallback(nghttp2_session* /*session*/,
                                                   nghttp2_data_source* source,
                                                   void* /*user_data*/) {
   NGHTTP2WebStream* web_stream = static_cast<NGHTTP2WebStream*>(source->ptr);
+
   return web_stream->ReadSendData(buf,
                                   length,
                                   data_flags);
@@ -467,6 +470,7 @@ nghttp2_session* H2TlsServer::CreateH2Session(Session* sess) {
 
     return nullptr;
   }
+
   nghttp2_session_callbacks_set_send_callback2(cbs,
                                                SendCallback);
   nghttp2_session_callbacks_set_on_header_callback(cbs,
