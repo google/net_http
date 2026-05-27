@@ -12,7 +12,7 @@ TEST_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.abspath(os.path.join(TEST_DIR, "..", ".."))
 
 SERVER_BIN = os.path.join(PROJECT_ROOT, "cpp", "build", "examples", "tls_echo_server")
-SERVER_PLAIN_BIN = os.path.join(PROJECT_ROOT, "cpp", "build", "examples", "echo_server")
+SERVER_PLAIN_BIN = os.path.join(PROJECT_ROOT, "cpp", "build", "examples", "plain_echo_server")
 CERTS_DIR = os.path.join(PROJECT_ROOT, "cpp", "certs")
 
 def get_free_port():
