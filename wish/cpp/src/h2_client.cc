@@ -36,6 +36,7 @@ bool H2Client::Init() {
   base_ = event_base_new();
   if (!base_) {
     LOG(ERROR) << "event_base_new() failed";
+
     return false;
   }
 
@@ -43,14 +44,16 @@ bool H2Client::Init() {
                              1);
   if (!dns_base_) {
     LOG(ERROR) << "evdns_base_new() failed";
+
     return false;
   }
 
-  struct bufferevent* bev = bufferevent_socket_new(base_,
-                                                   -1,
-                                                   BEV_OPT_CLOSE_ON_FREE);
+  bufferevent* bev = bufferevent_socket_new(base_,
+                                            -1,
+                                            BEV_OPT_CLOSE_ON_FREE);
   if (!bev) {
     LOG(ERROR) << "bufferevent_socket_new() failed";
+
     return false;
   }
 
@@ -72,6 +75,7 @@ bool H2Client::Init() {
                                      EV_READ | EV_WRITE);
   if (enable_rv != 0) {
     LOG(ERROR) << "bufferevent_enable() failed";
+
     return false;
   }
 
@@ -81,6 +85,7 @@ bool H2Client::Init() {
                                           host_.c_str(),
                                           port_) < 0) {
     LOG(ERROR) << "bufferevent_socket_connect_hostname() failed";
+
     return false;
   }
 
@@ -103,7 +108,8 @@ void H2Client::Stop() {
 
 // ---- libevent bufferevent callbacks ----
 
-void H2Client::ReadCallback(struct bufferevent* bev, void* ctx) {
+void H2Client::ReadCallback(struct bufferevent* bev,
+                            void* ctx) {
   Session* sess = static_cast<Session*>(ctx);
 
   if (!sess->h2session) {
@@ -117,7 +123,8 @@ void H2Client::ReadCallback(struct bufferevent* bev, void* ctx) {
     return;
   }
 
-  unsigned char* data = evbuffer_pullup(input, -1);
+  unsigned char* data = evbuffer_pullup(input,
+                                        -1);
   ssize_t recv_len = nghttp2_session_mem_recv(sess->h2session,
                                               data,
                                               len);
@@ -130,6 +137,7 @@ void H2Client::ReadCallback(struct bufferevent* bev, void* ctx) {
   int drain_rv = evbuffer_drain(input, static_cast<size_t>(recv_len));
   if (drain_rv != 0) {
     LOG(ERROR) << "evbuffer_drain() failed";
+
     return;
   }
 
@@ -210,6 +218,7 @@ nghttp2_ssize H2Client::SendCallback(nghttp2_session* /*session*/,
 
     return NGHTTP2_ERR_CALLBACK_FAILURE;
   }
+
   return static_cast<nghttp2_ssize>(length);
 }
 
@@ -219,7 +228,8 @@ int H2Client::OnHeaderCallback(nghttp2_session* /*session*/,
                                size_t namelen,
                                const uint8_t* value,
                                size_t valuelen,
-                               uint8_t /*flags*/, void* user_data) {
+                               uint8_t /*flags*/,
+                               void* user_data) {
   Session* sess = static_cast<Session*>(user_data);
 
   // Capture the :status value for our web-stream stream so that
@@ -284,6 +294,7 @@ int H2Client::OnDataChunkRecvCallback(nghttp2_session* session,
   if (sess->web_stream && stream_id == sess->h2_stream_id) {
     sess->web_stream->OnDataChunk(data,
                                   len);
+
     int send_rv = nghttp2_session_send(session);
     if (send_rv < 0) {
       LOG(ERROR) << "nghttp2_session_send() failed: "
@@ -395,6 +406,7 @@ void H2Client::InitH2Session(Session* sess) {
   if (stream_id < 0) {
     LOG(ERROR) << "H2Client: nghttp2_submit_request2() failed: "
                << nghttp2_strerror(stream_id);
+
     return;
   }
   sess->h2_stream_id = stream_id;
