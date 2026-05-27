@@ -1,6 +1,19 @@
-# WiSH C++ Implementation
+# web-stream C++ Implementation
 
-This directory contains a C++ implementation of WiSH protocol together with a thin TLS stack enabling mTLS.
+This directory contains a C++ implementation of the **web-stream** protocol (defined in the [web-stream Protocol Specification](https://datatracker.ietf.org/doc/html/draft-yoshino-wish)), built with `libevent`, `nghttp2`, and `wslay`, including support for TLS and mTLS.
+
+## Directory Overview
+
+- [`src/`](src/): Core library providing transport-agnostic `web-stream` abstractions, framing engines (`BufferEventWebStream`, `NGHTTP2WebStream`), HTTP/1.1 handshakes, TLS utilities, and client/server modules for HTTP/1.1 and HTTP/2.
+- [`examples/`](examples/): Example echo servers and clients for HTTP/1.1 and HTTP/2 (plain text and TLS/mTLS).
+- [`benchmark/`](benchmark/): Benchmark clients and automation scripts for high-throughput and QPS stress testing.
+- [`certs/`](certs/): Pre-generated CA, server, and client certificates for TLS and mTLS testing.
+- [`deployments/`](deployments/): Kubernetes manifests for echo server and benchmarking deployments.
+- [`patches/`](patches/): Patches for third-party dependencies (e.g. `wslay`).
+- [`scripts/`](scripts/): Automation scripts for building and pushing Docker images.
+
+For a comprehensive file-by-file reference and architectural code map, see [CODE_MAP.md](CODE_MAP.md).
+
 
 ## Building
 
