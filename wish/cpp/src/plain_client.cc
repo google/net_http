@@ -61,9 +61,11 @@ bool PlainClient::Init() {
       bev,
       [this](bufferevent* bev) {
         stream_ = new BufferEventWebStream(bev, false);
+
         if (on_open_) {
-          stream_->SetOnOpen([this]() { on_open_(stream_); });
+          on_open_(stream_);
         }
+
         stream_->Start();
         handshake_.reset();
       },
@@ -79,9 +81,6 @@ bool PlainClient::Init() {
 
 void PlainClient::SetOnOpen(OpenCallback cb) {
   on_open_ = cb;
-  if (stream_) {
-    stream_->SetOnOpen([this]() { on_open_(stream_); });
-  }
 }
 
 void PlainClient::Run() {

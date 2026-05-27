@@ -100,11 +100,13 @@ void PlainServer::AcceptConnCb(evconnlistener* listener,
       bev,
       [server](bufferevent* bev) {
         BufferEventWebStream* stream = new BufferEventWebStream(bev, true);
+
         if (server->on_stream_) {
           server->on_stream_(stream);
         } else {
           LOG(WARNING) << "Warning: No stream handler registered.";
         }
+
         stream->Start();
       },
       []() {

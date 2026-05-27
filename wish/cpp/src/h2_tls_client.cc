@@ -296,8 +296,6 @@ int H2TlsClient::OnFrameRecvCallback(nghttp2_session* /*session*/,
       frame->headers.cat == NGHTTP2_HCAT_RESPONSE &&
       sess->response_status == 200) {
     if (sess->web_stream) {
-      sess->web_stream->OnOpen();
-
       if (sess->client->on_open_) {
         sess->client->on_open_(sess->web_stream);
       }

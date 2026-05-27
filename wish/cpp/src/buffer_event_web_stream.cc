@@ -58,10 +58,6 @@ void BufferEventWebStream::Start() {
     LOG(ERROR) << "bufferevent_enable() failed";
   }
 
-  if (on_open_) {
-    on_open_();
-  }
-
   // If there is already data in the input buffer, process it immediately.
   if (evbuffer_get_length(bufferevent_get_input(bev_)) > 0) {
     ReadCallback(bev_, this);
@@ -69,8 +65,6 @@ void BufferEventWebStream::Start() {
 }
 
 void BufferEventWebStream::SetOnMessage(MessageCallback cb) { on_message_ = cb; }
-
-void BufferEventWebStream::SetOnOpen(OpenCallback cb) { on_open_ = cb; }
 
 void BufferEventWebStream::SetOnClose(CloseCallback cb) { on_close_ = cb; }
 
@@ -225,8 +219,6 @@ void BufferEventWebStream::EventCallback(bufferevent* bev,
     delete stream;
   }
 }
-
-
 
 // ---- wslay callbacks ----
 

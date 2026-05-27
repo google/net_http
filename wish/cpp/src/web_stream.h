@@ -12,14 +12,12 @@
 class WebStream {
  public:
   using MessageCallback = std::function<void(uint8_t, const std::string&)>;
-  using OpenCallback = std::function<void()>;
   using CloseCallback = std::function<void()>;
   using ErrorCallback = std::function<void()>;
 
   virtual ~WebStream() = default;
 
   virtual void SetOnMessage(MessageCallback cb) = 0;
-  virtual void SetOnOpen(OpenCallback cb) = 0;
   virtual void SetOnClose(CloseCallback cb) = 0;
   virtual void SetOnError(ErrorCallback cb) = 0;
 

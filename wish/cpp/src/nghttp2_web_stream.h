@@ -36,7 +36,6 @@ class NGHTTP2WebStream : public WebStream {
   ~NGHTTP2WebStream() override;
 
   void SetOnMessage(MessageCallback cb) override;
-  void SetOnOpen(OpenCallback cb) override;
   void SetOnClose(CloseCallback cb) override;
   void SetOnError(ErrorCallback cb) override;
 
@@ -55,10 +54,6 @@ class NGHTTP2WebStream : public WebStream {
   // Append data received in an HTTP/2 DATA frame and run wslay recv.
   void OnDataChunk(const uint8_t* data,
                    size_t len);
-
-  // Signal that the HTTP/2 handshake for this stream is complete (200 received
-  // on the client side, or HEADERS received on the server side).
-  void OnOpen();
 
   // Signal that the HTTP/2 stream has been closed.
   void OnClose();
@@ -86,7 +81,6 @@ class NGHTTP2WebStream : public WebStream {
   wslay_event_context* ctx_;
 
   MessageCallback on_message_;
-  OpenCallback on_open_;
   CloseCallback on_close_;
   ErrorCallback on_error_;
 

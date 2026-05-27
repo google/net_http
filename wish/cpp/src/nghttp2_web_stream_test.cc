@@ -60,20 +60,8 @@ TEST_F(NGHTTP2WebStreamTest, HandshakeAndSimpleExchange) {
   NGHTTP2WebStream server(server_session_, 1, true /* is_server */);
   NGHTTP2WebStream client(client_session_, 1, false /* is_server */);
 
-  bool server_opened = false;
-  bool client_opened = false;
   std::string received_from_client;
   std::string received_from_server;
-
-  server.SetOnOpen([&]() {
-    server_opened = true;
-    server.SendText("Hello, Client!");
-  });
-
-  client.SetOnOpen([&]() {
-    client_opened = true;
-    client.SendText("Hello, Server!");
-  });
 
   server.SetOnMessage([&](uint8_t opcode, const std::string& msg) {
     if (opcode == WEB_STREAM_OPCODE_TEXT) {
@@ -87,16 +75,14 @@ TEST_F(NGHTTP2WebStreamTest, HandshakeAndSimpleExchange) {
     }
   });
 
-  // Simulate the HTTP/2 handshake completing on both sides.
-  server.OnOpen();
-  client.OnOpen();
+  // Both sides are open immediately upon construction and ready to send.
+  server.SendText("Hello, Client!");
+  client.SendText("Hello, Server!");
 
   // Deliver each side's wslay frames to the other side.
   Pipe(&server, &client);
   Pipe(&client, &server);
 
-  EXPECT_TRUE(server_opened);
-  EXPECT_TRUE(client_opened);
   EXPECT_EQ(received_from_client, "Hello, Server!");
   EXPECT_EQ(received_from_server, "Hello, Client!");
 }
@@ -105,7 +91,6 @@ TEST_F(NGHTTP2WebStreamTest, HandshakeAndSimpleExchange) {
 // web-stream doesn't use masking (unlike WebSocket over TCP).
 TEST_F(NGHTTP2WebStreamTest, ClientSendsUnmasked) {
   NGHTTP2WebStream client(client_session_, 1, false /* is_server */);
-  client.OnOpen();
   client.SendText("Hello");
 
   uint8_t buf[256];
@@ -126,7 +111,6 @@ TEST_F(NGHTTP2WebStreamTest, ClientSendsUnmasked) {
 // Tests that the server does NOT mask frames when sending.
 TEST_F(NGHTTP2WebStreamTest, ServerSendsUnmasked) {
   NGHTTP2WebStream server(server_session_, 1, true /* is_server */);
-  server.OnOpen();
   server.SendText("Hello");
 
   uint8_t buf[256];
@@ -151,9 +135,6 @@ TEST_F(NGHTTP2WebStreamTest, CloseSignalsEOF) {
 
   bool client_close_fired = false;
   client.SetOnClose([&]() { client_close_fired = true; });
-
-  server.OnOpen();
-  client.OnOpen();
 
   // Send a message, then close the server side.
   server.SendText("Hello");
@@ -190,11 +171,8 @@ TEST_F(NGHTTP2WebStreamTest, OnErrorOnMidMessageEOF) {
   bool client_close_fired = false;
   bool client_error_fired = false;
 
-  client.SetOnOpen([&]() {});
   client.SetOnClose([&]() { client_close_fired = true; });
   client.SetOnError([&]() { client_error_fired = true; });
-
-  client.OnOpen();
 
   // Write a partial message frame:
   // - First byte: FIN=1, opcode=TEXT(0x1) => 0x81

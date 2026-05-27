@@ -48,8 +48,6 @@ NGHTTP2WebStream::~NGHTTP2WebStream() {
 
 void NGHTTP2WebStream::SetOnMessage(MessageCallback cb) { on_message_ = cb; }
 
-void NGHTTP2WebStream::SetOnOpen(OpenCallback cb) { on_open_ = cb; }
-
 void NGHTTP2WebStream::SetOnClose(CloseCallback cb) { on_close_ = cb; }
 
 void NGHTTP2WebStream::SetOnError(ErrorCallback cb) { on_error_ = cb; }
@@ -103,12 +101,6 @@ void NGHTTP2WebStream::OnDataChunk(const uint8_t* data, size_t len) {
   int rv = wslay_event_recv(ctx_);
   if (rv != 0) {
     LOG(ERROR) << "NGHTTP2WebStream: wslay_event_recv() failed: " << rv;
-  }
-}
-
-void NGHTTP2WebStream::OnOpen() {
-  if (on_open_) {
-    on_open_();
   }
 }
 
