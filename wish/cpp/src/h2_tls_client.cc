@@ -1,6 +1,7 @@
 #include "h2_tls_client.h"
 
 #include <absl/log/log.h>
+#include <absl/strings/numbers.h>
 #include <netinet/tcp.h>
 
 #include <algorithm>
@@ -266,18 +267,13 @@ int H2TlsClient::OnHeaderCallback(nghttp2_session* /*session*/,
   // Capture the :status value for our web-stream stream so that
   // OnFrameRecvCallback can verify the server accepted the request.
   if (frame->hd.stream_id == sess->h2_stream_id &&
-      namelen == 7 && memcmp(name, ":status", 7) == 0) {
+      absl::string_view(reinterpret_cast<const char*>(name), namelen) == ":status") {
     int parsed = 0;
-    bool valid = (valuelen > 0);
-    for (size_t i = 0; i < valuelen && valid; ++i) {
-      if (value[i] < '0' || value[i] > '9') {
-        valid = false;
-      } else {
-        parsed = parsed * 10 + (value[i] - '0');
-      }
-    }
     // Store -1 for malformed values so the == 200 check in
     // OnFrameRecvCallback never accidentally matches.
+    bool valid = absl::SimpleAtoi(
+        absl::string_view(reinterpret_cast<const char*>(value), valuelen),
+        &parsed);
     sess->response_status = valid ? parsed : -1;
   }
 
