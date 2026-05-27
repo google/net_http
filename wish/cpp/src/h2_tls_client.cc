@@ -159,11 +159,14 @@ void H2TlsClient::EventCallback(struct bufferevent* bev,
     int fd = bufferevent_getfd(bev);
     if (fd >= 0) {
       int one = 1;
-      setsockopt(fd,
-                 IPPROTO_TCP,
-                 TCP_NODELAY,
-                 &one,
-                 sizeof(one));
+      int rv = setsockopt(fd,
+                          IPPROTO_TCP,
+                          TCP_NODELAY,
+                          &one,
+                          sizeof(one));
+      if (rv != 0) {
+        std::cerr << "H2TlsClient: setsockopt(TCP_NODELAY) failed" << std::endl;
+      }
     }
 
     sess->client->InitH2Session(sess);

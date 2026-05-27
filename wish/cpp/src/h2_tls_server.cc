@@ -102,11 +102,16 @@ void H2TlsServer::AcceptConnCb(evconnlistener* listener,
   event_base* base = evconnlistener_get_base(listener);
 
   int one = 1;
-  setsockopt(fd,
-             IPPROTO_TCP,
-             TCP_NODELAY,
-             &one,
-             sizeof(one));
+  int set_rv = setsockopt(fd,
+                          IPPROTO_TCP,
+                          TCP_NODELAY,
+                          &one,
+                          sizeof(one));
+  if (set_rv != 0) {
+    std::cerr << "H2TlsServer: setsockopt(TCP_NODELAY) failed" << std::endl;
+    evutil_closesocket(fd);
+    return;
+  }
 
   SSL* ssl = SSL_new(server->tls_ctx_.ssl_ctx());
   bufferevent* bev = bufferevent_openssl_socket_new(

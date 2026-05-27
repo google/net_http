@@ -69,11 +69,16 @@ void H2Server::AcceptConnCb(struct evconnlistener* listener, evutil_socket_t fd,
   struct event_base* base = evconnlistener_get_base(listener);
 
   int one = 1;
-  setsockopt(fd,
-             IPPROTO_TCP,
-             TCP_NODELAY,
-             &one,
-             sizeof(one));
+  int set_rv = setsockopt(fd,
+                          IPPROTO_TCP,
+                          TCP_NODELAY,
+                          &one,
+                          sizeof(one));
+  if (set_rv != 0) {
+    std::cerr << "H2Server: setsockopt(TCP_NODELAY) failed" << std::endl;
+    evutil_closesocket(fd);
+    return;
+  }
 
   struct bufferevent* bev =
       bufferevent_socket_new(base,
