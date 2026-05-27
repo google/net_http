@@ -12,10 +12,12 @@
 
 class TlsServer {
  public:
-  using ConnectCallback = std::function<void(struct bufferevent*)>;
+  using ConnectCallback = std::function<void(bufferevent*)>;
 
-  TlsServer(const std::string& ca_file, const std::string& cert_file,
-             const std::string& key_file, int port);
+  TlsServer(int port,
+            const std::string& ca_file,
+            const std::string& cert_file,
+            const std::string& key_file);
   ~TlsServer();
 
   bool Init();

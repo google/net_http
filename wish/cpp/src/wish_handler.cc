@@ -11,11 +11,20 @@
 #include <sstream>
 #include <vector>
 
-WishHandler::WishHandler(struct bufferevent* bev, bool is_server)
-    : bev_(bev), is_server_(is_server), ctx_(nullptr), state_(HANDSHAKE) {
-  struct wslay_event_callbacks callbacks = {
-      RecvCallback, SendCallback, GenMaskCallback, NULL,
-      NULL, NULL, OnMsgRecvCallback};
+WishHandler::WishHandler(bufferevent* bev,
+                         bool is_server)
+    : bev_(bev),
+      is_server_(is_server),
+      ctx_(nullptr),
+      state_(HANDSHAKE) {
+  wslay_event_callbacks callbacks = {
+      RecvCallback,
+      SendCallback,
+      GenmaskCallback,
+      nullptr,  // on_frame_recv_start_callback
+      nullptr,  // on_frame_recv_chunk_callback
+      nullptr,  // on_frame_recv_end_callback
+      OnMsgRecvCallback};
 
   if (is_server_) {
     wslay_event_context_server_init(&ctx_, &callbacks, this);
@@ -32,8 +41,11 @@ WishHandler::~WishHandler() {
 }
 
 void WishHandler::Start() {
-  bufferevent_setcb(bev_, ReadCallback, NULL, EventCallback, this);
-  bufferevent_enable(bev_, EV_READ | EV_WRITE);
+  bufferevent_setcb(bev_,
+                    ReadCallback,
+                    nullptr,
+                    EventCallback,
+                    this);
 
   if (!is_server_) {
     SendHttpRequest();
@@ -46,8 +58,11 @@ void WishHandler::SetOnOpen(OpenCallback cb) { on_open_ = cb; }
 
 void WishHandler::SetOnClose(CloseCallback cb) { on_close_ = cb; }
 
-ssize_t WishHandler::RecvCallback(wslay_event_context* ctx, uint8_t* buf,
-                                  size_t len, int flags, void* user_data) {
+ssize_t WishHandler::RecvCallback(wslay_event_context* ctx,
+                                  uint8_t* buf,
+                                  size_t len,
+                                  int flags,
+                                  void* user_data) {
   WishHandler* handler = static_cast<WishHandler*>(user_data);
   struct evbuffer* input = bufferevent_get_input(handler->bev_);
 
@@ -62,8 +77,11 @@ ssize_t WishHandler::RecvCallback(wslay_event_context* ctx, uint8_t* buf,
   return copy_len;
 }
 
-ssize_t WishHandler::SendCallback(wslay_event_context* ctx, const uint8_t* data,
-                                  size_t len, int flags, void* user_data) {
+ssize_t WishHandler::SendCallback(wslay_event_context* ctx,
+                                  const uint8_t* data,
+                                  size_t len,
+                                  int flags,
+                                  void* user_data) {
   WishHandler* handler = static_cast<WishHandler*>(user_data);
   bufferevent_write(handler->bev_, data, len);
   return len;
@@ -105,7 +123,8 @@ void WishHandler::ReadCallback(struct bufferevent* bev, void* ctx) {
   }
 }
 
-void WishHandler::EventCallback(struct bufferevent* bev, short events,
+void WishHandler::EventCallback(bufferevent* bev,
+                                short what,  // NOLINT(runtime/int)
                                 void* ctx) {
   if (events & BEV_EVENT_ERROR) {
     std::cerr << "Error on socket: "
@@ -124,10 +143,10 @@ void WishHandler::EventCallback(struct bufferevent* bev, short events,
 }
 
 int WishHandler::SendMessage(uint8_t opcode, const std::string& msg) {
-  if (state_ != OPEN) return -1;
-
-  struct wslay_event_msg msg_frame = {
-      opcode, reinterpret_cast<const uint8_t*>(msg.c_str()), msg.length()};
+  wslay_event_msg msg_frame = {
+      opcode,
+      reinterpret_cast<const uint8_t*>(msg.c_str()),
+      msg.length()};
   // Queue msg
   int res = wslay_event_queue_msg(ctx_, &msg_frame);
   if (res != 0) return res;
@@ -222,8 +241,10 @@ bool WishHandler::ReadHttpResponse() {
   struct evbuffer* input = bufferevent_get_input(bev_);
 
   // Search for \r\n\r\n
-  struct evbuffer_ptr ptr = evbuffer_search(input, "\r\n\r\n", 4, NULL);
-  if (ptr.pos == -1) return false;
+  evbuffer_ptr ptr = evbuffer_search(input,
+                                     "\r\n\r\n",
+                                     4,
+                                     nullptr);
 
   size_t header_len = ptr.pos + 4;
   char* headers = new char[header_len + 1];

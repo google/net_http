@@ -35,8 +35,9 @@ bool TlsContext::Init(bool is_server) {
 
   // Load CA certificate for verifying the peer
   if (!ca_file_.empty()) {
-    if (SSL_CTX_load_verify_locations(ssl_ctx_, ca_file_.c_str(), nullptr) !=
-        1) {
+    if (SSL_CTX_load_verify_locations(ssl_ctx_,
+                                      ca_file_.c_str(),
+                                      nullptr) != 1) {
       std::cerr << "Error loading CA file: " << ca_file_ << std::endl;
       return false;
     }
@@ -53,14 +54,16 @@ bool TlsContext::Init(bool is_server) {
 
   // Load own certificate and key
   if (!certificate_file_.empty() && !private_key_file_.empty()) {
-    if (SSL_CTX_use_certificate_file(ssl_ctx_, certificate_file_.c_str(),
+    if (SSL_CTX_use_certificate_file(ssl_ctx_,
+                                     certificate_file_.c_str(),
                                      SSL_FILETYPE_PEM) <= 0) {
       std::cerr << "Error loading certificate file: " << certificate_file_
                 << std::endl;
       return false;
     }
 
-    if (SSL_CTX_use_PrivateKey_file(ssl_ctx_, private_key_file_.c_str(),
+    if (SSL_CTX_use_PrivateKey_file(ssl_ctx_,
+                                    private_key_file_.c_str(),
                                     SSL_FILETYPE_PEM) <= 0) {
       std::cerr << "Error loading key file: " << private_key_file_ << std::endl;
       return false;
