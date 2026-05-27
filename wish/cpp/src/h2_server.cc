@@ -154,7 +154,8 @@ void H2Server::AcceptConnCb(struct evconnlistener* listener,
                     EventCallback,
                     sess);
 
-  int enable_rv = bufferevent_enable(bev, EV_READ | EV_WRITE);
+  int enable_rv = bufferevent_enable(bev,
+                                     EV_READ | EV_WRITE);
   if (enable_rv != 0) {
     LOG(ERROR) << "H2Server: bufferevent_enable() failed";
 
@@ -166,9 +167,9 @@ void H2Server::AcceptConnCb(struct evconnlistener* listener,
   }
 }
 
-void H2Server::AcceptErrorCb(struct evconnlistener* listener,
+void H2Server::AcceptErrorCb(evconnlistener* listener,
                              void* /*ctx*/) {
-  struct event_base* base = evconnlistener_get_base(listener);
+  event_base* base = evconnlistener_get_base(listener);
   int err = EVUTIL_SOCKET_ERROR();
   LOG(ERROR) << "H2Server: listener error " << err << " ("
              << evutil_socket_error_to_string(err) << ")";
@@ -177,10 +178,10 @@ void H2Server::AcceptErrorCb(struct evconnlistener* listener,
 
 // ---- libevent bufferevent callbacks ----
 
-void H2Server::ReadCallback(struct bufferevent* bev, void* ctx) {
+void H2Server::ReadCallback(bufferevent* bev, void* ctx) {
   Session* sess = static_cast<Session*>(ctx);
 
-  struct evbuffer* input = bufferevent_get_input(bev);
+  evbuffer* input = bufferevent_get_input(bev);
 
   size_t len = evbuffer_get_length(input);
   if (len == 0) {
@@ -199,14 +200,14 @@ void H2Server::ReadCallback(struct bufferevent* bev, void* ctx) {
   }
   evbuffer_drain(input, static_cast<size_t>(readlen));
 
-  int rv = nghttp2_session_send(sess->h2session);
-  if (rv < 0) {
+  int session_send_rv = nghttp2_session_send(sess->h2session);
+  if (session_send_rv < 0) {
     LOG(ERROR) << "H2Server: nghttp2_session_send() failed: "
-               << nghttp2_strerror(rv);
+               << nghttp2_strerror(session_send_rv);
   }
 }
 
-void H2Server::EventCallback(struct bufferevent* bev,
+void H2Server::EventCallback(bufferevent* bev,
                              short what,  // NOLINT(runtime/int)
                              void* ctx) {
   Session* sess = static_cast<Session*>(ctx);
@@ -418,6 +419,7 @@ nghttp2_ssize H2Server::DataSourceReadCallback(nghttp2_session* /*session*/,
                                                nghttp2_data_source* source,
                                                void* /*user_data*/) {
   NGHTTP2WebStream* web_stream = static_cast<NGHTTP2WebStream*>(source->ptr);
+
   return web_stream->ReadSendData(buf,
                                   length,
                                   data_flags);
@@ -433,6 +435,7 @@ nghttp2_session* H2Server::CreateH2Session(Session* sess) {
 
     return nullptr;
   }
+
   nghttp2_session_callbacks_set_send_callback2(cbs,
                                                SendCallback);
   nghttp2_session_callbacks_set_on_header_callback(cbs,

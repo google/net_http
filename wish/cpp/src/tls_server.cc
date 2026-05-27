@@ -106,7 +106,7 @@ void TlsServer::AcceptConnCb(evconnlistener* listener,
                  TCP_NODELAY,
                  &one,
                  sizeof(one)) < 0) {
-    LOG(ERROR) << "Failed to set TCP_NODELAY: " << strerror(errno);
+    LOG(ERROR) << "setsockopt(TCP_NODELAY) failed: " << strerror(errno);
   }
 
   SSL* ssl = SSL_new(server->tls_ctx_.ssl_ctx());
