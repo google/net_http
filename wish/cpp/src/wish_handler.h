@@ -33,7 +33,7 @@ class WishHandler {
   using CloseCallback = std::function<void()>;
 
   // Constructor takes an already created bufferevent
-  WishHandler(struct bufferevent* bev, bool is_server);
+  WishHandler(bufferevent* bev, bool is_server);
   ~WishHandler();
 
   // Start the handler (sets up callbacks and enables events)
@@ -50,7 +50,7 @@ class WishHandler {
   void SetOnClose(CloseCallback cb);
 
  private:
-  struct bufferevent* bev_;
+  bufferevent* bev_;
   bool is_server_;
   struct wslay_event_context* ctx_;
   MessageCallback on_message_;

@@ -38,10 +38,10 @@ class TlsClient {
   std::string host_;
   int port_;
 
-  TlsContext tls_ctx_;
+  event_base* base_;
+  evdns_base* dns_base_;
 
-  struct event_base* base_;
-  struct evdns_base* dns_base_;
+  TlsContext tls_ctx_;
 
   WishHandler* handler_;
 

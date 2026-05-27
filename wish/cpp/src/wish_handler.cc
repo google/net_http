@@ -64,7 +64,8 @@ ssize_t WishHandler::RecvCallback(wslay_event_context* ctx,
                                   int flags,
                                   void* user_data) {
   WishHandler* handler = static_cast<WishHandler*>(user_data);
-  struct evbuffer* input = bufferevent_get_input(handler->bev_);
+
+  evbuffer* input = bufferevent_get_input(handler->bev_);
 
   size_t data_len = evbuffer_get_length(input);
   if (data_len == 0) {
@@ -192,13 +193,21 @@ void WishHandler::HandleHandshake() {
 }
 
 bool WishHandler::ReadHttpRequest() {
-  struct evbuffer* input = bufferevent_get_input(bev_);
+  evbuffer* input = bufferevent_get_input(bev_);
+
   size_t len = evbuffer_get_length(input);
-  if (len == 0) return false;
+  if (len == 0) {
+    return false;
+  }
 
   // Search for \r\n\r\n
-  struct evbuffer_ptr ptr = evbuffer_search(input, "\r\n\r\n", 4, NULL);
-  if (ptr.pos == -1) return false;  // Not full headers yet
+  evbuffer_ptr ptr = evbuffer_search(input,
+                                     "\r\n\r\n",
+                                     4,
+                                     nullptr);
+  if (ptr.pos == -1) {
+    return false;  // Not full headers yet
+  }
 
   // Read up to the end of headers
   size_t header_len = ptr.pos + 4;

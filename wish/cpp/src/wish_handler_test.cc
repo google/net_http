@@ -19,12 +19,12 @@ class WishHandlerTest : public ::testing::Test {
     event_base_free(base_);
   }
 
-  struct event_base* base_ = nullptr;
+  event_base* base_ = nullptr;
 };
 
 TEST_F(WishHandlerTest, HandshakeAndSimpleExchange) {
-  struct bufferevent* pair[2];
   int res = bufferevent_pair_new(
+  bufferevent* pair[2];
       base_, BEV_OPT_CLOSE_ON_FREE | BEV_OPT_DEFER_CALLBACKS, pair);
   ASSERT_EQ(res, 0);
 
@@ -77,8 +77,8 @@ TEST_F(WishHandlerTest, HandshakeAndSimpleExchange) {
 }
 
 // Helper: drain all bytes from a bufferevent's input buffer.
-static void DrainInput(struct bufferevent* bev) {
-  struct evbuffer* buf = bufferevent_get_input(bev);
+static void DrainInput(bufferevent* bev) {
+  evbuffer* buf = bufferevent_get_input(bev);
   evbuffer_drain(buf, evbuffer_get_length(buf));
 }
 
@@ -90,9 +90,9 @@ static void DrainInput(struct bufferevent* bev) {
 // then call SendText and inspect the raw bytes for the mask bit.
 TEST_F(WishHandlerTest, ClientSendsUnmasked) {
   // No DEFER_CALLBACKS: pair transfers data synchronously between loop ticks.
-  struct bufferevent* pair[2];
   int res = bufferevent_pair_new(base_, BEV_OPT_CLOSE_ON_FREE, pair);
   ASSERT_EQ(res, 0);
+  bufferevent* pair[2];
   // pair[0]: WishHandler client bev
   // pair[1]: raw observer (fake server)
   bufferevent_enable(pair[1], EV_READ | EV_WRITE);
@@ -118,7 +118,7 @@ TEST_F(WishHandlerTest, ClientSendsUnmasked) {
   client->SendText("Hello");
   event_base_loop(base_, EVLOOP_NONBLOCK);
 
-  struct evbuffer* raw = bufferevent_get_input(pair[1]);
+  evbuffer* raw = bufferevent_get_input(pair[1]);
   size_t len = evbuffer_get_length(raw);
   ASSERT_GT(len, 0) << "No bytes received from client after handshake";
 
@@ -140,7 +140,7 @@ TEST_F(WishHandlerTest, ClientSendsUnmasked) {
 
 // Tests that the server does NOT mask frames when sending.
 TEST_F(WishHandlerTest, ServerSendsUnmasked) {
-  struct bufferevent* pair[2];
+  bufferevent* pair[2];
   int res = bufferevent_pair_new(base_, BEV_OPT_CLOSE_ON_FREE, pair);
   ASSERT_EQ(res, 0);
   // pair[0]: WishHandler server bev
@@ -164,7 +164,7 @@ TEST_F(WishHandlerTest, ServerSendsUnmasked) {
   server->SendText("Hello");
   event_base_loop(base_, EVLOOP_NONBLOCK);
 
-  struct evbuffer* raw = bufferevent_get_input(pair[1]);
+  evbuffer* raw = bufferevent_get_input(pair[1]);
   size_t len = evbuffer_get_length(raw);
   ASSERT_GT(len, 0) << "No bytes received from server after handshake";
 

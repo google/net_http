@@ -25,9 +25,9 @@ class TlsServer {
   void Run();
 
  private:
-  static void AcceptConnCb(struct evconnlistener* listener, evutil_socket_t fd,
-                           struct sockaddr* address, int socklen, void* ctx);
-  static void AcceptErrorCb(struct evconnlistener* listener, void* ctx);
+  static void AcceptConnCb(evconnlistener* listener, evutil_socket_t fd,
+                           sockaddr* address, int socklen, void* ctx);
+  static void AcceptErrorCb(evconnlistener* listener, void* ctx);
 
   std::string ca_file_;
   std::string cert_file_;
@@ -36,8 +36,8 @@ class TlsServer {
   int port_;
 
   TlsContext tls_ctx_;
-  struct event_base* base_;
-  struct evconnlistener* listener_;
+  event_base* base_;
+  evconnlistener* listener_;
 
   ConnectCallback on_connection_;
 };
