@@ -1,10 +1,16 @@
-#include <iostream>
+#include <absl/flags/parse.h>
+#include <absl/log/initialize.h>
+#include <absl/log/log.h>
+
 #include <string>
 
 #include "../src/buffer_event_web_stream.h"
 #include "../src/h2_tls_client.h"
 
-int main() {
+int main(int argc, char** argv) {
+  absl::ParseCommandLine(argc, argv);
+  absl::InitializeLog();
+
   H2TlsClient client("127.0.0.1",
                      8080,
                      "certs/ca.crt",
@@ -12,12 +18,12 @@ int main() {
                      "certs/client.key");
 
   if (!client.Init()) {
-    std::cerr << "Init() failed" << std::endl;
+    LOG(INFO) << "Init() failed";
     return 1;
   }
 
   client.SetOnOpen([](NGHTTP2WebStream* stream) {
-    std::cout << "OnOpen" << std::endl;
+    LOG(INFO) << "OnOpen";
 
     stream->SetOnMessage([](uint8_t opcode, const std::string& msg) {
       std::string type;
@@ -36,11 +42,11 @@ int main() {
           break;
       }
 
-      std::cout << "Message (opcode: " << type << ", message: " << msg << ")" << std::endl;
+      LOG(INFO) << "Message (opcode: " << type << ", message: " << msg << ")";
     });
 
     stream->SetOnClose(
-        []() { std::cout << "OnClose" << std::endl; });
+        []() { LOG(INFO) << "OnClose"; });
 
     stream->SendText("Hello web-stream text over HTTP/2+TLS!");
     stream->SendBinary("Hello web-stream binary over HTTP/2+TLS!");

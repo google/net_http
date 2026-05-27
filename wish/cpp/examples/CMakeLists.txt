@@ -28,6 +28,10 @@ add_executable(tls_hello_client
 )
 target_link_libraries(tls_hello_client
     buffer_event_web_stream
+    absl::flags_parse
+    absl::log
+    absl::log_initialize
+    "$<LINK_LIBRARY:WHOLE_ARCHIVE,absl::log_flags>"
 )
 
 # ---- HTTP/2 (h2c) examples ----
@@ -61,6 +65,10 @@ add_executable(h2_hello_client
 )
 target_link_libraries(h2_hello_client
     buffer_event_web_stream
+    absl::flags_parse
+    absl::log
+    absl::log_initialize
+    "$<LINK_LIBRARY:WHOLE_ARCHIVE,absl::log_flags>"
 )
 
 add_executable(h2_tls_hello_client
@@ -68,4 +76,8 @@ add_executable(h2_tls_hello_client
 )
 target_link_libraries(h2_tls_hello_client
     buffer_event_web_stream
+    absl::flags_parse
+    absl::log
+    absl::log_initialize
+    "$<LINK_LIBRARY:WHOLE_ARCHIVE,absl::log_flags>"
 )
