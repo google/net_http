@@ -31,8 +31,11 @@ class H2TlsServer {
  private:
   struct Session {
     H2TlsServer* server;
+
     bufferevent* bev;
+
     nghttp2_session* h2session;
+
     std::unordered_map<int32_t, NGHTTP2WebStream*> streams;
     std::unordered_map<int32_t, bool> stream_is_wish;
   };

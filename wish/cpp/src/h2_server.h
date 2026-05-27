@@ -31,7 +31,9 @@ class H2Server {
   // Per-connection state.
   struct Session {
     H2Server* server;
+
     bufferevent* bev;
+
     nghttp2_session* h2session;
 
     // Live web-stream streams keyed by HTTP/2 stream id.

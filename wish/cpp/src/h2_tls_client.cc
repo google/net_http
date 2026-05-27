@@ -53,6 +53,7 @@ bool H2TlsClient::Init() {
 
   if (!tls_ctx_.Init(false)) {
     LOG(ERROR) << "H2TlsClient: failed to init TLS context";
+
     return false;
   }
 
@@ -67,7 +68,8 @@ bool H2TlsClient::Init() {
     return false;
   }
 
-  dns_base_ = evdns_base_new(base_, 1);
+  dns_base_ = evdns_base_new(base_,
+                             1);
   if (!dns_base_) {
     LOG(ERROR) << "evdns_base_new() failed";
 
@@ -75,8 +77,11 @@ bool H2TlsClient::Init() {
   }
 
   SSL* ssl = SSL_new(tls_ctx_.ssl_ctx());
-  struct bufferevent* bev = bufferevent_openssl_socket_new(
-      base_, -1, ssl, BUFFEREVENT_SSL_CONNECTING, BEV_OPT_CLOSE_ON_FREE);
+  bufferevent* bev = bufferevent_openssl_socket_new(base_,
+                                                    -1,
+                                                    ssl,
+                                                    BUFFEREVENT_SSL_CONNECTING,
+                                                    BEV_OPT_CLOSE_ON_FREE);
   if (!bev) {
     LOG(ERROR) << "bufferevent_openssl_socket_new() failed";
 
@@ -101,11 +106,17 @@ bool H2TlsClient::Init() {
                                      EV_READ | EV_WRITE);
   if (enable_rv != 0) {
     LOG(ERROR) << "bufferevent_enable() failed";
+
     return false;
   }
 
-  if (bufferevent_socket_connect_hostname(bev, dns_base_, AF_INET, host_.c_str(), port_) < 0) {
+  if (bufferevent_socket_connect_hostname(bev,
+                                          dns_base_,
+                                          AF_INET,
+                                          host_.c_str(),
+                                          port_) < 0) {
     LOG(ERROR) << "bufferevent_socket_connect_hostname() failed";
+
     return false;
   }
 
@@ -128,7 +139,8 @@ void H2TlsClient::Stop() {
 
 // ---- libevent bufferevent callbacks ----
 
-void H2TlsClient::ReadCallback(struct bufferevent* bev, void* ctx) {
+void H2TlsClient::ReadCallback(struct bufferevent* bev,
+                               void* ctx) {
   Session* sess = static_cast<Session*>(ctx);
 
   if (!sess->h2session) {
@@ -142,7 +154,8 @@ void H2TlsClient::ReadCallback(struct bufferevent* bev, void* ctx) {
     return;
   }
 
-  unsigned char* data = evbuffer_pullup(input, -1);
+  unsigned char* data = evbuffer_pullup(input,
+                                        -1);
   ssize_t recv_len = nghttp2_session_mem_recv(sess->h2session,
                                               data,
                                               len);
@@ -173,11 +186,11 @@ void H2TlsClient::ReadCallback(struct bufferevent* bev, void* ctx) {
 }
 
 void H2TlsClient::EventCallback(struct bufferevent* bev,
-                                short events,  // NOLINT(runtime/int)
+                                short what,  // NOLINT(runtime/int)
                                 void* arg) {
   Session* sess = static_cast<Session*>(arg);
 
-  if (events & BEV_EVENT_CONNECTED) {
+  if (what & BEV_EVENT_CONNECTED) {
     int fd = bufferevent_getfd(bev);
     if (fd >= 0) {
       int one = 1;
@@ -196,11 +209,11 @@ void H2TlsClient::EventCallback(struct bufferevent* bev,
     return;
   }
 
-  if (events & BEV_EVENT_ERROR) {
+  if (what & BEV_EVENT_ERROR) {
     LOG(ERROR) << "BEV_EVENT_ERROR event";
   }
 
-  if (events & (BEV_EVENT_EOF | BEV_EVENT_ERROR)) {
+  if (what & (BEV_EVENT_EOF | BEV_EVENT_ERROR)) {
     if (sess->web_stream) {
       sess->web_stream->OnClose();
 
@@ -317,6 +330,7 @@ int H2TlsClient::OnDataChunkRecvCallback(nghttp2_session* session,
   if (sess->web_stream && stream_id == sess->h2_stream_id) {
     sess->web_stream->OnDataChunk(data,
                                   len);
+
     int send_rv = nghttp2_session_send(session);
     if (send_rv < 0) {
       LOG(ERROR) << "nghttp2_session_send() failed: "
@@ -421,6 +435,7 @@ void H2TlsClient::InitH2Session(Session* sess) {
   if (stream_id < 0) {
     LOG(ERROR) << "H2TlsClient: nghttp2_submit_request2() failed: "
                << nghttp2_strerror(stream_id);
+
     return;
   }
   sess->h2_stream_id = stream_id;
@@ -428,6 +443,9 @@ void H2TlsClient::InitH2Session(Session* sess) {
   sess->web_stream = new NGHTTP2WebStream(sess->h2session,
                                           stream_id,
                                           false);
+
+  // Register the stream object as stream user-data so DataSourceReadCallback
+  // can find it.  This must happen before nghttp2_session_send().
   nghttp2_session_set_stream_user_data(sess->h2session,
                                        stream_id,
                                        sess->web_stream);
