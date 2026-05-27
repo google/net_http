@@ -245,4 +245,8 @@ if(WISH_BUILD_TESTS)
     add_executable(handshake_test src/handshake_test.cc)
     target_link_libraries(handshake_test http1_handshake gtest_main gtest event)
     add_test(NAME handshake_test COMMAND handshake_test)
+
+    add_executable(h2_server_test src/h2_server_test.cc)
+    target_link_libraries(h2_server_test web_stream gtest_main gtest event)
+    add_test(NAME h2_server_test COMMAND h2_server_test)
 endif()

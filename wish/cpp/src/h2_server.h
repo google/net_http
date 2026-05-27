@@ -41,6 +41,7 @@ class H2Server {
   ~H2Server();
 
   bool Init();
+  int GetPort() const;
   void SetOnStream(StreamCallback cb);
   int Run();
 
@@ -114,6 +115,9 @@ class H2Server {
                                               uint32_t*,
                                               nghttp2_data_source*,
                                               void*);
+
+  // Helper: tear down session resources on error or closure.
+  static void HandleSessionError(Session* sess);
 
   // Helper: initialise an nghttp2 server session for a new connection.
   static nghttp2_session* CreateH2Session(Session* sess);
