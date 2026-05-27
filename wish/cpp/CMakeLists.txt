@@ -72,6 +72,13 @@ FetchContent_Declare(
 )
 
 
+FetchContent_Declare(
+    picohttpparser
+    GIT_REPOSITORY https://github.com/h2o/picohttpparser.git
+    GIT_TAG        539bb9f510f5aefc8efda53aaf822a21ecae2832 # v1.2
+)
+
+
 # These variables are unprefixed, so MakeAvailable is called immediately and
 # they are unset afterwards to avoid leaking into other dependencies.
 
@@ -136,8 +143,7 @@ if(WISH_BUILD_TESTS)
 endif()
 
 
-FetchContent_MakeAvailable(wslay libevent boringssl)
-
+FetchContent_MakeAvailable(wslay libevent boringssl picohttpparser)
 
 include_directories(${wslay_SOURCE_DIR}/lib/includes)
 include_directories(${libevent_SOURCE_DIR}/include)
@@ -145,6 +151,7 @@ include_directories(${libevent_BINARY_DIR}/include)
 include_directories(${boringssl_SOURCE_DIR}/include)
 include_directories(${nghttp2_SOURCE_DIR}/lib/includes)
 include_directories(${nghttp2_BINARY_DIR}/lib/includes)
+include_directories(${picohttpparser_SOURCE_DIR})
 include_directories(src)
 
 # We will compile libevent's bufferevent_openssl.c inside our library
@@ -157,6 +164,8 @@ add_library(buffer_event_web_stream STATIC
     src/buffer_event_web_stream.h
     src/handshake.h
     src/handshake.cc
+    ${picohttpparser_SOURCE_DIR}/picohttpparser.c
+    ${picohttpparser_SOURCE_DIR}/picohttpparser.h
     ${libevent_SOURCE_DIR}/bufferevent_openssl.c
     ${libevent_SOURCE_DIR}/bufferevent_ssl.c
     src/plain_server.cc
