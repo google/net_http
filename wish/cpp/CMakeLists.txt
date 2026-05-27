@@ -181,36 +181,46 @@ target_link_libraries(http1_handshake event absl::strings absl::log)
 # since we disabled it in libevent's own build.
 # Build as a static library: libevent is also static and was not compiled with
 # -fPIC, so it cannot be linked into a shared object.
-add_library(web_stream STATIC
+add_library(web_stream_core STATIC
     src/web_stream.h
     src/buffer_event_web_stream.cc
     src/buffer_event_web_stream.h
     ${libevent_SOURCE_DIR}/bufferevent_openssl.c
     ${libevent_SOURCE_DIR}/bufferevent_ssl.c
-    src/plain_server.cc
-    src/plain_server.h
-    src/plain_client.cc
-    src/plain_client.h
     src/tls_context.cc
     src/tls_context.h
-    src/tls_server.cc
-    src/tls_server.h
-    src/tls_client.cc
-    src/tls_client.h
     src/nghttp2_web_stream.cc
     src/nghttp2_web_stream.h
-    src/h2_server.cc
-    src/h2_server.h
+)
+target_link_libraries(web_stream_core PUBLIC http1_handshake wslay event ssl crypto nghttp2_static absl::strings absl::log)
+target_compile_definitions(web_stream_core PUBLIC EVENT__HAVE_OPENSSL=1)
+
+add_library(web_stream_client STATIC
+    src/plain_client.cc
+    src/plain_client.h
+    src/tls_client.cc
+    src/tls_client.h
     src/h2_client.cc
     src/h2_client.h
-    src/h2_tls_server.cc
-    src/h2_tls_server.h
     src/h2_tls_client.cc
     src/h2_tls_client.h
 )
-# BoringSSL targets: ssl and crypto.  nghttp2 for HTTP/2 framing.
-target_link_libraries(web_stream http1_handshake wslay event ssl crypto nghttp2_static absl::strings absl::log)
-target_compile_definitions(web_stream PUBLIC EVENT__HAVE_OPENSSL=1)
+target_link_libraries(web_stream_client PUBLIC web_stream_core)
+
+add_library(web_stream_server STATIC
+    src/plain_server.cc
+    src/plain_server.h
+    src/tls_server.cc
+    src/tls_server.h
+    src/h2_server.cc
+    src/h2_server.h
+    src/h2_tls_server.cc
+    src/h2_tls_server.h
+)
+target_link_libraries(web_stream_server PUBLIC web_stream_core)
+
+add_library(web_stream INTERFACE)
+target_link_libraries(web_stream INTERFACE web_stream_client web_stream_server)
 
 
 if(WISH_BUILD_EXAMPLES)
