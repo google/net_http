@@ -32,13 +32,18 @@ void accept_conn_cb(struct evconnlistener* listener,
   struct event_base* base = evconnlistener_get_base(listener);
 
   int nodelay = 1;
-  if (setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &nodelay, sizeof(nodelay)) !=
+  if (setsockopt(fd,
+                 IPPROTO_TCP,
+                 TCP_NODELAY,
+                 &nodelay,
+                 sizeof(nodelay)) !=
       0) {
     LOG(ERROR) << "setsockopt(TCP_NODELAY) failed";
   }
 
-  struct bufferevent* bev =
-      bufferevent_socket_new(base, fd, BEV_OPT_CLOSE_ON_FREE);
+  struct bufferevent* bev = bufferevent_socket_new(base,
+                                                   fd,
+                                                   BEV_OPT_CLOSE_ON_FREE);
   if (!bev) {
     LOG(ERROR) << "Failed to create bufferevent for accepted socket";
     evutil_closesocket(fd);
