@@ -1,0 +1,110 @@
+#include "plain_server.h"
+
+#include <arpa/inet.h>
+#include <event2/util.h>
+#include <netinet/tcp.h>
+
+#include <cerrno>
+#include <cstring>
+#include <iostream>
+
+PlainServer::PlainServer(int port)
+    : port_(port),
+      base_(nullptr),
+      listener_(nullptr) {}
+
+PlainServer::~PlainServer() {
+  if (listener_) {
+    evconnlistener_free(listener_);
+  }
+  if (base_) {
+    event_base_free(base_);
+  }
+}
+
+bool PlainServer::Init() {
+  base_ = event_base_new();
+  if (!base_) {
+    std::cerr << "Could not initialize libevent!" << std::endl;
+    return false;
+  }
+
+  sockaddr_in sin;
+  memset(&sin, 0, sizeof(sin));
+  sin.sin_family = AF_INET;
+  sin.sin_addr.s_addr = htonl(INADDR_ANY);
+  sin.sin_port = htons(port_);
+
+  listener_ = evconnlistener_new_bind(base_,
+                                      AcceptConnCb,
+                                      this,
+                                      LEV_OPT_CLOSE_ON_FREE | LEV_OPT_REUSEABLE,
+                                      -1,
+                                      reinterpret_cast<sockaddr*>(&sin),
+                                      sizeof(sin));
+  if (!listener_) {
+    std::cerr << "Could not create a listener!" << std::endl;
+    return false;
+  }
+
+  evconnlistener_set_error_cb(listener_, AcceptErrorCb);
+  return true;
+}
+
+void PlainServer::SetOnConnection(ConnectCallback cb) {
+  on_connection_ = cb;
+}
+
+void PlainServer::Run() {
+  std::cout << "Server listening on port " << port_ << "..." << std::endl;
+  event_base_dispatch(base_);
+}
+
+void PlainServer::AcceptConnCb(evconnlistener* listener,
+                               evutil_socket_t fd,
+                               sockaddr* address,
+                               int socklen,
+                               void* ctx) {
+  (void)address;
+  (void)socklen;
+
+  event_base* base = evconnlistener_get_base(listener);
+  PlainServer* server = static_cast<PlainServer*>(ctx);
+
+  int one = 1;
+  if (setsockopt(fd,
+                 IPPROTO_TCP,
+                 TCP_NODELAY,
+                 &one,
+                 sizeof(one)) < 0) {
+    std::cerr << "setsockopt(TCP_NODELAY) failed: " << strerror(errno) << std::endl;
+  }
+
+  bufferevent* bev = bufferevent_socket_new(base,
+                                            fd,
+                                            BEV_OPT_CLOSE_ON_FREE);
+  if (!bev) {
+    std::cerr << "bufferevent_socket_new() failed" << std::endl;
+    evutil_closesocket(fd);
+    return;
+  }
+
+  if (server->on_connection_) {
+    server->on_connection_(bev);
+  } else {
+    std::cerr << "Warning: No connection handler registered." << std::endl;
+    bufferevent_free(bev);
+  }
+}
+
+void PlainServer::AcceptErrorCb(evconnlistener* listener, void* ctx) {
+  // Suppress unused parameter warnings.
+  (void)ctx;
+
+  event_base* base = evconnlistener_get_base(listener);
+  int err = EVUTIL_SOCKET_ERROR();
+  std::cerr << "Got an error " << err << " ("
+            << evutil_socket_error_to_string(err)
+            << ") on the listener. Shutting down." << std::endl;
+  event_base_loopexit(base, nullptr);
+}
