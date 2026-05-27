@@ -41,18 +41,44 @@ class BufferEventWebStream : public WebStream {
   int SendBinary(const std::string& msg) override;
   int SendMetadata(const std::string& msg) override;
 
+  // Signal EOF on the outbound HTTP/1.1 chunked body by writing a terminal
+  // zero-length chunk ("0\r\n\r\n").
+  // Returns 0 on success, or -1 if Close() has already been called.
+  int Close() override;
+
  private:
   bufferevent* bev_;
 
   enum State {
     HANDSHAKE,
     OPEN,
+    // Inbound terminal chunk received; draining outbound buffer before delete.
+    DRAINING,
     CLOSED
   };
   State state_;
 
   bool is_server_;
   wslay_event_context* ctx_;
+
+  // ---- Chunked-encoding send state ----
+  // Set by Close(); prevents further sends and writes the terminal chunk.
+  bool close_pending_ = false;
+
+  // ---- Chunked-encoding receive state ----
+  // Set when the terminal zero-length chunk has been seen on the inbound side.
+  bool receive_closed_ = false;
+
+  // State machine used by ReadChunkedBytes() to decode the inbound
+  // Transfer-Encoding: chunked body after the HTTP handshake.
+  enum class ChunkState {
+    HEADER,   // Reading "<hex>\r\n"
+    DATA,     // Reading chunk_remaining_ bytes of payload
+    TRAILER,  // Reading trailing "\r\n" after payload
+  };
+  ChunkState chunk_state_ = ChunkState::HEADER;
+  // Bytes remaining in the current DATA chunk.
+  size_t chunk_remaining_ = 0;
 
   MessageCallback on_message_;
   OpenCallback on_open_;
@@ -61,6 +87,8 @@ class BufferEventWebStream : public WebStream {
   // libevent callbacks
   static void ReadCallback(bufferevent* bev,
                            void* ctx);
+  static void DrainCallback(bufferevent* bev,
+                            void* ctx);
   static void EventCallback(bufferevent* bev,
                             short what,  // NOLINT(runtime/int)
                             void* ctx);
@@ -93,6 +121,12 @@ class BufferEventWebStream : public WebStream {
                                      void* user_data);
 
   int SendMessage(uint8_t opcode, const std::string& msg);
+
+  // Decode one batch of Transfer-Encoding: chunked bytes from the inbound
+  // bufferevent into buf[0..len).  Mirrors the wslay recv-callback signature:
+  // returns bytes copied on success, or -1 with wslay error set on failure /
+  // would-block.  Sets receive_closed_ when the terminal chunk is consumed.
+  ssize_t ReadChunkedBytes(uint8_t* buf, size_t len);
 };
 
 #endif  // WISH_CPP_SRC_BUFFER_EVENT_WEB_STREAM_H_

@@ -63,6 +63,33 @@ int NGHTTP2WebStream::SendMetadata(const std::string& msg) {
   return SendMessage(WEB_STREAM_OPCODE_METADATA, msg);
 }
 
+int NGHTTP2WebStream::Close() {
+  if (close_pending_) {
+    return -1;
+  }
+  close_pending_ = true;
+
+  // Wake up the deferred data source so ReadSendData() is called immediately;
+  // it will set NGHTTP2_DATA_FLAG_EOF now that close_pending_ is true.
+  // NGHTTP2_ERR_INVALID_ARGUMENT is returned when the stream is not deferred
+  // (data provider already active), which is not an error here.
+  int resume_rv = nghttp2_session_resume_data(h2session_, stream_id_);
+  if (resume_rv < 0 && resume_rv != NGHTTP2_ERR_INVALID_ARGUMENT) {
+    std::cerr << "NGHTTP2WebStream::Close: nghttp2_session_resume_data() failed: "
+              << nghttp2_strerror(resume_rv) << std::endl;
+    return resume_rv;
+  }
+
+  int send_rv = nghttp2_session_send(h2session_);
+  if (send_rv < 0) {
+    std::cerr << "NGHTTP2WebStream::Close: nghttp2_session_send() failed: "
+              << nghttp2_strerror(send_rv) << std::endl;
+    return send_rv;
+  }
+
+  return 0;
+}
+
 // ---- Session callbacks (called by H2Server / H2Client) ----
 
 void NGHTTP2WebStream::OnDataChunk(const uint8_t* data, size_t len) {
@@ -93,6 +120,11 @@ nghttp2_ssize NGHTTP2WebStream::ReadSendData(uint8_t* buf,
                                              uint32_t* data_flags) {
   size_t avail = evbuffer_get_length(output_buf_);
   if (avail == 0) {
+    if (close_pending_) {
+      // No more data and Close() was called: signal END_STREAM.
+      *data_flags |= NGHTTP2_DATA_FLAG_EOF;
+      return 0;
+    }
     // Deferred: wake up with nghttp2_session_resume_data when data arrives.
     return NGHTTP2_ERR_DEFERRED;
   }

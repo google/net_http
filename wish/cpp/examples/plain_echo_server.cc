@@ -57,6 +57,11 @@ int main(int argc, char** argv) {
         LOG(WARNING) << "Unknown opcode, cannot echo.";
       }
     });
+
+    stream->SetOnClose([stream]() {
+      LOG(INFO) << "OnClose";
+      stream->Close();
+    });
   });
 
   server.Run();

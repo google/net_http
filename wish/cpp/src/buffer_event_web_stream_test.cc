@@ -129,12 +129,21 @@ TEST_F(BufferEventWebStreamTest, ClientSendsUnmasked) {
 
   unsigned char* bytes = evbuffer_pullup(raw, len);
 
-  // First byte: FIN=1, RSV=0, opcode=TEXT(0x1) => 0x81
-  EXPECT_EQ(bytes[0], 0x81u);
+  // With Transfer-Encoding: chunked, outbound wslay frames are wrapped as:
+  //   <hex-len>\r\n<wslay frame>\r\n
+  // For "Hello" (5-byte payload), the wslay TEXT frame is 7 bytes
+  // (0x81 0x05 + 5-byte payload).  The chunk header for 7 bytes is "7\r\n"
+  // (3 bytes), so the first wslay frame byte appears at offset 3.
+  // If wslay splits the frame header (2 B) from the payload (5 B), the first
+  // chunk is "2\r\n", still 3 bytes, and bytes[3] is still 0x81.
+  ASSERT_GE(len, 5u) << "Too few bytes to inspect wslay frame inside chunk";
 
-  // Second byte: mask bit (0x80) + payload length.
+  // First wslay frame byte: FIN=1, RSV=0, opcode=TEXT(0x1) => 0x81
+  EXPECT_EQ(bytes[3], 0x81u);
+
+  // Second wslay frame byte: mask bit (0x80) + payload length.
   // web-stream doesn't use masking.
-  bool is_masked = (bytes[1] & 0x80) != 0;
+  bool is_masked = (bytes[4] & 0x80) != 0;
   EXPECT_FALSE(is_masked) << "Client sent a masked frame! web-stream must not use masking.";
 
   // BufferEventWebStream destructor frees pair[0].
@@ -175,11 +184,53 @@ TEST_F(BufferEventWebStreamTest, ServerSendsUnmasked) {
 
   unsigned char* bytes = evbuffer_pullup(raw, len);
 
-  EXPECT_EQ(bytes[0], 0x81u);
+  // Same chunk-framing offset as ClientSendsUnmasked: the chunk header for the
+  // wslay frame occupies 3 bytes ("<1-digit-hex>\r\n"), so the first wslay
+  // frame byte is at offset 3.
+  ASSERT_GE(len, 5u) << "Too few bytes to inspect wslay frame inside chunk";
 
-  bool is_masked = (bytes[1] & 0x80) != 0;
+  EXPECT_EQ(bytes[3], 0x81u);
+
+  bool is_masked = (bytes[4] & 0x80) != 0;
   EXPECT_FALSE(is_masked) << "Server sent a masked frame! web-stream must not use masking.";
 
   delete server;
   bufferevent_free(pair[1]);
+}
+
+// Verify that Close() delivers a terminal chunk to the peer and that the peer's
+// on_close_ callback fires.  Also checks that calling Close() twice returns -1.
+TEST_F(BufferEventWebStreamTest, CloseSignalsEOF) {
+  bufferevent* pair[2];
+  int rv = bufferevent_pair_new(base_,
+                                BEV_OPT_CLOSE_ON_FREE | BEV_OPT_DEFER_CALLBACKS,
+                                pair);
+  ASSERT_EQ(rv, 0);
+
+  BufferEventWebStream* server = new BufferEventWebStream(pair[0], true /* is_server */);
+  BufferEventWebStream* client = new BufferEventWebStream(pair[1], false /* is_server */);
+
+  bool client_close_fired = false;
+
+  server->SetOnOpen([&]() {
+    // First Close() must succeed.
+    EXPECT_EQ(server->Close(), 0);
+    // Second Close() must return an error.
+    EXPECT_EQ(server->Close(), -1);
+  });
+
+  client->SetOnClose([&]() {
+    client_close_fired = true;
+    event_base_loopbreak(base_);
+  });
+
+  server->Start();
+  client->Start();
+
+  event_base_dispatch(base_);
+
+  EXPECT_TRUE(client_close_fired);
+  // client self-deleted inside ReadCallback when it received the terminal chunk.
+  // Only delete server.
+  delete server;
 }
