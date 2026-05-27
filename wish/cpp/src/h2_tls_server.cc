@@ -17,9 +17,12 @@
       (uint8_t*)(name), (uint8_t*)(value), strlen(name), strlen(value), NGHTTP2_NV_FLAG_NONE}
 
 // ALPN selection callback: prefers "h2".
-static int AlpnSelectCb(SSL* /*ssl*/, const unsigned char** out,
-                        unsigned char* outlen, const unsigned char* in,
-                        unsigned int inlen, void* /*arg*/) {
+static int AlpnSelectCb(SSL* /*ssl*/,
+                        const unsigned char** out,
+                        unsigned char* outlen,
+                        const unsigned char* in,
+                        unsigned int inlen,
+                        void* /*arg*/) {
   // nghttp2_select_next_protocol returns 1 if "h2" is found, <=0 otherwise.
   if (nghttp2_select_next_protocol(const_cast<unsigned char**>(out), outlen, in, inlen) <= 0) {
     return SSL_TLSEXT_ERR_NOACK;
@@ -96,7 +99,8 @@ void H2TlsServer::Run() {
 
 void H2TlsServer::AcceptConnCb(evconnlistener* listener,
                                evutil_socket_t fd,
-                               sockaddr* /*address*/, int /*socklen*/,
+                               sockaddr* /*address*/,
+                               int /*socklen*/,
                                void* ctx) {
   H2TlsServer* server = static_cast<H2TlsServer*>(ctx);
   event_base* base = evconnlistener_get_base(listener);
@@ -212,8 +216,10 @@ void H2TlsServer::EventCallback(bufferevent* bev,
 // ---- nghttp2 session callbacks ----
 
 ssize_t H2TlsServer::SendCallback(nghttp2_session* /*session*/,
-                                  const uint8_t* data, size_t length,
-                                  int /*flags*/, void* user_data) {
+                                  const uint8_t* data,
+                                  size_t length,
+                                  int /*flags*/,
+                                  void* user_data) {
   Session* sess = static_cast<Session*>(user_data);
   bufferevent_write(sess->bev,
                     data,
@@ -223,9 +229,12 @@ ssize_t H2TlsServer::SendCallback(nghttp2_session* /*session*/,
 
 int H2TlsServer::OnHeaderCallback(nghttp2_session* /*session*/,
                                   const nghttp2_frame* frame,
-                                  const uint8_t* name, size_t namelen,
-                                  const uint8_t* value, size_t valuelen,
-                                  uint8_t /*flags*/, void* user_data) {
+                                  const uint8_t* name,
+                                  size_t namelen,
+                                  const uint8_t* value,
+                                  size_t valuelen,
+                                  uint8_t /*flags*/,
+                                  void* user_data) {
   if (frame->hd.type != NGHTTP2_HEADERS ||
       frame->headers.cat != NGHTTP2_HCAT_REQUEST) {
     return 0;
@@ -291,8 +300,10 @@ int H2TlsServer::OnFrameRecvCallback(nghttp2_session* session,
 }
 
 int H2TlsServer::OnDataChunkRecvCallback(nghttp2_session* session,
-                                         uint8_t /*flags*/, int32_t stream_id,
-                                         const uint8_t* data, size_t len,
+                                         uint8_t /*flags*/,
+                                         int32_t stream_id,
+                                         const uint8_t* data,
+                                         size_t len,
                                          void* user_data) {
   Session* sess = static_cast<Session*>(user_data);
   auto it = sess->streams.find(stream_id);
@@ -320,7 +331,8 @@ int H2TlsServer::OnStreamCloseCallback(nghttp2_session* /*session*/,
 
 ssize_t H2TlsServer::DataSourceReadCallback(nghttp2_session* /*session*/,
                                             int32_t /*stream_id*/,
-                                            uint8_t* buf, size_t length,
+                                            uint8_t* buf,
+                                            size_t length,
                                             uint32_t* data_flags,
                                             nghttp2_data_source* source,
                                             void* /*user_data*/) {

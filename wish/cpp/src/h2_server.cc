@@ -62,10 +62,13 @@ void H2Server::Run() {
 
 // ---- libevent listener callbacks ----
 
-void H2Server::AcceptConnCb(struct evconnlistener* listener, evutil_socket_t fd,
-                            struct sockaddr* /*address*/, int /*socklen*/,
+void H2Server::AcceptConnCb(struct evconnlistener* listener,
+                            evutil_socket_t fd,
+                            struct sockaddr* /*address*/,
+                            int /*socklen*/,
                             void* ctx) {
   H2Server* server = static_cast<H2Server*>(ctx);
+
   struct event_base* base = evconnlistener_get_base(listener);
 
   int one = 1;
@@ -80,10 +83,9 @@ void H2Server::AcceptConnCb(struct evconnlistener* listener, evutil_socket_t fd,
     return;
   }
 
-  struct bufferevent* bev =
-      bufferevent_socket_new(base,
-                             fd,
-                             BEV_OPT_CLOSE_ON_FREE);
+  struct bufferevent* bev = bufferevent_socket_new(base,
+                                                   fd,
+                                                   BEV_OPT_CLOSE_ON_FREE);
   if (!bev) {
     std::cerr << "H2Server: bufferevent_socket_new() failed" << std::endl;
     evutil_closesocket(fd);
@@ -133,10 +135,9 @@ void H2Server::ReadCallback(struct bufferevent* bev, void* ctx) {
   }
 
   unsigned char* data = evbuffer_pullup(input, -1);
-  ssize_t readlen =
-      nghttp2_session_mem_recv(sess->h2session,
-                               data,
-                               len);
+  ssize_t readlen = nghttp2_session_mem_recv(sess->h2session,
+                                             data,
+                                             len);
   if (readlen < 0) {
     std::cerr << "H2Server: nghttp2_session_mem_recv failed: "
               << nghttp2_strerror(static_cast<int>(readlen)) << std::endl;
@@ -153,15 +154,15 @@ void H2Server::ReadCallback(struct bufferevent* bev, void* ctx) {
 }
 
 void H2Server::EventCallback(struct bufferevent* bev,
-                             short events,  // NOLINT(runtime/int)
+                             short what,  // NOLINT(runtime/int)
                              void* ctx) {
   Session* sess = static_cast<Session*>(ctx);
 
-  if (events & BEV_EVENT_ERROR) {
+  if (what & BEV_EVENT_ERROR) {
     std::cerr << "H2Server: connection error" << std::endl;
   }
 
-  if (events & (BEV_EVENT_EOF | BEV_EVENT_ERROR)) {
+  if (what & (BEV_EVENT_EOF | BEV_EVENT_ERROR)) {
     for (auto& [sid, stream] : sess->streams) {
       stream->OnClose();
       delete stream;
@@ -175,8 +176,10 @@ void H2Server::EventCallback(struct bufferevent* bev,
 // ---- nghttp2 session callbacks ----
 
 ssize_t H2Server::SendCallback(nghttp2_session* /*session*/,
-                               const uint8_t* data, size_t length,
-                               int /*flags*/, void* user_data) {
+                               const uint8_t* data,
+                               size_t length,
+                               int /*flags*/,
+                               void* user_data) {
   Session* sess = static_cast<Session*>(user_data);
   bufferevent_write(sess->bev,
                     data,
@@ -185,9 +188,12 @@ ssize_t H2Server::SendCallback(nghttp2_session* /*session*/,
 }
 
 int H2Server::OnHeaderCallback(nghttp2_session* /*session*/,
-                               const nghttp2_frame* frame, const uint8_t* name,
-                               size_t namelen, const uint8_t* value,
-                               size_t valuelen, uint8_t /*flags*/,
+                               const nghttp2_frame* frame,
+                               const uint8_t* name,
+                               size_t namelen,
+                               const uint8_t* value,
+                               size_t valuelen,
+                               uint8_t /*flags*/,
                                void* user_data) {
   if (frame->hd.type != NGHTTP2_HEADERS ||
       frame->headers.cat != NGHTTP2_HCAT_REQUEST) {
@@ -206,7 +212,8 @@ int H2Server::OnHeaderCallback(nghttp2_session* /*session*/,
 }
 
 int H2Server::OnFrameRecvCallback(nghttp2_session* session,
-                                  const nghttp2_frame* frame, void* user_data) {
+                                  const nghttp2_frame* frame,
+                                  void* user_data) {
   if (frame->hd.type != NGHTTP2_HEADERS ||
       frame->headers.cat != NGHTTP2_HCAT_REQUEST) {
     return 0;
@@ -258,8 +265,10 @@ int H2Server::OnFrameRecvCallback(nghttp2_session* session,
 }
 
 int H2Server::OnDataChunkRecvCallback(nghttp2_session* session,
-                                      uint8_t /*flags*/, int32_t stream_id,
-                                      const uint8_t* data, size_t len,
+                                      uint8_t /*flags*/,
+                                      int32_t stream_id,
+                                      const uint8_t* data,
+                                      size_t len,
                                       void* user_data) {
   Session* sess = static_cast<Session*>(user_data);
   auto it = sess->streams.find(stream_id);
@@ -271,7 +280,8 @@ int H2Server::OnDataChunkRecvCallback(nghttp2_session* session,
 }
 
 int H2Server::OnStreamCloseCallback(nghttp2_session* /*session*/,
-                                    int32_t stream_id, uint32_t /*error_code*/,
+                                    int32_t stream_id,
+                                    uint32_t /*error_code*/,
                                     void* user_data) {
   Session* sess = static_cast<Session*>(user_data);
   auto it = sess->streams.find(stream_id);
@@ -285,8 +295,10 @@ int H2Server::OnStreamCloseCallback(nghttp2_session* /*session*/,
 }
 
 ssize_t H2Server::DataSourceReadCallback(nghttp2_session* /*session*/,
-                                         int32_t /*stream_id*/, uint8_t* buf,
-                                         size_t length, uint32_t* data_flags,
+                                         int32_t /*stream_id*/,
+                                         uint8_t* buf,
+                                         size_t length,
+                                         uint32_t* data_flags,
                                          nghttp2_data_source* source,
                                          void* /*user_data*/) {
   NGHTTP2WebStream* web_stream = static_cast<NGHTTP2WebStream*>(source->ptr);
