@@ -117,9 +117,9 @@ void BufferEventWebStream::ReadCallback(bufferevent* bev, void* ctx) {
         }
         break;
       case OPEN: {
-        int err = wslay_event_recv(stream->ctx_);
-        if (err != 0) {
-          std::cerr << "wslay_event_recv() failed: " << err << std::endl;
+        int rv = wslay_event_recv(stream->ctx_);
+        if (rv != 0) {
+          std::cerr << "wslay_event_recv() failed: " << rv << std::endl;
           return;
         }
 
