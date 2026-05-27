@@ -18,6 +18,7 @@ int main(int argc, char** argv) {
 
   if (!server.Init()) {
     LOG(ERROR) << "Init() failed";
+
     return 1;
   }
 
@@ -43,6 +44,7 @@ int main(int argc, char** argv) {
 
       LOG(INFO) << "OnMessage (opcode: " << type << ", message: " << msg << ")";
 
+      // Echo back
       if (opcode == WEB_STREAM_OPCODE_TEXT) {
         stream->SendText(msg);
       } else if (opcode == WEB_STREAM_OPCODE_BINARY) {
@@ -58,5 +60,6 @@ int main(int argc, char** argv) {
   });
 
   server.Run();
+
   return 0;
 }
