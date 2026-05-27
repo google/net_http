@@ -142,6 +142,7 @@ class BufferEventWebStream : public WebStream {
                                             void* user_data);
 
   int SendMessage(uint8_t opcode, const std::string& msg);
+  void TryDrain();
 
   // Decode one batch of Transfer-Encoding: chunked bytes from the inbound
   // bufferevent into buf[0..len).  Mirrors the wslay recv-callback signature:

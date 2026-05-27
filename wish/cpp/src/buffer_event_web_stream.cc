@@ -179,15 +179,14 @@ void BufferEventWebStream::ReadCallback(bufferevent* bev, void* ctx) {
           }
 
           if (stream->close_pending_) {
-            // Close() was called in the callback; the outbound terminal chunk
-            // (and any pending echo frames) are queued in the output buffer.
-            // Switch to DRAINING and delete only after the buffer empties.
             stream->state_ = DRAINING;
             bufferevent_setcb(stream->bev_,
                               ReadCallback,
                               DrainCallback,
                               EventCallback,
                               stream);
+
+            stream->TryDrain();
           } else {
             stream->state_ = CLOSED;
             auto cleanup = std::move(stream->cleanup_cb_);
@@ -220,19 +219,11 @@ void BufferEventWebStream::ReadCallback(bufferevent* bev, void* ctx) {
   }
 }
 
-void BufferEventWebStream::DrainCallback(bufferevent* bev,
+void BufferEventWebStream::DrainCallback(bufferevent* /*bev*/,
                                          void* ctx) {
   BufferEventWebStream* stream = static_cast<BufferEventWebStream*>(ctx);
 
-  // Delete the stream only once all queued outbound data has been sent.
-  size_t output_len = evbuffer_get_length(bufferevent_get_output(bev));
-  if (output_len == 0) {
-    stream->state_ = CLOSED;
-    auto cleanup = std::move(stream->cleanup_cb_);
-    if (cleanup) {
-      cleanup(stream);
-    }
-  }
+  stream->TryDrain();
 }
 
 void BufferEventWebStream::EventCallback(bufferevent* bev,
@@ -505,4 +496,15 @@ int BufferEventWebStream::SendMessage(uint8_t opcode, const std::string& msg) {
 
   // Force send
   return wslay_event_send(ctx_);
+}
+
+void BufferEventWebStream::TryDrain() {
+  size_t output_len = evbuffer_get_length(bufferevent_get_output(bev_));
+  if (output_len == 0) {
+    state_ = CLOSED;
+    auto cleanup = std::move(cleanup_cb_);
+    if (cleanup) {
+      cleanup(this);
+    }
+  }
 }
