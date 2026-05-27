@@ -17,6 +17,7 @@ int main(int argc, char** argv) {
   absl::InitializeLog();
 
   const int port = absl::GetFlag(FLAGS_port);
+
   const std::string ca_cert = absl::GetFlag(FLAGS_ca_cert);
   const std::string server_cert = absl::GetFlag(FLAGS_server_cert);
   const std::string server_key = absl::GetFlag(FLAGS_server_key);

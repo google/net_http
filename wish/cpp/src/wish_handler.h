@@ -52,7 +52,7 @@ class WishHandler {
  private:
   bufferevent* bev_;
   bool is_server_;
-  struct wslay_event_context* ctx_;
+
   MessageCallback on_message_;
   OpenCallback on_open_;
   CloseCallback on_close_;

@@ -132,7 +132,8 @@ void WishHandler::EventCallback(bufferevent* bev,
               << evutil_socket_error_to_string(EVUTIL_SOCKET_ERROR())
               << std::endl;
   }
-  if (events & (BEV_EVENT_EOF | BEV_EVENT_ERROR)) {
+
+  if (what & (BEV_EVENT_EOF | BEV_EVENT_ERROR)) {
     // Connection closed
     std::cout << "Connection closed." << std::endl;
     WishHandler* handler = static_cast<WishHandler*>(ctx);

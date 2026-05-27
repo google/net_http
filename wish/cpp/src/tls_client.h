@@ -24,9 +24,11 @@ class TlsClient {
   ~TlsClient();
 
   bool Init();
+
   void SetOnOpen(OpenCallback cb);
   void SetOnMessage(MessageCallback cb);
   void SetOnClose(CloseCallback cb);
+
   void Run();
   void Stop();
 
