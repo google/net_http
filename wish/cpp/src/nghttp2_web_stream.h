@@ -31,7 +31,9 @@ class NGHTTP2WebStream {
   // session  : the nghttp2 session that owns this stream (not transferred).
   // stream_id: HTTP/2 stream identifier.
   // is_server: true when this end is the HTTP/2 server.
-  NGHTTP2WebStream(nghttp2_session* session, int32_t stream_id, bool is_server);
+  NGHTTP2WebStream(nghttp2_session* session,
+                   int32_t stream_id,
+                   bool is_server);
   ~NGHTTP2WebStream();
 
   void SetOnMessage(MessageCallback cb);
@@ -47,7 +49,8 @@ class NGHTTP2WebStream {
   // ---- Called by H2Server / H2Client session management ----
 
   // Append data received in an HTTP/2 DATA frame and run wslay recv.
-  void OnDataChunk(const uint8_t* data, size_t len);
+  void OnDataChunk(const uint8_t* data,
+                   size_t len);
 
   // Signal that the HTTP/2 handshake for this stream is complete (200 received
   // on the client side, or HEADERS received on the server side).
@@ -58,7 +61,9 @@ class NGHTTP2WebStream {
 
   // nghttp2 data-source read callback: drains output_buf_ into the HTTP/2
   // DATA frame buffer.  Returns NGHTTP2_ERR_DEFERRED when no data is ready.
-  nghttp2_ssize ReadSendData(uint8_t* buf, size_t length, uint32_t* data_flags);
+  nghttp2_ssize ReadSendData(uint8_t* buf,
+                             size_t length,
+                             uint32_t* data_flags);
 
  private:
   nghttp2_session* h2session_;
@@ -77,15 +82,23 @@ class NGHTTP2WebStream {
   CloseCallback on_close_;
 
   // wslay callbacks
-  static ssize_t WslayRecvCallback(wslay_event_context*, uint8_t*,
-                                   size_t, int, void*);
+  static ssize_t WslayRecvCallback(wslay_event_context*,
+                                   uint8_t*,
+                                   size_t,
+                                   int,
+                                   void*);
   static ssize_t WslaySendCallback(wslay_event_context*,
-                                   const uint8_t*, size_t, int, void*);
-  static int WslayGenmaskCallback(wslay_event_context*, uint8_t*,
-                                  size_t, void*);
-  static void WslayOnMsgRecvCallback(
-      wslay_event_context*,
-      const wslay_event_on_msg_recv_arg*, void*);
+                                   const uint8_t*,
+                                   size_t,
+                                   int,
+                                   void*);
+  static int WslayGenmaskCallback(wslay_event_context*,
+                                  uint8_t*,
+                                  size_t,
+                                  void*);
+  static void WslayOnMsgRecvCallback(wslay_event_context*,
+                                     const wslay_event_on_msg_recv_arg*,
+                                     void*);
 
   int SendMessage(uint8_t opcode, const std::string& msg);
 };

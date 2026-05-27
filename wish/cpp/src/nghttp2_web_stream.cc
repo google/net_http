@@ -29,9 +29,13 @@ NGHTTP2WebStream::NGHTTP2WebStream(nghttp2_session* session,
       WslayOnMsgRecvCallback};
 
   if (is_server_) {
-    wslay_event_context_server_init(&ctx_, &callbacks, this);
+    wslay_event_context_server_init(&ctx_,
+                                    &callbacks,
+                                    this);
   } else {
-    wslay_event_context_client_init(&ctx_, &callbacks, this);
+    wslay_event_context_client_init(&ctx_,
+                                    &callbacks,
+                                    this);
   }
 }
 
@@ -191,15 +195,16 @@ int NGHTTP2WebStream::SendMessage(uint8_t opcode,
   // NGHTTP2_ERR_INVALID_ARGUMENT is returned when the stream is not deferred,
   // meaning the data provider is already active – that is not an error here.
   int resume_data_rv = nghttp2_session_resume_data(h2session_, stream_id_);
-  if (resume_data_rv < 0 && resume_data_rv != NGHTTP2_ERR_INVALID_ARGUMENT) {
-    std::cerr << "NGHTTP2WebStream: nghttp2_session_resume_data failed: "
+  if (resume_data_rv < 0 &&
+      resume_data_rv != NGHTTP2_ERR_INVALID_ARGUMENT) {
+    std::cerr << "NGHTTP2WebStream: nghttp2_session_resume_data() failed: "
               << nghttp2_strerror(resume_data_rv) << std::endl;
     return resume_data_rv;
   }
 
   int h2_send_rv = nghttp2_session_send(h2session_);
   if (h2_send_rv < 0) {
-    std::cerr << "NGHTTP2WebStream: nghttp2_session_send failed: "
+    std::cerr << "NGHTTP2WebStream: nghttp2_session_send() failed: "
               << nghttp2_strerror(h2_send_rv) << std::endl;
     return h2_send_rv;
   }
