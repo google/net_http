@@ -8,7 +8,10 @@
 #include <functional>
 #include <string>
 
+#include <memory>
+
 #include "buffer_event_web_stream.h"
+#include "handshake.h"
 
 class PlainClient {
  public:
@@ -34,6 +37,7 @@ class PlainClient {
   event_base* base_;
   evdns_base* dns_base_;
 
+  std::unique_ptr<ClientHandshake> handshake_;
   BufferEventWebStream* stream_;
 
   OpenCallback on_open_;

@@ -18,10 +18,12 @@
 #include <algorithm>
 #include <chrono>
 #include <cstring>
+#include <memory>
 #include <string>
 #include <vector>
 
 #include "../src/buffer_event_web_stream.h"
+#include "../src/handshake.h"
 #include "../src/tls_context.h"
 
 ABSL_FLAG(std::string, host, "127.0.0.1", "Server host to connect to");
@@ -37,6 +39,7 @@ namespace {
 struct ClientState {
   struct event_base* base = nullptr;
   struct bufferevent* bev = nullptr;
+  std::unique_ptr<ClientHandshake> handshake;
   BufferEventWebStream* handler = nullptr;
 
   bool connected = false;
@@ -102,47 +105,57 @@ bool InitConnection(ClientState* client) {
   }
   freeaddrinfo(res);
 
-  client->handler = new BufferEventWebStream(client->bev, false);
-  client->handler->SetOnOpen([client]() {
-    const int fd = bufferevent_getfd(client->bev);
-    if (fd >= 0) {
-      int nodelay = 1;
-      int result = setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &nodelay, sizeof(nodelay));
-      if (result != 0) {
-        LOG(FATAL) << "setsockopt(TCP_NODELAY) failed";
-      }
-    }
+  client->handshake = std::make_unique<ClientHandshake>(
+      client->bev,
+      [client](bufferevent* bev) {
+        client->handler = new BufferEventWebStream(bev, false);
 
-    client->connected = true;
-    event_base_loopexit(client->base, nullptr);
-  });
-
-  client->handler->SetOnMessage(
-      [client](uint8_t opcode, const std::string& msg) {
-        (void)opcode;
-        (void)msg;
-
-        if (!client->awaiting_response) {
-          return;
+        const int fd = bufferevent_getfd(client->bev);
+        if (fd >= 0) {
+          int nodelay = 1;
+          int result = setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &nodelay, sizeof(nodelay));
+          if (result != 0) {
+            LOG(FATAL) << "setsockopt(TCP_NODELAY) failed";
+          }
         }
 
-        const auto end = std::chrono::steady_clock::now();
-        const double latency_us =
-            std::chrono::duration<double, std::micro>(end -
-                                                      client->request_start)
-                .count();
-        client->latencies_us.push_back(latency_us);
-        client->awaiting_response = false;
+        client->connected = true;
+        event_base_loopexit(client->base, nullptr);
+
+        client->handler->SetOnMessage(
+            [client](uint8_t opcode, const std::string& msg) {
+              (void)opcode;
+              (void)msg;
+
+              if (!client->awaiting_response) {
+                return;
+              }
+
+              const auto end = std::chrono::steady_clock::now();
+              const double latency_us =
+                  std::chrono::duration<double, std::micro>(end -
+                                                            client->request_start)
+                      .count();
+              client->latencies_us.push_back(latency_us);
+              client->awaiting_response = false;
+              event_base_loopexit(client->base, nullptr);
+            });
+
+        client->handler->Start();
+      },
+      [client]() {
+        LOG(ERROR) << "Handshake failed";
         event_base_loopexit(client->base, nullptr);
       });
 
-  client->handler->Start();
+  client->handshake->Start();
 
   event_base_dispatch(client->base);
   return client->connected;
 }
 
 void CleanupConnection(ClientState* client) {
+  client->handshake.reset();
   if (client->handler) {
     delete client->handler;
     client->handler = nullptr;

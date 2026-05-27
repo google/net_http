@@ -8,7 +8,10 @@
 #include <functional>
 #include <string>
 
+#include <memory>
+
 #include "buffer_event_web_stream.h"
+#include "handshake.h"
 #include "tls_context.h"
 
 class TlsClient {
@@ -44,6 +47,7 @@ class TlsClient {
 
   TlsContext tls_ctx_;
 
+  std::unique_ptr<ClientHandshake> handshake_;
   BufferEventWebStream* stream_;
 
   OpenCallback on_open_;

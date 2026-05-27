@@ -18,7 +18,7 @@ BufferEventWebStream::BufferEventWebStream(bufferevent* bev,
     : bev_(bev),
       is_server_(is_server),
       ctx_(nullptr),
-      state_(HANDSHAKE) {
+      state_(OPEN) {
   wslay_event_callbacks callbacks = {
       WslayRecvCallback,
       WslaySendCallback,
@@ -58,8 +58,13 @@ void BufferEventWebStream::Start() {
     LOG(ERROR) << "bufferevent_enable() failed";
   }
 
-  if (!is_server_) {
-    SendHttpRequest();
+  if (on_open_) {
+    on_open_();
+  }
+
+  // If there is already data in the input buffer, process it immediately.
+  if (evbuffer_get_length(bufferevent_get_input(bev_)) > 0) {
+    ReadCallback(bev_, this);
   }
 }
 
@@ -109,13 +114,6 @@ void BufferEventWebStream::ReadCallback(bufferevent* bev, void* ctx) {
 
   for (;;) {
     switch (stream->state_) {
-      case HANDSHAKE:
-        stream->HandleHandshake();
-        if (stream->state_ == HANDSHAKE) {
-          // Handshake not complete, wait for more data.
-          return;
-        }
-        break;
       case OPEN: {
         int rv = wslay_event_recv(stream->ctx_);
         if (rv != 0) {
@@ -228,115 +226,7 @@ void BufferEventWebStream::EventCallback(bufferevent* bev,
   }
 }
 
-// ---- Handshake handling ----
 
-void BufferEventWebStream::HandleHandshake() {
-  if (is_server_) {
-    if (ReadHttpRequest()) {
-      SendHttpResponse("200 OK", "application/web-stream");
-      state_ = OPEN;
-      if (on_open_) {
-        on_open_();
-      }
-    }
-
-    return;
-  }
-
-  // Client waits for response
-  if (ReadHttpResponse()) {
-    state_ = OPEN;
-
-    // Maybe trigger some on_open callback?
-    LOG(INFO) << "Handshake complete!";
-
-    if (on_open_) {
-      on_open_();
-    }
-  }
-}
-
-bool BufferEventWebStream::ReadHttpRequest() {
-  evbuffer* input = bufferevent_get_input(bev_);
-
-  size_t len = evbuffer_get_length(input);
-  if (len == 0) {
-    return false;
-  }
-
-  // Search for \r\n\r\n
-  evbuffer_ptr ptr = evbuffer_search(input,
-                                     "\r\n\r\n",
-                                     4,
-                                     nullptr);
-  if (ptr.pos == -1) {
-    return false;  // Not full headers yet
-  }
-
-  // Read up to the end of headers
-  size_t header_len = ptr.pos + 4;
-  char* headers = new char[header_len + 1];
-  evbuffer_remove(input, headers, header_len);
-  headers[header_len] = '\0';
-  std::string data(headers);
-  delete[] headers;
-
-  // Check for web-stream specific header
-  if (data.find("Content-Type: application/web-stream") == std::string::npos &&
-      data.find("content-type: application/web-stream") == std::string::npos) {
-    LOG(ERROR) << "Missing web-stream Content-Type!";
-    return false;
-  }
-  return true;
-}
-
-void BufferEventWebStream::SendHttpResponse(const std::string& status,
-                                            const std::string& content_type) {
-  std::stringstream ss;
-  ss << "HTTP/1.1 " << status << "\r\n";
-  ss << "Content-Type: " << content_type << "\r\n";
-  ss << "Transfer-Encoding: chunked\r\n";
-  ss << "\r\n";  // End of headers
-  std::string data = ss.str();
-  bufferevent_write(bev_, data.c_str(), data.length());
-}
-
-void BufferEventWebStream::SendHttpRequest() {
-  std::stringstream ss;
-  ss << "POST / HTTP/1.1\r\n";
-  ss << "Host: localhost\r\n";
-  ss << "Content-Type: application/web-stream\r\n";
-  ss << "Transfer-Encoding: chunked\r\n";
-  ss << "\r\n";
-  std::string data = ss.str();
-  bufferevent_write(bev_, data.c_str(), data.length());
-}
-
-bool BufferEventWebStream::ReadHttpResponse() {
-  evbuffer* input = bufferevent_get_input(bev_);
-
-  // Search for \r\n\r\n
-  evbuffer_ptr ptr = evbuffer_search(input,
-                                     "\r\n\r\n",
-                                     4,
-                                     nullptr);
-  if (ptr.pos == -1) {
-    return false;
-  }
-
-  size_t header_len = ptr.pos + 4;
-  char* headers = new char[header_len + 1];
-  evbuffer_remove(input, headers, header_len);
-  headers[header_len] = '\0';
-  std::string data(headers);
-  delete[] headers;
-
-  if (data.find("200 OK") == std::string::npos) {
-    LOG(ERROR) << "Bad Handy handshake response: " << data;
-    return false;
-  }
-  return true;
-}
 
 // ---- wslay callbacks ----
 
