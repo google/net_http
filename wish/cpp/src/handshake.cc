@@ -122,8 +122,13 @@ void ClientHandshake::HandleEvent(short what) {
 
   if (what & (BEV_EVENT_EOF | BEV_EVENT_ERROR | BEV_EVENT_TIMEOUT)) {
     if (what & BEV_EVENT_ERROR) {
-      LOG(ERROR) << "Error during client handshake: "
-                 << evutil_socket_error_to_string(EVUTIL_SOCKET_ERROR());
+      int err = EVUTIL_SOCKET_ERROR();
+      if (err != 0) {
+        LOG(ERROR) << "Error during client handshake: "
+                   << evutil_socket_error_to_string(err);
+      } else {
+        LOG(ERROR) << "Error during client handshake";
+      }
     }
 
     auto on_error = std::move(on_error_);
@@ -198,8 +203,13 @@ void ServerHandshake::HandleRead() {
 void ServerHandshake::HandleEvent(short what) {
   if (what & (BEV_EVENT_EOF | BEV_EVENT_ERROR | BEV_EVENT_TIMEOUT)) {
     if (what & BEV_EVENT_ERROR) {
-      LOG(ERROR) << "Error during server handshake: "
-                 << evutil_socket_error_to_string(EVUTIL_SOCKET_ERROR());
+      int err = EVUTIL_SOCKET_ERROR();
+      if (err != 0) {
+        LOG(ERROR) << "Error during server handshake: "
+                   << evutil_socket_error_to_string(err);
+      } else {
+        LOG(ERROR) << "Error during server handshake";
+      }
     }
 
     auto on_error = std::move(on_error_);
