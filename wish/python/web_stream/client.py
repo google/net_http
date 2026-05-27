@@ -36,11 +36,19 @@ class WebStreamConnection:
             def set_error():
                 if not self._open_future.done():
                     self._open_future.set_exception(ConnectionError("Connection failed or lost"))
+                else:
+                    self._recv_queue.put_nowait(ConnectionError("Connection lost"))
             self._loop.call_soon_threadsafe(set_error)
+
+        def on_close():
+            def set_close():
+                self._recv_queue.put_nowait(ConnectionAbortedError("Connection closed"))
+            self._loop.call_soon_threadsafe(set_close)
 
         self._client.set_on_open(on_open)
         self._client.set_on_message(on_message)
         self._client.set_on_error(on_error)
+        self._client.set_on_close(on_close)
 
     async def connect(self):
         # Run the C++ event loop in a background daemon thread.
@@ -68,7 +76,15 @@ class WebStreamConnection:
 
     async def recv(self):
         """Receives a message from the WebStream connection."""
-        opcode, msg = await self._recv_queue.get()
+        if not self._client:
+            raise RuntimeError("Connection is closed")
+
+        res = await self._recv_queue.get()
+
+        if isinstance(res, Exception):
+            raise res
+
+        opcode, msg = res
         # You can process opcode here if you want to distinguish text/binary
         # We'll just return the message
         # In actual implementation: 1=Text, 2=Binary
