@@ -23,8 +23,6 @@ class PlainClient {
   bool Init();
 
   void SetOnOpen(OpenCallback cb);
-  void SetOnMessage(MessageCallback cb);
-  void SetOnClose(CloseCallback cb);
 
   void Run();
   void Stop();
@@ -39,8 +37,6 @@ class PlainClient {
   BufferEventWebStream* handler_;
 
   OpenCallback on_open_;
-  MessageCallback on_message_;
-  CloseCallback on_close_;
 };
 
 #endif  // WISH_CPP_SRC_PLAIN_CLIENT_H_

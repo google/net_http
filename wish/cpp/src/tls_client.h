@@ -27,8 +27,6 @@ class TlsClient {
   bool Init();
 
   void SetOnOpen(OpenCallback cb);
-  void SetOnMessage(MessageCallback cb);
-  void SetOnClose(CloseCallback cb);
 
   void Run();
   void Stop();
@@ -49,8 +47,6 @@ class TlsClient {
   BufferEventWebStream* handler_;
 
   OpenCallback on_open_;
-  MessageCallback on_message_;
-  CloseCallback on_close_;
 };
 
 #endif  // WISH_CPP_SRC_TLS_CLIENT_H_

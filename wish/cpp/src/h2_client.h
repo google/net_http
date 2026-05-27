@@ -30,7 +30,6 @@ class H2Client {
   bool Init();
 
   void SetOnOpen(OpenCallback cb);
-  void SetOnClose(CloseCallback cb);
 
   void Run();
   void Stop();
@@ -108,7 +107,6 @@ class H2Client {
   Session* session_;
 
   OpenCallback on_open_;
-  CloseCallback on_close_;
 };
 
 #endif  // WISH_CPP_SRC_H2_CLIENT_H_

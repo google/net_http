@@ -30,7 +30,6 @@ class H2TlsClient {
   bool Init();
 
   void SetOnOpen(OpenCallback cb);
-  void SetOnClose(CloseCallback cb);
 
   void Run();
   void Stop();
@@ -109,7 +108,6 @@ class H2TlsClient {
   Session* session_;
 
   OpenCallback on_open_;
-  CloseCallback on_close_;
 };
 
 #endif  // WISH_CPP_SRC_H2_TLS_CLIENT_H_

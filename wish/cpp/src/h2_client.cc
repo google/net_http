@@ -89,8 +89,6 @@ bool H2Client::Init() {
 
 void H2Client::SetOnOpen(OpenCallback cb) { on_open_ = cb; }
 
-void H2Client::SetOnClose(CloseCallback cb) { on_close_ = cb; }
-
 void H2Client::Run() {
   std::cout << "Running..." << std::endl;
 
@@ -178,9 +176,6 @@ void H2Client::EventCallback(struct bufferevent* bev,
   if (what & (BEV_EVENT_EOF | BEV_EVENT_ERROR)) {
     if (sess->web_stream) {
       sess->web_stream->OnClose();
-      if (sess->client->on_close_) {
-        sess->client->on_close_();
-      }
 
       delete sess->web_stream;
       sess->web_stream = nullptr;
@@ -270,10 +265,6 @@ int H2Client::OnFrameRecvCallback(nghttp2_session* /*session*/,
       (frame->hd.flags & NGHTTP2_FLAG_END_STREAM)) {
     if (sess->web_stream) {
       sess->web_stream->OnClose();
-
-      if (sess->client->on_close_) {
-        sess->client->on_close_();
-      }
     }
   }
 
@@ -309,9 +300,6 @@ int H2Client::OnStreamCloseCallback(nghttp2_session* /*session*/,
 
   if (sess->web_stream && stream_id == sess->h2_stream_id) {
     sess->web_stream->OnClose();
-    if (sess->client->on_close_) {
-      sess->client->on_close_();
-    }
 
     delete sess->web_stream;
     sess->web_stream = nullptr;
