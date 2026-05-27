@@ -12,7 +12,7 @@
 
 class PlainClient {
  public:
-  using OpenCallback = std::function<void(BufferEventWebStream*)>;
+  using OpenCallback = std::function<void(WebStream*)>;
   using MessageCallback = std::function<void(uint8_t, const std::string&)>;
   using CloseCallback = std::function<void()>;
 

@@ -9,6 +9,7 @@
 #include <string>
 #include <vector>
 
+#include "web_stream.h"
 #include "wish_opcodes.h"
 
 // wslay forward decl
@@ -22,28 +23,23 @@ struct wslay_event_on_msg_recv_arg;
 // It manages the lifecycle of a single web-stream connection, including the initial HTTP handshake and subsequent message framing/parsing.
 //
 // It uses libevent's bufferevent for async I/O. The underlying transport should be provided through it.
-class BufferEventWebStream {
+class BufferEventWebStream : public WebStream {
  public:
-  using MessageCallback =
-      std::function<void(uint8_t opcode, const std::string&)>;
-  using OpenCallback = std::function<void()>;
-  using CloseCallback = std::function<void()>;
-
   // Constructor takes an already created bufferevent
   BufferEventWebStream(bufferevent* bev,
                        bool is_server);
-  ~BufferEventWebStream();
+  ~BufferEventWebStream() override;
 
   // Start the handler (sets up callbacks and enables events)
   void Start();
 
-  void SetOnMessage(MessageCallback cb);
-  void SetOnOpen(OpenCallback cb);
-  void SetOnClose(CloseCallback cb);
+  void SetOnMessage(MessageCallback cb) override;
+  void SetOnOpen(OpenCallback cb) override;
+  void SetOnClose(CloseCallback cb) override;
 
-  int SendText(const std::string& msg);
-  int SendBinary(const std::string& msg);
-  int SendMetadata(const std::string& msg);
+  int SendText(const std::string& msg) override;
+  int SendBinary(const std::string& msg) override;
+  int SendMetadata(const std::string& msg) override;
 
  private:
   bufferevent* bev_;

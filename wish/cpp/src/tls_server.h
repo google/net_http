@@ -8,12 +8,12 @@
 #include <functional>
 #include <string>
 
-#include "buffer_event_web_stream.h"
 #include "tls_context.h"
+#include "web_stream.h"
 
 class TlsServer {
  public:
-  using StreamCallback = std::function<void(BufferEventWebStream*)>;
+  using StreamCallback = std::function<void(WebStream*)>;
 
   TlsServer(int port,
             const std::string& ca_file,

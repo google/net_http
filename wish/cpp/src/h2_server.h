@@ -13,12 +13,12 @@
 #include "nghttp2_web_stream.h"
 
 // H2Server listens for plain (cleartext) HTTP/2 (h2c) connections and
-// exposes each incoming web-stream stream as an NGHTTP2WebStream to the caller.
+// exposes each incoming web-stream stream to the caller.
 class H2Server {
  public:
   // Called once per accepted web-stream stream.  The callback owns no lifetime;
   // the stream is deleted by H2Server when the HTTP/2 stream closes.
-  using StreamCallback = std::function<void(NGHTTP2WebStream*)>;
+  using StreamCallback = std::function<void(WebStream*)>;
 
   explicit H2Server(int port);
   ~H2Server();

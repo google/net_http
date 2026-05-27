@@ -7,6 +7,8 @@
 #include <functional>
 #include <string>
 
+#include "web_stream.h"
+
 // Forward-declare wslay types to avoid pulling in wslay.h in this header.
 extern "C" {
 struct wslay_event_context;
@@ -22,27 +24,23 @@ struct wslay_event_on_msg_recv_arg;
 //
 // The public API mirrors BufferEventWebStream so callers can switch transports with
 // minimal changes.
-class NGHTTP2WebStream {
+class NGHTTP2WebStream : public WebStream {
  public:
-  using MessageCallback = std::function<void(uint8_t, const std::string&)>;
-  using OpenCallback = std::function<void()>;
-  using CloseCallback = std::function<void()>;
-
   // session  : the nghttp2 session that owns this stream (not transferred).
   // stream_id: HTTP/2 stream identifier.
   // is_server: true when this end is the HTTP/2 server.
   NGHTTP2WebStream(nghttp2_session* session,
                    int32_t stream_id,
                    bool is_server);
-  ~NGHTTP2WebStream();
+  ~NGHTTP2WebStream() override;
 
-  void SetOnMessage(MessageCallback cb);
-  void SetOnOpen(OpenCallback cb);
-  void SetOnClose(CloseCallback cb);
+  void SetOnMessage(MessageCallback cb) override;
+  void SetOnOpen(OpenCallback cb) override;
+  void SetOnClose(CloseCallback cb) override;
 
-  int SendText(const std::string& msg);
-  int SendBinary(const std::string& msg);
-  int SendMetadata(const std::string& msg);
+  int SendText(const std::string& msg) override;
+  int SendBinary(const std::string& msg) override;
+  int SendMetadata(const std::string& msg) override;
 
   int32_t stream_id() const { return stream_id_; }
 

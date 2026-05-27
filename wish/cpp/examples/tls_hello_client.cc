@@ -5,8 +5,8 @@
 
 #include <string>
 
-#include "../src/buffer_event_web_stream.h"
 #include "../src/tls_client.h"
+#include "../src/wish_opcodes.h"
 
 ABSL_FLAG(std::string, host, "127.0.0.1", "Server host address");
 ABSL_FLAG(int, port, 8080, "Server port");
@@ -47,7 +47,7 @@ int main(int argc, char** argv) {
     return 1;
   }
 
-  client.SetOnOpen([](BufferEventWebStream* handler) {
+  client.SetOnOpen([](WebStream* handler) {
     LOG(INFO) << "OnOpen";
 
     handler->SendText("Hello web-stream text!");

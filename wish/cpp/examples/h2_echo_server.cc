@@ -3,8 +3,8 @@
 #include <absl/log/initialize.h>
 #include <absl/log/log.h>
 
-#include "../src/buffer_event_web_stream.h"
 #include "../src/h2_server.h"
+#include "../src/wish_opcodes.h"
 
 ABSL_FLAG(int, port, 8080, "Port to listen on");
 
@@ -22,7 +22,7 @@ int main(int argc, char** argv) {
     return 1;
   }
 
-  server.SetOnStream([](NGHTTP2WebStream* stream) {
+  server.SetOnStream([](WebStream* stream) {
     LOG(INFO) << "OnStream";
 
     stream->SetOnMessage([stream](uint8_t opcode, const std::string& msg) {
