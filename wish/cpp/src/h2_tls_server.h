@@ -47,8 +47,8 @@ class H2TlsServer {
   static void EventCallback(bufferevent*, short, void*);  // NOLINT(runtime/int)
 
   // nghttp2 session callbacks
-  static ssize_t SendCallback(nghttp2_session*, const uint8_t*, size_t, int,
-                              void*);
+  static nghttp2_ssize SendCallback(nghttp2_session*, const uint8_t*, size_t,
+                                    int, void*);
   static int OnHeaderCallback(nghttp2_session*, const nghttp2_frame*,
                               const uint8_t*, size_t, const uint8_t*, size_t,
                               uint8_t, void*);
