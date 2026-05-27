@@ -35,9 +35,10 @@ bool TlsContext::Init(bool is_server) {
   }
 
   if (!ca_file_.empty()) {
-    if (SSL_CTX_load_verify_locations(ssl_ctx_,
-                                      ca_file_.c_str(),
-                                      nullptr) != 1) {
+    int load_rv = SSL_CTX_load_verify_locations(ssl_ctx_,
+                                                ca_file_.c_str(),
+                                                nullptr);
+    if (load_rv != 1) {
       LOG(ERROR) << "Error loading CA file: " << ca_file_;
 
       return false;
@@ -55,23 +56,26 @@ bool TlsContext::Init(bool is_server) {
 
   // Load own certificate and key
   if (!certificate_file_.empty() && !private_key_file_.empty()) {
-    if (SSL_CTX_use_certificate_file(ssl_ctx_,
-                                     certificate_file_.c_str(),
-                                     SSL_FILETYPE_PEM) <= 0) {
+    int cert_rv = SSL_CTX_use_certificate_file(ssl_ctx_,
+                                               certificate_file_.c_str(),
+                                               SSL_FILETYPE_PEM);
+    if (cert_rv <= 0) {
       LOG(ERROR) << "Error loading certificate file: " << certificate_file_;
 
       return false;
     }
 
-    if (SSL_CTX_use_PrivateKey_file(ssl_ctx_,
-                                    private_key_file_.c_str(),
-                                    SSL_FILETYPE_PEM) <= 0) {
+    int key_rv = SSL_CTX_use_PrivateKey_file(ssl_ctx_,
+                                             private_key_file_.c_str(),
+                                             SSL_FILETYPE_PEM);
+    if (key_rv <= 0) {
       LOG(ERROR) << "Error loading key file: " << private_key_file_;
 
       return false;
     }
 
-    if (!SSL_CTX_check_private_key(ssl_ctx_)) {
+    int check_rv = SSL_CTX_check_private_key(ssl_ctx_);
+    if (check_rv != 1) {
       LOG(ERROR) << "Private key does not match the certificate public key";
 
       return false;

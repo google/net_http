@@ -59,7 +59,8 @@ void BufferEventWebStream::Start() {
   }
 
   // If there is already data in the input buffer, process it immediately.
-  if (evbuffer_get_length(bufferevent_get_input(bev_)) > 0) {
+  size_t input_len = evbuffer_get_length(bufferevent_get_input(bev_));
+  if (input_len > 0) {
     ReadCallback(bev_, this);
   }
 }
@@ -186,7 +187,8 @@ void BufferEventWebStream::DrainCallback(bufferevent* bev,
   BufferEventWebStream* stream = static_cast<BufferEventWebStream*>(ctx);
 
   // Delete the stream only once all queued outbound data has been sent.
-  if (evbuffer_get_length(bufferevent_get_output(bev)) == 0) {
+  size_t output_len = evbuffer_get_length(bufferevent_get_output(bev));
+  if (output_len == 0) {
     stream->state_ = CLOSED;
     delete stream;
   }
@@ -244,14 +246,40 @@ ssize_t BufferEventWebStream::WslaySendCallback(wslay_event_context* ctx,
   int header_len = snprintf(header, sizeof(header), "%zx\r\n", len);
   if (header_len <= 0) {
     wslay_event_set_error(ctx, WSLAY_ERR_CALLBACK_FAILURE);
+
     return -1;
   }
 
-  if (bufferevent_write(stream->bev_, header, static_cast<size_t>(header_len)) != 0 ||
-      bufferevent_write(stream->bev_, data, len) != 0 ||
-      bufferevent_write(stream->bev_, "\r\n", 2) != 0) {
+  int write_header_rv = bufferevent_write(stream->bev_,
+                                          header,
+                                          static_cast<size_t>(header_len));
+  if (write_header_rv != 0) {
     LOG(ERROR) << "bufferevent_write() failed";
+
     wslay_event_set_error(ctx, WSLAY_ERR_CALLBACK_FAILURE);
+
+    return -1;
+  }
+
+  int write_data_rv = bufferevent_write(stream->bev_,
+                                        data,
+                                        len);
+  if (write_data_rv != 0) {
+    LOG(ERROR) << "bufferevent_write() failed";
+
+    wslay_event_set_error(ctx, WSLAY_ERR_CALLBACK_FAILURE);
+
+    return -1;
+  }
+
+  int write_trailer_rv = bufferevent_write(stream->bev_,
+                                           "\r\n",
+                                           2);
+  if (write_trailer_rv != 0) {
+    LOG(ERROR) << "bufferevent_write() failed";
+
+    wslay_event_set_error(ctx, WSLAY_ERR_CALLBACK_FAILURE);
+
     return -1;
   }
 
@@ -373,7 +401,8 @@ ssize_t BufferEventWebStream::ReadChunkedBytes(uint8_t* buf, size_t len) {
       }
 
       case ChunkState::TRAILER: {
-        if (evbuffer_get_length(input) < 2) {
+        size_t input_len = evbuffer_get_length(input);
+        if (input_len < 2) {
           wslay_event_set_error(ctx_, WSLAY_ERR_WOULDBLOCK);
           return -1;
         }

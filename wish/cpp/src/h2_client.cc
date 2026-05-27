@@ -93,11 +93,12 @@ bool H2Client::Init() {
     return false;
   }
 
-  if (bufferevent_socket_connect_hostname(bev,
-                                          dns_base_,
-                                          AF_INET,
-                                          host_.c_str(),
-                                          port_) < 0) {
+  int connect_rv = bufferevent_socket_connect_hostname(bev,
+                                                       dns_base_,
+                                                       AF_INET,
+                                                       host_.c_str(),
+                                                       port_);
+  if (connect_rv < 0) {
     LOG(ERROR) << "bufferevent_socket_connect_hostname() failed";
 
     return false;
