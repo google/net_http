@@ -11,6 +11,10 @@ Below is the directory layout of the `webchannel/js` project:
 ```
 webchannel/js/
 ├── CODE_MAP.md                # This file
+├── Makefile                   # Standard Makefile for build/install tasks
+├── package.json               # Package metadata and build scripts
+├── compile.js                 # Node.js Closure Compiler runner script
+├── exports.js                 # Entry point defining external JS module exports
 ├── demo/                      # Demo application for verification & testing
 │   ├── index.html             # HTML user interface for the demo
 │   ├── demo.ts                # TypeScript client-side demo code
@@ -164,3 +168,33 @@ The `demo/` folder contains a TypeScript web app demonstrating library initializ
    npm start
    ```
 4. Open your browser and navigate to `http://localhost:9000/`.
+
+---
+
+## 7. Compiling the Library
+
+The project is compiled using the native version of Google Closure Compiler, resolving dependencies from both the custom [imported_src/](imported_src/) sources and the standard `google-closure-library` package.
+
+### Build Setup Files:
+* **[package.json](package.json)**: Configures dependency management and compilation scripts.
+* **[Makefile](Makefile)**: Provides convenience targets (`make install`, `make build`, and `make clean`).
+* **[exports.js](exports.js)**: Imports Closure namespaces (`goog.net.createWebChannelTransport`, `goog.net.WebChannel`, etc.) and maps them to standard CommonJS `module.exports`.
+* **[compile.js](compile.js)**: Node.js compiler runner. It recursively resolves all Closure dependencies, filters out duplicate modules from the Google Closure Library, and configures the native GraalVM compiler binary path to run without requiring Java.
+
+### How to Compile:
+To compile the library and update the bundled `dist/webchannel_blob_es2022.js` asset:
+1. Make sure you are in the `webchannel/js` directory.
+2. Install the compilation dependencies (Closure Compiler and Closure Library):
+   ```bash
+   make install
+   # or: npm install
+   ```
+3. Compile the library:
+   ```bash
+   make build
+   # or: npm run build
+   ```
+4. Clean up build artifacts (optional):
+   ```bash
+   make clean
+   ```
