@@ -332,12 +332,12 @@ int H2TlsClient::OnStreamCloseCallback(nghttp2_session* /*session*/,
   return 0;
 }
 
-ssize_t H2TlsClient::DataSourceReadCallback(nghttp2_session* session,
-                                            int32_t stream_id, uint8_t* buf,
-                                            size_t length,
-                                            uint32_t* data_flags,
-                                            nghttp2_data_source* /*source*/,
-                                            void* /*user_data*/) {
+nghttp2_ssize H2TlsClient::DataSourceReadCallback(nghttp2_session* session,
+                                                  int32_t stream_id, uint8_t* buf,
+                                                  size_t length,
+                                                  uint32_t* data_flags,
+                                                  nghttp2_data_source* /*source*/,
+                                                  void* /*user_data*/) {
   NGHTTP2WebStream* web_stream = static_cast<NGHTTP2WebStream*>(
       nghttp2_session_get_stream_user_data(session, stream_id));
   if (!web_stream) {
@@ -397,18 +397,18 @@ void H2TlsClient::InitH2Session(Session* sess) {
       H2TC_MAKE_NV("content-type", "application/web-stream"),
   };
 
-  nghttp2_data_provider data_prd;
+  nghttp2_data_provider2 data_prd;
   data_prd.source.ptr = nullptr;
   data_prd.read_callback = DataSourceReadCallback;
 
-  int32_t stream_id = nghttp2_submit_request(sess->h2session,
-                                             nullptr,
-                                             hdrs,
-                                             5,
-                                             &data_prd,
-                                             nullptr);
+  int32_t stream_id = nghttp2_submit_request2(sess->h2session,
+                                              nullptr,
+                                              hdrs,
+                                              5,
+                                              &data_prd,
+                                              nullptr);
   if (stream_id < 0) {
-    std::cerr << "H2TlsClient: nghttp2_submit_request failed: "
+    std::cerr << "H2TlsClient: nghttp2_submit_request2() failed: "
               << nghttp2_strerror(stream_id) << std::endl;
     return;
   }
