@@ -21,7 +21,8 @@ static int AlpnSelectCb(SSL* /*ssl*/,
                         unsigned int inlen,
                         void* /*arg*/) {
   // nghttp2_select_next_protocol returns 1 if "h2" is found, <=0 otherwise.
-  if (nghttp2_select_next_protocol(const_cast<unsigned char**>(out), outlen, in, inlen) <= 0) {
+  int select_rv = nghttp2_select_next_protocol(const_cast<unsigned char**>(out), outlen, in, inlen);
+  if (select_rv <= 0) {
     return SSL_TLSEXT_ERR_NOACK;
   }
   return SSL_TLSEXT_ERR_OK;

@@ -78,11 +78,12 @@ bool TlsClient::Init() {
 
   bufferevent_openssl_set_allow_dirty_shutdown(bev, 1);
 
-  if (bufferevent_socket_connect_hostname(bev,
-                                          dns_base_,
-                                          AF_INET,
-                                          host_.c_str(),
-                                          port_) < 0) {
+  int connect_rv = bufferevent_socket_connect_hostname(bev,
+                                                       dns_base_,
+                                                       AF_INET,
+                                                       host_.c_str(),
+                                                       port_);
+  if (connect_rv < 0) {
     LOG(ERROR) << "bufferevent_socket_connect_hostname() failed";
     bufferevent_free(bev);
 

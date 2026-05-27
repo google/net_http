@@ -96,11 +96,12 @@ void TlsServer::AcceptConnCb(evconnlistener* listener,
   TlsServer* server = static_cast<TlsServer*>(ctx);
 
   int one = 1;
-  if (setsockopt(fd,
-                 IPPROTO_TCP,
-                 TCP_NODELAY,
-                 &one,
-                 sizeof(one)) < 0) {
+  int set_opt_rv = setsockopt(fd,
+                              IPPROTO_TCP,
+                              TCP_NODELAY,
+                              &one,
+                              sizeof(one));
+  if (set_opt_rv < 0) {
     LOG(ERROR) << "setsockopt(TCP_NODELAY) failed: " << strerror(errno);
   }
 
