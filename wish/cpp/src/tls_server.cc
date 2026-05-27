@@ -11,12 +11,14 @@
 #include <event2/bufferevent_ssl.h>
 #include <openssl/ssl.h>
 
-TlsServer::TlsServer(const std::string& ca_file, const std::string& cert_file,
-                     const std::string& key_file, int port)
-    : ca_file_(ca_file),
+TlsServer::TlsServer(int port,
+                     const std::string& ca_file,
+                     const std::string& cert_file,
+                     const std::string& key_file)
+    : port_(port),
+      ca_file_(ca_file),
       cert_file_(cert_file),
       key_file_(key_file),
-      port_(port),
       base_(nullptr),
       listener_(nullptr) {}
 

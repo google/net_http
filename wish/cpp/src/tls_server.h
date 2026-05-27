@@ -29,11 +29,11 @@ class TlsServer {
                            sockaddr* address, int socklen, void* ctx);
   static void AcceptErrorCb(evconnlistener* listener, void* ctx);
 
+  int port_;
+
   std::string ca_file_;
   std::string cert_file_;
   std::string key_file_;
-
-  int port_;
 
   TlsContext tls_ctx_;
   event_base* base_;
