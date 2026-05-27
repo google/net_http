@@ -116,7 +116,6 @@ void ClientHandshake::HandleRead() {
 
 void ClientHandshake::HandleEvent(short what) {
   if (what & BEV_EVENT_CONNECTED) {
-    LOG(INFO) << "Client handshake: connected";
     return;
   }
 

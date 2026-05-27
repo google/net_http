@@ -2,14 +2,13 @@
 
 #include <absl/log/log.h>
 #include <absl/strings/numbers.h>
+#include <event2/bufferevent_ssl.h>
 #include <netinet/tcp.h>
+#include <openssl/ssl.h>
 
 #include <algorithm>
 #include <cstring>
 #include <string>
-
-#include <event2/bufferevent_ssl.h>
-#include <openssl/ssl.h>
 
 #define H2TC_MAKE_NV(name, value) \
   {                               \
@@ -139,8 +138,6 @@ bool H2TlsClient::Init() {
 void H2TlsClient::SetOnOpen(OpenCallback cb) { on_open_ = cb; }
 
 void H2TlsClient::Run() {
-  LOG(INFO) << "Running...";
-
   event_base_dispatch(base_);
 }
 

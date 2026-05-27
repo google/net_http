@@ -60,8 +60,6 @@ bool H2Server::Init() {
 void H2Server::SetOnStream(StreamCallback cb) { on_stream_ = cb; }
 
 void H2Server::Run() {
-  LOG(INFO) << "H2Server listening on port " << port_ << "...";
-
   event_base_dispatch(base_);
 }
 

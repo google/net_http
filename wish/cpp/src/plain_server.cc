@@ -61,8 +61,6 @@ void PlainServer::SetOnStream(StreamCallback cb) {
 }
 
 void PlainServer::Run() {
-  LOG(INFO) << "Server listening on port " << port_ << "...";
-
   event_base_dispatch(base_);
 }
 

@@ -2,15 +2,14 @@
 
 #include <absl/log/log.h>
 #include <arpa/inet.h>
+#include <event2/bufferevent_ssl.h>
 #include <netinet/tcp.h>
+#include <openssl/ssl.h>
 
 #include <cstring>
 
 #include "buffer_event_web_stream.h"
 #include "handshake.h"
-
-#include <event2/bufferevent_ssl.h>
-#include <openssl/ssl.h>
 
 TlsServer::TlsServer(int port,
                      const std::string& ca_file,
@@ -81,8 +80,6 @@ bool TlsServer::Init() {
 }
 
 void TlsServer::Run() {
-  LOG(INFO) << "Server listening on port " << port_ << "...";
-
   event_base_dispatch(base_);
 }
 

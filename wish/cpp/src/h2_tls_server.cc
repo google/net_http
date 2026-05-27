@@ -96,8 +96,6 @@ bool H2TlsServer::Init() {
 void H2TlsServer::SetOnStream(StreamCallback cb) { on_stream_ = cb; }
 
 void H2TlsServer::Run() {
-  LOG(INFO) << "H2TlsServer listening on port " << port_ << "...";
-
   event_base_dispatch(base_);
 }
 

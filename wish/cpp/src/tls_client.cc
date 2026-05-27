@@ -1,7 +1,6 @@
 #include "tls_client.h"
 
 #include <absl/log/log.h>
-
 #include <event2/bufferevent_ssl.h>
 #include <openssl/ssl.h>
 
@@ -113,8 +112,6 @@ void TlsClient::SetOnOpen(OpenCallback cb) {
 }
 
 void TlsClient::Run() {
-  LOG(INFO) << "Client running...";
-
   event_base_dispatch(base_);
 }
 
