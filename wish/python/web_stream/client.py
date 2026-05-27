@@ -74,7 +74,7 @@ class WebStreamConnection:
         else:
             self._handler.send_text(str(data))
 
-    async def recv(self):
+    async def recv(self, decode=None):
         """Receives a message from the WebStream connection."""
         if not self._client:
             raise RuntimeError("Connection is closed")
@@ -85,12 +85,20 @@ class WebStreamConnection:
             raise res
 
         opcode, msg = res
-        # You can process opcode here if you want to distinguish text/binary
-        # We'll just return the message
-        # In actual implementation: 1=Text, 2=Binary
-        if opcode == 2:
-            return msg.encode("utf-8") if isinstance(msg, str) else msg
+        
+        # Determine if we should return str or bytes
+        # Default behavior: Text (opcode 1) -> str, Binary (opcode 2) -> bytes
+        should_decode = decode
+        if should_decode is None:
+            should_decode = (opcode != 2)
+
+        if should_decode:
+            if isinstance(msg, bytes):
+                return msg.decode("utf-8")
+            return msg
         else:
+            if isinstance(msg, str):
+                return msg.encode("utf-8")
             return msg
 
 class _ConnectContextManager:
