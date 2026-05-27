@@ -28,6 +28,8 @@
 
 #include "nghttp2_web_stream.h"
 
+constexpr size_t kDefaultMaxH2Connections = 10000;
+
 // H2Server listens for plain (cleartext) HTTP/2 (h2c) connections and
 // exposes each incoming web-stream stream to the caller.
 class H2Server {
@@ -43,6 +45,8 @@ class H2Server {
   bool Init();
   int GetPort() const;
   void SetOnStream(StreamCallback cb);
+  void SetMaxConnections(size_t max_connections) { max_connections_ = max_connections; }
+  size_t active_connections() const { return active_sessions_count_; }
   int Run();
 
  private:
@@ -129,6 +133,9 @@ class H2Server {
   evconnlistener* listener_;
 
   StreamCallback on_stream_;
+
+  size_t max_connections_ = kDefaultMaxH2Connections;
+  size_t active_sessions_count_ = 0;
 };
 
 #endif  // WISH_CPP_SRC_H2_SERVER_H_

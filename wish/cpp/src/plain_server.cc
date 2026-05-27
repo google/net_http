@@ -90,6 +90,15 @@ void PlainServer::AcceptConnCb(evconnlistener* listener,
   event_base* base = evconnlistener_get_base(listener);
   PlainServer* server = static_cast<PlainServer*>(ctx);
 
+  if (server->max_connections_ > 0 &&
+      (server->active_handshakes_.size() + server->active_streams_.size()) >= server->max_connections_) {
+    VLOG(1) << "Max connections limit reached (" << server->max_connections_ << "). Rejecting connection.";
+
+    evutil_closesocket(fd);
+
+    return;
+  }
+
   int one = 1;
   int set_opt_rv = setsockopt(fd,
                               IPPROTO_TCP,

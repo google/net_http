@@ -96,8 +96,15 @@ void H2Server::AcceptConnCb(evconnlistener* listener,
                             int /*socklen*/,
                             void* ctx) {
   H2Server* server = static_cast<H2Server*>(ctx);
-
   event_base* base = evconnlistener_get_base(listener);
+
+  if (server->max_connections_ > 0 && server->active_sessions_count_ >= server->max_connections_) {
+    VLOG(1) << "H2Server: Max connections limit reached (" << server->max_connections_ << "). Rejecting connection.";
+
+    evutil_closesocket(fd);
+
+    return;
+  }
 
   int one = 1;
   int set_rv = setsockopt(fd,
@@ -145,6 +152,7 @@ void H2Server::AcceptConnCb(evconnlistener* listener,
 
     return;
   }
+  server->active_sessions_count_++;
 
   // Send server connection preface (SETTINGS frame).
   nghttp2_settings_entry iv[] = {
@@ -223,6 +231,9 @@ void H2Server::AcceptErrorCb(evconnlistener* listener,
 void H2Server::HandleSessionError(Session* sess) {
   if (!sess) {
     return;
+  }
+  if (sess->server && sess->server->active_sessions_count_ > 0) {
+    sess->server->active_sessions_count_--;
   }
   for (auto& [sid, info] : sess->incoming_streams) {
     if (info.web_stream) {

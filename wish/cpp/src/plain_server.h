@@ -30,6 +30,8 @@
 class ServerHandshake;
 class BufferEventWebStream;
 
+constexpr size_t kDefaultMaxConnections = 10000;
+
 class PlainServer {
  public:
   using StreamCallback = std::function<void(WebStream*)>;
@@ -40,6 +42,8 @@ class PlainServer {
 
   bool Init();
   void SetOnStream(StreamCallback cb);
+  void SetMaxConnections(size_t max_connections) { max_connections_ = max_connections; }
+  size_t active_connections() const { return active_handshakes_.size() + active_streams_.size(); }
   int Run();
 
  private:
@@ -61,6 +65,8 @@ class PlainServer {
   evconnlistener* listener_;
 
   StreamCallback on_stream_;
+
+  size_t max_connections_ = kDefaultMaxConnections;
 
   std::vector<std::unique_ptr<ServerHandshake>> active_handshakes_;
   std::vector<std::unique_ptr<BufferEventWebStream>> active_streams_;
