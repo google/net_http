@@ -1,5 +1,6 @@
 #include "wish_handler.h"
 
+#include <absl/base/optimization.h>
 #include <event2/buffer.h>
 #include <event2/bufferevent.h>
 #include <event2/event.h>
@@ -108,11 +109,7 @@ ssize_t WishHandler::SendCallback(wslay_event_context* ctx,
 
 int WishHandler::GenmaskCallback(wslay_event_context* ctx, uint8_t* buf,
                                  size_t len, void* user_data) {
-  static std::mt19937 rng(std::random_device{}());
-  std::uniform_int_distribution<uint8_t> dist(0, 255);
-  for (size_t i = 0; i < len; ++i) {
-    buf[i] = dist(rng);
-  }
+  ABSL_UNREACHABLE();
   return 0;
 }
 
