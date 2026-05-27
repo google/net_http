@@ -19,8 +19,12 @@ ABSL_FLAG(int, port, 8080, "Port to listen on");
 
 namespace {
 
-void accept_conn_cb(struct evconnlistener* listener, evutil_socket_t fd,
-                    struct sockaddr* address, int socklen, void* ctx) {
+void accept_conn_cb(struct evconnlistener* listener,
+                    evutil_socket_t fd,
+                    struct sockaddr* address,
+                    int socklen,
+                    void* ctx) {
+  // Suppress unused parameter warnings.
   (void)address;
   (void)socklen;
   (void)ctx;
@@ -76,7 +80,9 @@ void accept_conn_cb(struct evconnlistener* listener, evutil_socket_t fd,
 }
 
 void accept_error_cb(struct evconnlistener* listener, void* ctx) {
+  // Suppress unused parameter warnings.
   (void)ctx;
+
   struct event_base* base = evconnlistener_get_base(listener);
   const int err = EVUTIL_SOCKET_ERROR();
   LOG(ERROR) << "Listener error " << err << " ("
@@ -89,6 +95,7 @@ void accept_error_cb(struct evconnlistener* listener, void* ctx) {
 int main(int argc, char** argv) {
   absl::ParseCommandLine(argc, argv);
   absl::InitializeLog();
+
   const int port = absl::GetFlag(FLAGS_port);
 
   struct event_base* base = event_base_new();

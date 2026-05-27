@@ -63,6 +63,7 @@ int H2WishStream::SendMetadata(const std::string& msg) {
 
 void H2WishStream::OnDataChunk(const uint8_t* data, size_t len) {
   evbuffer_add(input_buf_, data, len);
+
   int err = wslay_event_recv(ctx_);
   if (err != 0) {
     std::cerr << "H2WishStream: wslay_event_recv failed: " << err << std::endl;
