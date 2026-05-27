@@ -129,6 +129,123 @@ class TestWebStreamClientPlainE2E(unittest.TestCase):
         asyncio.set_event_loop(loop)
         loop.run_until_complete(run())
 
+    def test_recv_decode_options(self):
+        async def run():
+            # Allow the server more time to start up to avoid Connection reset
+            await asyncio.sleep(1.0)
+            
+            uri = f"webstream://127.0.0.1:{self.port}"
+            
+            async with web_stream.connect(uri) as ws:
+                # 1. Test sending string and receiving with decode=False (returns bytes)
+                await ws.send("hello")
+                msg_bytes = await asyncio.wait_for(ws.recv(decode=False), timeout=2.0)
+                self.assertEqual(msg_bytes, b"hello")
+                self.assertIsInstance(msg_bytes, bytes)
+                
+                # 2. Test sending string and receiving with decode=True (returns str)
+                await ws.send("world")
+                msg_str = await asyncio.wait_for(ws.recv(decode=True), timeout=2.0)
+                self.assertEqual(msg_str, "world")
+                self.assertIsInstance(msg_str, str)
+                
+                # 3. Test sending bytes (which will be echoed as binary) and receiving with decode=True (returns str)
+                await ws.send(b"binary-text")
+                msg_str_from_bin = await asyncio.wait_for(ws.recv(decode=True), timeout=2.0)
+                self.assertEqual(msg_str_from_bin, "binary-text")
+                self.assertIsInstance(msg_str_from_bin, str)
+                
+                # 4. Test sending bytes and receiving with default decode=None (returns bytes for binary)
+                await ws.send(b"binary-bytes")
+                msg_bytes_from_bin = await asyncio.wait_for(ws.recv(decode=None), timeout=2.0)
+                self.assertEqual(msg_bytes_from_bin, b"binary-bytes")
+                self.assertIsInstance(msg_bytes_from_bin, bytes)
+                
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        loop.run_until_complete(run())
+
+    def test_recv_metadata(self):
+        async def run():
+            # Allow the server more time to start up to avoid Connection reset
+            await asyncio.sleep(1.0)
+            
+            uri = f"webstream://127.0.0.1:{self.port}"
+            
+            async with web_stream.connect(uri) as ws:
+                # We can manually put a metadata message into ws._recv_queue
+                await ws._recv_queue.put((web_stream.WEB_STREAM_OPCODE_METADATA, b"meta-data-val"))
+                
+                # Default decode=None: should return bytes
+                msg = await ws.recv(decode=None)
+                self.assertEqual(msg, b"meta-data-val")
+                self.assertIsInstance(msg, bytes)
+                
+                # Put another one and test decode=True: should return str
+                await ws._recv_queue.put((web_stream.WEB_STREAM_OPCODE_METADATA, b"meta-data-val2"))
+                msg_str = await ws.recv(decode=True)
+                self.assertEqual(msg_str, "meta-data-val2")
+                self.assertIsInstance(msg_str, str)
+
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        loop.run_until_complete(run())
+
+    def test_iterator_break(self):
+        async def run():
+            # Allow the server more time to start up to avoid Connection reset
+            await asyncio.sleep(1.0)
+            
+            uri = f"webstream://127.0.0.1:{self.port}"
+            
+            async with web_stream.connect(uri) as ws:
+                await ws.send("hello")
+                await ws.send("world")
+                
+                received = []
+                async for msg in ws:
+                    received.append(msg)
+                    if len(received) == 2:
+                        break
+                
+                self.assertEqual(received, ["hello", "world"])
+                
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        try:
+            loop.run_until_complete(run())
+        finally:
+            loop.run_until_complete(loop.shutdown_asyncgens())
+            loop.close()
+
+    def test_iterator_close(self):
+        async def run():
+            # Allow the server more time to start up to avoid Connection reset
+            await asyncio.sleep(1.0)
+            
+            uri = f"webstream://127.0.0.1:{self.port}"
+            
+            async with web_stream.connect(uri) as ws:
+                async def close_later():
+                    await asyncio.sleep(0.5)
+                    await ws.close()
+                    
+                asyncio.create_task(close_later())
+                
+                messages = []
+                async for msg in ws:
+                    messages.append(msg)
+                
+                self.assertEqual(messages, [])
+                
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        try:
+            loop.run_until_complete(run())
+        finally:
+            loop.run_until_complete(loop.shutdown_asyncgens())
+            loop.close()
+
     def test_server_disconnect_detect(self):
         port = get_free_port()
         cmd = [

@@ -385,11 +385,7 @@ NB_MODULE(web_stream_ext, m) {
           handler->SetOnMessage([&self](uint8_t opcode, const std::string& msg) {
             nb::gil_scoped_acquire acquire;
             try {
-              if (opcode == WEB_STREAM_OPCODE_BINARY || opcode == WEB_STREAM_OPCODE_METADATA) {
-                self.on_message_cb(opcode, nb::bytes(msg.data(), msg.size()));
-              } else {
-                self.on_message_cb(opcode, msg);
-              }
+              self.on_message_cb(opcode, nb::bytes(msg.data(), msg.size()));
             } catch (nb::python_error& e) {
               e.restore();
               PyErr_WriteUnraisable(self.on_message_cb.ptr());
@@ -501,11 +497,7 @@ NB_MODULE(web_stream_ext, m) {
           handler->SetOnMessage([&self](uint8_t opcode, const std::string& msg) {
             nb::gil_scoped_acquire acquire;
             try {
-              if (opcode == WEB_STREAM_OPCODE_BINARY || opcode == WEB_STREAM_OPCODE_METADATA) {
-                self.on_message_cb(opcode, nb::bytes(msg.data(), msg.size()));
-              } else {
-                self.on_message_cb(opcode, msg);
-              }
+              self.on_message_cb(opcode, nb::bytes(msg.data(), msg.size()));
             } catch (nb::python_error& e) {
               e.restore();
               PyErr_WriteUnraisable(self.on_message_cb.ptr());

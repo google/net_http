@@ -4,6 +4,11 @@ from urllib.parse import urlparse
 
 from . import web_stream_ext
 
+# WebStream Opcodes
+WEB_STREAM_OPCODE_TEXT = 1
+WEB_STREAM_OPCODE_BINARY = 2
+WEB_STREAM_OPCODE_METADATA = 3
+
 class WebStreamConnection:
     def __init__(self, host, port, tls, ca_file="", cert_file="", key_file=""):
         self._host = host
@@ -87,18 +92,19 @@ class WebStreamConnection:
         opcode, msg = res
         
         # Determine if we should return str or bytes
-        # Default behavior: Text (opcode 1) -> str, Binary (opcode 2) -> bytes
+        # Default behavior:
+        # - WEB_STREAM_OPCODE_TEXT -> str
+        # - WEB_STREAM_OPCODE_BINARY -> bytes
+        # - WEB_STREAM_OPCODE_METADATA -> bytes
+        # Note: UTF-8 decoding for metadata is undefined in the specification.
+        # We treat it similarly to binary messages for now (i.e. no UTF-8 decoding by default).
         should_decode = decode
         if should_decode is None:
-            should_decode = (opcode != 2)
+            should_decode = (opcode == WEB_STREAM_OPCODE_TEXT)
 
         if should_decode:
-            if isinstance(msg, bytes):
-                return msg.decode("utf-8")
-            return msg
+            return msg.decode("utf-8")
         else:
-            if isinstance(msg, str):
-                return msg.encode("utf-8")
             return msg
 
     async def __aiter__(self):
