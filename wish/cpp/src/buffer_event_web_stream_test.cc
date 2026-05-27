@@ -386,5 +386,66 @@ TEST_F(BufferEventWebStreamTest, WarningOnExtraDataPostClose) {
   EXPECT_TRUE(server_close_fired);
 }
 
+// Verify that SetOnError callback fires instead of SetOnClose if the stream is closed
+// in the middle of receiving a message.
+TEST_F(BufferEventWebStreamTest, OnErrorOnMidMessageEOF) {
+  bufferevent* pair[2];
+  int rv = bufferevent_pair_new(base_,
+                                BEV_OPT_CLOSE_ON_FREE | BEV_OPT_DEFER_CALLBACKS,
+                                pair);
+  ASSERT_EQ(rv, 0);
+
+  BufferEventWebStream* server = new BufferEventWebStream(pair[0], true /* is_server */);
+  bufferevent_enable(pair[1], EV_READ | EV_WRITE);
+
+  bool server_close_fired = false;
+  bool server_error_fired = false;
+
+  server->SetOnOpen([&]() {
+    // Handshake complete, wait for incoming data.
+  });
+
+  server->SetOnClose([&]() {
+    server_close_fired = true;
+  });
+
+  server->SetOnError([&]() {
+    server_error_fired = true;
+    event_base_loopbreak(base_);
+  });
+
+  server->Start();
+
+  // 1. Fake client handshake
+  const char* req =
+      "POST / HTTP/1.1\r\nHost: localhost\r\n"
+      "Content-Type: application/web-stream\r\n\r\n";
+  bufferevent_write(pair[1], req, strlen(req));
+
+  // Let handshake complete
+  event_base_loop(base_, EVLOOP_NONBLOCK);
+  DrainInput(pair[1]);
+
+  // 2. Write a partial message frame inside a chunk:
+  // - Hex size of frame payload is 12 (frame header 2 bytes + 10 bytes text).
+  // - Hex chunk size is "c".
+  // - Frame expects 100 bytes of payload (0x64), but we only provide 10.
+  bufferevent_write(pair[1], "c\r\n", 3);
+  uint8_t frame_hdr[2] = {0x81, 100};
+  bufferevent_write(pair[1], frame_hdr, 2);
+  bufferevent_write(pair[1], "1234567890", 10);
+  // Chunk trailer CRLF + Terminal Chunk "0\r\n\r\n"
+  bufferevent_write(pair[1], "\r\n0\r\n\r\n", 7);
+
+  // Run the event loop to process the incoming chunks
+  event_base_dispatch(base_);
+
+  EXPECT_FALSE(server_close_fired);
+  EXPECT_TRUE(server_error_fired);
+
+  bufferevent_free(pair[1]);
+}
+
+
 
 
