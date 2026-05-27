@@ -266,12 +266,14 @@ ssize_t H2Client::DataSourceReadCallback(nghttp2_session* session,
 void H2Client::InitH2Session(Session* sess) {
   nghttp2_session_callbacks* cbs;
   nghttp2_session_callbacks_new(&cbs);
-  nghttp2_session_callbacks_set_send_callback(cbs, SendCallback);
-  nghttp2_session_callbacks_set_on_header_callback(cbs, OnHeaderCallback);
+  nghttp2_session_callbacks_set_send_callback(cbs,
+                                              SendCallback);
+  nghttp2_session_callbacks_set_on_header_callback(cbs,
+                                                   OnHeaderCallback);
   nghttp2_session_callbacks_set_on_frame_recv_callback(cbs,
                                                        OnFrameRecvCallback);
-  nghttp2_session_callbacks_set_on_data_chunk_recv_callback(
-      cbs, OnDataChunkRecvCallback);
+  nghttp2_session_callbacks_set_on_data_chunk_recv_callback(cbs,
+                                                            OnDataChunkRecvCallback);
   nghttp2_session_callbacks_set_on_stream_close_callback(cbs,
                                                          OnStreamCloseCallback);
 
