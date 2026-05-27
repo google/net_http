@@ -23,9 +23,9 @@ BufferEventWebStream::BufferEventWebStream(bufferevent* bev,
       WslayRecvCallback,
       WslaySendCallback,
       WslayGenmaskCallback,
-      nullptr,  // on_frame_recv_start_callback
-      nullptr,  // on_frame_recv_chunk_callback
-      nullptr,  // on_frame_recv_end_callback
+      WslayOnFrameRecvStartCallback,  // on_frame_recv_start_callback
+      nullptr,                        // on_frame_recv_chunk_callback
+      nullptr,                        // on_frame_recv_end_callback
       WslayOnMsgRecvCallback};
 
   if (is_server_) {
@@ -68,6 +68,8 @@ void BufferEventWebStream::SetOnMessage(MessageCallback cb) { on_message_ = cb; 
 void BufferEventWebStream::SetOnOpen(OpenCallback cb) { on_open_ = cb; }
 
 void BufferEventWebStream::SetOnClose(CloseCallback cb) { on_close_ = cb; }
+
+void BufferEventWebStream::SetOnError(ErrorCallback cb) { on_error_ = cb; }
 
 // ---- Public send methods ----
 
@@ -141,12 +143,18 @@ void BufferEventWebStream::ReadCallback(bufferevent* bev, void* ctx) {
                             EventCallback,
                             handler);
 
-          if (handler->on_close_) {
-            handler->on_close_();
+          if (handler->in_message_) {
+            if (handler->on_error_) {
+              handler->on_error_();
+            }
+          } else {
+            if (handler->on_close_) {
+              handler->on_close_();
+            }
           }
 
           if (handler->close_pending_) {
-            // Close() was called in on_close_(); the outbound terminal chunk
+            // Close() was called in the callback; the outbound terminal chunk
             // (and any pending echo frames) are queued in the output buffer.
             // Switch to DRAINING and delete only after the buffer empties.
             handler->state_ = DRAINING;
@@ -374,11 +382,25 @@ void BufferEventWebStream::WslayOnMsgRecvCallback(wslay_event_context* ctx,
                                                   void* user_data) {
   BufferEventWebStream* handler = static_cast<BufferEventWebStream*>(user_data);
 
+  if (!wslay_is_ctrl_frame(arg->opcode)) {
+    handler->in_message_ = false;
+  }
+
   // Consider implementing backpressure.
 
   if (handler->on_message_) {
     std::string msg(reinterpret_cast<const char*>(arg->msg), arg->msg_length);
     handler->on_message_(arg->opcode, msg);
+  }
+}
+
+void BufferEventWebStream::WslayOnFrameRecvStartCallback(wslay_event_context* ctx,
+                                                         const wslay_event_on_frame_recv_start_arg* arg,
+                                                         void* user_data) {
+  BufferEventWebStream* handler = static_cast<BufferEventWebStream*>(user_data);
+
+  if (!wslay_is_ctrl_frame(arg->opcode)) {
+    handler->in_message_ = true;
   }
 }
 

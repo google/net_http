@@ -16,6 +16,7 @@
 extern "C" {
 struct wslay_event_context;
 struct wslay_event_on_msg_recv_arg;
+struct wslay_event_on_frame_recv_start_arg;
 }
 
 // BufferEventWebStream implements the web-stream protocol defined at https://datatracker.ietf.org/doc/html/draft-yoshino-wish
@@ -36,6 +37,7 @@ class BufferEventWebStream : public WebStream {
   void SetOnMessage(MessageCallback cb) override;
   void SetOnOpen(OpenCallback cb) override;
   void SetOnClose(CloseCallback cb) override;
+  void SetOnError(ErrorCallback cb) override;
 
   int SendText(const std::string& msg) override;
   int SendBinary(const std::string& msg) override;
@@ -59,6 +61,7 @@ class BufferEventWebStream : public WebStream {
   State state_;
 
   bool is_server_;
+  bool in_message_ = false;
   wslay_event_context* ctx_;
 
   // ---- Chunked-encoding send state ----
@@ -85,6 +88,7 @@ class BufferEventWebStream : public WebStream {
   MessageCallback on_message_;
   OpenCallback on_open_;
   CloseCallback on_close_;
+  ErrorCallback on_error_;
 
   // libevent callbacks
   static void ReadCallback(bufferevent* bev,
@@ -121,6 +125,9 @@ class BufferEventWebStream : public WebStream {
   static void WslayOnMsgRecvCallback(wslay_event_context* ctx,
                                      const wslay_event_on_msg_recv_arg* arg,
                                      void* user_data);
+  static void WslayOnFrameRecvStartCallback(wslay_event_context* ctx,
+                                            const wslay_event_on_frame_recv_start_arg* arg,
+                                            void* user_data);
 
   int SendMessage(uint8_t opcode, const std::string& msg);
 

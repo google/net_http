@@ -24,9 +24,9 @@ NGHTTP2WebStream::NGHTTP2WebStream(nghttp2_session* session,
       WslayRecvCallback,
       WslaySendCallback,
       WslayGenmaskCallback,
-      nullptr,  // on_frame_recv_start_callback
-      nullptr,  // on_frame_recv_chunk_callback
-      nullptr,  // on_frame_recv_end_callback
+      WslayOnFrameRecvStartCallback,  // on_frame_recv_start_callback
+      nullptr,                        // on_frame_recv_chunk_callback
+      nullptr,                        // on_frame_recv_end_callback
       WslayOnMsgRecvCallback};
 
   if (is_server_) {
@@ -51,6 +51,8 @@ void NGHTTP2WebStream::SetOnMessage(MessageCallback cb) { on_message_ = cb; }
 void NGHTTP2WebStream::SetOnOpen(OpenCallback cb) { on_open_ = cb; }
 
 void NGHTTP2WebStream::SetOnClose(CloseCallback cb) { on_close_ = cb; }
+
+void NGHTTP2WebStream::SetOnError(ErrorCallback cb) { on_error_ = cb; }
 
 // ---- Public send methods ----
 
@@ -113,8 +115,14 @@ void NGHTTP2WebStream::OnClose() {
     return;
   }
   close_fired_ = true;
-  if (on_close_) {
-    on_close_();
+  if (in_message_) {
+    if (on_error_) {
+      on_error_();
+    }
+  } else {
+    if (on_close_) {
+      on_close_();
+    }
   }
 }
 
@@ -203,9 +211,23 @@ void NGHTTP2WebStream::WslayOnMsgRecvCallback(wslay_event_context* /*ctx*/,
                                               void* user_data) {
   NGHTTP2WebStream* s = static_cast<NGHTTP2WebStream*>(user_data);
 
+  if (!wslay_is_ctrl_frame(arg->opcode)) {
+    s->in_message_ = false;
+  }
+
   if (s->on_message_) {
     std::string msg(reinterpret_cast<const char*>(arg->msg), arg->msg_length);
     s->on_message_(arg->opcode, msg);
+  }
+}
+
+void NGHTTP2WebStream::WslayOnFrameRecvStartCallback(wslay_event_context* /*ctx*/,
+                                                     const wslay_event_on_frame_recv_start_arg* arg,
+                                                     void* user_data) {
+  NGHTTP2WebStream* s = static_cast<NGHTTP2WebStream*>(user_data);
+
+  if (!wslay_is_ctrl_frame(arg->opcode)) {
+    s->in_message_ = true;
   }
 }
 

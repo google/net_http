@@ -13,6 +13,7 @@
 extern "C" {
 struct wslay_event_context;
 struct wslay_event_on_msg_recv_arg;
+struct wslay_event_on_frame_recv_start_arg;
 }
 
 // NGHTTP2WebStream implements the web-stream protocol over a single HTTP/2 stream.
@@ -37,6 +38,7 @@ class NGHTTP2WebStream : public WebStream {
   void SetOnMessage(MessageCallback cb) override;
   void SetOnOpen(OpenCallback cb) override;
   void SetOnClose(CloseCallback cb) override;
+  void SetOnError(ErrorCallback cb) override;
 
   int SendText(const std::string& msg) override;
   int SendBinary(const std::string& msg) override;
@@ -80,11 +82,13 @@ class NGHTTP2WebStream : public WebStream {
   // Set by Close(); causes ReadSendData() to set NGHTTP2_DATA_FLAG_EOF.
   bool close_pending_ = false;
   bool close_fired_ = false;
+  bool in_message_ = false;
   wslay_event_context* ctx_;
 
   MessageCallback on_message_;
   OpenCallback on_open_;
   CloseCallback on_close_;
+  ErrorCallback on_error_;
 
   // wslay callbacks
   static ssize_t WslayRecvCallback(wslay_event_context*,
@@ -104,6 +108,9 @@ class NGHTTP2WebStream : public WebStream {
   static void WslayOnMsgRecvCallback(wslay_event_context*,
                                      const wslay_event_on_msg_recv_arg*,
                                      void*);
+  static void WslayOnFrameRecvStartCallback(wslay_event_context*,
+                                            const wslay_event_on_frame_recv_start_arg*,
+                                            void*);
 
   int SendMessage(uint8_t opcode, const std::string& msg);
 };

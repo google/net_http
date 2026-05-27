@@ -181,3 +181,36 @@ TEST_F(NGHTTP2WebStreamTest, CloseSignalsEOF) {
   client.OnClose();
   EXPECT_TRUE(client_close_fired);
 }
+
+// Verify that SetOnError callback fires instead of SetOnClose if the stream is closed
+// in the middle of receiving a message on HTTP/2.
+TEST_F(NGHTTP2WebStreamTest, OnErrorOnMidMessageEOF) {
+  NGHTTP2WebStream client(client_session_, 1, false /* is_server */);
+
+  bool client_close_fired = false;
+  bool client_error_fired = false;
+
+  client.SetOnOpen([&]() {});
+  client.SetOnClose([&]() { client_close_fired = true; });
+  client.SetOnError([&]() { client_error_fired = true; });
+
+  client.OnOpen();
+
+  // Write a partial message frame:
+  // - First byte: FIN=1, opcode=TEXT(0x1) => 0x81
+  // - Second byte: payload length = 100 (expects 100 bytes)
+  // - We only provide 10 bytes of payload.
+  uint8_t data[12];
+  data[0] = 0x81;
+  data[1] = 100;
+  std::memcpy(data + 2, "1234567890", 10);
+
+  client.OnDataChunk(data, sizeof(data));
+
+  // Now close the stream while we are in the middle of receiving the message.
+  client.OnClose();
+
+  EXPECT_FALSE(client_close_fired);
+  EXPECT_TRUE(client_error_fired);
+}
+
