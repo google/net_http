@@ -164,8 +164,10 @@ int WishHandler::SendMessage(uint8_t opcode, const std::string& msg) {
       reinterpret_cast<const uint8_t*>(msg.c_str()),
       msg.length()};
   // Queue msg
-  int res = wslay_event_queue_msg(ctx_, &msg_frame);
-  if (res != 0) return res;
+  int rv = wslay_event_queue_msg(ctx_, &msg_frame);
+  if (rv != 0) {
+    return rv;
+  }
 
   // Force send
   return wslay_event_send(ctx_);

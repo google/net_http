@@ -145,8 +145,8 @@ TEST_F(WishHandlerTest, ClientSendsUnmasked) {
 // Tests that the server does NOT mask frames when sending.
 TEST_F(WishHandlerTest, ServerSendsUnmasked) {
   bufferevent* pair[2];
-  int res = bufferevent_pair_new(base_, BEV_OPT_CLOSE_ON_FREE, pair);
-  ASSERT_EQ(res, 0);
+  int rv = bufferevent_pair_new(base_, BEV_OPT_CLOSE_ON_FREE, pair);
+  ASSERT_EQ(rv, 0);
   // pair[0]: WishHandler server bev
   // pair[1]: raw observer (fake client)
   bufferevent_enable(pair[1], EV_READ | EV_WRITE);
