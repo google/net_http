@@ -34,6 +34,7 @@ H2TlsClient::~H2TlsClient() {
   if (base_) {
     event_base_loopbreak(base_);
   }
+
   if (dns_base_) {
     evdns_base_free(dns_base_, 0);
   }
@@ -123,11 +124,13 @@ void H2TlsClient::Stop() {
 
 void H2TlsClient::ReadCallback(struct bufferevent* bev, void* arg) {
   Session* sess = static_cast<Session*>(arg);
+
   if (!sess->h2session) {
     return;
   }
 
   struct evbuffer* input = bufferevent_get_input(bev);
+
   size_t len = evbuffer_get_length(input);
   if (len == 0) {
     return;
@@ -202,8 +205,10 @@ void H2TlsClient::EventCallback(struct bufferevent* bev,
 // ---- nghttp2 session callbacks ----
 
 ssize_t H2TlsClient::SendCallback(nghttp2_session* /*session*/,
-                                  const uint8_t* data, size_t length,
-                                  int /*flags*/, void* user_data) {
+                                  const uint8_t* data,
+                                  size_t length,
+                                  int /*flags*/,
+                                  void* user_data) {
   Session* sess = static_cast<Session*>(user_data);
   bufferevent_write(sess->bev,
                     data,
@@ -213,9 +218,12 @@ ssize_t H2TlsClient::SendCallback(nghttp2_session* /*session*/,
 
 int H2TlsClient::OnHeaderCallback(nghttp2_session* /*session*/,
                                   const nghttp2_frame* /*frame*/,
-                                  const uint8_t* /*name*/, size_t /*namelen*/,
-                                  const uint8_t* /*value*/, size_t /*valuelen*/,
-                                  uint8_t /*flags*/, void* /*user_data*/) {
+                                  const uint8_t* /*name*/,
+                                  size_t /*namelen*/,
+                                  const uint8_t* /*value*/,
+                                  size_t /*valuelen*/,
+                                  uint8_t /*flags*/,
+                                  void* /*user_data*/) {
   return 0;
 }
 
@@ -223,6 +231,7 @@ int H2TlsClient::OnFrameRecvCallback(nghttp2_session* /*session*/,
                                      const nghttp2_frame* frame,
                                      void* user_data) {
   Session* sess = static_cast<Session*>(user_data);
+
   if (frame->hd.type == NGHTTP2_HEADERS &&
       frame->headers.cat == NGHTTP2_HCAT_RESPONSE &&
       frame->hd.stream_id == sess->wish_stream_id) {
@@ -237,10 +246,13 @@ int H2TlsClient::OnFrameRecvCallback(nghttp2_session* /*session*/,
 }
 
 int H2TlsClient::OnDataChunkRecvCallback(nghttp2_session* session,
-                                         uint8_t /*flags*/, int32_t stream_id,
-                                         const uint8_t* data, size_t len,
+                                         uint8_t /*flags*/,
+                                         int32_t stream_id,
+                                         const uint8_t* data,
+                                         size_t len,
                                          void* user_data) {
   Session* sess = static_cast<Session*>(user_data);
+
   if (sess->web_stream && stream_id == sess->wish_stream_id) {
     sess->web_stream->OnDataChunk(data, len);
     nghttp2_session_send(session);
@@ -253,6 +265,7 @@ int H2TlsClient::OnStreamCloseCallback(nghttp2_session* /*session*/,
                                        uint32_t /*error_code*/,
                                        void* user_data) {
   Session* sess = static_cast<Session*>(user_data);
+
   if (sess->web_stream && stream_id == sess->wish_stream_id) {
     sess->web_stream->OnClose();
     if (sess->client->on_close_) {

@@ -22,6 +22,7 @@ H2Client::~H2Client() {
   if (base_) {
     event_base_loopbreak(base_);
   }
+
   if (dns_base_) {
     evdns_base_free(dns_base_, 0);
   }
@@ -44,10 +45,9 @@ bool H2Client::Init() {
     return false;
   }
 
-  struct bufferevent* bev =
-      bufferevent_socket_new(base_,
-                             -1,
-                             BEV_OPT_CLOSE_ON_FREE);
+  struct bufferevent* bev = bufferevent_socket_new(base_,
+                                                   -1,
+                                                   BEV_OPT_CLOSE_ON_FREE);
   if (!bev) {
     std::cerr << "bufferevent_socket_new() failed" << std::endl;
     return false;
@@ -100,11 +100,13 @@ void H2Client::Stop() {
 
 void H2Client::ReadCallback(struct bufferevent* bev, void* arg) {
   Session* sess = static_cast<Session*>(arg);
+
   if (!sess->h2session) {
     return;
   }
 
   struct evbuffer* input = bufferevent_get_input(bev);
+
   size_t len = evbuffer_get_length(input);
   if (len == 0) {
     return;
@@ -177,8 +179,10 @@ void H2Client::EventCallback(struct bufferevent* bev,
 // ---- nghttp2 session callbacks ----
 
 ssize_t H2Client::SendCallback(nghttp2_session* /*session*/,
-                               const uint8_t* data, size_t length,
-                               int /*flags*/, void* user_data) {
+                               const uint8_t* data,
+                               size_t length,
+                               int /*flags*/,
+                               void* user_data) {
   Session* sess = static_cast<Session*>(user_data);
   bufferevent_write(sess->bev,
                     data,
@@ -188,8 +192,10 @@ ssize_t H2Client::SendCallback(nghttp2_session* /*session*/,
 
 int H2Client::OnHeaderCallback(nghttp2_session* /*session*/,
                                const nghttp2_frame* frame,
-                               const uint8_t* name, size_t namelen,
-                               const uint8_t* value, size_t valuelen,
+                               const uint8_t* name,
+                               size_t namelen,
+                               const uint8_t* value,
+                               size_t valuelen,
                                uint8_t /*flags*/, void* /*user_data*/) {
   // We only care about detecting the :status 200 for our web-stream stream.
   // That check is done in OnFrameRecvCallback once all headers are received.
@@ -198,6 +204,7 @@ int H2Client::OnHeaderCallback(nghttp2_session* /*session*/,
   (void)namelen;
   (void)value;
   (void)valuelen;
+
   return 0;
 }
 
@@ -221,10 +228,13 @@ int H2Client::OnFrameRecvCallback(nghttp2_session* /*session*/,
 }
 
 int H2Client::OnDataChunkRecvCallback(nghttp2_session* session,
-                                      uint8_t /*flags*/, int32_t stream_id,
-                                      const uint8_t* data, size_t len,
+                                      uint8_t /*flags*/,
+                                      int32_t stream_id,
+                                      const uint8_t* data,
+                                      size_t len,
                                       void* user_data) {
   Session* sess = static_cast<Session*>(user_data);
+
   if (sess->web_stream && stream_id == sess->wish_stream_id) {
     sess->web_stream->OnDataChunk(data,
                                   len);
@@ -235,8 +245,10 @@ int H2Client::OnDataChunkRecvCallback(nghttp2_session* session,
 
 int H2Client::OnStreamCloseCallback(nghttp2_session* /*session*/,
                                     int32_t stream_id,
-                                    uint32_t /*error_code*/, void* user_data) {
+                                    uint32_t /*error_code*/,
+                                    void* user_data) {
   Session* sess = static_cast<Session*>(user_data);
+
   if (sess->web_stream && stream_id == sess->wish_stream_id) {
     sess->web_stream->OnClose();
     if (sess->client->on_close_) {
@@ -252,8 +264,10 @@ int H2Client::OnStreamCloseCallback(nghttp2_session* /*session*/,
 // that the stream object can be created after nghttp2_submit_request returns
 // the real stream_id (the id is not known before that call).
 ssize_t H2Client::DataSourceReadCallback(nghttp2_session* session,
-                                         int32_t stream_id, uint8_t* buf,
-                                         size_t length, uint32_t* data_flags,
+                                         int32_t stream_id,
+                                         uint8_t* buf,
+                                         size_t length,
+                                         uint32_t* data_flags,
                                          nghttp2_data_source* /*source*/,
                                          void* /*user_data*/) {
   NGHTTP2WebStream* web_stream = static_cast<NGHTTP2WebStream*>(
