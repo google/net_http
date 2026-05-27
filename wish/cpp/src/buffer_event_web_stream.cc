@@ -88,7 +88,6 @@ int BufferEventWebStream::Close() {
     return -1;
   }
   close_pending_ = true;
-  state_ = CLOSED;
 
   // Write the terminal zero-length chunk that signals end-of-body to the peer.
   static constexpr char kTerminalChunk[] = "0\r\n\r\n";
@@ -124,30 +123,38 @@ void BufferEventWebStream::ReadCallback(bufferevent* bev, void* ctx) {
 
         // The inbound terminal chunk was fully consumed by ReadChunkedBytes().
         if (handler->receive_closed_) {
-          // Clear the read callback; receive direction is done.  Do NOT set
-          // state_ = CLOSED yet: on_close_() may still call Close() to queue
-          // the outbound terminal chunk, and we need the output buffer to drain
-          // before freeing the handler.
+          // Check for any extra data received after the terminal chunk
+          evbuffer* input = bufferevent_get_input(handler->bev_);
+          size_t extra_len = evbuffer_get_length(input);
+          if (extra_len > 0) {
+            std::cerr << "Warning: received " << extra_len << " bytes of extra data after stream close." << std::endl;
+            evbuffer_drain(input, extra_len);
+          }
+
+          // Keep the read callback as ReadCallback; receive direction is done.
+          // Do NOT set state_ = CLOSED yet: on_close_() may still call Close()
+          // to queue the outbound terminal chunk, and we need the output buffer
+          // to drain before freeing the handler.
           bufferevent_setcb(handler->bev_,
+                            ReadCallback,
                             nullptr,
-                            nullptr,
-                            nullptr,
-                            nullptr);
+                            EventCallback,
+                            handler);
+
           if (handler->on_close_) {
             handler->on_close_();
           }
+
           if (handler->close_pending_) {
             // Close() was called in on_close_(); the outbound terminal chunk
             // (and any pending echo frames) are queued in the output buffer.
             // Switch to DRAINING and delete only after the buffer empties.
             handler->state_ = DRAINING;
             bufferevent_setcb(handler->bev_,
-                              nullptr,
+                              ReadCallback,
                               DrainCallback,
                               EventCallback,
                               handler);
-            bufferevent_enable(handler->bev_,
-                               EV_WRITE);
           } else {
             handler->state_ = CLOSED;
             delete handler;
@@ -155,6 +162,15 @@ void BufferEventWebStream::ReadCallback(bufferevent* bev, void* ctx) {
           return;
         }
 
+        return;
+      }
+      case DRAINING: {
+        evbuffer* input = bufferevent_get_input(handler->bev_);
+        size_t len = evbuffer_get_length(input);
+        if (len > 0) {
+          std::cerr << "Warning: received " << len << " bytes of extra data after stream close." << std::endl;
+          evbuffer_drain(input, len);
+        }
         return;
       }
       case CLOSED:
@@ -416,7 +432,7 @@ ssize_t BufferEventWebStream::ReadChunkedBytes(uint8_t* buf, size_t len) {
 
         if (chunk_remaining_ == 0) {
           // Terminal chunk: signal receive-close after the trailing \r\n.
-          receive_closed_ = true;
+          terminal_chunk_seen_ = true;
 
           chunk_state_ = ChunkState::TRAILER;
           continue;  // Consume the TRAILER in the same call.
@@ -456,7 +472,8 @@ ssize_t BufferEventWebStream::ReadChunkedBytes(uint8_t* buf, size_t len) {
         evbuffer_drain(input, 2);  // Discard "\r\n".
         chunk_state_ = ChunkState::HEADER;
 
-        if (receive_closed_) {
+        if (terminal_chunk_seen_) {
+          receive_closed_ = true;
           // Terminal chunk fully consumed; let ReadCallback close the stream.
           wslay_event_set_error(ctx_, WSLAY_ERR_WOULDBLOCK);
           return -1;
@@ -469,7 +486,7 @@ ssize_t BufferEventWebStream::ReadChunkedBytes(uint8_t* buf, size_t len) {
 }
 
 int BufferEventWebStream::SendMessage(uint8_t opcode, const std::string& msg) {
-  if (state_ != OPEN) {
+  if (state_ != OPEN || close_pending_) {
     return -1;
   }
 
