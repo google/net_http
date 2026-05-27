@@ -24,8 +24,9 @@ class WishHandlerTest : public ::testing::Test {
 
 TEST_F(WishHandlerTest, HandshakeAndSimpleExchange) {
   bufferevent* pair[2];
-  int rv = bufferevent_pair_new(
-      base_, BEV_OPT_CLOSE_ON_FREE | BEV_OPT_DEFER_CALLBACKS, pair);
+  int rv = bufferevent_pair_new(base_,
+                                BEV_OPT_CLOSE_ON_FREE | BEV_OPT_DEFER_CALLBACKS,
+                                pair);
   ASSERT_EQ(rv, 0);
 
   WishHandler* server = new WishHandler(pair[0], true /* is_server */);
