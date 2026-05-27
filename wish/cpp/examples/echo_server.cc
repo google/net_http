@@ -103,9 +103,13 @@ int main(int argc, char** argv) {
   sin.sin_addr.s_addr = htonl(INADDR_ANY);
   sin.sin_port = htons(port);
 
-  struct evconnlistener* listener = evconnlistener_new_bind(
-      base, accept_conn_cb, nullptr, LEV_OPT_CLOSE_ON_FREE | LEV_OPT_REUSEABLE,
-      -1, reinterpret_cast<struct sockaddr*>(&sin), sizeof(sin));
+  struct evconnlistener* listener = evconnlistener_new_bind(base,
+                                                            accept_conn_cb,
+                                                            nullptr,
+                                                            LEV_OPT_CLOSE_ON_FREE | LEV_OPT_REUSEABLE,
+                                                            -1,
+                                                            reinterpret_cast<struct sockaddr*>(&sin),
+                                                            sizeof(sin));
 
   if (!listener) {
     LOG(ERROR) << "Could not create listener on port " << port;
