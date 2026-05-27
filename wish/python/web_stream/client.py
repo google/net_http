@@ -101,6 +101,15 @@ class WebStreamConnection:
                 return msg.encode("utf-8")
             return msg
 
+    async def __aiter__(self):
+        """Iterate on incoming messages."""
+        try:
+            while True:
+                yield await self.recv()
+        except (ConnectionAbortedError, RuntimeError):
+            pass
+
+
 class _ConnectContextManager:
     def __init__(self, uri, ca_file="", cert_file="", key_file=""):
         parsed = urlparse(uri)
