@@ -263,7 +263,7 @@ void H2TlsServer::EventCallback(bufferevent* bev,
 
   if (what & (BEV_EVENT_EOF | BEV_EVENT_ERROR)) {
     for (auto& [sid, stream] : sess->streams) {
-      stream->OnClose();
+      stream->OnError();
       delete stream;
     }
 
@@ -435,13 +435,17 @@ int H2TlsServer::OnDataChunkRecvCallback(nghttp2_session* session,
 
 int H2TlsServer::OnStreamCloseCallback(nghttp2_session* /*session*/,
                                        int32_t stream_id,
-                                       uint32_t /*error_code*/,
+                                       uint32_t error_code,
                                        void* user_data) {
   Session* sess = static_cast<Session*>(user_data);
 
   auto it = sess->streams.find(stream_id);
   if (it != sess->streams.end()) {
-    it->second->OnClose();
+    if (error_code != NGHTTP2_NO_ERROR) {
+      it->second->OnError();
+    } else {
+      it->second->OnClose();
+    }
 
     delete it->second;
     sess->streams.erase(it);

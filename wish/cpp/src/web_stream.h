@@ -18,7 +18,18 @@ class WebStream {
   virtual ~WebStream() = default;
 
   virtual void SetOnMessage(MessageCallback cb) = 0;
+
+  // Set the callback triggered when the stream closes cleanly.
+  //
+  // This callback is invoked ONLY when the stream closed at a message boundary
+  // (i.e. not in the middle of a message) AND the underlying transport
+  // reached EOF cleanly without any errors.
+  // If the stream is closed prematurely or an error occurs, SetOnError is
+  // fired instead.
   virtual void SetOnClose(CloseCallback cb) = 0;
+
+  // Set the callback triggered when the stream encounters an error or is
+  // closed prematurely.
   virtual void SetOnError(ErrorCallback cb) = 0;
 
   virtual int SendText(const std::string& msg) = 0;
