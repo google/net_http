@@ -2,8 +2,6 @@
 
 #include <absl/log/log.h>
 
-// To use BoringSSL
-#define EVENT__HAVE_OPENSSL 1
 #include <event2/bufferevent_ssl.h>
 #include <openssl/ssl.h>
 

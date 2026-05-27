@@ -4,8 +4,6 @@
 #include <absl/log/log.h>
 #include <arpa/inet.h>
 #include <benchmark/benchmark.h>
-// To use BoringSSL
-#define EVENT__HAVE_OPENSSL 1
 #include <event2/bufferevent.h>
 #include <event2/bufferevent_ssl.h>
 #include <event2/event.h>
