@@ -105,28 +105,28 @@ int BufferEventWebStream::Close() {
 // ---- libevent callbacks ----
 
 void BufferEventWebStream::ReadCallback(bufferevent* bev, void* ctx) {
-  BufferEventWebStream* handler = static_cast<BufferEventWebStream*>(ctx);
+  BufferEventWebStream* stream = static_cast<BufferEventWebStream*>(ctx);
 
   for (;;) {
-    switch (handler->state_) {
+    switch (stream->state_) {
       case HANDSHAKE:
-        handler->HandleHandshake();
-        if (handler->state_ == HANDSHAKE) {
+        stream->HandleHandshake();
+        if (stream->state_ == HANDSHAKE) {
           // Handshake not complete, wait for more data.
           return;
         }
         break;
       case OPEN: {
-        int err = wslay_event_recv(handler->ctx_);
+        int err = wslay_event_recv(stream->ctx_);
         if (err != 0) {
           std::cerr << "wslay_event_recv() failed: " << err << std::endl;
           return;
         }
 
         // The inbound terminal chunk was fully consumed by ReadChunkedBytes().
-        if (handler->receive_closed_) {
+        if (stream->receive_closed_) {
           // Check for any extra data received after the terminal chunk
-          evbuffer* input = bufferevent_get_input(handler->bev_);
+          evbuffer* input = bufferevent_get_input(stream->bev_);
           size_t extra_len = evbuffer_get_length(input);
           if (extra_len > 0) {
             std::cerr << "Warning: received " << extra_len << " bytes of extra data after stream close." << std::endl;
@@ -136,36 +136,36 @@ void BufferEventWebStream::ReadCallback(bufferevent* bev, void* ctx) {
           // Keep the read callback as ReadCallback; receive direction is done.
           // Do NOT set state_ = CLOSED yet: on_close_() may still call Close()
           // to queue the outbound terminal chunk, and we need the output buffer
-          // to drain before freeing the handler.
-          bufferevent_setcb(handler->bev_,
+          // to drain before freeing the stream.
+          bufferevent_setcb(stream->bev_,
                             ReadCallback,
                             nullptr,
                             EventCallback,
-                            handler);
+                            stream);
 
-          if (handler->in_message_) {
-            if (handler->on_error_) {
-              handler->on_error_();
+          if (stream->in_message_) {
+            if (stream->on_error_) {
+              stream->on_error_();
             }
           } else {
-            if (handler->on_close_) {
-              handler->on_close_();
+            if (stream->on_close_) {
+              stream->on_close_();
             }
           }
 
-          if (handler->close_pending_) {
+          if (stream->close_pending_) {
             // Close() was called in the callback; the outbound terminal chunk
             // (and any pending echo frames) are queued in the output buffer.
             // Switch to DRAINING and delete only after the buffer empties.
-            handler->state_ = DRAINING;
-            bufferevent_setcb(handler->bev_,
+            stream->state_ = DRAINING;
+            bufferevent_setcb(stream->bev_,
                               ReadCallback,
                               DrainCallback,
                               EventCallback,
-                              handler);
+                              stream);
           } else {
-            handler->state_ = CLOSED;
-            delete handler;
+            stream->state_ = CLOSED;
+            delete stream;
           }
           return;
         }
@@ -173,7 +173,7 @@ void BufferEventWebStream::ReadCallback(bufferevent* bev, void* ctx) {
         return;
       }
       case DRAINING: {
-        evbuffer* input = bufferevent_get_input(handler->bev_);
+        evbuffer* input = bufferevent_get_input(stream->bev_);
         size_t len = evbuffer_get_length(input);
         if (len > 0) {
           std::cerr << "Warning: received " << len << " bytes of extra data after stream close." << std::endl;
@@ -189,12 +189,14 @@ void BufferEventWebStream::ReadCallback(bufferevent* bev, void* ctx) {
   }
 }
 
-void BufferEventWebStream::DrainCallback(bufferevent* bev, void* ctx) {
-  BufferEventWebStream* handler = static_cast<BufferEventWebStream*>(ctx);
-  // Delete the handler only once all queued outbound data has been sent.
+void BufferEventWebStream::DrainCallback(bufferevent* bev,
+                                         void* ctx) {
+  BufferEventWebStream* stream = static_cast<BufferEventWebStream*>(ctx);
+
+  // Delete the stream only once all queued outbound data has been sent.
   if (evbuffer_get_length(bufferevent_get_output(bev)) == 0) {
-    handler->state_ = CLOSED;
-    delete handler;
+    stream->state_ = CLOSED;
+    delete stream;
   }
 }
 
@@ -210,18 +212,20 @@ void BufferEventWebStream::EventCallback(bufferevent* bev,
   if (what & (BEV_EVENT_EOF | BEV_EVENT_ERROR)) {
     // Connection closed
     std::cout << "Connection closed." << std::endl;
-    BufferEventWebStream* handler = static_cast<BufferEventWebStream*>(ctx);
+
+    BufferEventWebStream* stream = static_cast<BufferEventWebStream*>(ctx);
+
     // Guard against double-close: ReadCallback may have already called
-    // on_close_() and deleted the handler via the terminal-chunk path.
+    // on_close_() and deleted the stream via the terminal-chunk path.
     // state_ == CLOSED or DRAINING means on_close_() was already fired.
-    if (handler->state_ != CLOSED && handler->state_ != DRAINING) {
+    if (stream->state_ != CLOSED && stream->state_ != DRAINING) {
       // Notify before self-deletion so Python-side handles can be invalidated
       // while the pointer is still valid.
-      if (handler->on_close_) {
-        handler->on_close_();
+      if (stream->on_close_) {
+        stream->on_close_();
       }
     }
-    delete handler;
+    delete stream;
   }
 }
 
@@ -340,8 +344,9 @@ ssize_t BufferEventWebStream::WslayRecvCallback(wslay_event_context* /*ctx*/,
                                                 size_t len,
                                                 int /*flags*/,
                                                 void* user_data) {
-  BufferEventWebStream* handler = static_cast<BufferEventWebStream*>(user_data);
-  return handler->ReadChunkedBytes(buf, len);
+  BufferEventWebStream* stream = static_cast<BufferEventWebStream*>(user_data);
+
+  return stream->ReadChunkedBytes(buf, len);
 }
 
 ssize_t BufferEventWebStream::WslaySendCallback(wslay_event_context* ctx,
@@ -349,7 +354,7 @@ ssize_t BufferEventWebStream::WslaySendCallback(wslay_event_context* ctx,
                                                 size_t len,
                                                 int /*flags*/,
                                                 void* user_data) {
-  BufferEventWebStream* handler = static_cast<BufferEventWebStream*>(user_data);
+  BufferEventWebStream* stream = static_cast<BufferEventWebStream*>(user_data);
 
   // Wrap the wslay frame bytes in a single HTTP/1.1 chunk:
   //   <hex-len>\r\n<data>\r\n
@@ -360,9 +365,9 @@ ssize_t BufferEventWebStream::WslaySendCallback(wslay_event_context* ctx,
     return -1;
   }
 
-  if (bufferevent_write(handler->bev_, header, static_cast<size_t>(header_len)) != 0 ||
-      bufferevent_write(handler->bev_, data, len) != 0 ||
-      bufferevent_write(handler->bev_, "\r\n", 2) != 0) {
+  if (bufferevent_write(stream->bev_, header, static_cast<size_t>(header_len)) != 0 ||
+      bufferevent_write(stream->bev_, data, len) != 0 ||
+      bufferevent_write(stream->bev_, "\r\n", 2) != 0) {
     std::cerr << "bufferevent_write() failed" << std::endl;
     wslay_event_set_error(ctx, WSLAY_ERR_CALLBACK_FAILURE);
     return -1;
@@ -380,27 +385,27 @@ int BufferEventWebStream::WslayGenmaskCallback(wslay_event_context* ctx, uint8_t
 void BufferEventWebStream::WslayOnMsgRecvCallback(wslay_event_context* ctx,
                                                   const wslay_event_on_msg_recv_arg* arg,
                                                   void* user_data) {
-  BufferEventWebStream* handler = static_cast<BufferEventWebStream*>(user_data);
+  BufferEventWebStream* stream = static_cast<BufferEventWebStream*>(user_data);
 
   if (!wslay_is_ctrl_frame(arg->opcode)) {
-    handler->in_message_ = false;
+    stream->in_message_ = false;
   }
 
   // Consider implementing backpressure.
 
-  if (handler->on_message_) {
+  if (stream->on_message_) {
     std::string msg(reinterpret_cast<const char*>(arg->msg), arg->msg_length);
-    handler->on_message_(arg->opcode, msg);
+    stream->on_message_(arg->opcode, msg);
   }
 }
 
 void BufferEventWebStream::WslayOnFrameRecvStartCallback(wslay_event_context* ctx,
                                                          const wslay_event_on_frame_recv_start_arg* arg,
                                                          void* user_data) {
-  BufferEventWebStream* handler = static_cast<BufferEventWebStream*>(user_data);
+  BufferEventWebStream* stream = static_cast<BufferEventWebStream*>(user_data);
 
   if (!wslay_is_ctrl_frame(arg->opcode)) {
-    handler->in_message_ = true;
+    stream->in_message_ = true;
   }
 }
 
