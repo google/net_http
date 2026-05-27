@@ -62,23 +62,23 @@ class WishHandler {
   State state_;
 
   // wslay callbacks
-  static ssize_t RecvCallback(wslay_event_context* ctx,
-                              uint8_t* buf,
-                              size_t len,
-                              int flags,
-                              void* user_data);
-  static ssize_t SendCallback(wslay_event_context* ctx,
-                              const uint8_t* data,
-                              size_t len,
-                              int flags,
-                              void* user_data);
-  static int GenmaskCallback(wslay_event_context* ctx,
-                             uint8_t* buf,
-                             size_t len,
-                             void* user_data);
-  static void OnMsgRecvCallback(wslay_event_context* ctx,
-                                const wslay_event_on_msg_recv_arg* arg,
-                                void* user_data);
+  static ssize_t WslayRecvCallback(wslay_event_context* ctx,
+                                   uint8_t* buf,
+                                   size_t len,
+                                   int flags,
+                                   void* user_data);
+  static ssize_t WslaySendCallback(wslay_event_context* ctx,
+                                   const uint8_t* data,
+                                   size_t len,
+                                   int flags,
+                                   void* user_data);
+  static int WslayGenmaskCallback(wslay_event_context* ctx,
+                                  uint8_t* buf,
+                                  size_t len,
+                                  void* user_data);
+  static void WslayOnMsgRecvCallback(wslay_event_context* ctx,
+                                     const wslay_event_on_msg_recv_arg* arg,
+                                     void* user_data);
 
   // libevent callbacks
   static void ReadCallback(bufferevent* bev,
