@@ -1,4 +1,9 @@
+#include <absl/flags/flag.h>
+#include <absl/flags/parse.h>
+#include <absl/log/initialize.h>
+#include <absl/log/log.h>
 #include <arpa/inet.h>
+#include <benchmark/benchmark.h>
 #include <event2/bufferevent.h>
 #include <event2/event.h>
 #include <netdb.h>
@@ -13,11 +18,6 @@
 #include <vector>
 
 #include "../src/wish_handler.h"
-#include "absl/flags/flag.h"
-#include "absl/flags/parse.h"
-#include "absl/log/initialize.h"
-#include "absl/log/log.h"
-#include "benchmark/benchmark.h"
 
 ABSL_FLAG(std::string, host, "127.0.0.1", "Server host to connect to");
 ABSL_FLAG(int, port, 8080, "Server port to connect to");
