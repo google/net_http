@@ -276,8 +276,13 @@ int H2TlsClient::OnDataChunkRecvCallback(nghttp2_session* session,
   Session* sess = static_cast<Session*>(user_data);
 
   if (sess->web_stream && stream_id == sess->wish_stream_id) {
-    sess->web_stream->OnDataChunk(data, len);
-    nghttp2_session_send(session);
+    sess->web_stream->OnDataChunk(data,
+                                  len);
+    int send_rv = nghttp2_session_send(session);
+    if (send_rv < 0) {
+      std::cerr << "nghttp2_session_send() failed: "
+                << nghttp2_strerror(send_rv) << std::endl;
+    }
   }
 
   return 0;
@@ -391,5 +396,9 @@ void H2TlsClient::InitH2Session(Session* sess) {
                                        stream_id,
                                        sess->web_stream);
 
-  nghttp2_session_send(sess->h2session);
+  int send_rv = nghttp2_session_send(sess->h2session);
+  if (send_rv < 0) {
+    std::cerr << "H2TlsClient: nghttp2_session_send() failed: "
+              << nghttp2_strerror(send_rv) << std::endl;
+  }
 }
