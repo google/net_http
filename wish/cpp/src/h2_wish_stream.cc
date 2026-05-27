@@ -107,13 +107,16 @@ ssize_t H2WishStream::WslayRecvCallback(wslay_event_context* ctx,
                                         void* user_data) {
   H2WishStream* s = static_cast<H2WishStream*>(user_data);
 
-  size_t avail = evbuffer_get_length(s->input_buf_);
-  if (avail == 0) {
+  evbuffer* input = s->input_buf_;
+
+  size_t data_len = evbuffer_get_length(input);
+  if (data_len == 0) {
     wslay_event_set_error(ctx, WSLAY_ERR_WOULDBLOCK);
     return -1;
   }
-  size_t copy_len = std::min(len, avail);
-  int rv = evbuffer_remove(s->input_buf_, buf, copy_len);
+
+  size_t copy_len = std::min(len, data_len);
+  int rv = evbuffer_remove(input, buf, copy_len);
   if (rv < 0) {
     std::cerr << "evbuffer_remove() failed" << std::endl;
     wslay_event_set_error(ctx, WSLAY_ERR_CALLBACK_FAILURE);
