@@ -92,7 +92,12 @@ int BufferEventWebStream::Close() {
 
   // Write the terminal zero-length chunk that signals end-of-body to the peer.
   static constexpr char kTerminalChunk[] = "0\r\n\r\n";
-  bufferevent_write(bev_, kTerminalChunk, sizeof(kTerminalChunk) - 1);
+  int rv = bufferevent_write(bev_, kTerminalChunk, sizeof(kTerminalChunk) - 1);
+  if (rv != 0) {
+    std::cerr << "bufferevent_write() failed" << std::endl;
+    return -1;
+  }
+
   return 0;
 }
 
