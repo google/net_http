@@ -93,7 +93,14 @@ ssize_t NGHTTP2WebStream::ReadSendData(uint8_t* buf,
     return NGHTTP2_ERR_DEFERRED;
   }
   size_t send_len = std::min(avail, length);
-  evbuffer_remove(output_buf_, buf, send_len);
+
+  int rv = evbuffer_remove(output_buf_, buf, send_len);
+  if (rv < 0) {
+    std::cerr << "evbuffer_remove() failed" << std::endl;
+    // TODO(nlattice): Consider using `NGHTTP2_ERR_TEMPORAL_CALLBACK_FAILURE` instead of `NGHTTP2_ERR_CALLBACK_FAILURE`.
+    return NGHTTP2_ERR_CALLBACK_FAILURE;
+  }
+
   // Never set NGHTTP2_DATA_FLAG_EOF: the web-stream stream is long-lived.
   return static_cast<ssize_t>(send_len);
 }
