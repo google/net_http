@@ -13,6 +13,7 @@ PlainClient::~PlainClient() {
   if (base_) {
     event_base_loopbreak(base_);
   }
+
   if (dns_base_) {
     evdns_base_free(dns_base_, 0);
   }
