@@ -35,7 +35,6 @@ class BufferEventWebStream : public WebStream {
   void Start();
 
   void SetOnMessage(MessageCallback cb) override;
-  void SetOnOpen(OpenCallback cb) override;
   void SetOnClose(CloseCallback cb) override;
   void SetOnError(ErrorCallback cb) override;
 
@@ -85,7 +84,6 @@ class BufferEventWebStream : public WebStream {
   size_t chunk_remaining_ = 0;
 
   MessageCallback on_message_;
-  OpenCallback on_open_;
   CloseCallback on_close_;
   ErrorCallback on_error_;
 

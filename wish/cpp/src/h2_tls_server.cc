@@ -402,8 +402,6 @@ int H2TlsServer::OnFrameRecvCallback(nghttp2_session* session,
     sess->server->on_stream_(web_stream);
   }
 
-  web_stream->OnOpen();
-
   return 0;
 }
 

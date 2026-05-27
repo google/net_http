@@ -49,10 +49,7 @@ TEST_F(BufferEventWebStreamTest, HandshakeAndSimpleExchange) {
       pair[0],
       [&](bufferevent* bev) {
         server = new BufferEventWebStream(bev, true);
-        server->SetOnOpen([&]() {
-          server_opened = true;
-          server->SendText("Hello, Client!");
-        });
+        server_opened = true;
         server->SetOnMessage([&](uint8_t opcode, const std::string& msg) {
           if (opcode == WEB_STREAM_OPCODE_TEXT) {
             received_from_client = msg;
@@ -60,6 +57,7 @@ TEST_F(BufferEventWebStreamTest, HandshakeAndSimpleExchange) {
           check_done();
         });
         server->Start();
+        server->SendText("Hello, Client!");
       },
       []() { ADD_FAILURE() << "Server handshake failed"; });
   server_handshake->Start();
@@ -68,10 +66,7 @@ TEST_F(BufferEventWebStreamTest, HandshakeAndSimpleExchange) {
       pair[1],
       [&](bufferevent* bev) {
         client = new BufferEventWebStream(bev, false);
-        client->SetOnOpen([&]() {
-          client_opened = true;
-          client->SendText("Hello, Server!");
-        });
+        client_opened = true;
         client->SetOnMessage([&](uint8_t opcode, const std::string& msg) {
           if (opcode == WEB_STREAM_OPCODE_TEXT) {
             received_from_server = msg;
@@ -79,6 +74,7 @@ TEST_F(BufferEventWebStreamTest, HandshakeAndSimpleExchange) {
           check_done();
         });
         client->Start();
+        client->SendText("Hello, Server!");
       },
       []() { ADD_FAILURE() << "Client handshake failed"; });
   client_handshake->Start();
@@ -222,11 +218,9 @@ TEST_F(BufferEventWebStreamTest, CloseSignalsEOF) {
       pair[0],
       [&](bufferevent* bev) {
         server = new BufferEventWebStream(bev, true);
-        server->SetOnOpen([&]() {
-          EXPECT_EQ(server->Close(), 0);
-          EXPECT_EQ(server->Close(), -1);
-        });
         server->Start();
+        EXPECT_EQ(server->Close(), 0);
+        EXPECT_EQ(server->Close(), -1);
       },
       []() { ADD_FAILURE() << "Server handshake failed"; });
   server_handshake->Start();
@@ -276,10 +270,7 @@ TEST_F(BufferEventWebStreamTest, HandshakeAndMetadataExchange) {
       pair[0],
       [&](bufferevent* bev) {
         server = new BufferEventWebStream(bev, true);
-        server->SetOnOpen([&]() {
-          server_opened = true;
-          server->SendMetadata("Server Metadata");
-        });
+        server_opened = true;
         server->SetOnMessage([&](uint8_t opcode, const std::string& msg) {
           if (opcode == WEB_STREAM_OPCODE_METADATA) {
             metadata_from_client = msg;
@@ -287,6 +278,7 @@ TEST_F(BufferEventWebStreamTest, HandshakeAndMetadataExchange) {
           check_done();
         });
         server->Start();
+        server->SendMetadata("Server Metadata");
       },
       []() { ADD_FAILURE() << "Server handshake failed"; });
   server_handshake->Start();
@@ -295,10 +287,7 @@ TEST_F(BufferEventWebStreamTest, HandshakeAndMetadataExchange) {
       pair[1],
       [&](bufferevent* bev) {
         client = new BufferEventWebStream(bev, false);
-        client->SetOnOpen([&]() {
-          client_opened = true;
-          client->SendMetadata("Client Metadata");
-        });
+        client_opened = true;
         client->SetOnMessage([&](uint8_t opcode, const std::string& msg) {
           if (opcode == WEB_STREAM_OPCODE_METADATA) {
             metadata_from_server = msg;
@@ -306,6 +295,7 @@ TEST_F(BufferEventWebStreamTest, HandshakeAndMetadataExchange) {
           check_done();
         });
         client->Start();
+        client->SendMetadata("Client Metadata");
       },
       []() { ADD_FAILURE() << "Client handshake failed"; });
   client_handshake->Start();
@@ -340,9 +330,6 @@ TEST_F(BufferEventWebStreamTest, ReceiveMessageAfterClose) {
       pair[0],
       [&](bufferevent* bev) {
         server = new BufferEventWebStream(bev, true);
-        server->SetOnOpen([&]() {
-          EXPECT_EQ(server->Close(), 0);
-        });
         server->SetOnMessage([&](uint8_t opcode, const std::string& msg) {
           if (opcode == WEB_STREAM_OPCODE_TEXT && msg == "Hello after server close") {
             server_received_msg_after_close = true;
@@ -352,6 +339,7 @@ TEST_F(BufferEventWebStreamTest, ReceiveMessageAfterClose) {
           server_close_fired = true;
         });
         server->Start();
+        EXPECT_EQ(server->Close(), 0);
       },
       []() { ADD_FAILURE() << "Server handshake failed"; });
   server_handshake->Start();
@@ -396,13 +384,11 @@ TEST_F(BufferEventWebStreamTest, WarningOnExtraDataPostClose) {
       pair[0],
       [&](bufferevent* bev) {
         server = new BufferEventWebStream(bev, true);
-        server->SetOnOpen([&]() {
-          server->Close();
-        });
         server->SetOnClose([&]() {
           server_close_fired = true;
         });
         server->Start();
+        server->Close();
       },
       []() { ADD_FAILURE() << "Server handshake failed"; });
   server_handshake->Start();
