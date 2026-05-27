@@ -129,6 +129,42 @@ class TestWebStreamClientPlainE2E(unittest.TestCase):
         asyncio.set_event_loop(loop)
         loop.run_until_complete(run())
 
+    def test_server_disconnect_detect(self):
+        port = get_free_port()
+        cmd = [
+            SERVER_PLAIN_BIN,
+            f"--port={port}",
+        ]
+        server_proc = subprocess.Popen(
+            cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True
+        )
+        
+        async def run():
+            await asyncio.sleep(1.0)
+            uri = f"webstream://127.0.0.1:{port}"
+            async with web_stream.connect(uri) as ws:
+                # Terminate server to force disconnect
+                server_proc.terminate()
+                server_proc.wait()
+                
+                # The client should detect this disconnect and raise ConnectionError or ConnectionAbortedError on recv()
+                try:
+                    await asyncio.wait_for(ws.recv(), timeout=5.0)
+                    self.fail("Expected ConnectionError or ConnectionAbortedError, but no exception was raised")
+                except (ConnectionError, ConnectionAbortedError):
+                    pass
+                
+        try:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            loop.run_until_complete(run())
+        finally:
+            server_proc.terminate()
+            server_proc.wait()
+
 
 if __name__ == "__main__":
     result = unittest.main(exit=False).result
