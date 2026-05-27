@@ -42,9 +42,9 @@ int main() {
     stream->SetOnClose(
         []() { std::cout << "TLS WiSH stream closed." << std::endl; });
 
-    stream->SendText("Hello WiSH Text over HTTP/2+TLS!");
-    stream->SendBinary("Hello WiSH Binary over HTTP/2+TLS!");
-    stream->SendMetadata("Hello WiSH TextMetadata over HTTP/2+TLS!");
+    stream->SendText("Hello web-stream text over HTTP/2+TLS!");
+    stream->SendBinary("Hello web-stream binary over HTTP/2+TLS!");
+    stream->SendMetadata("Hello web-stream metadata over HTTP/2+TLS!");
   });
 
   client.Run();

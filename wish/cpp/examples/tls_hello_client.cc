@@ -19,9 +19,9 @@ int main() {
   client.SetOnOpen([](WishHandler* handler) {
     std::cout << "Connected and Handshake Complete!" << std::endl;
 
-    handler->SendText("Hello WiSH Text!");
-    handler->SendBinary("Hello WiSH Binary!");
-    handler->SendMetadata("Hello WiSH Metadata!");
+    handler->SendText("Hello web-stream text!");
+    handler->SendBinary("Hello web-stream binary!");
+    handler->SendMetadata("Hello web-stream metadata!");
   });
 
   client.SetOnMessage([](uint8_t opcode, const std::string& msg) {
