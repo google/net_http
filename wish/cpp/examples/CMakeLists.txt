@@ -1,7 +1,7 @@
-add_executable(echo_server
-    echo_server.cc
+add_executable(plain_echo_server
+    plain_echo_server.cc
 )
-target_link_libraries(echo_server
+target_link_libraries(plain_echo_server
     buffer_event_web_stream
     absl::flags
     absl::flags_parse

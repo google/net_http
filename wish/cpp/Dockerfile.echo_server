@@ -39,10 +39,10 @@ RUN --mount=type=cache,target=/cmake-cache,sharing=locked \
             -DWISH_BUILD_BENCHMARKS=OFF \
             -DWISH_BUILD_EXAMPLES=ON \
         && cmake --build /cmake-build \
-            --target echo_server tls_echo_server \
+            --target plain_echo_server tls_echo_server \
             -- -j"$(nproc)" \
         && mkdir -p build \
-        && cp /cmake-build/examples/echo_server      build/echo_server \
+        && cp /cmake-build/examples/plain_echo_server      build/plain_echo_server \
         && cp /cmake-build/examples/tls_echo_server  build/tls_echo_server
 
 # ---------------------------------------------------------------------------
@@ -54,11 +54,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         libstdc++6 \
     && rm -rf /var/lib/apt/lists/*
 
-COPY --from=builder /src/build/echo_server      /usr/local/bin/echo_server
+COPY --from=builder /src/build/plain_echo_server      /usr/local/bin/plain_echo_server
 COPY --from=builder /src/build/tls_echo_server  /usr/local/bin/tls_echo_server
 
 EXPOSE 8080
 
 # Default: plain-text echo server. Override CMD in the Pod spec for TLS.
-ENTRYPOINT ["/usr/local/bin/echo_server"]
+ENTRYPOINT ["/usr/local/bin/plain_echo_server"]
 CMD ["--port=8080"]
