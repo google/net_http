@@ -65,8 +65,13 @@ bool H2Client::Init() {
                     nullptr,
                     EventCallback,
                     session_);
-  bufferevent_enable(bev,
-                     EV_READ | EV_WRITE);
+
+  int enable_rv = bufferevent_enable(bev,
+                                     EV_READ | EV_WRITE);
+  if (enable_rv != 0) {
+    std::cerr << "bufferevent_enable() failed" << std::endl;
+    return false;
+  }
 
   if (bufferevent_socket_connect_hostname(bev,
                                           dns_base_,
@@ -121,12 +126,16 @@ void H2Client::ReadCallback(struct bufferevent* bev, void* arg) {
               << nghttp2_strerror(static_cast<int>(recv_len)) << std::endl;
     return;
   }
-  evbuffer_drain(input, static_cast<size_t>(recv_len));
+  int drain_rv = evbuffer_drain(input, static_cast<size_t>(recv_len));
+  if (drain_rv != 0) {
+    std::cerr << "evbuffer_drain() failed" << std::endl;
+    return;
+  }
 
-  int rv = nghttp2_session_send(sess->h2session);
-  if (rv < 0) {
+  int send_rv = nghttp2_session_send(sess->h2session);
+  if (send_rv < 0) {
     std::cerr << "nghttp2_session_send() failed: "
-              << nghttp2_strerror(rv) << std::endl;
+              << nghttp2_strerror(send_rv) << std::endl;
   }
 }
 
@@ -184,9 +193,14 @@ ssize_t H2Client::SendCallback(nghttp2_session* /*session*/,
                                int /*flags*/,
                                void* user_data) {
   Session* sess = static_cast<Session*>(user_data);
-  bufferevent_write(sess->bev,
-                    data,
-                    length);
+
+  int rv = bufferevent_write(sess->bev,
+                             data,
+                             length);
+  if (rv != 0) {
+    std::cerr << "bufferevent_write() failed" << std::endl;
+    return NGHTTP2_ERR_CALLBACK_FAILURE;
+  }
   return static_cast<ssize_t>(length);
 }
 
