@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.14)
 project(wish_cpp)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 option(WISH_BUILD_TESTS "Build wish unit tests" ON)
 option(WISH_BUILD_BENCHMARKS "Build wish benchmarks" ON)
 option(WISH_BUILD_EXAMPLES "Build wish examples" ON)
