@@ -55,7 +55,7 @@ int main(int argc, char** argv) {
 
     stream->SendText("Hello web-stream text over HTTP/2!");
     stream->SendBinary("Hello web-stream binary over HTTP/2!");
-    // stream->SendMetadata("Hello web-stream metadata over HTTP/2!");
+    stream->SendMetadata("Hello web-stream metadata over HTTP/2!");
     stream->Close();
   });
 
