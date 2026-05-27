@@ -260,11 +260,11 @@ int H2TlsServer::OnFrameRecvCallback(nghttp2_session* session,
     return 0;
   }
 
-  NGHTTP2WebStream* wish_stream = new NGHTTP2WebStream(session, stream_id, true);
-  sess->streams[stream_id] = wish_stream;
+  NGHTTP2WebStream* web_stream = new NGHTTP2WebStream(session, stream_id, true);
+  sess->streams[stream_id] = web_stream;
 
   nghttp2_data_provider data_prd;
-  data_prd.source.ptr = wish_stream;
+  data_prd.source.ptr = web_stream;
   data_prd.read_callback = DataSourceReadCallback;
 
   const nghttp2_nv hdrs[] = {
@@ -278,10 +278,10 @@ int H2TlsServer::OnFrameRecvCallback(nghttp2_session* session,
   nghttp2_session_send(session);
 
   if (sess->server->on_stream_) {
-    sess->server->on_stream_(wish_stream);
+    sess->server->on_stream_(web_stream);
   }
 
-  wish_stream->OnOpen();
+  web_stream->OnOpen();
   return 0;
 }
 
@@ -319,10 +319,10 @@ ssize_t H2TlsServer::DataSourceReadCallback(nghttp2_session* /*session*/,
                                             uint32_t* data_flags,
                                             nghttp2_data_source* source,
                                             void* /*user_data*/) {
-  NGHTTP2WebStream* stream = static_cast<NGHTTP2WebStream*>(source->ptr);
-  return stream->ReadSendData(buf,
-                              length,
-                              data_flags);
+  NGHTTP2WebStream* web_stream = static_cast<NGHTTP2WebStream*>(source->ptr);
+  return web_stream->ReadSendData(buf,
+                                  length,
+                                  data_flags);
 }
 
 // ---- Helper ----

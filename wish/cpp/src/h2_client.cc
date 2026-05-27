@@ -57,7 +57,7 @@ bool H2Client::Init() {
   session_->client = this;
   session_->bev = bev;
   session_->h2session = nullptr;
-  session_->wish_stream = nullptr;
+  session_->web_stream = nullptr;
   session_->wish_stream_id = -1;
 
   bufferevent_setcb(bev,
@@ -151,13 +151,13 @@ void H2Client::EventCallback(struct bufferevent* bev,
   }
 
   if (events & (BEV_EVENT_EOF | BEV_EVENT_ERROR)) {
-    if (sess->wish_stream) {
-      sess->wish_stream->OnClose();
+    if (sess->web_stream) {
+      sess->web_stream->OnClose();
       if (sess->client->on_close_) {
         sess->client->on_close_();
       }
-      delete sess->wish_stream;
-      sess->wish_stream = nullptr;
+      delete sess->web_stream;
+      sess->web_stream = nullptr;
     }
 
     if (sess->h2session) {
@@ -207,10 +207,10 @@ int H2Client::OnFrameRecvCallback(nghttp2_session* /*session*/,
   if (frame->hd.type == NGHTTP2_HEADERS &&
       frame->headers.cat == NGHTTP2_HCAT_RESPONSE &&
       frame->hd.stream_id == sess->wish_stream_id) {
-    if (sess->wish_stream) {
-      sess->wish_stream->OnOpen();
+    if (sess->web_stream) {
+      sess->web_stream->OnOpen();
       if (sess->client->on_open_) {
-        sess->client->on_open_(sess->wish_stream);
+        sess->client->on_open_(sess->web_stream);
       }
     }
   }
@@ -222,9 +222,9 @@ int H2Client::OnDataChunkRecvCallback(nghttp2_session* session,
                                       const uint8_t* data, size_t len,
                                       void* user_data) {
   Session* sess = static_cast<Session*>(user_data);
-  if (sess->wish_stream && stream_id == sess->wish_stream_id) {
-    sess->wish_stream->OnDataChunk(data,
-                                   len);
+  if (sess->web_stream && stream_id == sess->wish_stream_id) {
+    sess->web_stream->OnDataChunk(data,
+                                  len);
     nghttp2_session_send(session);
   }
   return 0;
@@ -234,13 +234,13 @@ int H2Client::OnStreamCloseCallback(nghttp2_session* /*session*/,
                                     int32_t stream_id,
                                     uint32_t /*error_code*/, void* user_data) {
   Session* sess = static_cast<Session*>(user_data);
-  if (sess->wish_stream && stream_id == sess->wish_stream_id) {
-    sess->wish_stream->OnClose();
+  if (sess->web_stream && stream_id == sess->wish_stream_id) {
+    sess->web_stream->OnClose();
     if (sess->client->on_close_) {
       sess->client->on_close_();
     }
-    delete sess->wish_stream;
-    sess->wish_stream = nullptr;
+    delete sess->web_stream;
+    sess->web_stream = nullptr;
   }
   return 0;
 }
@@ -253,12 +253,12 @@ ssize_t H2Client::DataSourceReadCallback(nghttp2_session* session,
                                          size_t length, uint32_t* data_flags,
                                          nghttp2_data_source* /*source*/,
                                          void* /*user_data*/) {
-  NGHTTP2WebStream* stream = static_cast<NGHTTP2WebStream*>(
+  NGHTTP2WebStream* web_stream = static_cast<NGHTTP2WebStream*>(
       nghttp2_session_get_stream_user_data(session, stream_id));
-  if (!stream) {
+  if (!web_stream) {
     return NGHTTP2_ERR_DEFERRED;
   }
-  return stream->ReadSendData(buf, length, data_flags);
+  return web_stream->ReadSendData(buf, length, data_flags);
 }
 
 // ---- Helper: initialise nghttp2 after TCP connection ----
@@ -329,15 +329,15 @@ void H2Client::InitH2Session(Session* sess) {
   sess->wish_stream_id = stream_id;
 
   // Create the NGHTTP2WebStream now that the real stream_id is known.
-  sess->wish_stream = new NGHTTP2WebStream(sess->h2session,
-                                           stream_id,
-                                           false);
+  sess->web_stream = new NGHTTP2WebStream(sess->h2session,
+                                          stream_id,
+                                          false);
 
   // Register the stream object as stream user-data so DataSourceReadCallback
   // can find it.  This must happen before nghttp2_session_send().
   nghttp2_session_set_stream_user_data(sess->h2session,
                                        stream_id,
-                                       sess->wish_stream);
+                                       sess->web_stream);
 
   nghttp2_session_send(sess->h2session);
 }

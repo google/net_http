@@ -38,7 +38,7 @@ class H2TlsClient {
     H2TlsClient* client;
     bufferevent* bev;
     nghttp2_session* h2session;
-    NGHTTP2WebStream* wish_stream;
+    NGHTTP2WebStream* web_stream;
     int32_t wish_stream_id;
   };
 
