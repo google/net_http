@@ -1,10 +1,10 @@
 #include "h2_tls_client.h"
 
+#include <absl/log/log.h>
 #include <netinet/tcp.h>
 
 #include <algorithm>
 #include <cstring>
-#include <iostream>
 #include <string>
 
 // BoringSSL headers
@@ -52,7 +52,7 @@ bool H2TlsClient::Init() {
   tls_ctx_.set_private_key_file(key_file_);
 
   if (!tls_ctx_.Init(false)) {
-    std::cerr << "H2TlsClient: failed to init TLS context" << std::endl;
+    LOG(ERROR) << "H2TlsClient: failed to init TLS context";
     return false;
   }
 
@@ -62,13 +62,15 @@ bool H2TlsClient::Init() {
 
   base_ = event_base_new();
   if (!base_) {
-    std::cerr << "event_base_new() failed" << std::endl;
+    LOG(ERROR) << "event_base_new() failed";
+
     return false;
   }
 
   dns_base_ = evdns_base_new(base_, 1);
   if (!dns_base_) {
-    std::cerr << "evdns_base_new() failed" << std::endl;
+    LOG(ERROR) << "evdns_base_new() failed";
+
     return false;
   }
 
@@ -76,8 +78,8 @@ bool H2TlsClient::Init() {
   struct bufferevent* bev = bufferevent_openssl_socket_new(
       base_, -1, ssl, BUFFEREVENT_SSL_CONNECTING, BEV_OPT_CLOSE_ON_FREE);
   if (!bev) {
-    std::cerr << "bufferevent_openssl_socket_new() failed"
-              << std::endl;
+    LOG(ERROR) << "bufferevent_openssl_socket_new() failed";
+
     return false;
   }
 
@@ -98,12 +100,12 @@ bool H2TlsClient::Init() {
   int enable_rv = bufferevent_enable(bev,
                                      EV_READ | EV_WRITE);
   if (enable_rv != 0) {
-    std::cerr << "bufferevent_enable() failed" << std::endl;
+    LOG(ERROR) << "bufferevent_enable() failed";
     return false;
   }
 
   if (bufferevent_socket_connect_hostname(bev, dns_base_, AF_INET, host_.c_str(), port_) < 0) {
-    std::cerr << "bufferevent_socket_connect_hostname() failed" << std::endl;
+    LOG(ERROR) << "bufferevent_socket_connect_hostname() failed";
     return false;
   }
 
@@ -113,7 +115,7 @@ bool H2TlsClient::Init() {
 void H2TlsClient::SetOnOpen(OpenCallback cb) { on_open_ = cb; }
 
 void H2TlsClient::Run() {
-  std::cout << "Running..." << std::endl;
+  LOG(INFO) << "Running...";
 
   event_base_dispatch(base_);
 }
@@ -145,13 +147,16 @@ void H2TlsClient::ReadCallback(struct bufferevent* bev, void* ctx) {
                                               data,
                                               len);
   if (recv_len < 0) {
-    std::cerr << "nghttp2_session_mem_recv() failed: "
-              << nghttp2_strerror(static_cast<int>(recv_len)) << std::endl;
+    LOG(ERROR) << "nghttp2_session_mem_recv() failed: "
+               << nghttp2_strerror(static_cast<int>(recv_len));
+
     return;
   }
+
   int drain_rv = evbuffer_drain(input, static_cast<size_t>(recv_len));
   if (drain_rv != 0) {
-    std::cerr << "evbuffer_drain() failed" << std::endl;
+    LOG(ERROR) << "evbuffer_drain() failed";
+
     return;
   }
 
@@ -162,8 +167,8 @@ void H2TlsClient::ReadCallback(struct bufferevent* bev, void* ctx) {
   // SendCallback.
   int send_rv = nghttp2_session_send(sess->h2session);
   if (send_rv < 0) {
-    std::cerr << "nghttp2_session_send() failed: "
-              << nghttp2_strerror(send_rv) << std::endl;
+    LOG(ERROR) << "nghttp2_session_send() failed: "
+               << nghttp2_strerror(send_rv);
   }
 }
 
@@ -182,7 +187,7 @@ void H2TlsClient::EventCallback(struct bufferevent* bev,
                           &one,
                           sizeof(one));
       if (rv != 0) {
-        std::cerr << "H2TlsClient: setsockopt(TCP_NODELAY) failed" << std::endl;
+        LOG(ERROR) << "H2TlsClient: setsockopt(TCP_NODELAY) failed";
       }
     }
 
@@ -192,7 +197,7 @@ void H2TlsClient::EventCallback(struct bufferevent* bev,
   }
 
   if (events & BEV_EVENT_ERROR) {
-    std::cerr << "BEV_EVENT_ERROR event" << std::endl;
+    LOG(ERROR) << "BEV_EVENT_ERROR event";
   }
 
   if (events & (BEV_EVENT_EOF | BEV_EVENT_ERROR)) {
@@ -227,7 +232,8 @@ nghttp2_ssize H2TlsClient::SendCallback(nghttp2_session* /*session*/,
                              data,
                              length);
   if (rv != 0) {
-    std::cerr << "bufferevent_write() failed" << std::endl;
+    LOG(ERROR) << "bufferevent_write() failed";
+
     return NGHTTP2_ERR_CALLBACK_FAILURE;
   }
 
@@ -313,8 +319,8 @@ int H2TlsClient::OnDataChunkRecvCallback(nghttp2_session* session,
                                   len);
     int send_rv = nghttp2_session_send(session);
     if (send_rv < 0) {
-      std::cerr << "nghttp2_session_send() failed: "
-                << nghttp2_strerror(send_rv) << std::endl;
+      LOG(ERROR) << "nghttp2_session_send() failed: "
+                 << nghttp2_strerror(send_rv);
     }
   }
 
@@ -413,8 +419,8 @@ void H2TlsClient::InitH2Session(Session* sess) {
                                               &data_prd,
                                               nullptr);
   if (stream_id < 0) {
-    std::cerr << "H2TlsClient: nghttp2_submit_request2() failed: "
-              << nghttp2_strerror(stream_id) << std::endl;
+    LOG(ERROR) << "H2TlsClient: nghttp2_submit_request2() failed: "
+               << nghttp2_strerror(stream_id);
     return;
   }
   sess->h2_stream_id = stream_id;
@@ -428,7 +434,7 @@ void H2TlsClient::InitH2Session(Session* sess) {
 
   int send_rv = nghttp2_session_send(sess->h2session);
   if (send_rv < 0) {
-    std::cerr << "H2TlsClient: nghttp2_session_send() failed: "
-              << nghttp2_strerror(send_rv) << std::endl;
+    LOG(ERROR) << "H2TlsClient: nghttp2_session_send() failed: "
+               << nghttp2_strerror(send_rv);
   }
 }

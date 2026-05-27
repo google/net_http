@@ -1,10 +1,10 @@
 #include "tls_server.h"
 
+#include <absl/log/log.h>
 #include <arpa/inet.h>
 #include <netinet/tcp.h>
 
 #include <cstring>
-#include <iostream>
 
 #include "buffer_event_web_stream.h"
 
@@ -42,13 +42,15 @@ bool TlsServer::Init() {
   tls_ctx_.set_private_key_file(key_file_);
 
   if (!tls_ctx_.Init(true)) {
-    std::cerr << "Failed to init TLS context" << std::endl;
+    LOG(ERROR) << "Failed to init TLS context";
+
     return false;
   }
 
   base_ = event_base_new();
   if (!base_) {
-    std::cerr << "Could not initialize libevent!" << std::endl;
+    LOG(ERROR) << "Could not initialize libevent!";
+
     return false;
   }
 
@@ -69,7 +71,8 @@ bool TlsServer::Init() {
                                       sizeof(sin));
 
   if (!listener_) {
-    std::cerr << "Could not create a listener!" << std::endl;
+    LOG(ERROR) << "Could not create a listener!";
+
     return false;
   }
 
@@ -79,7 +82,8 @@ bool TlsServer::Init() {
 }
 
 void TlsServer::Run() {
-  std::cout << "Server listening on port " << port_ << "..." << std::endl;
+  LOG(INFO) << "Server listening on port " << port_ << "...";
+
   event_base_dispatch(base_);
 }
 
@@ -101,7 +105,7 @@ void TlsServer::AcceptConnCb(evconnlistener* listener,
                  TCP_NODELAY,
                  &one,
                  sizeof(one)) < 0) {
-    std::cerr << "Failed to set TCP_NODELAY: " << strerror(errno) << std::endl;
+    LOG(ERROR) << "Failed to set TCP_NODELAY: " << strerror(errno);
   }
 
   SSL* ssl = SSL_new(server->tls_ctx_.ssl_ctx());
@@ -116,7 +120,7 @@ void TlsServer::AcceptConnCb(evconnlistener* listener,
   if (server->on_stream_) {
     server->on_stream_(stream);
   } else {
-    std::cerr << "Warning: No stream handler registered." << std::endl;
+    LOG(WARNING) << "Warning: No stream handler registered.";
   }
 
   stream->Start();
@@ -125,8 +129,8 @@ void TlsServer::AcceptConnCb(evconnlistener* listener,
 void TlsServer::AcceptErrorCb(evconnlistener* listener, void* ctx) {
   event_base* base = evconnlistener_get_base(listener);
   int err = EVUTIL_SOCKET_ERROR();
-  std::cerr << "Got an error " << err << " ("
-            << evutil_socket_error_to_string(err)
-            << ") on the listener. Shutting down." << std::endl;
+  LOG(ERROR) << "Got an error " << err << " ("
+             << evutil_socket_error_to_string(err)
+             << ") on the listener. Shutting down.";
   event_base_loopexit(base, nullptr);
 }

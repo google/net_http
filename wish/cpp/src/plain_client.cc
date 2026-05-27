@@ -1,6 +1,6 @@
 #include "plain_client.h"
 
-#include <iostream>
+#include <absl/log/log.h>
 
 PlainClient::PlainClient(const std::string& host, int port)
     : host_(host),
@@ -25,13 +25,15 @@ PlainClient::~PlainClient() {
 bool PlainClient::Init() {
   base_ = event_base_new();
   if (!base_) {
-    std::cerr << "event_base_new() failed" << std::endl;
+    LOG(ERROR) << "event_base_new() failed";
+
     return false;
   }
 
   dns_base_ = evdns_base_new(base_, 1);
   if (!dns_base_) {
-    std::cerr << "evdns_base_new() failed" << std::endl;
+    LOG(ERROR) << "evdns_base_new() failed";
+
     return false;
   }
 
@@ -39,7 +41,8 @@ bool PlainClient::Init() {
                                             -1,
                                             BEV_OPT_CLOSE_ON_FREE);
   if (!bev) {
-    std::cerr << "bufferevent_socket_new() failed" << std::endl;
+    LOG(ERROR) << "bufferevent_socket_new() failed";
+
     return false;
   }
 
@@ -48,7 +51,8 @@ bool PlainClient::Init() {
                                           AF_INET,
                                           host_.c_str(),
                                           port_) < 0) {
-    std::cerr << "bufferevent_socket_connect_hostname() failed" << std::endl;
+    LOG(ERROR) << "bufferevent_socket_connect_hostname() failed";
+
     return false;
   }
 
@@ -71,7 +75,7 @@ void PlainClient::SetOnOpen(OpenCallback cb) {
 }
 
 void PlainClient::Run() {
-  std::cout << "Client running..." << std::endl;
+  LOG(INFO) << "Client running...";
 
   event_base_dispatch(base_);
 }
