@@ -7,7 +7,7 @@ PlainClient::PlainClient(const std::string& host, int port)
       port_(port),
       base_(nullptr),
       dns_base_(nullptr),
-      handler_(nullptr) {}
+      stream_(nullptr) {}
 
 PlainClient::~PlainClient() {
   if (base_) {
@@ -56,21 +56,21 @@ bool PlainClient::Init() {
     return false;
   }
 
-  handler_ = new BufferEventWebStream(bev, false);
+  stream_ = new BufferEventWebStream(bev, false);
 
   if (on_open_) {
-    handler_->SetOnOpen([this]() { on_open_(handler_); });
+    stream_->SetOnOpen([this]() { on_open_(stream_); });
   }
 
-  handler_->Start();
+  stream_->Start();
 
   return true;
 }
 
 void PlainClient::SetOnOpen(OpenCallback cb) {
   on_open_ = cb;
-  if (handler_) {
-    handler_->SetOnOpen([this]() { on_open_(handler_); });
+  if (stream_) {
+    stream_->SetOnOpen([this]() { on_open_(stream_); });
   }
 }
 
