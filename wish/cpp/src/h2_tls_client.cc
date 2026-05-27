@@ -156,6 +156,11 @@ void H2TlsClient::ReadCallback(struct bufferevent* bev, void* ctx) {
     return;
   }
 
+  // nghttp2_session_mem_recv() only processes incoming frames; it does not
+  // transmit anything. Processing received frames may cause nghttp2 to
+  // internally queue outgoing frames (e.g. SETTINGS_ACK, WINDOW_UPDATE).
+  // Call nghttp2_session_send() here to flush those queued frames via
+  // SendCallback.
   int send_rv = nghttp2_session_send(sess->h2session);
   if (send_rv < 0) {
     std::cerr << "nghttp2_session_send() failed: "
