@@ -24,12 +24,10 @@ int main(int argc, char** argv) {
     return 1;
   }
 
-  server.SetOnConnection([](struct bufferevent* bev) {
-    LOG(INFO) << "Client connected.";
+  server.SetOnStream([](BufferEventWebStream* stream) {
+    LOG(INFO) << "OnStream";
 
-    BufferEventWebStream* handler = new BufferEventWebStream(bev, true);
-
-    handler->SetOnMessage([handler](uint8_t opcode, const std::string& msg) {
+    stream->SetOnMessage([stream](uint8_t opcode, const std::string& msg) {
       std::string type;
       switch (opcode) {
         case WEB_STREAM_OPCODE_TEXT:
@@ -50,17 +48,15 @@ int main(int argc, char** argv) {
 
       // Echo back
       if (opcode == WEB_STREAM_OPCODE_TEXT) {
-        handler->SendText(msg);
+        stream->SendText(msg);
       } else if (opcode == WEB_STREAM_OPCODE_BINARY) {
-        handler->SendBinary(msg);
+        stream->SendBinary(msg);
       } else if (opcode == WEB_STREAM_OPCODE_METADATA) {
-        handler->SendMetadata(msg);
+        stream->SendMetadata(msg);
       } else {
         LOG(WARNING) << "Unknown opcode, cannot echo.";
       }
     });
-
-    handler->Start();
   });
 
   server.Run();

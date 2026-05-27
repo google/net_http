@@ -7,15 +7,17 @@
 
 #include <functional>
 
+#include "buffer_event_web_stream.h"
+
 class PlainServer {
  public:
-  using ConnectCallback = std::function<void(bufferevent*)>;
+  using StreamCallback = std::function<void(BufferEventWebStream*)>;
 
   explicit PlainServer(int port);
   ~PlainServer();
 
   bool Init();
-  void SetOnConnection(ConnectCallback cb);
+  void SetOnStream(StreamCallback cb);
   void Run();
 
  private:
@@ -27,7 +29,7 @@ class PlainServer {
   event_base* base_;
   evconnlistener* listener_;
 
-  ConnectCallback on_connection_;
+  StreamCallback on_stream_;
 };
 
 #endif  // WISH_CPP_SRC_PLAIN_SERVER_H_

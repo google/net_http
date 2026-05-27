@@ -8,11 +8,12 @@
 #include <functional>
 #include <string>
 
+#include "buffer_event_web_stream.h"
 #include "tls_context.h"
 
 class TlsServer {
  public:
-  using ConnectCallback = std::function<void(bufferevent*)>;
+  using StreamCallback = std::function<void(BufferEventWebStream*)>;
 
   TlsServer(int port,
             const std::string& ca_file,
@@ -21,7 +22,7 @@ class TlsServer {
   ~TlsServer();
 
   bool Init();
-  void SetOnConnection(ConnectCallback cb);
+  void SetOnStream(StreamCallback cb);
   void Run();
 
  private:
@@ -39,7 +40,7 @@ class TlsServer {
   event_base* base_;
   evconnlistener* listener_;
 
-  ConnectCallback on_connection_;
+  StreamCallback on_stream_;
 };
 
 #endif  // WISH_CPP_SRC_TLS_SERVER_H_
