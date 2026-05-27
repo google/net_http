@@ -1,4 +1,4 @@
-#include "h2_wish_stream.h"
+#include "nghttp2_web_stream.h"
 
 #include <absl/base/optimization.h>
 #include <nghttp2/nghttp2.h>
@@ -11,8 +11,8 @@
 #include "wish_opcodes.h"
 
 NGHTTP2WebStream::NGHTTP2WebStream(nghttp2_session* session,
-                           int32_t stream_id,
-                           bool is_server)
+                                   int32_t stream_id,
+                                   bool is_server)
     : h2session_(session),
       stream_id_(stream_id),
       is_server_(is_server),
@@ -85,8 +85,8 @@ void NGHTTP2WebStream::OnClose() {
 // ---- nghttp2 data-source read callback ----
 
 ssize_t NGHTTP2WebStream::ReadSendData(uint8_t* buf,
-                                   size_t length,
-                                   uint32_t* data_flags) {
+                                       size_t length,
+                                       uint32_t* data_flags) {
   size_t avail = evbuffer_get_length(output_buf_);
   if (avail == 0) {
     // Deferred: wake up with nghttp2_session_resume_data when data arrives.
@@ -101,10 +101,10 @@ ssize_t NGHTTP2WebStream::ReadSendData(uint8_t* buf,
 // ---- wslay callbacks ----
 
 ssize_t NGHTTP2WebStream::WslayRecvCallback(wslay_event_context* ctx,
-                                        uint8_t* buf,
-                                        size_t len,
-                                        int /*flags*/,
-                                        void* user_data) {
+                                            uint8_t* buf,
+                                            size_t len,
+                                            int /*flags*/,
+                                            void* user_data) {
   NGHTTP2WebStream* s = static_cast<NGHTTP2WebStream*>(user_data);
 
   evbuffer* input = s->input_buf_;
@@ -126,10 +126,10 @@ ssize_t NGHTTP2WebStream::WslayRecvCallback(wslay_event_context* ctx,
 }
 
 ssize_t NGHTTP2WebStream::WslaySendCallback(wslay_event_context* /*ctx*/,
-                                        const uint8_t* data,
-                                        size_t len,
-                                        int /*flags*/,
-                                        void* user_data) {
+                                            const uint8_t* data,
+                                            size_t len,
+                                            int /*flags*/,
+                                            void* user_data) {
   NGHTTP2WebStream* s = static_cast<NGHTTP2WebStream*>(user_data);
 
   int rv = evbuffer_add(s->output_buf_, data, len);
@@ -143,16 +143,16 @@ ssize_t NGHTTP2WebStream::WslaySendCallback(wslay_event_context* /*ctx*/,
 }
 
 int NGHTTP2WebStream::WslayGenmaskCallback(wslay_event_context* /*ctx*/,
-                                       uint8_t* buf,
-                                       size_t len,
-                                       void* /*user_data*/) {
+                                           uint8_t* buf,
+                                           size_t len,
+                                           void* /*user_data*/) {
   ABSL_UNREACHABLE();
   return 0;
 }
 
 void NGHTTP2WebStream::WslayOnMsgRecvCallback(wslay_event_context* /*ctx*/,
-                                          const wslay_event_on_msg_recv_arg* arg,
-                                          void* user_data) {
+                                              const wslay_event_on_msg_recv_arg* arg,
+                                              void* user_data) {
   NGHTTP2WebStream* s = static_cast<NGHTTP2WebStream*>(user_data);
 
   if (s->on_message_) {
@@ -164,7 +164,7 @@ void NGHTTP2WebStream::WslayOnMsgRecvCallback(wslay_event_context* /*ctx*/,
 // ---- Private helpers ----
 
 int NGHTTP2WebStream::SendMessage(uint8_t opcode,
-                              const std::string& msg) {
+                                  const std::string& msg) {
   wslay_event_msg msg_frame = {
       opcode,
       reinterpret_cast<const uint8_t*>(msg.c_str()),

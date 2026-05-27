@@ -10,7 +10,7 @@
 #include <string>
 #include <unordered_map>
 
-#include "h2_wish_stream.h"
+#include "nghttp2_web_stream.h"
 
 // H2Server listens for plain (cleartext) HTTP/2 (h2c) connections and
 // exposes each incoming web-stream stream as an NGHTTP2WebStream to the caller.

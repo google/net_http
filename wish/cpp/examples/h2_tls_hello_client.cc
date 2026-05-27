@@ -1,8 +1,8 @@
 #include <iostream>
 #include <string>
 
+#include "../src/buffer_event_web_stream.h"
 #include "../src/h2_tls_client.h"
-#include "../src/wish_handler.h"
 
 int main() {
   H2TlsClient client("127.0.0.1",

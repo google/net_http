@@ -8,8 +8,8 @@
 #include <functional>
 #include <string>
 
+#include "buffer_event_web_stream.h"
 #include "tls_context.h"
-#include "wish_handler.h"
 
 class TlsClient {
  public:

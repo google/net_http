@@ -21,8 +21,8 @@
 #include <string>
 #include <vector>
 
+#include "../src/buffer_event_web_stream.h"
 #include "../src/tls_context.h"
-#include "../src/wish_handler.h"
 
 ABSL_FLAG(std::string, host, "127.0.0.1", "Server host to connect to");
 ABSL_FLAG(int, port, 8080, "Server port to connect to");

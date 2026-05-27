@@ -1,4 +1,4 @@
-#include "wish_handler.h"
+#include "buffer_event_web_stream.h"
 
 #include <event2/buffer.h>
 #include <event2/bufferevent.h>
@@ -8,7 +8,7 @@
 #include <cstring>
 #include <string>
 
-class WishHandlerTest : public ::testing::Test {
+class BufferEventWebStreamTest : public ::testing::Test {
  protected:
   void SetUp() override {
     base_ = event_base_new();
@@ -22,7 +22,7 @@ class WishHandlerTest : public ::testing::Test {
   event_base* base_ = nullptr;
 };
 
-TEST_F(WishHandlerTest, HandshakeAndSimpleExchange) {
+TEST_F(BufferEventWebStreamTest, HandshakeAndSimpleExchange) {
   bufferevent* pair[2];
   int rv = bufferevent_pair_new(base_,
                                 BEV_OPT_CLOSE_ON_FREE | BEV_OPT_DEFER_CALLBACKS,
@@ -93,7 +93,7 @@ static void DrainInput(bufferevent* bev) {
 // Strategy: use a raw bufferevent on one end of a pair as a fake server.
 // Inject a valid HTTP 200 response to move the BufferEventWebStream into OPEN state,
 // then call SendText and inspect the raw bytes for the mask bit.
-TEST_F(WishHandlerTest, ClientSendsUnmasked) {
+TEST_F(BufferEventWebStreamTest, ClientSendsUnmasked) {
   // No DEFER_CALLBACKS: pair transfers data synchronously between loop ticks.
   bufferevent* pair[2];
   int rv = bufferevent_pair_new(base_, BEV_OPT_CLOSE_ON_FREE, pair);
@@ -144,7 +144,7 @@ TEST_F(WishHandlerTest, ClientSendsUnmasked) {
 }
 
 // Tests that the server does NOT mask frames when sending.
-TEST_F(WishHandlerTest, ServerSendsUnmasked) {
+TEST_F(BufferEventWebStreamTest, ServerSendsUnmasked) {
   bufferevent* pair[2];
   int rv = bufferevent_pair_new(base_, BEV_OPT_CLOSE_ON_FREE, pair);
   ASSERT_EQ(rv, 0);

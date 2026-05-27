@@ -9,7 +9,7 @@
 #include <functional>
 #include <string>
 
-#include "h2_wish_stream.h"
+#include "nghttp2_web_stream.h"
 #include "tls_context.h"
 
 // H2TlsClient establishes a TLS-encrypted HTTP/2 connection and opens a single web-stream.

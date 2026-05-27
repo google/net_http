@@ -1,5 +1,5 @@
-#ifndef WISH_CPP_SRC_H2_WISH_STREAM_H_
-#define WISH_CPP_SRC_H2_WISH_STREAM_H_
+#ifndef WISH_CPP_SRC_NGHTTP2_WEB_STREAM_H_
+#define WISH_CPP_SRC_NGHTTP2_WEB_STREAM_H_
 
 #include <event2/buffer.h>
 #include <nghttp2/nghttp2.h>
@@ -90,4 +90,4 @@ class NGHTTP2WebStream {
   int SendMessage(uint8_t opcode, const std::string& msg);
 };
 
-#endif  // WISH_CPP_SRC_H2_WISH_STREAM_H_
+#endif  // WISH_CPP_SRC_NGHTTP2_WEB_STREAM_H_

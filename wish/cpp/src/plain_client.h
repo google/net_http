@@ -8,7 +8,7 @@
 #include <functional>
 #include <string>
 
-#include "wish_handler.h"
+#include "buffer_event_web_stream.h"
 
 class PlainClient {
  public:
