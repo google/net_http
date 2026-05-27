@@ -156,22 +156,24 @@ add_library(buffer_event_web_stream STATIC
     src/buffer_event_web_stream.h
     ${libevent_SOURCE_DIR}/bufferevent_openssl.c
     ${libevent_SOURCE_DIR}/bufferevent_ssl.c
+    src/plain_server.cc
+    src/plain_server.h
+    src/plain_client.cc
+    src/plain_client.h
     src/tls_context.cc
     src/tls_context.h
     src/tls_server.cc
     src/tls_server.h
     src/tls_client.cc
     src/tls_client.h
-    src/plain_client.cc
-    src/plain_client.h
     src/nghttp2_web_stream.cc
     src/nghttp2_web_stream.h
     src/h2_server.cc
     src/h2_server.h
-    src/h2_tls_server.cc
-    src/h2_tls_server.h
     src/h2_client.cc
     src/h2_client.h
+    src/h2_tls_server.cc
+    src/h2_tls_server.h
     src/h2_tls_client.cc
     src/h2_tls_client.h
 )
