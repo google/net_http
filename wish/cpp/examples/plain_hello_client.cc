@@ -55,6 +55,10 @@ int main(int argc, char** argv) {
     LOG(INFO) << "OnMessage (opcode: " << type << ", message: " << msg << ")";
   });
 
+  client.SetOnClose([]() {
+    LOG(INFO) << "OnClose";
+  });
+
   client.Run();
 
   return 0;
