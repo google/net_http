@@ -222,9 +222,11 @@ void H2Server::EventCallback(bufferevent* bev,
   }
 
   if (what & (BEV_EVENT_EOF | BEV_EVENT_ERROR)) {
-    for (auto& [sid, stream] : sess->streams) {
-      stream->OnError();
-      delete stream;
+    for (auto& [sid, info] : sess->incoming_streams) {
+      if (info.web_stream) {
+        info.web_stream->OnError();
+        delete info.web_stream;
+      }
     }
 
     nghttp2_session_del(sess->h2session);
@@ -272,9 +274,7 @@ int H2Server::OnHeaderCallback(nghttp2_session* /*session*/,
   std::string hdr_name(reinterpret_cast<const char*>(name), namelen);
   std::string hdr_value(reinterpret_cast<const char*>(value), valuelen);
 
-  if (hdr_name == "content-type" && hdr_value == "application/web-stream") {
-    sess->stream_is_wish[stream_id] = true;
-  }
+  sess->incoming_streams[stream_id].headers[hdr_name] = hdr_value;
   return 0;
 }
 
@@ -283,12 +283,19 @@ int H2Server::OnFrameRecvCallback(nghttp2_session* session,
                                   void* user_data) {
   Session* sess = static_cast<Session*>(user_data);
 
-  // Trigger OnClose if we receive END_STREAM (body EOF) from the peer.
-  if ((frame->hd.type == NGHTTP2_DATA || frame->hd.type == NGHTTP2_HEADERS) &&
-      (frame->hd.flags & NGHTTP2_FLAG_END_STREAM)) {
-    auto it = sess->streams.find(frame->hd.stream_id);
-    if (it != sess->streams.end()) {
-      it->second->OnClose();
+  int32_t stream_id = frame->hd.stream_id;
+
+  NGHTTP2WebStream* web_stream = nullptr;
+  auto it = sess->incoming_streams.find(stream_id);
+  if (it != sess->incoming_streams.end()) {
+    web_stream = it->second.web_stream;
+  }
+
+  if (web_stream) {
+    // Trigger OnClose if we receive END_STREAM (body EOF) from the peer.
+    if ((frame->hd.type == NGHTTP2_DATA || frame->hd.type == NGHTTP2_HEADERS) &&
+        (frame->hd.flags & NGHTTP2_FLAG_END_STREAM)) {
+      web_stream->OnClose();
     }
   }
 
@@ -297,11 +304,17 @@ int H2Server::OnFrameRecvCallback(nghttp2_session* session,
     return 0;
   }
 
-  int32_t stream_id = frame->hd.stream_id;
-
   // Reject non-web-stream requests with 415 Unsupported Media Type.
-  auto it = sess->stream_is_wish.find(stream_id);
-  if (it == sess->stream_is_wish.end() || !it->second) {
+  bool is_wish = false;
+  auto it_stream = sess->incoming_streams.find(stream_id);
+  if (it_stream != sess->incoming_streams.end()) {
+    auto ct_it = it_stream->second.headers.find("content-type");
+    if (ct_it != it_stream->second.headers.end() && ct_it->second == "application/web-stream") {
+      is_wish = true;
+    }
+  }
+
+  if (!is_wish) {
     const nghttp2_nv hdrs[] = {H2S_MAKE_NV(":status", "415")};
     int submit_response_rv = nghttp2_submit_response2(session,
                                                       stream_id,
@@ -324,14 +337,14 @@ int H2Server::OnFrameRecvCallback(nghttp2_session* session,
       // nghttp2_on_frame_recv_callback spec: any nonzero value signals a fatal error.
       return -1;
     }
+
     return 0;
   }
 
   // Create the web-stream stream object.
-  NGHTTP2WebStream* web_stream = new NGHTTP2WebStream(session, stream_id, true);
-  sess->streams[stream_id] = web_stream;
+  web_stream = new NGHTTP2WebStream(session, stream_id, true);
+  sess->incoming_streams[stream_id].web_stream = web_stream;
 
-  // Set up the data provider so we can push web-stream DATA frames to the client.
   nghttp2_data_provider2 data_prd;
   data_prd.source.ptr = web_stream;
   data_prd.read_callback = DataSourceReadCallback;
@@ -349,7 +362,7 @@ int H2Server::OnFrameRecvCallback(nghttp2_session* session,
                << nghttp2_strerror(submit_response_rv);
 
     delete web_stream;
-    sess->streams.erase(stream_id);
+    sess->incoming_streams.erase(stream_id);
 
     // nghttp2_on_frame_recv_callback spec: any nonzero value signals a fatal error.
     return -1;
@@ -361,7 +374,7 @@ int H2Server::OnFrameRecvCallback(nghttp2_session* session,
                << nghttp2_strerror(session_send_rv);
 
     delete web_stream;
-    sess->streams.erase(stream_id);
+    sess->incoming_streams.erase(stream_id);
 
     // nghttp2_on_frame_recv_callback spec: any nonzero value signals a fatal error.
     return -1;
@@ -384,9 +397,14 @@ int H2Server::OnDataChunkRecvCallback(nghttp2_session* session,
                                       void* user_data) {
   Session* sess = static_cast<Session*>(user_data);
 
-  auto it = sess->streams.find(stream_id);
-  if (it != sess->streams.end()) {
-    it->second->OnDataChunk(data, len);
+  NGHTTP2WebStream* web_stream = nullptr;
+  auto it = sess->incoming_streams.find(stream_id);
+  if (it != sess->incoming_streams.end()) {
+    web_stream = it->second.web_stream;
+  }
+
+  if (web_stream) {
+    web_stream->OnDataChunk(data, len);
 
     int rv = nghttp2_session_send(session);
     if (rv != 0) {
@@ -404,18 +422,22 @@ int H2Server::OnStreamCloseCallback(nghttp2_session* /*session*/,
                                     void* user_data) {
   Session* sess = static_cast<Session*>(user_data);
 
-  auto it = sess->streams.find(stream_id);
-  if (it != sess->streams.end()) {
+  NGHTTP2WebStream* web_stream = nullptr;
+  auto it = sess->incoming_streams.find(stream_id);
+  if (it != sess->incoming_streams.end()) {
+    web_stream = it->second.web_stream;
+  }
+
+  if (web_stream) {
     if (error_code != NGHTTP2_NO_ERROR) {
-      it->second->OnError();
+      web_stream->OnError();
     } else {
-      it->second->OnClose();
+      web_stream->OnClose();
     }
 
-    delete it->second;
-    sess->streams.erase(it);
+    delete web_stream;
   }
-  sess->stream_is_wish.erase(stream_id);
+  sess->incoming_streams.erase(stream_id);
 
   return 0;
 }
