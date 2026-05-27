@@ -30,7 +30,8 @@ class BufferEventWebStream {
   using CloseCallback = std::function<void()>;
 
   // Constructor takes an already created bufferevent
-  BufferEventWebStream(bufferevent* bev, bool is_server);
+  BufferEventWebStream(bufferevent* bev,
+                       bool is_server);
   ~BufferEventWebStream();
 
   // Start the handler (sets up callbacks and enables events)

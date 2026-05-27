@@ -1,3 +1,5 @@
+#include "buffer_event_web_stream.h"
+
 #include <absl/base/optimization.h>
 #include <event2/buffer.h>
 #include <event2/bufferevent.h>
@@ -10,8 +12,6 @@
 #include <random>
 #include <sstream>
 #include <vector>
-
-#include "buffer_event_web_stream.h"
 
 BufferEventWebStream::BufferEventWebStream(bufferevent* bev,
                                            bool is_server)
@@ -29,9 +29,13 @@ BufferEventWebStream::BufferEventWebStream(bufferevent* bev,
       WslayOnMsgRecvCallback};
 
   if (is_server_) {
-    wslay_event_context_server_init(&ctx_, &callbacks, this);
+    wslay_event_context_server_init(&ctx_,
+                                    &callbacks,
+                                    this);
   } else {
-    wslay_event_context_client_init(&ctx_, &callbacks, this);
+    wslay_event_context_client_init(&ctx_,
+                                    &callbacks,
+                                    this);
   }
 }
 
@@ -303,6 +307,8 @@ void BufferEventWebStream::WslayOnMsgRecvCallback(wslay_event_context* ctx,
     handler->on_message_(arg->opcode, msg);
   }
 }
+
+// ---- Private helpers ----
 
 int BufferEventWebStream::SendMessage(uint8_t opcode, const std::string& msg) {
   if (state_ != OPEN) {
