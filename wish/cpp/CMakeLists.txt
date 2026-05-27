@@ -28,7 +28,7 @@ set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 FetchContent_Declare(
     abseil
     GIT_REPOSITORY https://github.com/abseil/abseil-cpp.git
-    GIT_TAG        20260107.1
+    GIT_TAG        255c84dadd029fd8ad25c5efb5933e47beaa00c7 # 20260107.1
 )
 FetchContent_MakeAvailable(abseil)
 
@@ -105,7 +105,7 @@ set(BUILD_STATIC_LIBS       ON  CACHE BOOL "" FORCE)
 FetchContent_Declare(
     nghttp2
     GIT_REPOSITORY https://github.com/nghttp2/nghttp2.git
-    GIT_TAG        v1.65.0
+    GIT_TAG        68cb6900fde14c77f0cd7add0e094a862960eb99 # v1.69.0
 )
 FetchContent_MakeAvailable(nghttp2)
 
@@ -137,7 +137,7 @@ if(WISH_BUILD_TESTS)
     FetchContent_Declare(
         googletest
         GIT_REPOSITORY https://github.com/google/googletest.git
-        GIT_TAG        v1.17.0
+        GIT_TAG        52eb8108c5bdec04579160ae17225d66034bd723 # v1.17.0
     )
     FetchContent_MakeAvailable(googletest)
 endif()
