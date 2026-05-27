@@ -38,9 +38,9 @@ int main() {
     stream->SetOnClose(
         []() { std::cout << "WiSH stream closed." << std::endl; });
 
-    stream->SendText("Hello WiSH Text over HTTP/2!");
-    stream->SendBinary("Hello WiSH Binary over HTTP/2!");
-    stream->SendMetadata("Hello WiSH TextMetadata over HTTP/2!");
+    stream->SendText("Hello web-stream text over HTTP/2!");
+    stream->SendBinary("Hello web-stream binary over HTTP/2!");
+    stream->SendMetadata("Hello web-stream metadata over HTTP/2!");
   });
 
   client.Run();
