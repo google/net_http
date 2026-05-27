@@ -23,10 +23,10 @@ class WishHandlerTest : public ::testing::Test {
 };
 
 TEST_F(WishHandlerTest, HandshakeAndSimpleExchange) {
-  int res = bufferevent_pair_new(
   bufferevent* pair[2];
+  int rv = bufferevent_pair_new(
       base_, BEV_OPT_CLOSE_ON_FREE | BEV_OPT_DEFER_CALLBACKS, pair);
-  ASSERT_EQ(res, 0);
+  ASSERT_EQ(rv, 0);
 
   WishHandler* server = new WishHandler(pair[0], true /* is_server */);
   WishHandler* client = new WishHandler(pair[1], false /* is_server */);
@@ -94,9 +94,9 @@ static void DrainInput(bufferevent* bev) {
 // then call SendText and inspect the raw bytes for the mask bit.
 TEST_F(WishHandlerTest, ClientSendsUnmasked) {
   // No DEFER_CALLBACKS: pair transfers data synchronously between loop ticks.
-  int res = bufferevent_pair_new(base_, BEV_OPT_CLOSE_ON_FREE, pair);
-  ASSERT_EQ(res, 0);
   bufferevent* pair[2];
+  int rv = bufferevent_pair_new(base_, BEV_OPT_CLOSE_ON_FREE, pair);
+  ASSERT_EQ(rv, 0);
   // pair[0]: WishHandler client bev
   // pair[1]: raw observer (fake server)
   bufferevent_enable(pair[1], EV_READ | EV_WRITE);
