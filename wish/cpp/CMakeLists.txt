@@ -188,7 +188,12 @@ endif()
 
 if(WISH_BUILD_TESTS)
     enable_testing()
+
     add_executable(wish_handler_test src/wish_handler_test.cc)
     target_link_libraries(wish_handler_test wish_handler gtest_main gtest event wslay)
     add_test(NAME wish_handler_test COMMAND wish_handler_test)
+
+    add_executable(h2_wish_stream_test src/h2_wish_stream_test.cc)
+    target_link_libraries(h2_wish_stream_test wish_handler gtest_main gtest nghttp2::nghttp2 wslay)
+    add_test(NAME h2_wish_stream_test COMMAND h2_wish_stream_test)
 endif()
