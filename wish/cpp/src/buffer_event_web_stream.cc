@@ -1,6 +1,7 @@
 #include "buffer_event_web_stream.h"
 
 #include <absl/base/optimization.h>
+#include <absl/log/log.h>
 #include <event2/buffer.h>
 #include <event2/bufferevent.h>
 #include <event2/event.h>
@@ -8,7 +9,6 @@
 
 #include <algorithm>
 #include <cstring>
-#include <iostream>
 #include <random>
 #include <sstream>
 #include <vector>
@@ -55,7 +55,7 @@ void BufferEventWebStream::Start() {
 
   int enable_rv = bufferevent_enable(bev_, EV_READ | EV_WRITE);
   if (enable_rv != 0) {
-    std::cerr << "bufferevent_enable() failed" << std::endl;
+    LOG(ERROR) << "bufferevent_enable() failed";
   }
 
   if (!is_server_) {
@@ -95,7 +95,7 @@ int BufferEventWebStream::Close() {
   static constexpr char kTerminalChunk[] = "0\r\n\r\n";
   int rv = bufferevent_write(bev_, kTerminalChunk, sizeof(kTerminalChunk) - 1);
   if (rv != 0) {
-    std::cerr << "bufferevent_write() failed" << std::endl;
+    LOG(ERROR) << "bufferevent_write() failed";
     return -1;
   }
 
@@ -119,7 +119,7 @@ void BufferEventWebStream::ReadCallback(bufferevent* bev, void* ctx) {
       case OPEN: {
         int rv = wslay_event_recv(stream->ctx_);
         if (rv != 0) {
-          std::cerr << "wslay_event_recv() failed: " << rv << std::endl;
+          LOG(ERROR) << "wslay_event_recv() failed: " << rv;
           return;
         }
 
@@ -129,7 +129,7 @@ void BufferEventWebStream::ReadCallback(bufferevent* bev, void* ctx) {
           evbuffer* input = bufferevent_get_input(stream->bev_);
           size_t extra_len = evbuffer_get_length(input);
           if (extra_len > 0) {
-            std::cerr << "Warning: received " << extra_len << " bytes of extra data after stream close." << std::endl;
+            LOG(WARNING) << "Warning: received " << extra_len << " bytes of extra data after stream close.";
             evbuffer_drain(input, extra_len);
           }
 
@@ -176,7 +176,7 @@ void BufferEventWebStream::ReadCallback(bufferevent* bev, void* ctx) {
         evbuffer* input = bufferevent_get_input(stream->bev_);
         size_t len = evbuffer_get_length(input);
         if (len > 0) {
-          std::cerr << "Warning: received " << len << " bytes of extra data after stream close." << std::endl;
+          LOG(WARNING) << "Warning: received " << len << " bytes of extra data after stream close.";
           evbuffer_drain(input, len);
         }
         return;
@@ -204,14 +204,13 @@ void BufferEventWebStream::EventCallback(bufferevent* bev,
                                          short what,  // NOLINT(runtime/int)
                                          void* ctx) {
   if (what & BEV_EVENT_ERROR) {
-    std::cerr << "Error on socket: "
-              << evutil_socket_error_to_string(EVUTIL_SOCKET_ERROR())
-              << std::endl;
+    LOG(ERROR) << "Error on socket: "
+               << evutil_socket_error_to_string(EVUTIL_SOCKET_ERROR());
   }
 
   if (what & (BEV_EVENT_EOF | BEV_EVENT_ERROR)) {
     // Connection closed
-    std::cout << "Connection closed." << std::endl;
+    LOG(INFO) << "Connection closed.";
 
     BufferEventWebStream* stream = static_cast<BufferEventWebStream*>(ctx);
 
@@ -247,8 +246,10 @@ void BufferEventWebStream::HandleHandshake() {
   // Client waits for response
   if (ReadHttpResponse()) {
     state_ = OPEN;
+
     // Maybe trigger some on_open callback?
-    std::cout << "Handshake complete!" << std::endl;
+    LOG(INFO) << "Handshake complete!";
+
     if (on_open_) {
       on_open_();
     }
@@ -283,7 +284,7 @@ bool BufferEventWebStream::ReadHttpRequest() {
   // Check for web-stream specific header
   if (data.find("Content-Type: application/web-stream") == std::string::npos &&
       data.find("content-type: application/web-stream") == std::string::npos) {
-    std::cerr << "Missing web-stream Content-Type!" << std::endl;
+    LOG(ERROR) << "Missing web-stream Content-Type!";
     return false;
   }
   return true;
@@ -331,7 +332,7 @@ bool BufferEventWebStream::ReadHttpResponse() {
   delete[] headers;
 
   if (data.find("200 OK") == std::string::npos) {
-    std::cerr << "Bad Handy handshake response: " << data << std::endl;
+    LOG(ERROR) << "Bad Handy handshake response: " << data;
     return false;
   }
   return true;
@@ -368,7 +369,7 @@ ssize_t BufferEventWebStream::WslaySendCallback(wslay_event_context* ctx,
   if (bufferevent_write(stream->bev_, header, static_cast<size_t>(header_len)) != 0 ||
       bufferevent_write(stream->bev_, data, len) != 0 ||
       bufferevent_write(stream->bev_, "\r\n", 2) != 0) {
-    std::cerr << "bufferevent_write() failed" << std::endl;
+    LOG(ERROR) << "bufferevent_write() failed";
     wslay_event_set_error(ctx, WSLAY_ERR_CALLBACK_FAILURE);
     return -1;
   }
@@ -435,7 +436,7 @@ ssize_t BufferEventWebStream::ReadChunkedBytes(uint8_t* buf, size_t len) {
           return -1;  // Wait for more data.
         }
         if (pos.pos == 0) {
-          std::cerr << "ReadChunkedBytes: empty chunk-size line" << std::endl;
+          LOG(ERROR) << "ReadChunkedBytes: empty chunk-size line";
           wslay_event_set_error(ctx_, WSLAY_ERR_CALLBACK_FAILURE);
           return -1;
         }
@@ -450,7 +451,7 @@ ssize_t BufferEventWebStream::ReadChunkedBytes(uint8_t* buf, size_t len) {
         char* end = nullptr;
         unsigned long chunk_size = std::strtoul(line.data(), &end, 16);
         if (end == line.data()) {
-          std::cerr << "ReadChunkedBytes: malformed chunk size" << std::endl;
+          LOG(ERROR) << "ReadChunkedBytes: malformed chunk size";
           wslay_event_set_error(ctx_, WSLAY_ERR_CALLBACK_FAILURE);
           return -1;
         }
@@ -479,7 +480,7 @@ ssize_t BufferEventWebStream::ReadChunkedBytes(uint8_t* buf, size_t len) {
         size_t n = std::min({len, chunk_remaining_, avail});
         int rv = evbuffer_remove(input, buf, n);
         if (rv < 0) {
-          std::cerr << "ReadChunkedBytes: evbuffer_remove() failed" << std::endl;
+          LOG(ERROR) << "ReadChunkedBytes: evbuffer_remove() failed";
           wslay_event_set_error(ctx_, WSLAY_ERR_CALLBACK_FAILURE);
           return -1;
         }

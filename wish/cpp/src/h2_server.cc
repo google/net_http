@@ -1,11 +1,11 @@
 #include "h2_server.h"
 
+#include <absl/log/log.h>
 #include <arpa/inet.h>
 #include <netinet/tcp.h>
 
 #include <algorithm>
 #include <cstring>
-#include <iostream>
 
 #define H2S_MAKE_NV(name, value) \
   {                              \
@@ -28,7 +28,8 @@ H2Server::~H2Server() {
 bool H2Server::Init() {
   base_ = event_base_new();
   if (!base_) {
-    std::cerr << "H2Server: event_base_new() failed" << std::endl;
+    LOG(ERROR) << "H2Server: event_base_new() failed";
+
     return false;
   }
 
@@ -46,7 +47,8 @@ bool H2Server::Init() {
                                       reinterpret_cast<struct sockaddr*>(&sin),
                                       sizeof(sin));
   if (!listener_) {
-    std::cerr << "H2Server: evconnlistener_new_bind() failed" << std::endl;
+    LOG(ERROR) << "H2Server: evconnlistener_new_bind() failed";
+
     return false;
   }
 
@@ -58,7 +60,7 @@ bool H2Server::Init() {
 void H2Server::SetOnStream(StreamCallback cb) { on_stream_ = cb; }
 
 void H2Server::Run() {
-  std::cout << "H2Server listening on port " << port_ << "..." << std::endl;
+  LOG(INFO) << "H2Server listening on port " << port_ << "...";
 
   event_base_dispatch(base_);
 }
@@ -81,7 +83,7 @@ void H2Server::AcceptConnCb(struct evconnlistener* listener,
                           &one,
                           sizeof(one));
   if (set_rv != 0) {
-    std::cerr << "H2Server: setsockopt(TCP_NODELAY) failed" << std::endl;
+    LOG(ERROR) << "H2Server: setsockopt(TCP_NODELAY) failed";
     evutil_closesocket(fd);
     return;
   }
@@ -90,7 +92,7 @@ void H2Server::AcceptConnCb(struct evconnlistener* listener,
                                                    fd,
                                                    BEV_OPT_CLOSE_ON_FREE);
   if (!bev) {
-    std::cerr << "H2Server: bufferevent_socket_new() failed" << std::endl;
+    LOG(ERROR) << "H2Server: bufferevent_socket_new() failed";
     evutil_closesocket(fd);
     return;
   }
@@ -109,8 +111,8 @@ void H2Server::AcceptConnCb(struct evconnlistener* listener,
                                                    iv,
                                                    2);
   if (submit_settings_rv != 0) {
-    std::cerr << "H2Server: nghttp2_submit_settings() failed: "
-              << nghttp2_strerror(submit_settings_rv) << std::endl;
+    LOG(ERROR) << "H2Server: nghttp2_submit_settings() failed: "
+               << nghttp2_strerror(submit_settings_rv);
 
     nghttp2_session_del(sess->h2session);
     bufferevent_free(bev);
@@ -124,8 +126,8 @@ void H2Server::AcceptConnCb(struct evconnlistener* listener,
                                                                        0,
                                                                        1 << 20);
   if (set_local_window_size_rv != 0) {
-    std::cerr << "H2Server: nghttp2_session_set_local_window_size() failed: "
-              << nghttp2_strerror(set_local_window_size_rv) << std::endl;
+    LOG(ERROR) << "H2Server: nghttp2_session_set_local_window_size() failed: "
+               << nghttp2_strerror(set_local_window_size_rv);
 
     nghttp2_session_del(sess->h2session);
     bufferevent_free(bev);
@@ -136,8 +138,8 @@ void H2Server::AcceptConnCb(struct evconnlistener* listener,
 
   int send_rv = nghttp2_session_send(sess->h2session);
   if (send_rv != 0) {
-    std::cerr << "H2Server: nghttp2_session_send() failed: "
-              << nghttp2_strerror(send_rv) << std::endl;
+    LOG(ERROR) << "H2Server: nghttp2_session_send() failed: "
+               << nghttp2_strerror(send_rv);
 
     nghttp2_session_del(sess->h2session);
     bufferevent_free(bev);
@@ -154,7 +156,7 @@ void H2Server::AcceptConnCb(struct evconnlistener* listener,
 
   int enable_rv = bufferevent_enable(bev, EV_READ | EV_WRITE);
   if (enable_rv != 0) {
-    std::cerr << "H2Server: bufferevent_enable() failed" << std::endl;
+    LOG(ERROR) << "H2Server: bufferevent_enable() failed";
 
     nghttp2_session_del(sess->h2session);
     bufferevent_free(bev);
@@ -168,8 +170,8 @@ void H2Server::AcceptErrorCb(struct evconnlistener* listener,
                              void* /*ctx*/) {
   struct event_base* base = evconnlistener_get_base(listener);
   int err = EVUTIL_SOCKET_ERROR();
-  std::cerr << "H2Server: listener error " << err << " ("
-            << evutil_socket_error_to_string(err) << ")" << std::endl;
+  LOG(ERROR) << "H2Server: listener error " << err << " ("
+             << evutil_socket_error_to_string(err) << ")";
   event_base_loopexit(base, nullptr);
 }
 
@@ -190,8 +192,8 @@ void H2Server::ReadCallback(struct bufferevent* bev, void* ctx) {
                                              data,
                                              len);
   if (readlen < 0) {
-    std::cerr << "H2Server: nghttp2_session_mem_recv() failed: "
-              << nghttp2_strerror(static_cast<int>(readlen)) << std::endl;
+    LOG(ERROR) << "H2Server: nghttp2_session_mem_recv() failed: "
+               << nghttp2_strerror(static_cast<int>(readlen));
     bufferevent_free(bev);
     return;
   }
@@ -199,8 +201,8 @@ void H2Server::ReadCallback(struct bufferevent* bev, void* ctx) {
 
   int rv = nghttp2_session_send(sess->h2session);
   if (rv < 0) {
-    std::cerr << "H2Server: nghttp2_session_send() failed: "
-              << nghttp2_strerror(rv) << std::endl;
+    LOG(ERROR) << "H2Server: nghttp2_session_send() failed: "
+               << nghttp2_strerror(rv);
   }
 }
 
@@ -210,7 +212,7 @@ void H2Server::EventCallback(struct bufferevent* bev,
   Session* sess = static_cast<Session*>(ctx);
 
   if (what & BEV_EVENT_ERROR) {
-    std::cerr << "H2Server: connection error" << std::endl;
+    LOG(ERROR) << "H2Server: connection error";
   }
 
   if (what & (BEV_EVENT_EOF | BEV_EVENT_ERROR)) {
@@ -301,8 +303,8 @@ int H2Server::OnFrameRecvCallback(nghttp2_session* session,
                                                       1,
                                                       nullptr);
     if (submit_response_rv != 0) {
-      std::cerr << "H2Server: nghttp2_submit_response2() failed: "
-                << nghttp2_strerror(submit_response_rv) << std::endl;
+      LOG(ERROR) << "H2Server: nghttp2_submit_response2() failed: "
+                 << nghttp2_strerror(submit_response_rv);
 
       // nghttp2_on_frame_recv_callback spec: any nonzero value signals a fatal error.
       return -1;
@@ -310,8 +312,8 @@ int H2Server::OnFrameRecvCallback(nghttp2_session* session,
 
     int session_send_rv = nghttp2_session_send(session);
     if (session_send_rv != 0) {
-      std::cerr << "H2Server: nghttp2_session_send() failed: "
-                << nghttp2_strerror(session_send_rv) << std::endl;
+      LOG(ERROR) << "H2Server: nghttp2_session_send() failed: "
+                 << nghttp2_strerror(session_send_rv);
 
       // nghttp2_on_frame_recv_callback spec: any nonzero value signals a fatal error.
       return -1;
@@ -337,8 +339,8 @@ int H2Server::OnFrameRecvCallback(nghttp2_session* session,
                                                     2,
                                                     &data_prd);
   if (submit_response_rv != 0) {
-    std::cerr << "H2Server: nghttp2_submit_response2() failed: "
-              << nghttp2_strerror(submit_response_rv) << std::endl;
+    LOG(ERROR) << "H2Server: nghttp2_submit_response2() failed: "
+               << nghttp2_strerror(submit_response_rv);
 
     delete web_stream;
     sess->streams.erase(stream_id);
@@ -349,8 +351,8 @@ int H2Server::OnFrameRecvCallback(nghttp2_session* session,
 
   int session_send_rv = nghttp2_session_send(session);
   if (session_send_rv != 0) {
-    std::cerr << "H2Server: nghttp2_session_send() failed: "
-              << nghttp2_strerror(session_send_rv) << std::endl;
+    LOG(ERROR) << "H2Server: nghttp2_session_send() failed: "
+               << nghttp2_strerror(session_send_rv);
 
     delete web_stream;
     sess->streams.erase(stream_id);
@@ -384,8 +386,8 @@ int H2Server::OnDataChunkRecvCallback(nghttp2_session* session,
 
     int rv = nghttp2_session_send(session);
     if (rv != 0) {
-      std::cerr << "H2Server: nghttp2_session_send() failed: "
-                << nghttp2_strerror(rv) << std::endl;
+      LOG(ERROR) << "H2Server: nghttp2_session_send() failed: "
+                 << nghttp2_strerror(rv);
     }
   }
 
@@ -429,7 +431,8 @@ nghttp2_session* H2Server::CreateH2Session(Session* sess) {
   nghttp2_session_callbacks* cbs;
   int callbacks_new_rv = nghttp2_session_callbacks_new(&cbs);
   if (callbacks_new_rv != 0) {
-    std::cerr << "H2Server: nghttp2_session_callbacks_new() failed" << std::endl;
+    LOG(ERROR) << "H2Server: nghttp2_session_callbacks_new() failed";
+
     return nullptr;
   }
   nghttp2_session_callbacks_set_send_callback2(cbs,
@@ -449,7 +452,8 @@ nghttp2_session* H2Server::CreateH2Session(Session* sess) {
                                                   sess);
   nghttp2_session_callbacks_del(cbs);
   if (session_new_rv != 0) {
-    std::cerr << "H2Server: nghttp2_session_server_new() failed" << std::endl;
+    LOG(ERROR) << "H2Server: nghttp2_session_server_new() failed";
+
     return nullptr;
   }
 

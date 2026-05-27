@@ -179,7 +179,7 @@ add_library(buffer_event_web_stream STATIC
     src/h2_tls_client.h
 )
 # BoringSSL targets: ssl and crypto.  nghttp2 for HTTP/2 framing.
-target_link_libraries(buffer_event_web_stream wslay event ssl crypto nghttp2::nghttp2 absl::strings)
+target_link_libraries(buffer_event_web_stream wslay event ssl crypto nghttp2::nghttp2 absl::strings absl::log)
 
 if(WISH_BUILD_EXAMPLES)
     add_subdirectory(examples)

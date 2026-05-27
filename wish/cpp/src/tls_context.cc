@@ -1,6 +1,6 @@
 #include "tls_context.h"
 
-#include <iostream>
+#include <absl/log/log.h>
 
 TlsContext::TlsContext() : ssl_ctx_(nullptr) {}
 
@@ -29,16 +29,17 @@ bool TlsContext::Init(bool is_server) {
   ssl_ctx_ = SSL_CTX_new(method);
 
   if (!ssl_ctx_) {
-    std::cerr << "Failed to create SSL_CTX" << std::endl;
+    LOG(ERROR) << "Failed to create SSL_CTX";
+
     return false;
   }
 
-  // Load CA certificate for verifying the peer
   if (!ca_file_.empty()) {
     if (SSL_CTX_load_verify_locations(ssl_ctx_,
                                       ca_file_.c_str(),
                                       nullptr) != 1) {
-      std::cerr << "Error loading CA file: " << ca_file_ << std::endl;
+      LOG(ERROR) << "Error loading CA file: " << ca_file_;
+
       return false;
     }
   }
@@ -57,26 +58,26 @@ bool TlsContext::Init(bool is_server) {
     if (SSL_CTX_use_certificate_file(ssl_ctx_,
                                      certificate_file_.c_str(),
                                      SSL_FILETYPE_PEM) <= 0) {
-      std::cerr << "Error loading certificate file: " << certificate_file_
-                << std::endl;
+      LOG(ERROR) << "Error loading certificate file: " << certificate_file_;
+
       return false;
     }
 
     if (SSL_CTX_use_PrivateKey_file(ssl_ctx_,
                                     private_key_file_.c_str(),
                                     SSL_FILETYPE_PEM) <= 0) {
-      std::cerr << "Error loading key file: " << private_key_file_ << std::endl;
+      LOG(ERROR) << "Error loading key file: " << private_key_file_;
+
       return false;
     }
 
     if (!SSL_CTX_check_private_key(ssl_ctx_)) {
-      std::cerr << "Private key does not match the certificate public key"
-                << std::endl;
+      LOG(ERROR) << "Private key does not match the certificate public key";
+
       return false;
     }
   } else {
-    std::cerr << "Warning: cert_path or key_path is empty. mTLS may fail."
-              << std::endl;
+    LOG(WARNING) << "Warning: cert_path or key_path is empty. mTLS may fail.";
   }
 
   return true;

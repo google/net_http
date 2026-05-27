@@ -1,6 +1,6 @@
 #include "tls_client.h"
 
-#include <iostream>
+#include <absl/log/log.h>
 
 // To use BoringSSL
 #define EVENT__HAVE_OPENSSL 1
@@ -46,19 +46,22 @@ bool TlsClient::Init() {
   tls_ctx_.set_private_key_file(key_file_);
 
   if (!tls_ctx_.Init(false)) {
-    std::cerr << "Failed to init TLS context" << std::endl;
+    LOG(ERROR) << "Failed to init TLS context";
+
     return false;
   }
 
   base_ = event_base_new();
   if (!base_) {
-    std::cerr << "event_base_new() failed" << std::endl;
+    LOG(ERROR) << "event_base_new() failed";
+
     return false;
   }
 
   dns_base_ = evdns_base_new(base_, 1);
   if (!dns_base_) {
-    std::cerr << "evdns_base_new() failed" << std::endl;
+    LOG(ERROR) << "evdns_base_new() failed";
+
     return false;
   }
 
@@ -69,7 +72,8 @@ bool TlsClient::Init() {
                                                     BUFFEREVENT_SSL_CONNECTING,
                                                     BEV_OPT_CLOSE_ON_FREE);
   if (!bev) {
-    std::cerr << "bufferevent_openssl_socket_new() failed" << std::endl;
+    LOG(ERROR) << "bufferevent_openssl_socket_new() failed";
+
     return false;
   }
 
@@ -78,7 +82,8 @@ bool TlsClient::Init() {
                                           AF_INET,
                                           host_.c_str(),
                                           port_) < 0) {
-    std::cerr << "bufferevent_socket_connect_hostname() failed" << std::endl;
+    LOG(ERROR) << "bufferevent_socket_connect_hostname() failed";
+
     return false;
   }
 
@@ -101,7 +106,7 @@ void TlsClient::SetOnOpen(OpenCallback cb) {
 }
 
 void TlsClient::Run() {
-  std::cout << "Client running..." << std::endl;
+  LOG(INFO) << "Client running...";
 
   event_base_dispatch(base_);
 }
