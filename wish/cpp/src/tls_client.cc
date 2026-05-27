@@ -71,6 +71,8 @@ bool TlsClient::Init() {
   if (!bev) {
     LOG(ERROR) << "bufferevent_openssl_socket_new() failed";
 
+    SSL_free(ssl);
+
     return false;
   }
 
