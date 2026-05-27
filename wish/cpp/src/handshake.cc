@@ -135,7 +135,14 @@ void ClientHandshake::HandleRead() {
     return;
   }
 
-  evbuffer_drain(input, parse_rv);
+  int drain_rv = evbuffer_drain(input, parse_rv);
+  if (drain_rv != 0) {
+    LOG(ERROR) << "evbuffer_drain() failed";
+
+    InvokeError();
+
+    return;
+  }
 
   // Handshake successful. Hand over bufferevent and trigger success callback.
   bufferevent* bev = bev_;

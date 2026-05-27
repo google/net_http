@@ -110,6 +110,14 @@ void TlsServer::AcceptConnCb(evconnlistener* listener,
                                                     ssl,
                                                     BUFFEREVENT_SSL_ACCEPTING,
                                                     BEV_OPT_CLOSE_ON_FREE);
+  if (!bev) {
+    LOG(ERROR) << "bufferevent_openssl_socket_new() failed";
+
+    SSL_free(ssl);
+    evutil_closesocket(fd);
+
+    return;
+  }
 
   auto* handshake = new ServerHandshake(
       bev,
