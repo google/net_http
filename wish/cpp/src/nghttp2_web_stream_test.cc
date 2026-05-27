@@ -58,7 +58,9 @@ class NGHTTP2WebStreamTest : public ::testing::Test {
 
 TEST_F(NGHTTP2WebStreamTest, HandshakeAndSimpleExchange) {
   NGHTTP2WebStream server(server_session_, 1, true /* is_server */);
+  ASSERT_TRUE(server.Init());
   NGHTTP2WebStream client(client_session_, 1, false /* is_server */);
+  ASSERT_TRUE(client.Init());
 
   std::string received_from_client;
   std::string received_from_server;
@@ -91,6 +93,7 @@ TEST_F(NGHTTP2WebStreamTest, HandshakeAndSimpleExchange) {
 // web-stream doesn't use masking (unlike WebSocket over TCP).
 TEST_F(NGHTTP2WebStreamTest, ClientSendsUnmasked) {
   NGHTTP2WebStream client(client_session_, 1, false /* is_server */);
+  ASSERT_TRUE(client.Init());
   client.SendText("Hello");
 
   uint8_t buf[256];
@@ -111,6 +114,7 @@ TEST_F(NGHTTP2WebStreamTest, ClientSendsUnmasked) {
 // Tests that the server does NOT mask frames when sending.
 TEST_F(NGHTTP2WebStreamTest, ServerSendsUnmasked) {
   NGHTTP2WebStream server(server_session_, 1, true /* is_server */);
+  ASSERT_TRUE(server.Init());
   server.SendText("Hello");
 
   uint8_t buf[256];
@@ -131,7 +135,9 @@ TEST_F(NGHTTP2WebStreamTest, ServerSendsUnmasked) {
 // calling Close() a second time returns -1.
 TEST_F(NGHTTP2WebStreamTest, CloseSignalsEOF) {
   NGHTTP2WebStream server(server_session_, 1, true /* is_server */);
+  ASSERT_TRUE(server.Init());
   NGHTTP2WebStream client(client_session_, 1, false /* is_server */);
+  ASSERT_TRUE(client.Init());
 
   bool client_close_fired = false;
   client.SetOnClose([&]() { client_close_fired = true; });
@@ -167,6 +173,7 @@ TEST_F(NGHTTP2WebStreamTest, CloseSignalsEOF) {
 // in the middle of receiving a message on HTTP/2.
 TEST_F(NGHTTP2WebStreamTest, OnErrorOnMidMessageEOF) {
   NGHTTP2WebStream client(client_session_, 1, false /* is_server */);
+  ASSERT_TRUE(client.Init());
 
   bool client_close_fired = false;
   bool client_error_fired = false;
@@ -195,6 +202,7 @@ TEST_F(NGHTTP2WebStreamTest, OnErrorOnMidMessageEOF) {
 // Verify that calling OnError() directly fires SetOnError callback.
 TEST_F(NGHTTP2WebStreamTest, OnErrorMethodFiresCallback) {
   NGHTTP2WebStream client(client_session_, 1, false /* is_server */);
+  ASSERT_TRUE(client.Init());
 
   bool client_close_fired = false;
   bool client_error_fired = false;

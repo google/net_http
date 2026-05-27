@@ -29,7 +29,7 @@ class H2TlsServer {
 
   bool Init();
   void SetOnStream(StreamCallback cb);
-  void Run();
+  int Run();
 
  private:
   struct Session {

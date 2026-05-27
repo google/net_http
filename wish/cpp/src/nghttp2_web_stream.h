@@ -35,6 +35,8 @@ class NGHTTP2WebStream : public WebStream {
                    bool is_server);
   ~NGHTTP2WebStream() override;
 
+  bool Init();
+
   void SetOnMessage(MessageCallback cb) override;
   void SetOnClose(CloseCallback cb) override;
   void SetOnError(ErrorCallback cb) override;

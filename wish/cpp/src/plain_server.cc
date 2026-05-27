@@ -61,8 +61,8 @@ void PlainServer::SetOnStream(StreamCallback cb) {
   on_stream_ = cb;
 }
 
-void PlainServer::Run() {
-  event_base_dispatch(base_);
+int PlainServer::Run() {
+  return event_base_dispatch(base_);
 }
 
 void PlainServer::AcceptConnCb(evconnlistener* listener,
@@ -92,7 +92,9 @@ void PlainServer::AcceptConnCb(evconnlistener* listener,
   if (!bev) {
     VLOG(1) << "bufferevent_socket_new() failed";
 
-    evutil_closesocket(fd);
+    if (evutil_closesocket(fd) != 0) {
+      VLOG(2) << "evutil_closesocket failed";
+    }
 
     return;
   }
@@ -101,6 +103,13 @@ void PlainServer::AcceptConnCb(evconnlistener* listener,
       bev,
       [server](bufferevent* bev) {
         auto stream = std::make_unique<BufferEventWebStream>(bev, true);
+
+        if (!stream->Init()) {
+          VLOG(1) << "BufferEventWebStream::Init() failed";
+
+          return;
+        }
+
         auto* raw_stream = stream.get();
         server->active_streams_.push_back(std::move(stream));
 
@@ -137,7 +146,10 @@ void PlainServer::AcceptErrorCb(evconnlistener* listener, void* ctx) {
   VLOG(1) << "Got an error " << err << " ("
           << evutil_socket_error_to_string(err)
           << ") on the listener. Shutting down.";
-  event_base_loopexit(base, nullptr);
+
+  if (event_base_loopexit(base, nullptr) != 0) {
+    VLOG(2) << "event_base_loopexit failed";
+  }
 }
 
 void PlainServer::RemoveHandshake(ServerHandshake* handshake) {

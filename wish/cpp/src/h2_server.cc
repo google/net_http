@@ -56,8 +56,8 @@ bool H2Server::Init() {
 
 void H2Server::SetOnStream(StreamCallback cb) { on_stream_ = cb; }
 
-void H2Server::Run() {
-  event_base_dispatch(base_);
+int H2Server::Run() {
+  return event_base_dispatch(base_);
 }
 
 // ---- libevent listener callbacks ----
@@ -80,7 +80,9 @@ void H2Server::AcceptConnCb(evconnlistener* listener,
   if (set_rv != 0) {
     VLOG(1) << "H2Server: setsockopt(TCP_NODELAY) failed";
 
-    evutil_closesocket(fd);
+    if (evutil_closesocket(fd) != 0) {
+      VLOG(2) << "evutil_closesocket failed";
+    }
 
     return;
   }
@@ -91,7 +93,9 @@ void H2Server::AcceptConnCb(evconnlistener* listener,
   if (!bev) {
     VLOG(1) << "H2Server: bufferevent_socket_new() failed";
 
-    evutil_closesocket(fd);
+    if (evutil_closesocket(fd) != 0) {
+      VLOG(2) << "evutil_closesocket failed";
+    }
 
     return;
   }
@@ -100,6 +104,19 @@ void H2Server::AcceptConnCb(evconnlistener* listener,
   sess->server = server;
   sess->bev = bev;
   sess->h2session = CreateH2Session(sess);
+  if (!sess->h2session) {
+    VLOG(1) << "H2Server: CreateH2Session() failed";
+
+    bufferevent_free(bev);
+
+    if (evutil_closesocket(fd) != 0) {
+      VLOG(2) << "evutil_closesocket failed";
+    }
+
+    delete sess;
+
+    return;
+  }
 
   // Send server connection preface (SETTINGS frame).
   nghttp2_settings_entry iv[] = {
@@ -167,12 +184,18 @@ void H2Server::AcceptConnCb(evconnlistener* listener,
 }
 
 void H2Server::AcceptErrorCb(evconnlistener* listener,
-                             void* /*ctx*/) {
+                             void* ctx) {
+  (void)ctx;
+
   event_base* base = evconnlistener_get_base(listener);
   int err = EVUTIL_SOCKET_ERROR();
-  VLOG(1) << "H2Server: listener error " << err << " ("
-          << evutil_socket_error_to_string(err) << ")";
-  event_base_loopexit(base, nullptr);
+  VLOG(1) << "H2Server: Got an error " << err << " ("
+          << evutil_socket_error_to_string(err)
+          << ") on the listener. Shutting down.";
+
+  if (event_base_loopexit(base, nullptr) != 0) {
+    VLOG(2) << "event_base_loopexit failed";
+  }
 }
 
 // ---- libevent bufferevent callbacks ----
@@ -346,6 +369,15 @@ int H2Server::OnFrameRecvCallback(nghttp2_session* session,
 
   // Create the web-stream stream object.
   web_stream = new NGHTTP2WebStream(session, stream_id, true);
+
+  if (!web_stream->Init()) {
+    VLOG(1) << "H2Server: NGHTTP2WebStream::Init() failed";
+
+    delete web_stream;
+
+    return -1;
+  }
+
   sess->incoming_streams[stream_id].web_stream = web_stream;
 
   nghttp2_data_provider2 data_prd;

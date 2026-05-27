@@ -19,7 +19,9 @@ NGHTTP2WebStream::NGHTTP2WebStream(nghttp2_session* session,
       ctx_(nullptr),
       close_fired_(false),
       input_buf_(evbuffer_new()),
-      output_buf_(evbuffer_new()) {
+      output_buf_(evbuffer_new()) {}
+
+bool NGHTTP2WebStream::Init() {
   wslay_event_callbacks callbacks = {
       WslayRecvCallback,
       WslaySendCallback,
@@ -29,15 +31,17 @@ NGHTTP2WebStream::NGHTTP2WebStream(nghttp2_session* session,
       nullptr,                        // on_frame_recv_end_callback
       WslayOnMsgRecvCallback};
 
+  int rv;
   if (is_server_) {
-    wslay_event_context_server_init(&ctx_,
-                                    &callbacks,
-                                    this);
+    rv = wslay_event_context_server_init(&ctx_,
+                                         &callbacks,
+                                         this);
   } else {
-    wslay_event_context_client_init(&ctx_,
-                                    &callbacks,
-                                    this);
+    rv = wslay_event_context_client_init(&ctx_,
+                                         &callbacks,
+                                         this);
   }
+  return rv == 0;
 }
 
 NGHTTP2WebStream::~NGHTTP2WebStream() {
@@ -96,11 +100,14 @@ int NGHTTP2WebStream::Close() {
 // ---- Session callbacks (called by H2Server / H2Client) ----
 
 void NGHTTP2WebStream::OnDataChunk(const uint8_t* data, size_t len) {
-  evbuffer_add(input_buf_, data, len);
+  int add_rv = evbuffer_add(input_buf_, data, len);
+  if (add_rv != 0) {
+    VLOG(2) << "NGHTTP2WebStream: evbuffer_add() failed";
+  }
 
-  int rv = wslay_event_recv(ctx_);
-  if (rv != 0) {
-    VLOG(2) << "NGHTTP2WebStream: wslay_event_recv() failed: " << rv;
+  int recv_rv = wslay_event_recv(ctx_);
+  if (recv_rv != 0) {
+    VLOG(2) << "NGHTTP2WebStream: wslay_event_recv() failed: " << recv_rv;
   }
 }
 

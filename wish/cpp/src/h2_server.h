@@ -26,7 +26,7 @@ class H2Server {
 
   bool Init();
   void SetOnStream(StreamCallback cb);
-  void Run();
+  int Run();
 
  private:
   // Per-connection state.

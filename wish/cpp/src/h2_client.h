@@ -33,8 +33,8 @@ class H2Client {
 
   void SetOnOpen(OpenCallback cb);
 
-  void Run();
-  void Stop();
+  int Run();
+  int Stop();
 
  private:
   // Per-connection state (heap-allocated, owned by the callbacks).

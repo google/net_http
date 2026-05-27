@@ -31,8 +31,8 @@ class TlsClient {
 
   void SetOnOpen(OpenCallback cb);
 
-  void Run();
-  void Stop();
+  int Run();
+  int Stop();
 
  private:
   event_base* base_;
