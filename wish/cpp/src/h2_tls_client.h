@@ -36,10 +36,15 @@ class H2TlsClient {
  private:
   struct Session {
     H2TlsClient* client;
+
     bufferevent* bev;
     nghttp2_session* h2session;
+
     NGHTTP2WebStream* web_stream;
-    int32_t wish_stream_id;
+    int32_t h2_stream_id;
+
+    // HTTP response status code received for h2_stream_id (0 = not yet seen).
+    int response_status;
   };
 
   // libevent bufferevent callbacks

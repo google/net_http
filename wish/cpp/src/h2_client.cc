@@ -58,7 +58,8 @@ bool H2Client::Init() {
   session_->bev = bev;
   session_->h2session = nullptr;
   session_->web_stream = nullptr;
-  session_->wish_stream_id = -1;
+  session_->h2_stream_id = -1;
+  session_->response_status = 0;
 
   bufferevent_setcb(bev,
                     ReadCallback,
@@ -220,14 +221,26 @@ int H2Client::OnHeaderCallback(nghttp2_session* /*session*/,
                                size_t namelen,
                                const uint8_t* value,
                                size_t valuelen,
-                               uint8_t /*flags*/, void* /*user_data*/) {
-  // We only care about detecting the :status 200 for our web-stream stream.
-  // That check is done in OnFrameRecvCallback once all headers are received.
-  (void)frame;
-  (void)name;
-  (void)namelen;
-  (void)value;
-  (void)valuelen;
+                               uint8_t /*flags*/, void* user_data) {
+  Session* sess = static_cast<Session*>(user_data);
+
+  // Capture the :status value for our web-stream stream so that
+  // OnFrameRecvCallback can verify the server accepted the request.
+  if (frame->hd.stream_id == sess->h2_stream_id &&
+      namelen == 7 && memcmp(name, ":status", 7) == 0) {
+    int parsed = 0;
+    bool valid = (valuelen > 0);
+    for (size_t i = 0; i < valuelen && valid; ++i) {
+      if (value[i] < '0' || value[i] > '9') {
+        valid = false;
+      } else {
+        parsed = parsed * 10 + (value[i] - '0');
+      }
+    }
+    // Store -1 for malformed values so the == 200 check in
+    // OnFrameRecvCallback never accidentally matches.
+    sess->response_status = valid ? parsed : -1;
+  }
 
   return 0;
 }
@@ -237,10 +250,13 @@ int H2Client::OnFrameRecvCallback(nghttp2_session* /*session*/,
                                   void* user_data) {
   Session* sess = static_cast<Session*>(user_data);
 
-  // Detect the 200 response for our web-stream stream.
+  // Trigger OnOpen only when the server responds with 200 for our web-stream
+  // stream, indicating it accepted the request.  Any other status (e.g. 400,
+  // 404, 500) is treated as a rejection and the stream is left unopened.
   if (frame->hd.type == NGHTTP2_HEADERS &&
       frame->headers.cat == NGHTTP2_HCAT_RESPONSE &&
-      frame->hd.stream_id == sess->wish_stream_id) {
+      frame->hd.stream_id == sess->h2_stream_id &&
+      sess->response_status == 200) {
     if (sess->web_stream) {
       sess->web_stream->OnOpen();
       if (sess->client->on_open_) {
@@ -259,7 +275,7 @@ int H2Client::OnDataChunkRecvCallback(nghttp2_session* session,
                                       void* user_data) {
   Session* sess = static_cast<Session*>(user_data);
 
-  if (sess->web_stream && stream_id == sess->wish_stream_id) {
+  if (sess->web_stream && stream_id == sess->h2_stream_id) {
     sess->web_stream->OnDataChunk(data,
                                   len);
     int send_rv = nghttp2_session_send(session);
@@ -278,7 +294,7 @@ int H2Client::OnStreamCloseCallback(nghttp2_session* /*session*/,
                                     void* user_data) {
   Session* sess = static_cast<Session*>(user_data);
 
-  if (sess->web_stream && stream_id == sess->wish_stream_id) {
+  if (sess->web_stream && stream_id == sess->h2_stream_id) {
     sess->web_stream->OnClose();
     if (sess->client->on_close_) {
       sess->client->on_close_();
@@ -378,7 +394,7 @@ void H2Client::InitH2Session(Session* sess) {
               << nghttp2_strerror(stream_id) << std::endl;
     return;
   }
-  sess->wish_stream_id = stream_id;
+  sess->h2_stream_id = stream_id;
 
   // Create the NGHTTP2WebStream now that the real stream_id is known.
   sess->web_stream = new NGHTTP2WebStream(sess->h2session,
