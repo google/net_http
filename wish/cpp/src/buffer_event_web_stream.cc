@@ -196,8 +196,12 @@ void BufferEventWebStream::EventCallback(bufferevent* bev,
                                          short what,  // NOLINT(runtime/int)
                                          void* ctx) {
   if (what & BEV_EVENT_ERROR) {
-    LOG(ERROR) << "Error on socket: "
-               << evutil_socket_error_to_string(EVUTIL_SOCKET_ERROR());
+    int err = EVUTIL_SOCKET_ERROR();
+    if (err != 0) {
+      LOG(ERROR) << "Error on socket: " << evutil_socket_error_to_string(err);
+    } else {
+      LOG(ERROR) << "Error on bufferevent";
+    }
   }
 
   if (what & (BEV_EVENT_EOF | BEV_EVENT_ERROR)) {
