@@ -79,6 +79,7 @@ class NGHTTP2WebStream : public WebStream {
   bool is_server_;
   // Set by Close(); causes ReadSendData() to set NGHTTP2_DATA_FLAG_EOF.
   bool close_pending_ = false;
+  bool close_fired_ = false;
   wslay_event_context* ctx_;
 
   MessageCallback on_message_;

@@ -17,6 +17,7 @@ NGHTTP2WebStream::NGHTTP2WebStream(nghttp2_session* session,
       stream_id_(stream_id),
       is_server_(is_server),
       ctx_(nullptr),
+      close_fired_(false),
       input_buf_(evbuffer_new()),
       output_buf_(evbuffer_new()) {
   wslay_event_callbacks callbacks = {
@@ -108,6 +109,10 @@ void NGHTTP2WebStream::OnOpen() {
 }
 
 void NGHTTP2WebStream::OnClose() {
+  if (close_fired_) {
+    return;
+  }
+  close_fired_ = true;
   if (on_close_) {
     on_close_();
   }

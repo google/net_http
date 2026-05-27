@@ -275,20 +275,37 @@ int H2TlsClient::OnFrameRecvCallback(nghttp2_session* /*session*/,
                                      void* user_data) {
   Session* sess = static_cast<Session*>(user_data);
 
+  if (frame->hd.stream_id != sess->h2_stream_id) {
+    return 0;
+  }
+
   // Trigger OnOpen only when the server responds with 200 for our web-stream
   // stream, indicating it accepted the request.  Any other status (e.g. 400,
   // 404, 500) is treated as a rejection and the stream is left unopened.
   if (frame->hd.type == NGHTTP2_HEADERS &&
       frame->headers.cat == NGHTTP2_HCAT_RESPONSE &&
-      frame->hd.stream_id == sess->h2_stream_id &&
       sess->response_status == 200) {
     if (sess->web_stream) {
       sess->web_stream->OnOpen();
+
       if (sess->client->on_open_) {
         sess->client->on_open_(sess->web_stream);
       }
     }
   }
+
+  // Trigger OnClose if we receive END_STREAM (body EOF) from the peer.
+  if ((frame->hd.type == NGHTTP2_DATA || frame->hd.type == NGHTTP2_HEADERS) &&
+      (frame->hd.flags & NGHTTP2_FLAG_END_STREAM)) {
+    if (sess->web_stream) {
+      sess->web_stream->OnClose();
+
+      if (sess->client->on_close_) {
+        sess->client->on_close_();
+      }
+    }
+  }
+
   return 0;
 }
 

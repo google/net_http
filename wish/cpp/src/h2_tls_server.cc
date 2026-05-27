@@ -305,12 +305,21 @@ int H2TlsServer::OnHeaderCallback(nghttp2_session* /*session*/,
 int H2TlsServer::OnFrameRecvCallback(nghttp2_session* session,
                                      const nghttp2_frame* frame,
                                      void* user_data) {
+  Session* sess = static_cast<Session*>(user_data);
+
+  // Trigger OnClose if we receive END_STREAM (body EOF) from the peer.
+  if ((frame->hd.type == NGHTTP2_DATA || frame->hd.type == NGHTTP2_HEADERS) &&
+      (frame->hd.flags & NGHTTP2_FLAG_END_STREAM)) {
+    auto it = sess->streams.find(frame->hd.stream_id);
+    if (it != sess->streams.end()) {
+      it->second->OnClose();
+    }
+  }
+
   if (frame->hd.type != NGHTTP2_HEADERS ||
       frame->headers.cat != NGHTTP2_HCAT_REQUEST) {
     return 0;
   }
-
-  Session* sess = static_cast<Session*>(user_data);
 
   int32_t stream_id = frame->hd.stream_id;
 
