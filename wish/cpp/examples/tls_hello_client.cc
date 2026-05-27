@@ -12,12 +12,12 @@ int main() {
                    "certs/client.key");
 
   if (!client.Init()) {
-    std::cerr << "Failed to initialize client" << std::endl;
+    std::cerr << "Init() failed" << std::endl;
     return 1;
   }
 
   client.SetOnOpen([](BufferEventWebStream* handler) {
-    std::cout << "Connected and Handshake Complete!" << std::endl;
+    std::cout << "OnOpen" << std::endl;
 
     handler->SendText("Hello web-stream text!");
     handler->SendBinary("Hello web-stream binary!");
@@ -40,7 +40,8 @@ int main() {
         type = "UNKNOWN(" + std::to_string(opcode) + ")";
         break;
     }
-    std::cout << "Server says [" << type << "]: " << msg << std::endl;
+
+    std::cout << "OnMessage (opcode: " << type << ", message: " << msg << ")" << std::endl;
   });
 
   client.Run();

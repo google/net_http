@@ -25,13 +25,12 @@ int main(int argc, char** argv) {
   H2TlsServer server(ca_cert, server_cert, server_key, port);
 
   if (!server.Init()) {
-    LOG(ERROR) << "Failed to initialize H2TlsServer";
+    LOG(ERROR) << "Init() failed";
     return 1;
   }
 
   server.SetOnStream([](NGHTTP2WebStream* stream) {
-    LOG(INFO) << "New TLS WiSH stream (stream_id=" << stream->stream_id()
-              << ")";
+    LOG(INFO) << "OnStream";
 
     stream->SetOnMessage([stream](uint8_t opcode, const std::string& msg) {
       std::string type;
@@ -49,7 +48,8 @@ int main(int argc, char** argv) {
           type = "UNKNOWN(" + std::to_string(opcode) + ")";
           break;
       }
-      LOG(INFO) << "Received [" << type << "]: " << msg;
+
+      LOG(INFO) << "OnMessage (opcode: " << type << ", message: " << msg << ")";
 
       if (opcode == WEB_STREAM_OPCODE_TEXT) {
         stream->SendText(msg);
@@ -62,7 +62,7 @@ int main(int argc, char** argv) {
       }
     });
 
-    stream->SetOnClose([]() { LOG(INFO) << "TLS WiSH stream closed."; });
+    stream->SetOnClose([]() { LOG(INFO) << "OnClose"; });
   });
 
   server.Run();
