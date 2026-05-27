@@ -82,25 +82,21 @@ FetchContent_Declare(
 # These variables are unprefixed, so MakeAvailable is called immediately and
 # they are unset afterwards to avoid leaking into other dependencies.
 
-# nghttp2: build only the core library (no TLS apps, no examples).
-set(ENABLE_LIB_ONLY         ON  CACHE BOOL "" FORCE)
-set(ENABLE_APP              OFF CACHE BOOL "" FORCE)
-set(ENABLE_HPACK_TOOLS      OFF CACHE BOOL "" FORCE)
-set(ENABLE_DOC              OFF CACHE BOOL "" FORCE)
-set(ENABLE_PYTHON_BINDINGS  OFF CACHE BOOL "" FORCE)
-set(ENABLE_EXAMPLES         OFF CACHE BOOL "" FORCE)
 set(ENABLE_FAILMALLOC       OFF CACHE BOOL "" FORCE)
-set(WITH_JEMALLOC           OFF CACHE BOOL "" FORCE)
-set(WITH_LIBEVENT_OPENSSL   OFF CACHE BOOL "" FORCE)
-set(WITH_OPENSSL            OFF CACHE BOOL "" FORCE)
-set(WITH_LIBXML2            OFF CACHE BOOL "" FORCE)
-set(WITH_SYSTEMD            OFF CACHE BOOL "" FORCE)
-set(WITH_MRUBY              OFF CACHE BOOL "" FORCE)
-set(WITH_NEVERBLEED         OFF CACHE BOOL "" FORCE)
 
 # Since BUILD_SHARED_LIBS=OFF, we need to explicitly enable the static target (nghttp2_static)
 set(BUILD_SHARED_LIBS       OFF CACHE BOOL "" FORCE)
 set(BUILD_STATIC_LIBS       ON  CACHE BOOL "" FORCE)
+
+# nghttp2: build only the core library (no TLS apps, no examples).
+set(ENABLE_LIB_ONLY         ON  CACHE BOOL "" FORCE)
+
+set(ENABLE_DOC              OFF CACHE BOOL "" FORCE)
+
+set(WITH_LIBXML2            OFF CACHE BOOL "" FORCE)
+set(WITH_JEMALLOC           OFF CACHE BOOL "" FORCE)
+set(WITH_MRUBY              OFF CACHE BOOL "" FORCE)
+set(WITH_NEVERBLEED         OFF CACHE BOOL "" FORCE)
 
 FetchContent_Declare(
     nghttp2
@@ -111,10 +107,15 @@ FetchContent_MakeAvailable(nghttp2)
 
 # Reset the cached variables to avoid affecting other dependencies. They are not prefixed.
 foreach(_var IN ITEMS
-        ENABLE_LIB_ONLY ENABLE_APP ENABLE_HPACK_TOOLS ENABLE_DOC
-        ENABLE_PYTHON_BINDINGS ENABLE_EXAMPLES ENABLE_FAILMALLOC
-        WITH_JEMALLOC WITH_LIBEVENT_OPENSSL WITH_OPENSSL WITH_LIBXML2
-        WITH_SYSTEMD WITH_MRUBY WITH_NEVERBLEED BUILD_STATIC_LIBS BUILD_SHARED_LIBS)
+        ENABLE_LIB_ONLY
+        ENABLE_DOC
+        ENABLE_FAILMALLOC
+        BUILD_SHARED_LIBS
+        BUILD_STATIC_LIBS
+        WITH_LIBXML2
+        WITH_JEMALLOC
+        WITH_MRUBY
+        WITH_NEVERBLEED)
     unset(${_var} CACHE)
 endforeach()
 
