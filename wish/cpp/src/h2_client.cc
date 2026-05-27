@@ -198,11 +198,11 @@ void H2Client::EventCallback(struct bufferevent* bev,
 
 // ---- nghttp2 session callbacks ----
 
-ssize_t H2Client::SendCallback(nghttp2_session* /*session*/,
-                               const uint8_t* data,
-                               size_t length,
-                               int /*flags*/,
-                               void* user_data) {
+nghttp2_ssize H2Client::SendCallback(nghttp2_session* /*session*/,
+                                     const uint8_t* data,
+                                     size_t length,
+                                     int /*flags*/,
+                                     void* user_data) {
   Session* sess = static_cast<Session*>(user_data);
 
   int rv = bufferevent_write(sess->bev,
@@ -212,7 +212,7 @@ ssize_t H2Client::SendCallback(nghttp2_session* /*session*/,
     std::cerr << "bufferevent_write() failed" << std::endl;
     return NGHTTP2_ERR_CALLBACK_FAILURE;
   }
-  return static_cast<ssize_t>(length);
+  return static_cast<nghttp2_ssize>(length);
 }
 
 int H2Client::OnHeaderCallback(nghttp2_session* /*session*/,
@@ -333,8 +333,8 @@ ssize_t H2Client::DataSourceReadCallback(nghttp2_session* session,
 void H2Client::InitH2Session(Session* sess) {
   nghttp2_session_callbacks* cbs;
   nghttp2_session_callbacks_new(&cbs);
-  nghttp2_session_callbacks_set_send_callback(cbs,
-                                              SendCallback);
+  nghttp2_session_callbacks_set_send_callback2(cbs,
+                                               SendCallback);
   nghttp2_session_callbacks_set_on_header_callback(cbs,
                                                    OnHeaderCallback);
   nghttp2_session_callbacks_set_on_frame_recv_callback(cbs,
