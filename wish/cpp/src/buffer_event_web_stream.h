@@ -68,6 +68,8 @@ class BufferEventWebStream : public WebStream {
   // ---- Chunked-encoding receive state ----
   // Set when the terminal zero-length chunk has been seen on the inbound side.
   bool receive_closed_ = false;
+  // Set when the terminal chunk (size 0) has been seen, but before its trailer is consumed.
+  bool terminal_chunk_seen_ = false;
 
   // State machine used by ReadChunkedBytes() to decode the inbound
   // Transfer-Encoding: chunked body after the HTTP handshake.

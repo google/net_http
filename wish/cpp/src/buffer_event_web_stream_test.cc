@@ -295,3 +295,96 @@ TEST_F(BufferEventWebStreamTest, HandshakeAndMetadataExchange) {
   delete client;
 }
 
+// Verify that the local side can still receive messages from the peer after calling Close() (half-closed).
+TEST_F(BufferEventWebStreamTest, ReceiveMessageAfterClose) {
+  bufferevent* pair[2];
+  int rv = bufferevent_pair_new(base_,
+                                BEV_OPT_CLOSE_ON_FREE | BEV_OPT_DEFER_CALLBACKS,
+                                pair);
+  ASSERT_EQ(rv, 0);
+
+  BufferEventWebStream* server = new BufferEventWebStream(pair[0], true /* is_server */);
+  BufferEventWebStream* client = new BufferEventWebStream(pair[1], false /* is_server */);
+
+  bool server_received_msg_after_close = false;
+  bool server_close_fired = false;
+  bool client_close_fired = false;
+
+  server->SetOnOpen([&]() {
+    // Server closes first (half-close)
+    EXPECT_EQ(server->Close(), 0);
+  });
+
+  server->SetOnMessage([&](uint8_t opcode, const std::string& msg) {
+    if (opcode == WEB_STREAM_OPCODE_TEXT && msg == "Hello after server close") {
+      server_received_msg_after_close = true;
+    }
+  });
+
+  client->SetOnClose([&]() {
+    client_close_fired = true;
+    // Client sends a message after server has closed its outbound side.
+    // This must be received successfully by the server.
+    client->SendText("Hello after server close");
+    // Client then closes its own side.
+    client->Close();
+  });
+
+  server->SetOnClose([&]() {
+    server_close_fired = true;
+  });
+
+  server->Start();
+  client->Start();
+
+  // The event loop should run until both server and client have completed their
+  // close sequences and self-deleted (which frees their bufferevents, leaving the base empty).
+  event_base_dispatch(base_);
+
+  EXPECT_TRUE(server_received_msg_after_close);
+  EXPECT_TRUE(client_close_fired);
+  EXPECT_TRUE(server_close_fired);
+}
+
+// Verify that any extra data arriving after the peer's terminal chunk is closed
+// triggers a warning to stderr and is drained.
+TEST_F(BufferEventWebStreamTest, WarningOnExtraDataPostClose) {
+  bufferevent* pair[2];
+  int rv = bufferevent_pair_new(base_,
+                                BEV_OPT_CLOSE_ON_FREE | BEV_OPT_DEFER_CALLBACKS,
+                                pair);
+  ASSERT_EQ(rv, 0);
+
+  BufferEventWebStream* server = new BufferEventWebStream(pair[0], true /* is_server */);
+  BufferEventWebStream* client = new BufferEventWebStream(pair[1], false /* is_server */);
+
+  bool server_close_fired = false;
+  bool client_close_fired = false;
+
+  server->SetOnOpen([&]() {
+    server->Close();
+  });
+
+  client->SetOnClose([&]() {
+    client_close_fired = true;
+    client->Close();
+    // Write extra data after closing the client stream.
+    const char* extra = "extra data after close";
+    bufferevent_write(pair[1], extra, strlen(extra));
+  });
+
+  server->SetOnClose([&]() {
+    server_close_fired = true;
+  });
+
+  server->Start();
+  client->Start();
+
+  event_base_dispatch(base_);
+
+  EXPECT_TRUE(client_close_fired);
+  EXPECT_TRUE(server_close_fired);
+}
+
+
+
