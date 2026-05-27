@@ -123,5 +123,5 @@ void TlsServer::AcceptErrorCb(evconnlistener* listener, void* ctx) {
   std::cerr << "Got an error " << err << " ("
             << evutil_socket_error_to_string(err)
             << ") on the listener. Shutting down." << std::endl;
-  event_base_loopexit(base, NULL);
+  event_base_loopexit(base, nullptr);
 }

@@ -87,7 +87,7 @@ static void DrainInput(bufferevent* bev) {
 }
 
 // Tests that the client does NOT mask frames when sending.
-// WiSH doesn't use masking (unlike WebSocket over TCP).
+// web-stream doesn't use masking (unlike WebSocket over TCP).
 //
 // Strategy: use a raw bufferevent on one end of a pair as a fake server.
 // Inject a valid HTTP 200 response to move the WishHandler into OPEN state,
@@ -132,9 +132,9 @@ TEST_F(WishHandlerTest, ClientSendsUnmasked) {
   EXPECT_EQ(bytes[0], 0x81u);
 
   // Second byte: mask bit (0x80) + payload length.
-  // WiSH doesn't use masking.
+  // web-stream doesn't use masking.
   bool is_masked = (bytes[1] & 0x80) != 0;
-  EXPECT_FALSE(is_masked) << "Client sent a masked frame! WiSH must not use masking.";
+  EXPECT_FALSE(is_masked) << "Client sent a masked frame! web-stream must not use masking.";
 
   // WishHandler destructor frees pair[0].
   delete client;
@@ -177,7 +177,7 @@ TEST_F(WishHandlerTest, ServerSendsUnmasked) {
   EXPECT_EQ(bytes[0], 0x81u);
 
   bool is_masked = (bytes[1] & 0x80) != 0;
-  EXPECT_FALSE(is_masked) << "Server sent a masked frame! WiSH must not use masking.";
+  EXPECT_FALSE(is_masked) << "Server sent a masked frame! web-stream must not use masking.";
 
   delete server;
   bufferevent_free(pair[1]);

@@ -20,9 +20,9 @@ const uint8_t WISH_OPCODE_BINARY = 2;
 const uint8_t WISH_OPCODE_TEXT_METADATA = 3;
 const uint8_t WISH_OPCODE_BINARY_METADATA = 4;
 
-// WishHandler implements the WiSH Procotol defined at https://datatracker.ietf.org/doc/html/draft-yoshino-wish
+// WishHandler implements the web-stream protocol defined at https://datatracker.ietf.org/doc/html/draft-yoshino-wish
 //
-// It manages the lifecycle of a single WiSH connection, including the initial HTTP handshake and subsequent message framing/parsing.
+// It manages the lifecycle of a single web-stream connection, including the initial HTTP handshake and subsequent message framing/parsing.
 //
 // It uses libevent's bufferevent for async I/O. The underlying transport should be provided through it.
 class WishHandler {
@@ -52,14 +52,17 @@ class WishHandler {
  private:
   bufferevent* bev_;
   bool is_server_;
+  wslay_event_context* ctx_;
 
   MessageCallback on_message_;
   OpenCallback on_open_;
   CloseCallback on_close_;
 
-  enum State { HANDSHAKE,
-               OPEN,
-               CLOSED };
+  enum State {
+    HANDSHAKE,
+    OPEN,
+    CLOSED
+  };
   State state_;
 
   // wslay callbacks
