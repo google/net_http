@@ -92,6 +92,7 @@ class H2TlsClient {
                                               void*);
 
   void InitH2Session(Session* sess);
+  void HandleSessionError(Session* sess);
 
   std::string host_;
   int port_;

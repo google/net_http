@@ -58,6 +58,9 @@ class NGHTTP2WebStream : public WebStream {
   // Signal that the HTTP/2 stream has been closed.
   void OnClose();
 
+  // Signal that the HTTP/2 stream or connection encountered a fatal error.
+  void OnError();
+
   // nghttp2 data-source read callback: drains output_buf_ into the HTTP/2
   // DATA frame buffer.  Returns NGHTTP2_ERR_DEFERRED when no data is ready.
   nghttp2_ssize ReadSendData(uint8_t* buf,

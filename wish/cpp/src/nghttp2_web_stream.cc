@@ -120,6 +120,16 @@ void NGHTTP2WebStream::OnClose() {
   }
 }
 
+void NGHTTP2WebStream::OnError() {
+  if (close_fired_) {
+    return;
+  }
+  close_fired_ = true;
+  if (on_error_) {
+    on_error_();
+  }
+}
+
 // ---- nghttp2 data-source read callback ----
 
 nghttp2_ssize NGHTTP2WebStream::ReadSendData(uint8_t* buf,

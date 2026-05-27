@@ -24,6 +24,20 @@ H2Client::~H2Client() {
     event_base_loopbreak(base_);
   }
 
+  if (session_) {
+    if (session_->web_stream) {
+      delete session_->web_stream;
+    }
+    if (session_->h2session) {
+      nghttp2_session_del(session_->h2session);
+    }
+    if (session_->bev) {
+      bufferevent_free(session_->bev);
+    }
+    delete session_;
+    session_ = nullptr;
+  }
+
   if (dns_base_) {
     evdns_base_free(dns_base_, 0);
   }
@@ -131,12 +145,17 @@ void H2Client::ReadCallback(bufferevent* bev,
   if (recv_len < 0) {
     LOG(ERROR) << "nghttp2_session_mem_recv() failed: "
                << nghttp2_strerror(static_cast<int>(recv_len));
+
+    sess->client->HandleSessionError(sess);
+
     return;
   }
 
   int drain_rv = evbuffer_drain(input, static_cast<size_t>(recv_len));
   if (drain_rv != 0) {
     LOG(ERROR) << "evbuffer_drain() failed";
+
+    sess->client->HandleSessionError(sess);
 
     return;
   }
@@ -150,6 +169,10 @@ void H2Client::ReadCallback(bufferevent* bev,
   if (send_rv < 0) {
     LOG(ERROR) << "nghttp2_session_send() failed: "
                << nghttp2_strerror(send_rv);
+
+    sess->client->HandleSessionError(sess);
+
+    return;
   }
 }
 
@@ -184,7 +207,11 @@ void H2Client::EventCallback(bufferevent* bev,
 
   if (what & (BEV_EVENT_EOF | BEV_EVENT_ERROR)) {
     if (sess->web_stream) {
-      sess->web_stream->OnClose();
+      if (what & BEV_EVENT_ERROR) {
+        sess->web_stream->OnError();
+      } else {
+        sess->web_stream->OnClose();
+      }
 
       delete sess->web_stream;
       sess->web_stream = nullptr;
@@ -195,10 +222,40 @@ void H2Client::EventCallback(bufferevent* bev,
       sess->h2session = nullptr;
     }
 
+    sess->client->Stop();
+
     bufferevent_free(bev);
 
+    if (sess->client->session_ == sess) {
+      sess->client->session_ = nullptr;
+    }
     delete sess;
   }
+}
+
+void H2Client::HandleSessionError(Session* sess) {
+  if (sess->web_stream) {
+    sess->web_stream->OnError();
+    delete sess->web_stream;
+    sess->web_stream = nullptr;
+  }
+
+  if (sess->h2session) {
+    nghttp2_session_del(sess->h2session);
+    sess->h2session = nullptr;
+  }
+
+  if (sess->bev) {
+    bufferevent_free(sess->bev);
+    sess->bev = nullptr;
+  }
+
+  Stop();
+
+  if (session_ == sess) {
+    session_ = nullptr;
+  }
+  delete sess;
 }
 
 // ---- nghttp2 session callbacks ----
@@ -261,12 +318,19 @@ int H2Client::OnFrameRecvCallback(nghttp2_session* /*session*/,
   // stream, indicating it accepted the request.  Any other status (e.g. 400,
   // 404, 500) is treated as a rejection and the stream is left unopened.
   if (frame->hd.type == NGHTTP2_HEADERS &&
-      frame->headers.cat == NGHTTP2_HCAT_RESPONSE &&
-      sess->response_status == 200) {
-    if (sess->web_stream) {
-      if (sess->client->on_open_) {
-        sess->client->on_open_(sess->web_stream);
+      frame->headers.cat == NGHTTP2_HCAT_RESPONSE) {
+    if (sess->response_status == 200) {
+      if (sess->web_stream) {
+        if (sess->client->on_open_) {
+          sess->client->on_open_(sess->web_stream);
+        }
       }
+    } else {
+      LOG(ERROR) << "H2Client: Server rejected stream with status: "
+                 << sess->response_status;
+
+      // nghttp2_on_frame_recv_callback spec: any nonzero value signals a fatal error.
+      return -1;
     }
   }
 
@@ -297,6 +361,8 @@ int H2Client::OnDataChunkRecvCallback(nghttp2_session* session,
     if (send_rv < 0) {
       LOG(ERROR) << "nghttp2_session_send() failed: "
                  << nghttp2_strerror(send_rv);
+
+      return NGHTTP2_ERR_CALLBACK_FAILURE;
     }
   }
 
@@ -305,12 +371,17 @@ int H2Client::OnDataChunkRecvCallback(nghttp2_session* session,
 
 int H2Client::OnStreamCloseCallback(nghttp2_session* /*session*/,
                                     int32_t stream_id,
-                                    uint32_t /*error_code*/,
+                                    uint32_t error_code,
                                     void* user_data) {
   Session* sess = static_cast<Session*>(user_data);
 
   if (sess->web_stream && stream_id == sess->h2_stream_id) {
-    sess->web_stream->OnClose();
+    if (error_code != NGHTTP2_NO_ERROR) {
+      LOG(ERROR) << "H2Client: Stream closed with error code: " << error_code;
+      sess->web_stream->OnError();
+    } else {
+      sess->web_stream->OnClose();
+    }
 
     delete sess->web_stream;
     sess->web_stream = nullptr;
@@ -404,7 +475,7 @@ void H2Client::InitH2Session(Session* sess) {
   if (stream_id < 0) {
     LOG(ERROR) << "H2Client: nghttp2_submit_request2() failed: "
                << nghttp2_strerror(stream_id);
-
+    HandleSessionError(sess);
     return;
   }
   sess->h2_stream_id = stream_id;
@@ -424,5 +495,6 @@ void H2Client::InitH2Session(Session* sess) {
   if (send_rv < 0) {
     LOG(ERROR) << "H2Client: nghttp2_session_send() failed: "
                << nghttp2_strerror(send_rv);
+    HandleSessionError(sess);
   }
 }

@@ -192,3 +192,19 @@ TEST_F(NGHTTP2WebStreamTest, OnErrorOnMidMessageEOF) {
   EXPECT_TRUE(client_error_fired);
 }
 
+// Verify that calling OnError() directly fires SetOnError callback.
+TEST_F(NGHTTP2WebStreamTest, OnErrorMethodFiresCallback) {
+  NGHTTP2WebStream client(client_session_, 1, false /* is_server */);
+
+  bool client_close_fired = false;
+  bool client_error_fired = false;
+
+  client.SetOnClose([&]() { client_close_fired = true; });
+  client.SetOnError([&]() { client_error_fired = true; });
+
+  client.OnError();
+
+  EXPECT_FALSE(client_close_fired);
+  EXPECT_TRUE(client_error_fired);
+}
+
