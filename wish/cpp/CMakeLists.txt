@@ -42,7 +42,7 @@ FetchContent_Declare(
     wslay
     GIT_REPOSITORY https://github.com/tatsuhiro-t/wslay.git
     GIT_TAG        0e7d106ff89ad6638090fd811a9b2e4c5dda8d40
-    PATCH_COMMAND  git apply --reverse --check ${CMAKE_CURRENT_SOURCE_DIR}/patches/wslay-disable-mask.patch || git apply ${CMAKE_CURRENT_SOURCE_DIR}/patches/wslay-disable-mask.patch
+    PATCH_COMMAND  git apply --reverse --check ${CMAKE_CURRENT_SOURCE_DIR}/patches/wslay.patch || git apply ${CMAKE_CURRENT_SOURCE_DIR}/patches/wslay.patch
 )
 
 
