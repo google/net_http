@@ -187,9 +187,7 @@ void H2TlsServer::AcceptConnCb(evconnlistener* listener,
     VLOG(1) << "H2TlsServer: nghttp2_submit_settings() failed: "
             << nghttp2_strerror(submit_settings_rv);
 
-    nghttp2_session_del(sess->h2session);
-    bufferevent_free(bev);
-    delete sess;
+    HandleSessionError(sess);
 
     return;
   }
@@ -201,9 +199,7 @@ void H2TlsServer::AcceptConnCb(evconnlistener* listener,
     VLOG(1) << "H2TlsServer: nghttp2_session_set_local_window_size() failed: "
             << nghttp2_strerror(set_local_window_size_rv);
 
-    nghttp2_session_del(sess->h2session);
-    bufferevent_free(bev);
-    delete sess;
+    HandleSessionError(sess);
 
     return;
   }
@@ -213,9 +209,7 @@ void H2TlsServer::AcceptConnCb(evconnlistener* listener,
     VLOG(1) << "H2TlsServer: nghttp2_session_send() failed: "
             << nghttp2_strerror(send_rv);
 
-    nghttp2_session_del(sess->h2session);
-    bufferevent_free(bev);
-    delete sess;
+    HandleSessionError(sess);
 
     return;
   }
@@ -231,9 +225,7 @@ void H2TlsServer::AcceptConnCb(evconnlistener* listener,
   if (enable_rv != 0) {
     VLOG(1) << "H2TlsServer: bufferevent_enable() failed";
 
-    nghttp2_session_del(sess->h2session);
-    bufferevent_free(bev);
-    delete sess;
+    HandleSessionError(sess);
 
     return;
   }
@@ -256,6 +248,31 @@ void H2TlsServer::AcceptErrorCb(evconnlistener* listener,
 
 // ---- libevent bufferevent callbacks ----
 
+void H2TlsServer::HandleSessionError(Session* sess) {
+  if (!sess) {
+    return;
+  }
+  for (auto& [sid, info] : sess->incoming_streams) {
+    if (info.web_stream) {
+      info.web_stream->OnError();
+      delete info.web_stream;
+    }
+  }
+  sess->incoming_streams.clear();
+
+  if (sess->h2session) {
+    nghttp2_session_del(sess->h2session);
+    sess->h2session = nullptr;
+  }
+
+  if (sess->bev) {
+    bufferevent_free(sess->bev);
+    sess->bev = nullptr;
+  }
+
+  delete sess;
+}
+
 void H2TlsServer::ReadCallback(bufferevent* bev, void* ctx) {
   Session* sess = static_cast<Session*>(ctx);
 
@@ -274,7 +291,7 @@ void H2TlsServer::ReadCallback(bufferevent* bev, void* ctx) {
     VLOG(1) << "H2TlsServer: nghttp2_session_mem_recv() failed: "
             << nghttp2_strerror(static_cast<int>(recv_len));
 
-    bufferevent_free(bev);
+    HandleSessionError(sess);
     return;
   }
 
@@ -282,7 +299,7 @@ void H2TlsServer::ReadCallback(bufferevent* bev, void* ctx) {
   if (drain_rv != 0) {
     VLOG(3) << "H2TlsServer: evbuffer_drain() failed";
 
-    bufferevent_free(bev);
+    HandleSessionError(sess);
     return;
   }
 
@@ -290,12 +307,16 @@ void H2TlsServer::ReadCallback(bufferevent* bev, void* ctx) {
   if (session_send_rv < 0) {
     VLOG(1) << "H2TlsServer: nghttp2_session_send() failed: "
             << nghttp2_strerror(session_send_rv);
+
+    HandleSessionError(sess);
+    return;
   }
 }
 
 void H2TlsServer::EventCallback(bufferevent* bev,
                                 short what,  // NOLINT(runtime/int)
                                 void* ctx) {
+  (void)bev;
   Session* sess = static_cast<Session*>(ctx);
 
   if (what & BEV_EVENT_ERROR) {
@@ -303,16 +324,7 @@ void H2TlsServer::EventCallback(bufferevent* bev,
   }
 
   if (what & (BEV_EVENT_EOF | BEV_EVENT_ERROR)) {
-    for (auto& [sid, info] : sess->incoming_streams) {
-      if (info.web_stream) {
-        info.web_stream->OnError();
-        delete info.web_stream;
-      }
-    }
-
-    nghttp2_session_del(sess->h2session);
-    bufferevent_free(bev);
-    delete sess;
+    HandleSessionError(sess);
   }
 }
 

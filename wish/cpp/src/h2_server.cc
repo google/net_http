@@ -68,6 +68,20 @@ bool H2Server::Init() {
   return true;
 }
 
+int H2Server::GetPort() const {
+  if (listener_) {
+    evutil_socket_t fd = evconnlistener_get_fd(listener_);
+    if (fd >= 0) {
+      struct sockaddr_in sin;
+      socklen_t len = sizeof(sin);
+      if (getsockname(fd, reinterpret_cast<struct sockaddr*>(&sin), &len) == 0) {
+        return ntohs(sin.sin_port);
+      }
+    }
+  }
+  return port_;
+}
+
 void H2Server::SetOnStream(StreamCallback cb) { on_stream_ = cb; }
 
 int H2Server::Run() {
@@ -144,9 +158,7 @@ void H2Server::AcceptConnCb(evconnlistener* listener,
     VLOG(1) << "H2Server: nghttp2_submit_settings() failed: "
             << nghttp2_strerror(submit_settings_rv);
 
-    nghttp2_session_del(sess->h2session);
-    bufferevent_free(bev);
-    delete sess;
+    HandleSessionError(sess);
 
     return;
   }
@@ -159,9 +171,7 @@ void H2Server::AcceptConnCb(evconnlistener* listener,
     VLOG(1) << "H2Server: nghttp2_session_set_local_window_size() failed: "
             << nghttp2_strerror(set_local_window_size_rv);
 
-    nghttp2_session_del(sess->h2session);
-    bufferevent_free(bev);
-    delete sess;
+    HandleSessionError(sess);
 
     return;
   }
@@ -171,9 +181,7 @@ void H2Server::AcceptConnCb(evconnlistener* listener,
     VLOG(1) << "H2Server: nghttp2_session_send() failed: "
             << nghttp2_strerror(send_rv);
 
-    nghttp2_session_del(sess->h2session);
-    bufferevent_free(bev);
-    delete sess;
+    HandleSessionError(sess);
 
     return;
   }
@@ -189,9 +197,7 @@ void H2Server::AcceptConnCb(evconnlistener* listener,
   if (enable_rv != 0) {
     VLOG(1) << "H2Server: bufferevent_enable() failed";
 
-    nghttp2_session_del(sess->h2session);
-    bufferevent_free(bev);
-    delete sess;
+    HandleSessionError(sess);
 
     return;
   }
@@ -214,6 +220,31 @@ void H2Server::AcceptErrorCb(evconnlistener* listener,
 
 // ---- libevent bufferevent callbacks ----
 
+void H2Server::HandleSessionError(Session* sess) {
+  if (!sess) {
+    return;
+  }
+  for (auto& [sid, info] : sess->incoming_streams) {
+    if (info.web_stream) {
+      info.web_stream->OnError();
+      delete info.web_stream;
+    }
+  }
+  sess->incoming_streams.clear();
+
+  if (sess->h2session) {
+    nghttp2_session_del(sess->h2session);
+    sess->h2session = nullptr;
+  }
+
+  if (sess->bev) {
+    bufferevent_free(sess->bev);
+    sess->bev = nullptr;
+  }
+
+  delete sess;
+}
+
 void H2Server::ReadCallback(bufferevent* bev, void* ctx) {
   Session* sess = static_cast<Session*>(ctx);
 
@@ -232,7 +263,7 @@ void H2Server::ReadCallback(bufferevent* bev, void* ctx) {
     VLOG(1) << "H2Server: nghttp2_session_mem_recv() failed: "
             << nghttp2_strerror(static_cast<int>(readlen));
 
-    bufferevent_free(bev);
+    HandleSessionError(sess);
 
     return;
   }
@@ -240,7 +271,7 @@ void H2Server::ReadCallback(bufferevent* bev, void* ctx) {
   if (drain_rv != 0) {
     VLOG(3) << "H2Server: evbuffer_drain() failed";
 
-    bufferevent_free(bev);
+    HandleSessionError(sess);
 
     return;
   }
@@ -249,12 +280,18 @@ void H2Server::ReadCallback(bufferevent* bev, void* ctx) {
   if (session_send_rv < 0) {
     VLOG(1) << "H2Server: nghttp2_session_send() failed: "
             << nghttp2_strerror(session_send_rv);
+
+    HandleSessionError(sess);
+
+    return;
   }
 }
 
 void H2Server::EventCallback(bufferevent* bev,
                              short what,  // NOLINT(runtime/int)
                              void* ctx) {
+  (void)bev;
+
   Session* sess = static_cast<Session*>(ctx);
 
   if (what & BEV_EVENT_ERROR) {
@@ -262,16 +299,7 @@ void H2Server::EventCallback(bufferevent* bev,
   }
 
   if (what & (BEV_EVENT_EOF | BEV_EVENT_ERROR)) {
-    for (auto& [sid, info] : sess->incoming_streams) {
-      if (info.web_stream) {
-        info.web_stream->OnError();
-        delete info.web_stream;
-      }
-    }
-
-    nghttp2_session_del(sess->h2session);
-    bufferevent_free(bev);
-    delete sess;
+    HandleSessionError(sess);
   }
 }
 

@@ -115,6 +115,9 @@ class H2TlsServer {
                                               nghttp2_data_source*,
                                               void*);
 
+  // Helper: tear down session resources on error or closure.
+  static void HandleSessionError(Session* sess);
+
   static nghttp2_session* CreateH2Session(Session* sess);
 
   event_base* base_;
