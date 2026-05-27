@@ -51,8 +51,8 @@ bool PlainServer::Init() {
   return true;
 }
 
-void PlainServer::SetOnConnection(ConnectCallback cb) {
-  on_connection_ = cb;
+void PlainServer::SetOnStream(StreamCallback cb) {
+  on_stream_ = cb;
 }
 
 void PlainServer::Run() {
@@ -89,12 +89,15 @@ void PlainServer::AcceptConnCb(evconnlistener* listener,
     return;
   }
 
-  if (server->on_connection_) {
-    server->on_connection_(bev);
+  BufferEventWebStream* stream = new BufferEventWebStream(bev, true);
+
+  if (server->on_stream_) {
+    server->on_stream_(stream);
   } else {
-    std::cerr << "Warning: No connection handler registered." << std::endl;
-    bufferevent_free(bev);
+    std::cerr << "Warning: No stream handler registered." << std::endl;
   }
+
+  stream->Start();
 }
 
 void PlainServer::AcceptErrorCb(evconnlistener* listener, void* ctx) {
