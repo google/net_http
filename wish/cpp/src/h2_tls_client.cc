@@ -14,25 +14,22 @@
   {                               \
       (uint8_t*)(name), (uint8_t*)(value), strlen(name), strlen(value), NGHTTP2_NV_FLAG_NONE}
 
-H2TlsClient::H2TlsClient(const std::string& host,
+H2TlsClient::H2TlsClient(event_base* base,
+                         const std::string& host,
                          int port,
                          const std::string& ca_file,
                          const std::string& cert_file,
                          const std::string& key_file)
-    : host_(host),
+    : base_(base),
+      host_(host),
       port_(port),
       ca_file_(ca_file),
       cert_file_(cert_file),
       key_file_(key_file),
-      base_(nullptr),
       dns_base_(nullptr),
       session_(nullptr) {}
 
 H2TlsClient::~H2TlsClient() {
-  if (base_) {
-    event_base_loopbreak(base_);
-  }
-
   if (session_) {
     if (session_->web_stream) {
       delete session_->web_stream;
@@ -50,9 +47,6 @@ H2TlsClient::~H2TlsClient() {
   if (dns_base_) {
     evdns_base_free(dns_base_, 0);
   }
-  if (base_) {
-    event_base_free(base_);
-  }
 }
 
 bool H2TlsClient::Init() {
@@ -69,16 +63,15 @@ bool H2TlsClient::Init() {
     return false;
   }
 
-  // Advertise "h2" via ALPN so the server can negotiate HTTP/2.
-  static const unsigned char kAlpnH2[] = "\x02h2";
-  SSL_CTX_set_alpn_protos(tls_ctx_.ssl_ctx(), kAlpnH2, sizeof(kAlpnH2) - 1);
-
-  base_ = event_base_new();
   if (!base_) {
-    VLOG(1) << "event_base_new() failed";
+    VLOG(1) << "H2TlsClient: event_base is null";
 
     return false;
   }
+
+  // Advertise "h2" via ALPN so the server can negotiate HTTP/2.
+  static const unsigned char kAlpnH2[] = "\x02h2";
+  SSL_CTX_set_alpn_protos(tls_ctx_.ssl_ctx(), kAlpnH2, sizeof(kAlpnH2) - 1);
 
   dns_base_ = evdns_base_new(base_,
                              1);

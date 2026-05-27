@@ -12,15 +12,16 @@
 #include "buffer_event_web_stream.h"
 #include "handshake.h"
 
-TlsServer::TlsServer(int port,
+TlsServer::TlsServer(event_base* base,
+                     int port,
                      const std::string& ca_file,
                      const std::string& cert_file,
                      const std::string& key_file)
-    : port_(port),
+    : base_(base),
+      port_(port),
       ca_file_(ca_file),
       cert_file_(cert_file),
       key_file_(key_file),
-      base_(nullptr),
       listener_(nullptr) {}
 
 TlsServer::~TlsServer() {
@@ -29,9 +30,6 @@ TlsServer::~TlsServer() {
 
   if (listener_) {
     evconnlistener_free(listener_);
-  }
-  if (base_) {
-    event_base_free(base_);
   }
 }
 
@@ -49,9 +47,8 @@ bool TlsServer::Init() {
     return false;
   }
 
-  base_ = event_base_new();
   if (!base_) {
-    VLOG(1) << "Could not initialize libevent!";
+    VLOG(1) << "event_base is null";
 
     return false;
   }
@@ -161,8 +158,8 @@ void TlsServer::AcceptErrorCb(evconnlistener* listener, void* ctx) {
   event_base* base = evconnlistener_get_base(listener);
   int err = EVUTIL_SOCKET_ERROR();
   VLOG(1) << "Got an error " << err << " ("
-             << evutil_socket_error_to_string(err)
-             << ") on the listener. Shutting down.";
+          << evutil_socket_error_to_string(err)
+          << ") on the listener. Shutting down.";
   event_base_loopexit(base, nullptr);
 }
 

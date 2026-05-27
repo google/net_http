@@ -18,50 +18,63 @@ int main(int argc, char** argv) {
   const std::string host = absl::GetFlag(FLAGS_host);
   const int port = absl::GetFlag(FLAGS_port);
 
-  H2Client client(host, port);
-
-  if (!client.Init()) {
-    LOG(INFO) << "Init() failed";
+  event_base* base = event_base_new();
+  if (!base) {
+    LOG(ERROR) << "Failed to create event_base";
 
     return 1;
   }
 
-  client.SetOnOpen([&client](WebStream* stream) {
-    LOG(INFO) << "OnOpen";
+  {
+    H2Client client(base, host, port);
 
-    stream->SetOnMessage([](uint8_t opcode, const std::string& msg) {
-      std::string type;
-      switch (opcode) {
-        case WEB_STREAM_OPCODE_TEXT:
-          type = "TEXT";
-          break;
-        case WEB_STREAM_OPCODE_BINARY:
-          type = "BINARY";
-          break;
-        case WEB_STREAM_OPCODE_METADATA:
-          type = "METADATA";
-          break;
-        default:
-          type = "UNKNOWN(" + std::to_string(opcode) + ")";
-          break;
-      }
+    if (!client.Init()) {
+      LOG(INFO) << "Init() failed";
 
-      LOG(INFO) << "Message (opcode: " << type << ", message: " << msg << ")";
+      event_base_free(base);
+
+      return 1;
+    }
+
+    client.SetOnOpen([&client](WebStream* stream) {
+      LOG(INFO) << "OnOpen";
+
+      stream->SetOnMessage([](uint8_t opcode, const std::string& msg) {
+        std::string type;
+        switch (opcode) {
+          case WEB_STREAM_OPCODE_TEXT:
+            type = "TEXT";
+            break;
+          case WEB_STREAM_OPCODE_BINARY:
+            type = "BINARY";
+            break;
+          case WEB_STREAM_OPCODE_METADATA:
+            type = "METADATA";
+            break;
+          default:
+            type = "UNKNOWN(" + std::to_string(opcode) + ")";
+            break;
+        }
+
+        LOG(INFO) << "Message (opcode: " << type << ", message: " << msg << ")";
+      });
+
+      stream->SetOnClose([&client]() {
+        LOG(INFO) << "OnClose";
+
+        client.Stop();
+      });
+
+      stream->SendText("Hello web-stream text over HTTP/2!");
+      stream->SendBinary("Hello web-stream binary over HTTP/2!");
+      stream->SendMetadata("Hello web-stream metadata over HTTP/2!");
+      stream->Close();
     });
 
-    stream->SetOnClose([&client]() {
-      LOG(INFO) << "OnClose";
+    client.Run();
+  }
 
-      client.Stop();
-    });
-
-    stream->SendText("Hello web-stream text over HTTP/2!");
-    stream->SendBinary("Hello web-stream binary over HTTP/2!");
-    stream->SendMetadata("Hello web-stream metadata over HTTP/2!");
-    stream->Close();
-  });
-
-  client.Run();
+  event_base_free(base);
 
   return 0;
 }

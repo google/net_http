@@ -16,56 +16,69 @@ int main(int argc, char** argv) {
 
   const int port = absl::GetFlag(FLAGS_port);
 
-  PlainServer server(port);
-
-  if (!server.Init()) {
-    LOG(ERROR) << "Init() failed";
+  event_base* base = event_base_new();
+  if (!base) {
+    LOG(ERROR) << "Failed to create event_base";
 
     return 1;
   }
 
-  server.SetOnStream([](WebStream* stream) {
-    LOG(INFO) << "OnStream";
+  {
+    PlainServer server(base, port);
 
-    stream->SetOnMessage([stream](uint8_t opcode, const std::string& msg) {
-      std::string type;
-      switch (opcode) {
-        case WEB_STREAM_OPCODE_TEXT:
-          type = "TEXT";
-          break;
-        case WEB_STREAM_OPCODE_BINARY:
-          type = "BINARY";
-          break;
-        case WEB_STREAM_OPCODE_METADATA:
-          type = "METADATA";
-          break;
-        default:
-          type = "UNKNOWN(" + std::to_string(opcode) + ")";
-          break;
-      }
+    if (!server.Init()) {
+      LOG(ERROR) << "Init() failed";
 
-      LOG(INFO) << "OnMessage (opcode: " << type << ", message: " << msg << ")";
+      event_base_free(base);
 
-      // Echo back
-      if (opcode == WEB_STREAM_OPCODE_TEXT) {
-        stream->SendText(msg);
-      } else if (opcode == WEB_STREAM_OPCODE_BINARY) {
-        stream->SendBinary(msg);
-      } else if (opcode == WEB_STREAM_OPCODE_METADATA) {
-        stream->SendMetadata(msg);
-      } else {
-        LOG(WARNING) << "Unknown opcode, cannot echo.";
-      }
+      return 1;
+    }
+
+    server.SetOnStream([](WebStream* stream) {
+      LOG(INFO) << "OnStream";
+
+      stream->SetOnMessage([stream](uint8_t opcode, const std::string& msg) {
+        std::string type;
+        switch (opcode) {
+          case WEB_STREAM_OPCODE_TEXT:
+            type = "TEXT";
+            break;
+          case WEB_STREAM_OPCODE_BINARY:
+            type = "BINARY";
+            break;
+          case WEB_STREAM_OPCODE_METADATA:
+            type = "METADATA";
+            break;
+          default:
+            type = "UNKNOWN(" + std::to_string(opcode) + ")";
+            break;
+        }
+
+        LOG(INFO) << "OnMessage (opcode: " << type << ", message: " << msg << ")";
+
+        // Echo back
+        if (opcode == WEB_STREAM_OPCODE_TEXT) {
+          stream->SendText(msg);
+        } else if (opcode == WEB_STREAM_OPCODE_BINARY) {
+          stream->SendBinary(msg);
+        } else if (opcode == WEB_STREAM_OPCODE_METADATA) {
+          stream->SendMetadata(msg);
+        } else {
+          LOG(WARNING) << "Unknown opcode, cannot echo.";
+        }
+      });
+
+      stream->SetOnClose([stream]() {
+        LOG(INFO) << "OnClose";
+
+        stream->Close();
+      });
     });
 
-    stream->SetOnClose([stream]() {
-      LOG(INFO) << "OnClose";
+    server.Run();
+  }
 
-      stream->Close();
-    });
-  });
-
-  server.Run();
+  event_base_free(base);
 
   return 0;
 }

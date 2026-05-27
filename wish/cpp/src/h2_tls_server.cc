@@ -28,22 +28,20 @@ static int AlpnSelectCb(SSL* /*ssl*/,
   return SSL_TLSEXT_ERR_OK;
 }
 
-H2TlsServer::H2TlsServer(const std::string& ca_file,
+H2TlsServer::H2TlsServer(event_base* base,
+                         const std::string& ca_file,
                          const std::string& cert_file,
                          const std::string& key_file, int port)
-    : ca_file_(ca_file),
+    : base_(base),
+      ca_file_(ca_file),
       cert_file_(cert_file),
       key_file_(key_file),
       port_(port),
-      base_(nullptr),
       listener_(nullptr) {}
 
 H2TlsServer::~H2TlsServer() {
   if (listener_) {
     evconnlistener_free(listener_);
-  }
-  if (base_) {
-    event_base_free(base_);
   }
 }
 
@@ -64,9 +62,8 @@ bool H2TlsServer::Init() {
   // Advertise "h2" via ALPN.
   SSL_CTX_set_alpn_select_cb(tls_ctx_.ssl_ctx(), AlpnSelectCb, nullptr);
 
-  base_ = event_base_new();
   if (!base_) {
-    VLOG(1) << "H2TlsServer: event_base_new() failed";
+    VLOG(1) << "H2TlsServer: event_base is null";
 
     return false;
   }
@@ -156,7 +153,7 @@ void H2TlsServer::AcceptConnCb(evconnlistener* listener,
                                                    2);
   if (submit_settings_rv != 0) {
     VLOG(1) << "H2TlsServer: nghttp2_submit_settings() failed: "
-               << nghttp2_strerror(submit_settings_rv);
+            << nghttp2_strerror(submit_settings_rv);
 
     nghttp2_session_del(sess->h2session);
     bufferevent_free(bev);
@@ -170,7 +167,7 @@ void H2TlsServer::AcceptConnCb(evconnlistener* listener,
                                                                        1 << 20);
   if (set_local_window_size_rv != 0) {
     VLOG(1) << "H2TlsServer: nghttp2_session_set_local_window_size() failed: "
-               << nghttp2_strerror(set_local_window_size_rv);
+            << nghttp2_strerror(set_local_window_size_rv);
 
     nghttp2_session_del(sess->h2session);
     bufferevent_free(bev);
@@ -182,7 +179,7 @@ void H2TlsServer::AcceptConnCb(evconnlistener* listener,
   int send_rv = nghttp2_session_send(sess->h2session);
   if (send_rv != 0) {
     VLOG(1) << "H2TlsServer: nghttp2_session_send() failed: "
-               << nghttp2_strerror(send_rv);
+            << nghttp2_strerror(send_rv);
 
     nghttp2_session_del(sess->h2session);
     bufferevent_free(bev);
@@ -215,7 +212,7 @@ void H2TlsServer::AcceptErrorCb(evconnlistener* listener,
   event_base* base = evconnlistener_get_base(listener);
   int err = EVUTIL_SOCKET_ERROR();
   VLOG(1) << "H2TlsServer: listener error " << err << " ("
-             << evutil_socket_error_to_string(err) << ")";
+          << evutil_socket_error_to_string(err) << ")";
   event_base_loopexit(base, nullptr);
 }
 
@@ -237,7 +234,7 @@ void H2TlsServer::ReadCallback(bufferevent* bev, void* ctx) {
                                               len);
   if (recv_len < 0) {
     VLOG(1) << "H2TlsServer: nghttp2_session_mem_recv() failed: "
-               << nghttp2_strerror(static_cast<int>(recv_len));
+            << nghttp2_strerror(static_cast<int>(recv_len));
 
     bufferevent_free(bev);
     return;
@@ -254,7 +251,7 @@ void H2TlsServer::ReadCallback(bufferevent* bev, void* ctx) {
   int session_send_rv = nghttp2_session_send(sess->h2session);
   if (session_send_rv < 0) {
     VLOG(1) << "H2TlsServer: nghttp2_session_send() failed: "
-               << nghttp2_strerror(session_send_rv);
+            << nghttp2_strerror(session_send_rv);
   }
 }
 
@@ -369,7 +366,7 @@ int H2TlsServer::OnFrameRecvCallback(nghttp2_session* session,
                                                       nullptr);
     if (submit_response_rv != 0) {
       VLOG(1) << "H2TlsServer: nghttp2_submit_response2() failed: "
-                 << nghttp2_strerror(submit_response_rv);
+              << nghttp2_strerror(submit_response_rv);
 
       // nghttp2_on_frame_recv_callback spec: any nonzero value signals a fatal error.
       return -1;
@@ -378,7 +375,7 @@ int H2TlsServer::OnFrameRecvCallback(nghttp2_session* session,
     int session_send_rv = nghttp2_session_send(session);
     if (session_send_rv != 0) {
       VLOG(1) << "H2TlsServer: nghttp2_session_send() failed: "
-                 << nghttp2_strerror(session_send_rv);
+              << nghttp2_strerror(session_send_rv);
 
       // nghttp2_on_frame_recv_callback spec: any nonzero value signals a fatal error.
       return -1;
@@ -404,7 +401,7 @@ int H2TlsServer::OnFrameRecvCallback(nghttp2_session* session,
                                                     &data_prd);
   if (submit_response_rv != 0) {
     VLOG(1) << "H2TlsServer: nghttp2_submit_response2() failed: "
-               << nghttp2_strerror(submit_response_rv);
+            << nghttp2_strerror(submit_response_rv);
 
     delete web_stream;
     sess->incoming_streams.erase(stream_id);
@@ -416,7 +413,7 @@ int H2TlsServer::OnFrameRecvCallback(nghttp2_session* session,
   int session_send_rv = nghttp2_session_send(session);
   if (session_send_rv != 0) {
     VLOG(1) << "H2TlsServer: nghttp2_session_send() failed: "
-               << nghttp2_strerror(session_send_rv);
+            << nghttp2_strerror(session_send_rv);
 
     delete web_stream;
     sess->incoming_streams.erase(stream_id);
@@ -452,7 +449,7 @@ int H2TlsServer::OnDataChunkRecvCallback(nghttp2_session* session,
     int rv = nghttp2_session_send(session);
     if (rv != 0) {
       VLOG(1) << "H2TlsServer: nghttp2_session_send() failed: "
-                 << nghttp2_strerror(rv);
+              << nghttp2_strerror(rv);
     }
   }
 

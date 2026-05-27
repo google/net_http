@@ -20,8 +20,11 @@ class H2TlsServer {
  public:
   using StreamCallback = std::function<void(WebStream*)>;
 
-  H2TlsServer(const std::string& ca_file, const std::string& cert_file,
-              const std::string& key_file, int port);
+  H2TlsServer(event_base* base,
+              const std::string& ca_file,
+              const std::string& cert_file,
+              const std::string& key_file,
+              int port);
   ~H2TlsServer();
 
   bool Init();
@@ -98,13 +101,14 @@ class H2TlsServer {
 
   static nghttp2_session* CreateH2Session(Session* sess);
 
+  event_base* base_;
+
   int port_;
 
   std::string ca_file_;
   std::string cert_file_;
   std::string key_file_;
 
-  event_base* base_;
   evconnlistener* listener_;
 
   TlsContext tls_ctx_;

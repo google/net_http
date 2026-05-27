@@ -12,9 +12,10 @@
 #include "buffer_event_web_stream.h"
 #include "handshake.h"
 
-PlainServer::PlainServer(int port)
-    : port_(port),
-      base_(nullptr),
+PlainServer::PlainServer(event_base* base,
+                         int port)
+    : base_(base),
+      port_(port),
       listener_(nullptr) {}
 
 PlainServer::~PlainServer() {
@@ -24,15 +25,11 @@ PlainServer::~PlainServer() {
   if (listener_) {
     evconnlistener_free(listener_);
   }
-  if (base_) {
-    event_base_free(base_);
-  }
 }
 
 bool PlainServer::Init() {
-  base_ = event_base_new();
   if (!base_) {
-    VLOG(1) << "Could not initialize libevent!";
+    VLOG(1) << "event_base is null";
 
     return false;
   }

@@ -20,7 +20,8 @@ class H2Server {
   // the stream is deleted by H2Server when the HTTP/2 stream closes.
   using StreamCallback = std::function<void(WebStream*)>;
 
-  explicit H2Server(int port);
+  H2Server(event_base* base,
+           int port);
   ~H2Server();
 
   bool Init();
@@ -101,9 +102,10 @@ class H2Server {
   // Helper: initialise an nghttp2 server session for a new connection.
   static nghttp2_session* CreateH2Session(Session* sess);
 
+  event_base* base_;
+
   int port_;
 
-  event_base* base_;
   evconnlistener* listener_;
 
   StreamCallback on_stream_;

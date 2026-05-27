@@ -6,9 +6,8 @@
 #include <event2/event.h>
 
 #include <functional>
-#include <string>
-
 #include <memory>
+#include <string>
 
 #include "buffer_event_web_stream.h"
 #include "handshake.h"
@@ -19,7 +18,8 @@ class PlainClient {
   using MessageCallback = std::function<void(uint8_t, const std::string&)>;
   using CloseCallback = std::function<void()>;
 
-  PlainClient(const std::string& host,
+  PlainClient(event_base* base,
+              const std::string& host,
               int port);
   ~PlainClient();
 
@@ -31,10 +31,11 @@ class PlainClient {
   void Stop();
 
  private:
+  event_base* base_;
+
   std::string host_;
   int port_;
 
-  event_base* base_;
   evdns_base* dns_base_;
 
   std::unique_ptr<ClientHandshake> handshake_;
