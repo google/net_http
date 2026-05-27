@@ -25,14 +25,14 @@ PlainClient::~PlainClient() {
 bool PlainClient::Init() {
   base_ = event_base_new();
   if (!base_) {
-    LOG(ERROR) << "event_base_new() failed";
+    VLOG(1) << "event_base_new() failed";
 
     return false;
   }
 
   dns_base_ = evdns_base_new(base_, 1);
   if (!dns_base_) {
-    LOG(ERROR) << "evdns_base_new() failed";
+    VLOG(1) << "evdns_base_new() failed";
 
     return false;
   }
@@ -41,7 +41,7 @@ bool PlainClient::Init() {
                                             -1,
                                             BEV_OPT_CLOSE_ON_FREE);
   if (!bev) {
-    LOG(ERROR) << "bufferevent_socket_new() failed";
+    VLOG(1) << "bufferevent_socket_new() failed";
 
     return false;
   }
@@ -52,7 +52,7 @@ bool PlainClient::Init() {
                                                        host_.c_str(),
                                                        port_);
   if (connect_rv < 0) {
-    LOG(ERROR) << "bufferevent_socket_connect_hostname() failed";
+    VLOG(1) << "bufferevent_socket_connect_hostname() failed";
 
     bufferevent_free(bev);
 
@@ -75,7 +75,7 @@ bool PlainClient::Init() {
         handshake_.reset();
       },
       [this]() {
-        LOG(ERROR) << "Client handshake failed";
+        VLOG(1) << "Client handshake failed";
         handshake_.reset();
       });
 

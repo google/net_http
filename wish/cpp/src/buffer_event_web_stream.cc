@@ -65,7 +65,7 @@ void BufferEventWebStream::Start() {
 
   int enable_rv = bufferevent_enable(bev_, EV_READ | EV_WRITE);
   if (enable_rv != 0) {
-    LOG(ERROR) << "bufferevent_enable() failed";
+    VLOG(1) << "bufferevent_enable() failed";
   }
 
   // If there is already data in the input buffer, process it immediately.
@@ -105,7 +105,7 @@ int BufferEventWebStream::Close() {
   static constexpr char kTerminalChunk[] = "0\r\n\r\n";
   int rv = bufferevent_write(bev_, kTerminalChunk, sizeof(kTerminalChunk) - 1);
   if (rv != 0) {
-    LOG(ERROR) << "bufferevent_write() failed";
+    VLOG(3) << "bufferevent_write() failed";
 
     return -1;
   }
@@ -123,7 +123,7 @@ void BufferEventWebStream::ReadCallback(bufferevent* bev, void* ctx) {
       case OPEN: {
         int rv = wslay_event_recv(stream->ctx_);
         if (rv != 0) {
-          LOG(ERROR) << "wslay_event_recv() failed: " << rv;
+          VLOG(2) << "wslay_event_recv() failed: " << rv;
           return;
         }
 
@@ -133,7 +133,7 @@ void BufferEventWebStream::ReadCallback(bufferevent* bev, void* ctx) {
           evbuffer* input = bufferevent_get_input(stream->bev_);
           size_t extra_len = evbuffer_get_length(input);
           if (extra_len > 0) {
-            LOG(WARNING) << "Warning: received " << extra_len << " bytes of extra data after stream close.";
+            VLOG(2) << "Warning: received " << extra_len << " bytes of extra data after stream close.";
             evbuffer_drain(input, extra_len);
           }
 
@@ -183,7 +183,7 @@ void BufferEventWebStream::ReadCallback(bufferevent* bev, void* ctx) {
         evbuffer* input = bufferevent_get_input(stream->bev_);
         size_t len = evbuffer_get_length(input);
         if (len > 0) {
-          LOG(WARNING) << "Warning: received " << len << " bytes of extra data after stream close.";
+          VLOG(2) << "Warning: received " << len << " bytes of extra data after stream close.";
           evbuffer_drain(input, len);
         }
         return;
@@ -217,9 +217,9 @@ void BufferEventWebStream::EventCallback(bufferevent* bev,
   if (what & BEV_EVENT_ERROR) {
     int err = EVUTIL_SOCKET_ERROR();
     if (err != 0) {
-      LOG(ERROR) << "Error on socket: " << evutil_socket_error_to_string(err);
+      VLOG(2) << "Error on socket: " << evutil_socket_error_to_string(err);
     } else {
-      LOG(ERROR) << "Error on bufferevent";
+      VLOG(2) << "Error on bufferevent";
     }
   }
 
@@ -274,7 +274,7 @@ ssize_t BufferEventWebStream::WslaySendCallback(wslay_event_context* ctx,
                                           header,
                                           static_cast<size_t>(header_len));
   if (write_header_rv != 0) {
-    LOG(ERROR) << "bufferevent_write() failed";
+    VLOG(3) << "bufferevent_write() failed";
 
     wslay_event_set_error(ctx, WSLAY_ERR_CALLBACK_FAILURE);
 
@@ -285,7 +285,7 @@ ssize_t BufferEventWebStream::WslaySendCallback(wslay_event_context* ctx,
                                         data,
                                         len);
   if (write_data_rv != 0) {
-    LOG(ERROR) << "bufferevent_write() failed";
+    VLOG(3) << "bufferevent_write() failed";
 
     wslay_event_set_error(ctx, WSLAY_ERR_CALLBACK_FAILURE);
 
@@ -296,7 +296,7 @@ ssize_t BufferEventWebStream::WslaySendCallback(wslay_event_context* ctx,
                                            "\r\n",
                                            2);
   if (write_trailer_rv != 0) {
-    LOG(ERROR) << "bufferevent_write() failed";
+    VLOG(3) << "bufferevent_write() failed";
 
     wslay_event_set_error(ctx, WSLAY_ERR_CALLBACK_FAILURE);
 
@@ -362,11 +362,14 @@ ssize_t BufferEventWebStream::ReadChunkedBytes(uint8_t* buf, size_t len) {
         evbuffer_ptr pos = evbuffer_search(input, "\r\n", 2, nullptr);
         if (pos.pos < 0) {
           wslay_event_set_error(ctx_, WSLAY_ERR_WOULDBLOCK);
+
           return -1;  // Wait for more data.
         }
         if (pos.pos == 0) {
-          LOG(ERROR) << "ReadChunkedBytes: empty chunk-size line";
+          VLOG(3) << "ReadChunkedBytes: empty chunk-size line";
+
           wslay_event_set_error(ctx_, WSLAY_ERR_CALLBACK_FAILURE);
+
           return -1;
         }
 
@@ -380,8 +383,10 @@ ssize_t BufferEventWebStream::ReadChunkedBytes(uint8_t* buf, size_t len) {
         char* end = nullptr;
         unsigned long chunk_size = std::strtoul(line.data(), &end, 16);
         if (end == line.data()) {
-          LOG(ERROR) << "ReadChunkedBytes: malformed chunk size";
+          VLOG(3) << "ReadChunkedBytes: malformed chunk size";
+
           wslay_event_set_error(ctx_, WSLAY_ERR_CALLBACK_FAILURE);
+
           return -1;
         }
 
@@ -403,14 +408,17 @@ ssize_t BufferEventWebStream::ReadChunkedBytes(uint8_t* buf, size_t len) {
         size_t avail = evbuffer_get_length(input);
         if (avail == 0) {
           wslay_event_set_error(ctx_, WSLAY_ERR_WOULDBLOCK);
+
           return -1;
         }
 
         size_t n = std::min({len, chunk_remaining_, avail});
         int rv = evbuffer_remove(input, buf, n);
         if (rv < 0) {
-          LOG(ERROR) << "ReadChunkedBytes: evbuffer_remove() failed";
+          VLOG(3) << "ReadChunkedBytes: evbuffer_remove() failed";
+
           wslay_event_set_error(ctx_, WSLAY_ERR_CALLBACK_FAILURE);
+
           return -1;
         }
         chunk_remaining_ -= n;
@@ -424,6 +432,7 @@ ssize_t BufferEventWebStream::ReadChunkedBytes(uint8_t* buf, size_t len) {
         size_t input_len = evbuffer_get_length(input);
         if (input_len < 2) {
           wslay_event_set_error(ctx_, WSLAY_ERR_WOULDBLOCK);
+
           return -1;
         }
 
@@ -434,6 +443,7 @@ ssize_t BufferEventWebStream::ReadChunkedBytes(uint8_t* buf, size_t len) {
           receive_closed_ = true;
           // Terminal chunk fully consumed; let ReadCallback close the stream.
           wslay_event_set_error(ctx_, WSLAY_ERR_WOULDBLOCK);
+
           return -1;
         }
 

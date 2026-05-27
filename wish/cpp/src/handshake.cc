@@ -116,14 +116,15 @@ bool ValidateTransferEncoding(const phr_header* headers, size_t num_headers) {
       std::string_view value(headers[i].value, headers[i].value_len);
       std::vector<std::string_view> tokens = SplitAndTrim(value);
       if (tokens.empty()) {
-        LOG(ERROR) << "Empty Transfer-Encoding header value";
+        VLOG(2) << "Empty Transfer-Encoding header value";
+
         return false;
       }
       for (std::string_view token : tokens) {
         if (EqualsIgnoreCase(token, "chunked")) {
           // Valid chunked token
         } else {
-          LOG(ERROR) << "Unsupported Transfer-Encoding token: " << token;
+          VLOG(2) << "Unsupported Transfer-Encoding token: " << token;
 
           return false;
         }
@@ -136,31 +137,36 @@ bool ValidateTransferEncoding(const phr_header* headers, size_t num_headers) {
 bool ValidateHeaders(const phr_header* headers, size_t num_headers) {
   bool has_content_encoding = HasHeader(headers, num_headers, "content-encoding");
   if (has_content_encoding) {
-    LOG(ERROR) << "Content-Encoding support is not implemented yet";
+    VLOG(2) << "Content-Encoding support is not implemented yet";
+
     return false;
   }
 
   bool has_content_length = HasHeader(headers, num_headers, "content-length");
   if (has_content_length) {
-    LOG(ERROR) << "Content-Length support is not implemented yet";
+    VLOG(2) << "Content-Length support is not implemented yet";
+
     return false;
   }
 
   bool has_connection_close = CheckHeaderContains(headers, num_headers, "connection", "close");
   if (has_connection_close) {
-    LOG(ERROR) << "Connection: close support is not implemented yet";
+    VLOG(2) << "Connection: close support is not implemented yet";
+
     return false;
   }
 
   bool has_connection_upgrade = CheckHeaderContains(headers, num_headers, "connection", "upgrade");
   if (has_connection_upgrade) {
-    LOG(ERROR) << "Connection: upgrade is not supported by web-stream";
+    VLOG(2) << "Connection: upgrade is not supported by web-stream";
+
     return false;
   }
 
   bool has_upgrade = HasHeader(headers, num_headers, "upgrade");
   if (has_upgrade) {
-    LOG(ERROR) << "Upgrade header is not supported by web-stream";
+    VLOG(2) << "Upgrade header is not supported by web-stream";
+
     return false;
   }
 
@@ -194,7 +200,7 @@ void ClientHandshake::Start() {
 
   int enable_rv = bufferevent_enable(bev_, EV_READ | EV_WRITE);
   if (enable_rv != 0) {
-    LOG(ERROR) << "bufferevent_enable() failed";
+    VLOG(1) << "bufferevent_enable() failed";
 
     InvokeError();
 
@@ -210,7 +216,7 @@ void ClientHandshake::Start() {
   std::string data = ss.str();
   int write_rv = bufferevent_write(bev_, data.c_str(), data.length());
   if (write_rv != 0) {
-    LOG(ERROR) << "bufferevent_write() failed";
+    VLOG(3) << "bufferevent_write() failed";
 
     InvokeError();
   }
@@ -246,7 +252,7 @@ void ClientHandshake::HandleRead() {
 
   int parse_rv = phr_parse_response(data, len, &minor_version, &status, &msg, &msg_len, headers, &num_headers, 0);
   if (parse_rv == -1) {
-    LOG(ERROR) << "Failed to parse client handshake HTTP response";
+    VLOG(2) << "Failed to parse client handshake HTTP response";
 
     InvokeError();
 
@@ -257,7 +263,7 @@ void ClientHandshake::HandleRead() {
   }
 
   if (status != 200) {
-    LOG(ERROR) << "Bad client handshake response status: " << status;
+    VLOG(2) << "Bad client handshake response status: " << status;
 
     InvokeError();
 
@@ -265,7 +271,7 @@ void ClientHandshake::HandleRead() {
   }
 
   if (minor_version < 1) {
-    LOG(ERROR) << "HTTP version must be at least 1.1, got 1." << minor_version;
+    VLOG(2) << "HTTP version must be at least 1.1, got 1." << minor_version;
 
     InvokeError();
 
@@ -274,7 +280,7 @@ void ClientHandshake::HandleRead() {
 
   bool has_valid_ct = CheckHeader(headers, num_headers, "content-type", "application/web-stream");
   if (!has_valid_ct) {
-    LOG(ERROR) << "Client handshake response missing web-stream Content-Type!";
+    VLOG(2) << "Client handshake response missing web-stream Content-Type!";
 
     InvokeError();
 
@@ -290,7 +296,7 @@ void ClientHandshake::HandleRead() {
 
   int drain_rv = evbuffer_drain(input, parse_rv);
   if (drain_rv != 0) {
-    LOG(ERROR) << "evbuffer_drain() failed";
+    VLOG(3) << "evbuffer_drain() failed";
 
     InvokeError();
 
@@ -316,10 +322,10 @@ void ClientHandshake::HandleEvent(short what) {
   if (what & BEV_EVENT_ERROR) {
     int err = EVUTIL_SOCKET_ERROR();
     if (err != 0) {
-      LOG(ERROR) << "Error during client handshake: "
-                 << evutil_socket_error_to_string(err);
+      VLOG(2) << "Error during client handshake: "
+              << evutil_socket_error_to_string(err);
     } else {
-      LOG(ERROR) << "Error during client handshake";
+      VLOG(2) << "Error during client handshake";
     }
   }
 
@@ -357,7 +363,7 @@ void ServerHandshake::Start() {
 
   int enable_rv = bufferevent_enable(bev_, EV_READ | EV_WRITE);
   if (enable_rv != 0) {
-    LOG(ERROR) << "bufferevent_enable() failed";
+    VLOG(1) << "bufferevent_enable() failed";
 
     InvokeError();
 
@@ -396,7 +402,7 @@ void ServerHandshake::HandleRead() {
 
   int parse_rv = phr_parse_request(data, len, &method, &method_len, &path, &path_len, &minor_version, headers, &num_headers, 0);
   if (parse_rv == -1) {
-    LOG(ERROR) << "Failed to parse server handshake HTTP request";
+    VLOG(2) << "Failed to parse server handshake HTTP request";
 
     InvokeError();
 
@@ -407,7 +413,7 @@ void ServerHandshake::HandleRead() {
   }
 
   if (minor_version < 1) {
-    LOG(ERROR) << "HTTP version must be at least 1.1, got 1." << minor_version;
+    VLOG(2) << "HTTP version must be at least 1.1, got 1." << minor_version;
 
     InvokeError();
 
@@ -416,7 +422,7 @@ void ServerHandshake::HandleRead() {
 
   bool has_valid_ct = CheckHeader(headers, num_headers, "content-type", "application/web-stream");
   if (!has_valid_ct) {
-    LOG(ERROR) << "Missing web-stream Content-Type!";
+    VLOG(2) << "Missing web-stream Content-Type!";
 
     InvokeError();
 
@@ -432,7 +438,7 @@ void ServerHandshake::HandleRead() {
 
   int drain_rv = evbuffer_drain(input, parse_rv);
   if (drain_rv != 0) {
-    LOG(ERROR) << "evbuffer_drain() failed";
+    VLOG(3) << "evbuffer_drain() failed";
 
     InvokeError();
 
@@ -448,7 +454,7 @@ void ServerHandshake::HandleRead() {
   std::string response_data = ss.str();
   int write_rv = bufferevent_write(bev_, response_data.c_str(), response_data.length());
   if (write_rv != 0) {
-    LOG(ERROR) << "bufferevent_write() failed";
+    VLOG(3) << "bufferevent_write() failed";
 
     InvokeError();
 
@@ -475,10 +481,10 @@ void ServerHandshake::HandleEvent(short what) {
   if (what & BEV_EVENT_ERROR) {
     int err = EVUTIL_SOCKET_ERROR();
     if (err != 0) {
-      LOG(ERROR) << "Error during server handshake: "
-                 << evutil_socket_error_to_string(err);
+      VLOG(2) << "Error during server handshake: "
+              << evutil_socket_error_to_string(err);
     } else {
-      LOG(ERROR) << "Error during server handshake";
+      VLOG(2) << "Error during server handshake";
     }
   }
 
