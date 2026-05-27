@@ -28,7 +28,7 @@ H2Server::~H2Server() {
 bool H2Server::Init() {
   base_ = event_base_new();
   if (!base_) {
-    LOG(ERROR) << "H2Server: event_base_new() failed";
+    VLOG(1) << "H2Server: event_base_new() failed";
 
     return false;
   }
@@ -47,7 +47,7 @@ bool H2Server::Init() {
                                       reinterpret_cast<struct sockaddr*>(&sin),
                                       sizeof(sin));
   if (!listener_) {
-    LOG(ERROR) << "H2Server: evconnlistener_new_bind() failed";
+    VLOG(1) << "H2Server: evconnlistener_new_bind() failed";
 
     return false;
   }
@@ -81,8 +81,10 @@ void H2Server::AcceptConnCb(evconnlistener* listener,
                           &one,
                           sizeof(one));
   if (set_rv != 0) {
-    LOG(ERROR) << "H2Server: setsockopt(TCP_NODELAY) failed";
+    VLOG(1) << "H2Server: setsockopt(TCP_NODELAY) failed";
+
     evutil_closesocket(fd);
+
     return;
   }
 
@@ -90,8 +92,10 @@ void H2Server::AcceptConnCb(evconnlistener* listener,
                                             fd,
                                             BEV_OPT_CLOSE_ON_FREE);
   if (!bev) {
-    LOG(ERROR) << "H2Server: bufferevent_socket_new() failed";
+    VLOG(1) << "H2Server: bufferevent_socket_new() failed";
+
     evutil_closesocket(fd);
+
     return;
   }
 
@@ -109,8 +113,8 @@ void H2Server::AcceptConnCb(evconnlistener* listener,
                                                    iv,
                                                    2);
   if (submit_settings_rv != 0) {
-    LOG(ERROR) << "H2Server: nghttp2_submit_settings() failed: "
-               << nghttp2_strerror(submit_settings_rv);
+    VLOG(1) << "H2Server: nghttp2_submit_settings() failed: "
+            << nghttp2_strerror(submit_settings_rv);
 
     nghttp2_session_del(sess->h2session);
     bufferevent_free(bev);
@@ -124,8 +128,8 @@ void H2Server::AcceptConnCb(evconnlistener* listener,
                                                                        0,
                                                                        1 << 20);
   if (set_local_window_size_rv != 0) {
-    LOG(ERROR) << "H2Server: nghttp2_session_set_local_window_size() failed: "
-               << nghttp2_strerror(set_local_window_size_rv);
+    VLOG(1) << "H2Server: nghttp2_session_set_local_window_size() failed: "
+            << nghttp2_strerror(set_local_window_size_rv);
 
     nghttp2_session_del(sess->h2session);
     bufferevent_free(bev);
@@ -136,8 +140,8 @@ void H2Server::AcceptConnCb(evconnlistener* listener,
 
   int send_rv = nghttp2_session_send(sess->h2session);
   if (send_rv != 0) {
-    LOG(ERROR) << "H2Server: nghttp2_session_send() failed: "
-               << nghttp2_strerror(send_rv);
+    VLOG(1) << "H2Server: nghttp2_session_send() failed: "
+            << nghttp2_strerror(send_rv);
 
     nghttp2_session_del(sess->h2session);
     bufferevent_free(bev);
@@ -155,7 +159,7 @@ void H2Server::AcceptConnCb(evconnlistener* listener,
   int enable_rv = bufferevent_enable(bev,
                                      EV_READ | EV_WRITE);
   if (enable_rv != 0) {
-    LOG(ERROR) << "H2Server: bufferevent_enable() failed";
+    VLOG(1) << "H2Server: bufferevent_enable() failed";
 
     nghttp2_session_del(sess->h2session);
     bufferevent_free(bev);
@@ -169,8 +173,8 @@ void H2Server::AcceptErrorCb(evconnlistener* listener,
                              void* /*ctx*/) {
   event_base* base = evconnlistener_get_base(listener);
   int err = EVUTIL_SOCKET_ERROR();
-  LOG(ERROR) << "H2Server: listener error " << err << " ("
-             << evutil_socket_error_to_string(err) << ")";
+  VLOG(1) << "H2Server: listener error " << err << " ("
+          << evutil_socket_error_to_string(err) << ")";
   event_base_loopexit(base, nullptr);
 }
 
@@ -191,22 +195,26 @@ void H2Server::ReadCallback(bufferevent* bev, void* ctx) {
                                              data,
                                              len);
   if (readlen < 0) {
-    LOG(ERROR) << "H2Server: nghttp2_session_mem_recv() failed: "
-               << nghttp2_strerror(static_cast<int>(readlen));
+    VLOG(1) << "H2Server: nghttp2_session_mem_recv() failed: "
+            << nghttp2_strerror(static_cast<int>(readlen));
+
     bufferevent_free(bev);
+
     return;
   }
   int drain_rv = evbuffer_drain(input, static_cast<size_t>(readlen));
   if (drain_rv != 0) {
-    LOG(ERROR) << "H2Server: evbuffer_drain() failed";
+    VLOG(3) << "H2Server: evbuffer_drain() failed";
+
     bufferevent_free(bev);
+
     return;
   }
 
   int session_send_rv = nghttp2_session_send(sess->h2session);
   if (session_send_rv < 0) {
-    LOG(ERROR) << "H2Server: nghttp2_session_send() failed: "
-               << nghttp2_strerror(session_send_rv);
+    VLOG(1) << "H2Server: nghttp2_session_send() failed: "
+            << nghttp2_strerror(session_send_rv);
   }
 }
 
@@ -216,7 +224,7 @@ void H2Server::EventCallback(bufferevent* bev,
   Session* sess = static_cast<Session*>(ctx);
 
   if (what & BEV_EVENT_ERROR) {
-    LOG(ERROR) << "H2Server: connection error";
+    VLOG(2) << "H2Server: connection error";
   }
 
   if (what & (BEV_EVENT_EOF | BEV_EVENT_ERROR)) {
@@ -320,8 +328,8 @@ int H2Server::OnFrameRecvCallback(nghttp2_session* session,
                                                       1,
                                                       nullptr);
     if (submit_response_rv != 0) {
-      LOG(ERROR) << "H2Server: nghttp2_submit_response2() failed: "
-                 << nghttp2_strerror(submit_response_rv);
+      VLOG(1) << "H2Server: nghttp2_submit_response2() failed: "
+              << nghttp2_strerror(submit_response_rv);
 
       // nghttp2_on_frame_recv_callback spec: any nonzero value signals a fatal error.
       return -1;
@@ -329,8 +337,8 @@ int H2Server::OnFrameRecvCallback(nghttp2_session* session,
 
     int session_send_rv = nghttp2_session_send(session);
     if (session_send_rv != 0) {
-      LOG(ERROR) << "H2Server: nghttp2_session_send() failed: "
-                 << nghttp2_strerror(session_send_rv);
+      VLOG(1) << "H2Server: nghttp2_session_send() failed: "
+              << nghttp2_strerror(session_send_rv);
 
       // nghttp2_on_frame_recv_callback spec: any nonzero value signals a fatal error.
       return -1;
@@ -356,8 +364,8 @@ int H2Server::OnFrameRecvCallback(nghttp2_session* session,
                                                     2,
                                                     &data_prd);
   if (submit_response_rv != 0) {
-    LOG(ERROR) << "H2Server: nghttp2_submit_response2() failed: "
-               << nghttp2_strerror(submit_response_rv);
+    VLOG(1) << "H2Server: nghttp2_submit_response2() failed: "
+            << nghttp2_strerror(submit_response_rv);
 
     delete web_stream;
     sess->incoming_streams.erase(stream_id);
@@ -368,8 +376,8 @@ int H2Server::OnFrameRecvCallback(nghttp2_session* session,
 
   int session_send_rv = nghttp2_session_send(session);
   if (session_send_rv != 0) {
-    LOG(ERROR) << "H2Server: nghttp2_session_send() failed: "
-               << nghttp2_strerror(session_send_rv);
+    VLOG(1) << "H2Server: nghttp2_session_send() failed: "
+            << nghttp2_strerror(session_send_rv);
 
     delete web_stream;
     sess->incoming_streams.erase(stream_id);
@@ -406,8 +414,8 @@ int H2Server::OnDataChunkRecvCallback(nghttp2_session* session,
 
     int rv = nghttp2_session_send(session);
     if (rv != 0) {
-      LOG(ERROR) << "H2Server: nghttp2_session_send() failed: "
-                 << nghttp2_strerror(rv);
+      VLOG(1) << "H2Server: nghttp2_session_send() failed: "
+              << nghttp2_strerror(rv);
     }
   }
 
@@ -460,7 +468,7 @@ nghttp2_session* H2Server::CreateH2Session(Session* sess) {
   nghttp2_session_callbacks* cbs;
   int callbacks_new_rv = nghttp2_session_callbacks_new(&cbs);
   if (callbacks_new_rv != 0) {
-    LOG(ERROR) << "H2Server: nghttp2_session_callbacks_new() failed";
+    VLOG(1) << "H2Server: nghttp2_session_callbacks_new() failed";
 
     return nullptr;
   }
@@ -482,7 +490,7 @@ nghttp2_session* H2Server::CreateH2Session(Session* sess) {
                                                   sess);
   nghttp2_session_callbacks_del(cbs);
   if (session_new_rv != 0) {
-    LOG(ERROR) << "H2Server: nghttp2_session_server_new() failed";
+    VLOG(1) << "H2Server: nghttp2_session_server_new() failed";
 
     return nullptr;
   }

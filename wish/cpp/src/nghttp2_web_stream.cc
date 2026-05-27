@@ -76,16 +76,16 @@ int NGHTTP2WebStream::Close() {
   // (data provider already active), which is not an error here.
   int resume_rv = nghttp2_session_resume_data(h2session_, stream_id_);
   if (resume_rv < 0 && resume_rv != NGHTTP2_ERR_INVALID_ARGUMENT) {
-    LOG(ERROR) << "NGHTTP2WebStream::Close: nghttp2_session_resume_data() failed: "
-               << nghttp2_strerror(resume_rv);
+    VLOG(1) << "NGHTTP2WebStream::Close: nghttp2_session_resume_data() failed: "
+            << nghttp2_strerror(resume_rv);
 
     return resume_rv;
   }
 
   int send_rv = nghttp2_session_send(h2session_);
   if (send_rv < 0) {
-    LOG(ERROR) << "NGHTTP2WebStream::Close: nghttp2_session_send() failed: "
-               << nghttp2_strerror(send_rv);
+    VLOG(1) << "NGHTTP2WebStream::Close: nghttp2_session_send() failed: "
+            << nghttp2_strerror(send_rv);
 
     return send_rv;
   }
@@ -100,7 +100,7 @@ void NGHTTP2WebStream::OnDataChunk(const uint8_t* data, size_t len) {
 
   int rv = wslay_event_recv(ctx_);
   if (rv != 0) {
-    LOG(ERROR) << "NGHTTP2WebStream: wslay_event_recv() failed: " << rv;
+    VLOG(2) << "NGHTTP2WebStream: wslay_event_recv() failed: " << rv;
   }
 }
 
@@ -149,7 +149,7 @@ nghttp2_ssize NGHTTP2WebStream::ReadSendData(uint8_t* buf,
 
   int rv = evbuffer_remove(output_buf_, buf, send_len);
   if (rv < 0) {
-    LOG(ERROR) << "evbuffer_remove() failed";
+    VLOG(3) << "evbuffer_remove() failed";
 
     // TODO(nlattice): Consider using `NGHTTP2_ERR_TEMPORAL_CALLBACK_FAILURE` instead of `NGHTTP2_ERR_CALLBACK_FAILURE`.
     return NGHTTP2_ERR_CALLBACK_FAILURE;
@@ -179,9 +179,10 @@ ssize_t NGHTTP2WebStream::WslayRecvCallback(wslay_event_context* ctx,
   size_t copy_len = std::min(len, data_len);
   int rv = evbuffer_remove(input, buf, copy_len);
   if (rv < 0) {
-    LOG(ERROR) << "evbuffer_remove() failed";
+    VLOG(3) << "evbuffer_remove() failed";
 
     wslay_event_set_error(ctx, WSLAY_ERR_CALLBACK_FAILURE);
+
     return -1;
   }
   return static_cast<ssize_t>(copy_len);
@@ -196,9 +197,10 @@ ssize_t NGHTTP2WebStream::WslaySendCallback(wslay_event_context* /*ctx*/,
 
   int rv = evbuffer_add(s->output_buf_, data, len);
   if (rv != 0) {
-    LOG(ERROR) << "evbuffer_add() failed";
+    VLOG(3) << "evbuffer_add() failed";
 
     wslay_event_set_error(s->ctx_, WSLAY_ERR_CALLBACK_FAILURE);
+
     return -1;
   }
 
@@ -263,16 +265,16 @@ int NGHTTP2WebStream::SendMessage(uint8_t opcode,
   int resume_data_rv = nghttp2_session_resume_data(h2session_, stream_id_);
   if (resume_data_rv < 0 &&
       resume_data_rv != NGHTTP2_ERR_INVALID_ARGUMENT) {
-    LOG(ERROR) << "NGHTTP2WebStream: nghttp2_session_resume_data() failed: "
-               << nghttp2_strerror(resume_data_rv);
+    VLOG(1) << "NGHTTP2WebStream: nghttp2_session_resume_data() failed: "
+            << nghttp2_strerror(resume_data_rv);
 
     return resume_data_rv;
   }
 
   int h2_send_rv = nghttp2_session_send(h2session_);
   if (h2_send_rv < 0) {
-    LOG(ERROR) << "NGHTTP2WebStream: nghttp2_session_send() failed: "
-               << nghttp2_strerror(h2_send_rv);
+    VLOG(1) << "NGHTTP2WebStream: nghttp2_session_send() failed: "
+            << nghttp2_strerror(h2_send_rv);
 
     return h2_send_rv;
   }

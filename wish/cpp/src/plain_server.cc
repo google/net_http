@@ -32,7 +32,7 @@ PlainServer::~PlainServer() {
 bool PlainServer::Init() {
   base_ = event_base_new();
   if (!base_) {
-    LOG(ERROR) << "Could not initialize libevent!";
+    VLOG(1) << "Could not initialize libevent!";
 
     return false;
   }
@@ -51,7 +51,7 @@ bool PlainServer::Init() {
                                       reinterpret_cast<sockaddr*>(&sin),
                                       sizeof(sin));
   if (!listener_) {
-    LOG(ERROR) << "Could not create a listener!";
+    VLOG(1) << "Could not create a listener!";
 
     return false;
   }
@@ -86,16 +86,17 @@ void PlainServer::AcceptConnCb(evconnlistener* listener,
                               &one,
                               sizeof(one));
   if (set_opt_rv < 0) {
-    LOG(ERROR) << "setsockopt(TCP_NODELAY) failed: " << strerror(errno);
+    VLOG(1) << "setsockopt(TCP_NODELAY) failed: " << strerror(errno);
   }
 
   bufferevent* bev = bufferevent_socket_new(base,
                                             fd,
                                             BEV_OPT_CLOSE_ON_FREE);
   if (!bev) {
-    LOG(ERROR) << "bufferevent_socket_new() failed";
+    VLOG(1) << "bufferevent_socket_new() failed";
 
     evutil_closesocket(fd);
+
     return;
   }
 
@@ -113,13 +114,13 @@ void PlainServer::AcceptConnCb(evconnlistener* listener,
         if (server->on_stream_) {
           server->on_stream_(raw_stream);
         } else {
-          LOG(WARNING) << "Warning: No stream handler registered.";
+          VLOG(2) << "Warning: No stream handler registered.";
         }
 
         raw_stream->Start();
       },
       []() {
-        LOG(ERROR) << "Server handshake failed";
+        VLOG(1) << "Server handshake failed";
       },
       [server](ServerHandshake* h) {
         server->RemoveHandshake(h);
@@ -136,9 +137,9 @@ void PlainServer::AcceptErrorCb(evconnlistener* listener, void* ctx) {
 
   event_base* base = evconnlistener_get_base(listener);
   int err = EVUTIL_SOCKET_ERROR();
-  LOG(ERROR) << "Got an error " << err << " ("
-             << evutil_socket_error_to_string(err)
-             << ") on the listener. Shutting down.";
+  VLOG(1) << "Got an error " << err << " ("
+          << evutil_socket_error_to_string(err)
+          << ") on the listener. Shutting down.";
   event_base_loopexit(base, nullptr);
 }
 

@@ -29,7 +29,7 @@ bool TlsContext::Init(bool is_server) {
   ssl_ctx_ = SSL_CTX_new(method);
 
   if (!ssl_ctx_) {
-    LOG(ERROR) << "Failed to create SSL_CTX";
+    VLOG(1) << "Failed to create SSL_CTX";
 
     return false;
   }
@@ -39,7 +39,7 @@ bool TlsContext::Init(bool is_server) {
                                                 ca_file_.c_str(),
                                                 nullptr);
     if (load_rv != 1) {
-      LOG(ERROR) << "Error loading CA file: " << ca_file_;
+      VLOG(1) << "Error loading CA file: " << ca_file_;
 
       return false;
     }
@@ -60,7 +60,7 @@ bool TlsContext::Init(bool is_server) {
                                                certificate_file_.c_str(),
                                                SSL_FILETYPE_PEM);
     if (cert_rv <= 0) {
-      LOG(ERROR) << "Error loading certificate file: " << certificate_file_;
+      VLOG(1) << "Error loading certificate file: " << certificate_file_;
 
       return false;
     }
@@ -69,19 +69,19 @@ bool TlsContext::Init(bool is_server) {
                                              private_key_file_.c_str(),
                                              SSL_FILETYPE_PEM);
     if (key_rv <= 0) {
-      LOG(ERROR) << "Error loading key file: " << private_key_file_;
+      VLOG(1) << "Error loading key file: " << private_key_file_;
 
       return false;
     }
 
     int check_rv = SSL_CTX_check_private_key(ssl_ctx_);
     if (check_rv != 1) {
-      LOG(ERROR) << "Private key does not match the certificate public key";
+      VLOG(1) << "Private key does not match the certificate public key";
 
       return false;
     }
   } else {
-    LOG(WARNING) << "Warning: cert_path or key_path is empty. mTLS may fail.";
+    VLOG(1) << "Warning: cert_path or key_path is empty. mTLS may fail.";
   }
 
   return true;
