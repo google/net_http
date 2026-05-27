@@ -1,4 +1,4 @@
-#include "h2_wish_stream.h"
+#include "nghttp2_web_stream.h"
 
 #include <gtest/gtest.h>
 #include <nghttp2/nghttp2.h>

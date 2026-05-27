@@ -25,7 +25,7 @@
 #include <thread>
 #include <vector>
 
-#include "../src/wish_handler.h"
+#include "../src/buffer_event_web_stream.h"
 
 ABSL_FLAG(std::string, host, "127.0.0.1", "Server host to connect to");
 ABSL_FLAG(int, port, 8080, "Server port to connect to");

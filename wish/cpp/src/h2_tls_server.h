@@ -10,7 +10,7 @@
 #include <string>
 #include <unordered_map>
 
-#include "h2_wish_stream.h"
+#include "nghttp2_web_stream.h"
 #include "tls_context.h"
 
 // H2TlsServer listens for TLS-encrypted HTTP/2 connections.

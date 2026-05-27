@@ -3,8 +3,8 @@
 #include <absl/log/initialize.h>
 #include <absl/log/log.h>
 
+#include "../src/buffer_event_web_stream.h"
 #include "../src/h2_tls_server.h"
-#include "../src/wish_handler.h"
 
 ABSL_FLAG(int, port, 8080, "Port to listen on");
 ABSL_FLAG(std::string, ca_cert, "certs/ca.crt", "Path to CA certificate file");

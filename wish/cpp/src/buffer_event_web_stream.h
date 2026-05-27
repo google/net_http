@@ -1,5 +1,5 @@
-#ifndef WISH_CPP_SRC_WISH_HANDLER_H_
-#define WISH_CPP_SRC_WISH_HANDLER_H_
+#ifndef WISH_CPP_SRC_BUFFER_EVENT_WEB_STREAM_H_
+#define WISH_CPP_SRC_BUFFER_EVENT_WEB_STREAM_H_
 
 #include <event2/buffer.h>
 #include <event2/bufferevent.h>
@@ -98,4 +98,4 @@ class BufferEventWebStream {
   int SendMessage(uint8_t opcode, const std::string& msg);
 };
 
-#endif  // WISH_CPP_SRC_WISH_HANDLER_H_
+#endif  // WISH_CPP_SRC_BUFFER_EVENT_WEB_STREAM_H_

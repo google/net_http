@@ -13,7 +13,7 @@
 #include <cstring>
 #include <string>
 
-#include "../src/wish_handler.h"
+#include "../src/buffer_event_web_stream.h"
 
 ABSL_FLAG(int, port, 8080, "Port to listen on");
 

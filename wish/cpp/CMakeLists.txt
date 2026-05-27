@@ -151,9 +151,9 @@ include_directories(src)
 # since we disabled it in libevent's own build.
 # Build as a static library: libevent is also static and was not compiled with
 # -fPIC, so it cannot be linked into a shared object.
-add_library(wish_handler STATIC
-    src/wish_handler.cc
-    src/wish_handler.h
+add_library(buffer_event_web_stream STATIC
+    src/buffer_event_web_stream.cc
+    src/buffer_event_web_stream.h
     ${libevent_SOURCE_DIR}/bufferevent_openssl.c
     ${libevent_SOURCE_DIR}/bufferevent_ssl.c
     src/tls_context.cc
@@ -164,8 +164,8 @@ add_library(wish_handler STATIC
     src/tls_client.h
     src/plain_client.cc
     src/plain_client.h
-    src/h2_wish_stream.cc
-    src/h2_wish_stream.h
+    src/nghttp2_web_stream.cc
+    src/nghttp2_web_stream.h
     src/h2_server.cc
     src/h2_server.h
     src/h2_tls_server.cc
@@ -176,7 +176,7 @@ add_library(wish_handler STATIC
     src/h2_tls_client.h
 )
 # BoringSSL targets: ssl and crypto.  nghttp2 for HTTP/2 framing.
-target_link_libraries(wish_handler wslay event ssl crypto nghttp2::nghttp2)
+target_link_libraries(buffer_event_web_stream wslay event ssl crypto nghttp2::nghttp2)
 
 if(WISH_BUILD_EXAMPLES)
     add_subdirectory(examples)
@@ -189,11 +189,11 @@ endif()
 if(WISH_BUILD_TESTS)
     enable_testing()
 
-    add_executable(wish_handler_test src/wish_handler_test.cc)
-    target_link_libraries(wish_handler_test wish_handler gtest_main gtest event wslay)
-    add_test(NAME wish_handler_test COMMAND wish_handler_test)
+    add_executable(buffer_event_web_stream_test src/buffer_event_web_stream_test.cc)
+    target_link_libraries(buffer_event_web_stream_test buffer_event_web_stream gtest_main gtest event wslay)
+    add_test(NAME buffer_event_web_stream_test COMMAND buffer_event_web_stream_test)
 
-    add_executable(h2_wish_stream_test src/h2_wish_stream_test.cc)
-    target_link_libraries(h2_wish_stream_test wish_handler gtest_main gtest nghttp2::nghttp2 wslay)
-    add_test(NAME h2_wish_stream_test COMMAND h2_wish_stream_test)
+    add_executable(nghttp2_web_stream_test src/nghttp2_web_stream_test.cc)
+    target_link_libraries(nghttp2_web_stream_test buffer_event_web_stream gtest_main gtest nghttp2::nghttp2 wslay)
+    add_test(NAME nghttp2_web_stream_test COMMAND nghttp2_web_stream_test)
 endif()

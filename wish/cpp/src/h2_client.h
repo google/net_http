@@ -10,7 +10,7 @@
 #include <string>
 #include <unordered_map>
 
-#include "h2_wish_stream.h"
+#include "nghttp2_web_stream.h"
 
 // H2Client establishes a plain (cleartext) HTTP/2 (h2c) connection and opens
 // a single web-stream (POST / with Content-Type: application/web-stream).

@@ -1,5 +1,3 @@
-#include "wish_handler.h"
-
 #include <absl/base/optimization.h>
 #include <event2/buffer.h>
 #include <event2/bufferevent.h>
@@ -12,6 +10,8 @@
 #include <random>
 #include <sstream>
 #include <vector>
+
+#include "buffer_event_web_stream.h"
 
 BufferEventWebStream::BufferEventWebStream(bufferevent* bev,
                                            bool is_server)
