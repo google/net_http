@@ -93,7 +93,8 @@ bool InitConnection(ClientState* client) {
     return false;
   }
 
-  if (bufferevent_socket_connect(client->bev, res->ai_addr,
+  if (bufferevent_socket_connect(client->bev,
+                                 res->ai_addr,
                                  static_cast<int>(res->ai_addrlen)) < 0) {
     LOG(ERROR) << "bufferevent_socket_connect() failed";
     freeaddrinfo(res);
