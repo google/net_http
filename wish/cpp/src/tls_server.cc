@@ -6,6 +6,7 @@
 #include <netinet/tcp.h>
 #include <openssl/ssl.h>
 
+#include <algorithm>
 #include <cstring>
 
 #include "buffer_event_web_stream.h"
@@ -23,6 +24,9 @@ TlsServer::TlsServer(int port,
       listener_(nullptr) {}
 
 TlsServer::~TlsServer() {
+  active_handshakes_.clear();
+  active_streams_.clear();
+
   if (listener_) {
     evconnlistener_free(listener_);
   }
@@ -122,24 +126,35 @@ void TlsServer::AcceptConnCb(evconnlistener* listener,
 
   bufferevent_openssl_set_allow_dirty_shutdown(bev, 1);
 
-  auto* handshake = new ServerHandshake(
+  auto handshake = std::make_unique<ServerHandshake>(
       bev,
       [server](bufferevent* bev) {
-        BufferEventWebStream* stream = new BufferEventWebStream(bev, true);
+        auto stream = std::make_unique<BufferEventWebStream>(bev, true);
+        auto* raw_stream = stream.get();
+        server->active_streams_.push_back(std::move(stream));
+
+        raw_stream->SetCleanupCallback([server](BufferEventWebStream* s) {
+          server->RemoveStream(s);
+        });
 
         if (server->on_stream_) {
-          server->on_stream_(stream);
+          server->on_stream_(raw_stream);
         } else {
           LOG(WARNING) << "Warning: No stream handler registered.";
         }
 
-        stream->Start();
+        raw_stream->Start();
       },
       []() {
         LOG(ERROR) << "Server handshake failed";
+      },
+      [server](ServerHandshake* h) {
+        server->RemoveHandshake(h);
       });
 
-  handshake->Start();
+  auto* raw_handshake = handshake.get();
+  server->active_handshakes_.push_back(std::move(handshake));
+  raw_handshake->Start();
 }
 
 void TlsServer::AcceptErrorCb(evconnlistener* listener, void* ctx) {
@@ -149,4 +164,20 @@ void TlsServer::AcceptErrorCb(evconnlistener* listener, void* ctx) {
              << evutil_socket_error_to_string(err)
              << ") on the listener. Shutting down.";
   event_base_loopexit(base, nullptr);
+}
+
+void TlsServer::RemoveHandshake(ServerHandshake* handshake) {
+  auto it = std::find_if(active_handshakes_.begin(), active_handshakes_.end(), [handshake](const auto& ptr) { return ptr.get() == handshake; });
+  if (it != active_handshakes_.end()) {
+    auto ptr = std::move(*it);
+    active_handshakes_.erase(it);
+  }
+}
+
+void TlsServer::RemoveStream(BufferEventWebStream* stream) {
+  auto it = std::find_if(active_streams_.begin(), active_streams_.end(), [stream](const auto& ptr) { return ptr.get() == stream; });
+  if (it != active_streams_.end()) {
+    auto ptr = std::move(*it);
+    active_streams_.erase(it);
+  }
 }

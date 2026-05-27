@@ -38,7 +38,7 @@ class PlainClient {
   evdns_base* dns_base_;
 
   std::unique_ptr<ClientHandshake> handshake_;
-  BufferEventWebStream* stream_;
+  std::unique_ptr<BufferEventWebStream> stream_;
 
   OpenCallback on_open_;
 };

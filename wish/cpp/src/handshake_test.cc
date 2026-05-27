@@ -194,7 +194,7 @@ TEST_F(HandshakeTest, ServerHandshakeSuccess) {
   bool error_called = false;
   bufferevent* server_bev = nullptr;
 
-  auto* server = new ServerHandshake(
+  auto server = std::make_unique<ServerHandshake>(
       pair[0],
       [&](bufferevent* bev) {
         open_called = true;
@@ -247,7 +247,7 @@ TEST_F(HandshakeTest, ServerHandshakeFailureBadContentType) {
   bool open_called = false;
   bool error_called = false;
 
-  auto* server = new ServerHandshake(
+  auto server = std::make_unique<ServerHandshake>(
       pair[0],
       [&](bufferevent* bev) {
         open_called = true;
@@ -287,7 +287,7 @@ TEST_F(HandshakeTest, ServerHandshakeEventError) {
   bool open_called = false;
   bool error_called = false;
 
-  auto* server = new ServerHandshake(
+  auto server = std::make_unique<ServerHandshake>(
       pair[0],
       [&](bufferevent* bev) {
         open_called = true;
@@ -531,7 +531,7 @@ TEST_F(HandshakeTest, ServerHandshakeRejectsContentEncoding) {
 
   bool open_called = false;
   bool error_called = false;
-  auto* server = new ServerHandshake(
+  auto server = std::make_unique<ServerHandshake>(
       pair[0],
       [&](bufferevent* bev) { open_called = true; bufferevent_free(bev); event_base_loopbreak(base_); },
       [&]() { error_called = true; event_base_loopbreak(base_); });
@@ -554,7 +554,7 @@ TEST_F(HandshakeTest, ServerHandshakeRejectsContentLength) {
 
   bool open_called = false;
   bool error_called = false;
-  auto* server = new ServerHandshake(
+  auto server = std::make_unique<ServerHandshake>(
       pair[0],
       [&](bufferevent* bev) { open_called = true; bufferevent_free(bev); event_base_loopbreak(base_); },
       [&]() { error_called = true; event_base_loopbreak(base_); });
@@ -577,7 +577,7 @@ TEST_F(HandshakeTest, ServerHandshakeRejectsConnectionClose) {
 
   bool open_called = false;
   bool error_called = false;
-  auto* server = new ServerHandshake(
+  auto server = std::make_unique<ServerHandshake>(
       pair[0],
       [&](bufferevent* bev) { open_called = true; bufferevent_free(bev); event_base_loopbreak(base_); },
       [&]() { error_called = true; event_base_loopbreak(base_); });
@@ -600,7 +600,7 @@ TEST_F(HandshakeTest, ServerHandshakeRejectsNonChunkedTransferEncoding) {
 
   bool open_called = false;
   bool error_called = false;
-  auto* server = new ServerHandshake(
+  auto server = std::make_unique<ServerHandshake>(
       pair[0],
       [&](bufferevent* bev) { open_called = true; bufferevent_free(bev); event_base_loopbreak(base_); },
       [&]() { error_called = true; event_base_loopbreak(base_); });
@@ -623,7 +623,7 @@ TEST_F(HandshakeTest, ServerHandshakeRejectsHTTP10) {
 
   bool open_called = false;
   bool error_called = false;
-  auto* server = new ServerHandshake(
+  auto server = std::make_unique<ServerHandshake>(
       pair[0],
       [&](bufferevent* bev) { open_called = true; bufferevent_free(bev); event_base_loopbreak(base_); },
       [&]() { error_called = true; event_base_loopbreak(base_); });

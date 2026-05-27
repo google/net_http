@@ -6,10 +6,15 @@
 #include <event2/listener.h>
 
 #include <functional>
+#include <memory>
 #include <string>
+#include <vector>
 
 #include "tls_context.h"
 #include "web_stream.h"
+
+class ServerHandshake;
+class BufferEventWebStream;
 
 class TlsServer {
  public:
@@ -34,6 +39,9 @@ class TlsServer {
   static void AcceptErrorCb(evconnlistener* listener,
                             void* ctx);
 
+  void RemoveHandshake(ServerHandshake* handshake);
+  void RemoveStream(BufferEventWebStream* stream);
+
   int port_;
 
   std::string ca_file_;
@@ -46,6 +54,9 @@ class TlsServer {
   TlsContext tls_ctx_;
 
   StreamCallback on_stream_;
+
+  std::vector<std::unique_ptr<ServerHandshake>> active_handshakes_;
+  std::vector<std::unique_ptr<BufferEventWebStream>> active_streams_;
 };
 
 #endif  // WISH_CPP_SRC_TLS_SERVER_H_
