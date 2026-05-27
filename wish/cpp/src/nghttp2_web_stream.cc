@@ -98,7 +98,7 @@ void NGHTTP2WebStream::OnDataChunk(const uint8_t* data, size_t len) {
 
   int err = wslay_event_recv(ctx_);
   if (err != 0) {
-    std::cerr << "NGHTTP2WebStream: wslay_event_recv failed: " << err << std::endl;
+    std::cerr << "NGHTTP2WebStream: wslay_event_recv() failed: " << err << std::endl;
   }
 }
 

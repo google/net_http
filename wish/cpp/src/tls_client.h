@@ -34,12 +34,12 @@ class TlsClient {
   void Stop();
 
  private:
+  std::string host_;
+  int port_;
+
   std::string ca_file_;
   std::string cert_file_;
   std::string key_file_;
-
-  std::string host_;
-  int port_;
 
   event_base* base_;
   evdns_base* dns_base_;

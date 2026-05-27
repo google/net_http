@@ -70,8 +70,9 @@ int main(int argc, char** argv) {
       LOG(INFO) << "Message (opcode: " << type << ", message: " << msg << ")";
     });
 
-    stream->SetOnClose(
-        []() { LOG(INFO) << "OnClose"; });
+    stream->SetOnClose([]() {
+      LOG(INFO) << "OnClose";
+    });
 
     stream->SendText("Hello web-stream text over HTTP/2+TLS!");
     stream->SendBinary("Hello web-stream binary over HTTP/2+TLS!");

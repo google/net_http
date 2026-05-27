@@ -123,7 +123,11 @@ void BufferEventWebStream::ReadCallback(bufferevent* bev, void* ctx) {
           // state_ = CLOSED yet: on_close_() may still call Close() to queue
           // the outbound terminal chunk, and we need the output buffer to drain
           // before freeing the handler.
-          bufferevent_setcb(handler->bev_, nullptr, nullptr, nullptr, nullptr);
+          bufferevent_setcb(handler->bev_,
+                            nullptr,
+                            nullptr,
+                            nullptr,
+                            nullptr);
           if (handler->on_close_) {
             handler->on_close_();
           }
@@ -132,8 +136,13 @@ void BufferEventWebStream::ReadCallback(bufferevent* bev, void* ctx) {
             // (and any pending echo frames) are queued in the output buffer.
             // Switch to DRAINING and delete only after the buffer empties.
             handler->state_ = DRAINING;
-            bufferevent_setcb(handler->bev_, nullptr, DrainCallback, EventCallback, handler);
-            bufferevent_enable(handler->bev_, EV_WRITE);
+            bufferevent_setcb(handler->bev_,
+                              nullptr,
+                              DrainCallback,
+                              EventCallback,
+                              handler);
+            bufferevent_enable(handler->bev_,
+                               EV_WRITE);
           } else {
             handler->state_ = CLOSED;
             delete handler;
@@ -403,6 +412,7 @@ ssize_t BufferEventWebStream::ReadChunkedBytes(uint8_t* buf, size_t len) {
         if (chunk_remaining_ == 0) {
           // Terminal chunk: signal receive-close after the trailing \r\n.
           receive_closed_ = true;
+
           chunk_state_ = ChunkState::TRAILER;
           continue;  // Consume the TRAILER in the same call.
         }
@@ -437,13 +447,16 @@ ssize_t BufferEventWebStream::ReadChunkedBytes(uint8_t* buf, size_t len) {
           wslay_event_set_error(ctx_, WSLAY_ERR_WOULDBLOCK);
           return -1;
         }
+
         evbuffer_drain(input, 2);  // Discard "\r\n".
         chunk_state_ = ChunkState::HEADER;
+
         if (receive_closed_) {
           // Terminal chunk fully consumed; let ReadCallback close the stream.
           wslay_event_set_error(ctx_, WSLAY_ERR_WOULDBLOCK);
           return -1;
         }
+
         continue;  // Parse the next chunk header.
       }
     }

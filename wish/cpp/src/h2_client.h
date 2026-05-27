@@ -28,8 +28,10 @@ class H2Client {
   ~H2Client();
 
   bool Init();
+
   void SetOnOpen(OpenCallback cb);
   void SetOnClose(CloseCallback cb);
+
   void Run();
   void Stop();
 
@@ -50,26 +52,48 @@ class H2Client {
   };
 
   // libevent bufferevent callbacks
-  static void ReadCallback(bufferevent*, void*);
+  static void ReadCallback(bufferevent*,
+                           void*);
   static void EventCallback(bufferevent*,
                             short,  // NOLINT(runtime/int)
                             void*);
 
   // nghttp2 session callbacks
-  static nghttp2_ssize SendCallback(nghttp2_session*, const uint8_t*, size_t,
-                                    int, void*);
-  static int OnHeaderCallback(nghttp2_session*, const nghttp2_frame*,
-                              const uint8_t*, size_t, const uint8_t*, size_t,
-                              uint8_t, void*);
-  static int OnFrameRecvCallback(nghttp2_session*, const nghttp2_frame*, void*);
-  static int OnDataChunkRecvCallback(nghttp2_session*, uint8_t, int32_t,
-                                     const uint8_t*, size_t, void*);
-  static int OnStreamCloseCallback(nghttp2_session*, int32_t, uint32_t, void*);
+  static nghttp2_ssize SendCallback(nghttp2_session*,
+                                    const uint8_t*,
+                                    size_t,
+                                    int,
+                                    void*);
+  static int OnHeaderCallback(nghttp2_session*,
+                              const nghttp2_frame*,
+                              const uint8_t*,
+                              size_t,
+                              const uint8_t*,
+                              size_t,
+                              uint8_t,
+                              void*);
+  static int OnFrameRecvCallback(nghttp2_session*,
+                                 const nghttp2_frame*,
+                                 void*);
+  static int OnDataChunkRecvCallback(nghttp2_session*,
+                                     uint8_t,
+                                     int32_t,
+                                     const uint8_t*,
+                                     size_t,
+                                     void*);
+  static int OnStreamCloseCallback(nghttp2_session*,
+                                   int32_t,
+                                   uint32_t,
+                                   void*);
 
   // nghttp2 data-source read callback
-  static nghttp2_ssize DataSourceReadCallback(nghttp2_session*, int32_t, uint8_t*,
-                                              size_t, uint32_t*,
-                                              nghttp2_data_source*, void*);
+  static nghttp2_ssize DataSourceReadCallback(nghttp2_session*,
+                                              int32_t,
+                                              uint8_t*,
+                                              size_t,
+                                              uint32_t*,
+                                              nghttp2_data_source*,
+                                              void*);
 
   // Initialise nghttp2 and submit the web-stream request.
   // Called inside BEV_EVENT_CONNECTED so that TCP_NODELAY can be set first.

@@ -12,7 +12,9 @@
       (uint8_t*)(name), (uint8_t*)(value), strlen(name), strlen(value), NGHTTP2_NV_FLAG_NONE}
 
 H2Server::H2Server(int port)
-    : port_(port), base_(nullptr), listener_(nullptr) {}
+    : port_(port),
+      base_(nullptr),
+      listener_(nullptr) {}
 
 H2Server::~H2Server() {
   if (listener_) {
@@ -188,7 +190,7 @@ void H2Server::ReadCallback(struct bufferevent* bev, void* ctx) {
                                              data,
                                              len);
   if (readlen < 0) {
-    std::cerr << "H2Server: nghttp2_session_mem_recv failed: "
+    std::cerr << "H2Server: nghttp2_session_mem_recv() failed: "
               << nghttp2_strerror(static_cast<int>(readlen)) << std::endl;
     bufferevent_free(bev);
     return;
@@ -197,7 +199,7 @@ void H2Server::ReadCallback(struct bufferevent* bev, void* ctx) {
 
   int rv = nghttp2_session_send(sess->h2session);
   if (rv < 0) {
-    std::cerr << "H2Server: nghttp2_session_send failed: "
+    std::cerr << "H2Server: nghttp2_session_send() failed: "
               << nghttp2_strerror(rv) << std::endl;
   }
 }

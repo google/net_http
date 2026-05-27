@@ -80,6 +80,7 @@ int main(int argc, char** argv) {
 
     stream->SetOnClose([stream]() {
       LOG(INFO) << "OnClose";
+
       stream->Close();
     });
   });
