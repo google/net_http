@@ -2,16 +2,16 @@ import asyncio
 import threading
 from urllib.parse import urlparse
 
-from . import wish_ext
+from . import web_stream_ext
 
-class WishConnection:
+class WebStreamConnection:
     def __init__(self, host, port, tls, ca_file="", cert_file="", key_file=""):
         self._host = host
         self._port = port
         if tls:
-            self._client = wish_ext.TlsClient(ca_file, cert_file, key_file, host, port)
+            self._client = web_stream_ext.TlsClient(ca_file, cert_file, key_file, host, port)
         else:
-            self._client = wish_ext.PlainClient(host, port)
+            self._client = web_stream_ext.PlainClient(host, port)
         self._client.init()  # raises RuntimeError on failure
         
         self._loop = asyncio.get_running_loop()
@@ -46,7 +46,7 @@ class WishConnection:
             self._run_future = None
 
     async def send(self, data):
-        """Sends data over the WiSH connection. If data is bytes, sends as binary, else text."""
+        """Sends data over the WebStream connection. If data is bytes, sends as binary, else text."""
         if not self._handler:
             raise RuntimeError("Connection is not open")
             
@@ -56,7 +56,7 @@ class WishConnection:
             self._handler.send_text(str(data))
             
     async def recv(self):
-        """Receives a message from the WiSH connection."""
+        """Receives a message from the WebStream connection."""
         opcode, msg = await self._recv_queue.get()
         # You can process opcode here if you want to distinguish text/binary
         # We'll just return the message
@@ -69,7 +69,7 @@ class WishConnection:
 class _ConnectContextManager:
     def __init__(self, uri, ca_file="", cert_file="", key_file=""):
         parsed = urlparse(uri)
-        self.tls = parsed.scheme in ("wishs", "wss", "https")
+        self.tls = parsed.scheme in ("webstreams", "webstreams", "https")
         self.host = parsed.hostname
         self.port = parsed.port or (443 if self.tls else 80)
         self.ca_file = ca_file
@@ -78,7 +78,7 @@ class _ConnectContextManager:
         self.conn = None
 
     async def __aenter__(self):
-        self.conn = WishConnection(self.host, self.port, self.tls,
+        self.conn = WebStreamConnection(self.host, self.port, self.tls,
                                    self.ca_file, self.cert_file, self.key_file)
         await self.conn.connect()
         return self.conn

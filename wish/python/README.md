@@ -1,6 +1,6 @@
-# WiSH Python Bindings
+# WebStream Python Bindings
 
-Python bindings for the WiSH protocol (C++).
+Python bindings for the web-stream protocol (C++).
 
 These bindings provide an asyncio-compatible API and utilize `nanobind` for efficient C++-to-Python interoperability.
 The `libevent` event loop runs in a background thread, integrated with the Python `asyncio` event loop.
@@ -42,10 +42,10 @@ This sub-project is intended to be used with a Python virtual environment (`venv
 
 ```python
 import asyncio
-from wish.client import connect
+from web_stream.client import connect
 
-async def test_wish_client():
-    uri = "wishs://example.com:443"
+async def test_web_stream_client():
+    uri = "webstreams://example.com:443"
     
     # Establish connection
     async with connect(
@@ -56,22 +56,21 @@ async def test_wish_client():
     ) as conn:
         
         # Send a message
-        await conn.send("Hello over WiSH!")
+        await conn.send("Hello over web-stream!")
         
         # Receive a message
         msg = await conn.recv()
         print("Received:", msg)
 
 if __name__ == "__main__":
-    asyncio.run(test_wish_client())
+    asyncio.run(test_web_stream_client())
 ```
 
 ## Design Philosophy & Performance
 
 To provide maximum throughput without blocking the Python event loop, these bindings rely on several specific architectural choices:
 
-- **Background C++ Event Loop:** The core networking operations and TLS data streaming are handled natively by `libevent`. The `wish/client.py` module uses `loop.run_in_executor()` to spawn this C++ event loop in a background thread.
+- **Background C++ Event Loop:** The core networking operations and TLS data streaming are handled natively by `libevent`. The `web_stream/client.py` module uses `loop.run_in_executor()` to spawn this C++ event loop in a background thread.
 - **GIL Management:** The C++ extension releases the Python GIL while running its `libevent` dispatch loop and when performing heavy network I/O. The Python interpreter only re-acquires the GIL for split seconds to process incoming messages or to initiate send operations.
 - **Micro-Bindings:** `nanobind` is deliberately chosen for its modern, zero-overhead approach to creating C++ bindings. It has a small binary footprint and fast execution speed when crossing the C++/Python boundary.
 - **Thread-safe Asyncio Bridging:** When the C++ connection layer has an event (like a successful connection or a received message), it safely bridges back to the Python thread by triggering `loop.call_soon_threadsafe()`. Data is seamlessly funneled into an `asyncio.Queue` so that the Python user processes it using standard, non-blocking asynchronous loops.
-

@@ -1,13 +1,13 @@
 import asyncio
-import wish
+import web_stream
 
 # Certs created for the tls_echo_server example (adjust paths if needed)
 CERTS_DIR = "/home/ysnysnysn/net_http/wish/cpp/certs"
 
 async def main():
-    print("Connecting to WiSH server...")
-    async with wish.connect(
-        "wish://127.0.0.1:8080",
+    print("Connecting to WebStream server...")
+    async with web_stream.connect(
+        "webstream://127.0.0.1:8080",
         ca_file=f"{CERTS_DIR}/ca.crt",
         cert_file=f"{CERTS_DIR}/client.crt",
         key_file=f"{CERTS_DIR}/client.key",
