@@ -1,3 +1,15 @@
+diff --git a/lib/includes/wslay/wslay.h b/lib/includes/wslay/wslay.h
+index b73e6d8..80a5f78 100644
+--- a/lib/includes/wslay/wslay.h
++++ b/lib/includes/wslay/wslay.h
+@@ -132,6 +132,7 @@ enum wslay_opcode {
+   WSLAY_CONTINUATION_FRAME = 0x0u,
+   WSLAY_TEXT_FRAME = 0x1u,
+   WSLAY_BINARY_FRAME = 0x2u,
++  WSLAY_METADATA_FRAME = 0x3u,
+   WSLAY_CONNECTION_CLOSE = 0x8u,
+   WSLAY_PING = 0x9u,
+   WSLAY_PONG = 0xau
 diff --git a/lib/wslay_event.c b/lib/wslay_event.c
 index 4c29fe4..93e9255 100644
 --- a/lib/wslay_event.c
@@ -11,6 +23,14 @@ index 4c29fe4..93e9255 100644
          if ((r = wslay_event_queue_close_wrapper(ctx, WSLAY_CODE_PROTOCOL_ERROR,
                                                   NULL, 0)) != 0) {
            return (int)r;
+@@ -519,6 +519,7 @@ int wslay_event_recv(wslay_event_context_ptr ctx) {
+       if (ctx->imsg->opcode == 0xffu) {
+         if (iocb.opcode == WSLAY_TEXT_FRAME ||
+             iocb.opcode == WSLAY_BINARY_FRAME ||
++            iocb.opcode == WSLAY_METADATA_FRAME ||
+             iocb.opcode == WSLAY_CONNECTION_CLOSE ||
+             iocb.opcode == WSLAY_PING || iocb.opcode == WSLAY_PONG) {
+           wslay_event_imsg_set(ctx->imsg, iocb.fin, iocb.rsv, iocb.opcode);
 @@ -775,7 +775,7 @@ int wslay_event_send(wslay_event_context_ptr ctx) {
        iocb.fin = 1;
        iocb.opcode = ctx->omsg->opcode;
