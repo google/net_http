@@ -41,17 +41,14 @@ int main(int argc, char** argv) {
     handler->SetOnMessage([handler](uint8_t opcode, const std::string& msg) {
       std::string type;
       switch (opcode) {
-        case WISH_OPCODE_TEXT:
+        case WEB_STREAM_OPCODE_TEXT:
           type = "TEXT";
           break;
-        case WISH_OPCODE_BINARY:
+        case WEB_STREAM_OPCODE_BINARY:
           type = "BINARY";
           break;
-        case WISH_OPCODE_TEXT_METADATA:
-          type = "TEXT_METADATA";
-          break;
-        case WISH_OPCODE_BINARY_METADATA:
-          type = "BINARY_METADATA";
+        case WEB_STREAM_OPCODE_METADATA:
+          type = "METADATA";
           break;
         default:
           type = "UNKNOWN(" + std::to_string(opcode) + ")";
@@ -60,14 +57,12 @@ int main(int argc, char** argv) {
       LOG(INFO) << "Received [" << type << "]: " << msg;
 
       // Echo back
-      if (opcode == WISH_OPCODE_TEXT) {
+      if (opcode == WEB_STREAM_OPCODE_TEXT) {
         handler->SendText(msg);
-      } else if (opcode == WISH_OPCODE_BINARY) {
+      } else if (opcode == WEB_STREAM_OPCODE_BINARY) {
         handler->SendBinary(msg);
-      } else if (opcode == WISH_OPCODE_TEXT_METADATA) {
-        handler->SendTextMetadata(msg);
-      } else if (opcode == WISH_OPCODE_BINARY_METADATA) {
-        handler->SendBinaryMetadata(msg);
+      } else if (opcode == WEB_STREAM_OPCODE_METADATA) {
+        handler->SendMetadata(msg);
       } else {
         LOG(WARNING) << "Unknown opcode, cannot echo.";
       }

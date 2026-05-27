@@ -40,8 +40,7 @@ class H2WishStream {
 
   int SendText(const std::string& msg);
   int SendBinary(const std::string& msg);
-  int SendTextMetadata(const std::string& msg);
-  int SendBinaryMetadata(const std::string& msg);
+  int SendMetadata(const std::string& msg);
 
   int32_t stream_id() const { return stream_id_; }
 

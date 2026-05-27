@@ -27,17 +27,14 @@ int main(int argc, char** argv) {
     stream->SetOnMessage([stream](uint8_t opcode, const std::string& msg) {
       std::string type;
       switch (opcode) {
-        case WISH_OPCODE_TEXT:
+        case WEB_STREAM_OPCODE_TEXT:
           type = "TEXT";
           break;
-        case WISH_OPCODE_BINARY:
+        case WEB_STREAM_OPCODE_BINARY:
           type = "BINARY";
           break;
-        case WISH_OPCODE_TEXT_METADATA:
-          type = "TEXT_METADATA";
-          break;
-        case WISH_OPCODE_BINARY_METADATA:
-          type = "BINARY_METADATA";
+        case WEB_STREAM_OPCODE_METADATA:
+          type = "METADATA";
           break;
         default:
           type = "UNKNOWN(" + std::to_string(opcode) + ")";
@@ -45,16 +42,15 @@ int main(int argc, char** argv) {
       }
       LOG(INFO) << "Received [" << type << "]: " << msg;
 
-      if (opcode == WISH_OPCODE_TEXT)
+      if (opcode == WEB_STREAM_OPCODE_TEXT) {
         stream->SendText(msg);
-      else if (opcode == WISH_OPCODE_BINARY)
+      } else if (opcode == WEB_STREAM_OPCODE_BINARY) {
         stream->SendBinary(msg);
-      else if (opcode == WISH_OPCODE_TEXT_METADATA)
-        stream->SendTextMetadata(msg);
-      else if (opcode == WISH_OPCODE_BINARY_METADATA)
-        stream->SendBinaryMetadata(msg);
-      else
+      } else if (opcode == WEB_STREAM_OPCODE_METADATA) {
+        stream->SendMetadata(msg);
+      } else {
         LOG(WARNING) << "Unknown opcode, cannot echo.";
+      }
     });
 
     stream->SetOnClose([]() { LOG(INFO) << "WiSH stream closed."; });

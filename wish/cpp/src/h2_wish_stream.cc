@@ -8,6 +8,8 @@
 #include <iostream>
 #include <random>
 
+#include "wish_opcodes.h"
+
 H2WishStream::H2WishStream(nghttp2_session* session,
                            int32_t stream_id,
                            bool is_server)
@@ -48,16 +50,13 @@ void H2WishStream::SetOnClose(CloseCallback cb) { on_close_ = cb; }
 // ---- Public send methods ----
 
 int H2WishStream::SendText(const std::string& msg) {
-  return SendMessage(1, msg);
+  return SendMessage(WEB_STREAM_OPCODE_TEXT, msg);
 }
 int H2WishStream::SendBinary(const std::string& msg) {
-  return SendMessage(2, msg);
+  return SendMessage(WEB_STREAM_OPCODE_BINARY, msg);
 }
-int H2WishStream::SendTextMetadata(const std::string& msg) {
-  return SendMessage(3, msg);
-}
-int H2WishStream::SendBinaryMetadata(const std::string& msg) {
-  return SendMessage(4, msg);
+int H2WishStream::SendMetadata(const std::string& msg) {
+  return SendMessage(WEB_STREAM_OPCODE_METADATA, msg);
 }
 
 // ---- Session callbacks (called by H2Server / H2Client) ----
