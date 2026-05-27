@@ -26,37 +26,37 @@ int main(int argc, char** argv) {
     return 1;
   }
 
-  client.SetOnOpen([](WebStream* handler) {
+  client.SetOnOpen([](WebStream* stream) {
     LOG(INFO) << "OnOpen";
 
-    handler->SendText("Hello web-stream text!");
-    handler->SendBinary("Hello web-stream binary!");
-    handler->SendMetadata("Hello web-stream metadata!");
-    handler->Close();
-  });
+    stream->SetOnMessage([](uint8_t opcode, const std::string& msg) {
+      std::string type;
+      switch (opcode) {
+        case WEB_STREAM_OPCODE_TEXT:
+          type = "TEXT";
+          break;
+        case WEB_STREAM_OPCODE_BINARY:
+          type = "BINARY";
+          break;
+        case WEB_STREAM_OPCODE_METADATA:
+          type = "METADATA";
+          break;
+        default:
+          type = "UNKNOWN(" + std::to_string(opcode) + ")";
+          break;
+      }
 
-  client.SetOnMessage([](uint8_t opcode, const std::string& msg) {
-    std::string type;
-    switch (opcode) {
-      case WEB_STREAM_OPCODE_TEXT:
-        type = "TEXT";
-        break;
-      case WEB_STREAM_OPCODE_BINARY:
-        type = "BINARY";
-        break;
-      case WEB_STREAM_OPCODE_METADATA:
-        type = "METADATA";
-        break;
-      default:
-        type = "UNKNOWN(" + std::to_string(opcode) + ")";
-        break;
-    }
+      LOG(INFO) << "OnMessage (opcode: " << type << ", message: " << msg << ")";
+    });
 
-    LOG(INFO) << "OnMessage (opcode: " << type << ", message: " << msg << ")";
-  });
+    stream->SetOnClose([]() {
+      LOG(INFO) << "OnClose";
+    });
 
-  client.SetOnClose([]() {
-    LOG(INFO) << "OnClose";
+    stream->SendText("Hello web-stream text!");
+    stream->SendBinary("Hello web-stream binary!");
+    stream->SendMetadata("Hello web-stream metadata!");
+    stream->Close();
   });
 
   client.Run();

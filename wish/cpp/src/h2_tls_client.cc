@@ -112,8 +112,6 @@ bool H2TlsClient::Init() {
 
 void H2TlsClient::SetOnOpen(OpenCallback cb) { on_open_ = cb; }
 
-void H2TlsClient::SetOnClose(CloseCallback cb) { on_close_ = cb; }
-
 void H2TlsClient::Run() {
   std::cout << "Running..." << std::endl;
 
@@ -200,9 +198,6 @@ void H2TlsClient::EventCallback(struct bufferevent* bev,
   if (events & (BEV_EVENT_EOF | BEV_EVENT_ERROR)) {
     if (sess->web_stream) {
       sess->web_stream->OnClose();
-      if (sess->client->on_close_) {
-        sess->client->on_close_();
-      }
 
       delete sess->web_stream;
       sess->web_stream = nullptr;
@@ -299,10 +294,6 @@ int H2TlsClient::OnFrameRecvCallback(nghttp2_session* /*session*/,
       (frame->hd.flags & NGHTTP2_FLAG_END_STREAM)) {
     if (sess->web_stream) {
       sess->web_stream->OnClose();
-
-      if (sess->client->on_close_) {
-        sess->client->on_close_();
-      }
     }
   }
 
@@ -338,9 +329,6 @@ int H2TlsClient::OnStreamCloseCallback(nghttp2_session* /*session*/,
 
   if (sess->web_stream && stream_id == sess->h2_stream_id) {
     sess->web_stream->OnClose();
-    if (sess->client->on_close_) {
-      sess->client->on_close_();
-    }
 
     delete sess->web_stream;
     sess->web_stream = nullptr;
