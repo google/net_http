@@ -22,7 +22,10 @@ int main(int argc, char** argv) {
   const std::string server_cert = absl::GetFlag(FLAGS_server_cert);
   const std::string server_key = absl::GetFlag(FLAGS_server_key);
 
-  TlsServer server(ca_cert, server_cert, server_key, port);
+  TlsServer server(port,
+                   ca_cert,
+                   server_cert,
+                   server_key);
 
   if (!server.Init()) {
     LOG(ERROR) << "Failed to initialize server";
