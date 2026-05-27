@@ -42,6 +42,10 @@ class NGHTTP2WebStream : public WebStream {
   int SendBinary(const std::string& msg) override;
   int SendMetadata(const std::string& msg) override;
 
+  // Signal EOF on the outbound HTTP/2 DATA stream by setting END_STREAM.
+  // Returns 0 on success, or -1 if Close() has already been called.
+  int Close() override;
+
   int32_t stream_id() const { return stream_id_; }
 
   // ---- Called by H2Server / H2Client session management ----
@@ -73,6 +77,8 @@ class NGHTTP2WebStream : public WebStream {
   evbuffer* output_buf_;
 
   bool is_server_;
+  // Set by Close(); causes ReadSendData() to set NGHTTP2_DATA_FLAG_EOF.
+  bool close_pending_ = false;
   wslay_event_context* ctx_;
 
   MessageCallback on_message_;

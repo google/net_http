@@ -53,6 +53,7 @@ int main(int argc, char** argv) {
     handler->SendText("Hello web-stream text!");
     handler->SendBinary("Hello web-stream binary!");
     handler->SendMetadata("Hello web-stream metadata!");
+    handler->Close();
   });
 
   client.SetOnMessage([](uint8_t opcode, const std::string& msg) {

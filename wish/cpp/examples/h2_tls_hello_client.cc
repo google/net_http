@@ -76,6 +76,7 @@ int main(int argc, char** argv) {
     stream->SendText("Hello web-stream text over HTTP/2+TLS!");
     stream->SendBinary("Hello web-stream binary over HTTP/2+TLS!");
     stream->SendMetadata("Hello web-stream metadata over HTTP/2+TLS!");
+    stream->Close();
   });
 
   client.Run();

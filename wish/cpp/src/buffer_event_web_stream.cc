@@ -83,6 +83,19 @@ int BufferEventWebStream::SendMetadata(const std::string& msg) {
   return SendMessage(WEB_STREAM_OPCODE_METADATA, msg);
 }
 
+int BufferEventWebStream::Close() {
+  if (close_pending_) {
+    return -1;
+  }
+  close_pending_ = true;
+  state_ = CLOSED;
+
+  // Write the terminal zero-length chunk that signals end-of-body to the peer.
+  static constexpr char kTerminalChunk[] = "0\r\n\r\n";
+  bufferevent_write(bev_, kTerminalChunk, sizeof(kTerminalChunk) - 1);
+  return 0;
+}
+
 // ---- libevent callbacks ----
 
 void BufferEventWebStream::ReadCallback(bufferevent* bev, void* ctx) {
@@ -101,9 +114,30 @@ void BufferEventWebStream::ReadCallback(bufferevent* bev, void* ctx) {
         int err = wslay_event_recv(handler->ctx_);
         if (err != 0) {
           std::cerr << "wslay_event_recv() failed: " << err << std::endl;
+          return;
+        }
 
-          // Handle the error.
-
+        // The inbound terminal chunk was fully consumed by ReadChunkedBytes().
+        if (handler->receive_closed_) {
+          // Clear the read callback; receive direction is done.  Do NOT set
+          // state_ = CLOSED yet: on_close_() may still call Close() to queue
+          // the outbound terminal chunk, and we need the output buffer to drain
+          // before freeing the handler.
+          bufferevent_setcb(handler->bev_, nullptr, nullptr, nullptr, nullptr);
+          if (handler->on_close_) {
+            handler->on_close_();
+          }
+          if (handler->close_pending_) {
+            // Close() was called in on_close_(); the outbound terminal chunk
+            // (and any pending echo frames) are queued in the output buffer.
+            // Switch to DRAINING and delete only after the buffer empties.
+            handler->state_ = DRAINING;
+            bufferevent_setcb(handler->bev_, nullptr, DrainCallback, EventCallback, handler);
+            bufferevent_enable(handler->bev_, EV_WRITE);
+          } else {
+            handler->state_ = CLOSED;
+            delete handler;
+          }
           return;
         }
 
@@ -114,6 +148,15 @@ void BufferEventWebStream::ReadCallback(bufferevent* bev, void* ctx) {
       default:
         ABSL_UNREACHABLE();
     }
+  }
+}
+
+void BufferEventWebStream::DrainCallback(bufferevent* bev, void* ctx) {
+  BufferEventWebStream* handler = static_cast<BufferEventWebStream*>(ctx);
+  // Delete the handler only once all queued outbound data has been sent.
+  if (evbuffer_get_length(bufferevent_get_output(bev)) == 0) {
+    handler->state_ = CLOSED;
+    delete handler;
   }
 }
 
@@ -130,10 +173,15 @@ void BufferEventWebStream::EventCallback(bufferevent* bev,
     // Connection closed
     std::cout << "Connection closed." << std::endl;
     BufferEventWebStream* handler = static_cast<BufferEventWebStream*>(ctx);
-    // Notify before self-deletion so Python-side handles can be invalidated
-    // while the pointer is still valid.
-    if (handler->on_close_) {
-      handler->on_close_();
+    // Guard against double-close: ReadCallback may have already called
+    // on_close_() and deleted the handler via the terminal-chunk path.
+    // state_ == CLOSED or DRAINING means on_close_() was already fired.
+    if (handler->state_ != CLOSED && handler->state_ != DRAINING) {
+      // Notify before self-deletion so Python-side handles can be invalidated
+      // while the pointer is still valid.
+      if (handler->on_close_) {
+        handler->on_close_();
+      }
     }
     delete handler;
   }
@@ -204,6 +252,7 @@ void BufferEventWebStream::SendHttpResponse(const std::string& status,
   std::stringstream ss;
   ss << "HTTP/1.1 " << status << "\r\n";
   ss << "Content-Type: " << content_type << "\r\n";
+  ss << "Transfer-Encoding: chunked\r\n";
   ss << "\r\n";  // End of headers
   std::string data = ss.str();
   bufferevent_write(bev_, data.c_str(), data.length());
@@ -214,6 +263,7 @@ void BufferEventWebStream::SendHttpRequest() {
   ss << "POST / HTTP/1.1\r\n";
   ss << "Host: localhost\r\n";
   ss << "Content-Type: application/web-stream\r\n";
+  ss << "Transfer-Encoding: chunked\r\n";
   ss << "\r\n";
   std::string data = ss.str();
   bufferevent_write(bev_, data.c_str(), data.length());
@@ -247,40 +297,34 @@ bool BufferEventWebStream::ReadHttpResponse() {
 
 // ---- wslay callbacks ----
 
-ssize_t BufferEventWebStream::WslayRecvCallback(wslay_event_context* ctx,
+ssize_t BufferEventWebStream::WslayRecvCallback(wslay_event_context* /*ctx*/,
                                                 uint8_t* buf,
                                                 size_t len,
-                                                int flags,
+                                                int /*flags*/,
                                                 void* user_data) {
   BufferEventWebStream* handler = static_cast<BufferEventWebStream*>(user_data);
-
-  evbuffer* input = bufferevent_get_input(handler->bev_);
-
-  size_t data_len = evbuffer_get_length(input);
-  if (data_len == 0) {
-    wslay_event_set_error(ctx, WSLAY_ERR_WOULDBLOCK);
-    return -1;
-  }
-
-  size_t copy_len = std::min(len, data_len);
-  int rv = evbuffer_remove(input, buf, copy_len);
-  if (rv < 0) {
-    std::cerr << "evbuffer_remove() failed" << std::endl;
-    wslay_event_set_error(ctx, WSLAY_ERR_CALLBACK_FAILURE);
-    return -1;
-  }
-  return static_cast<ssize_t>(copy_len);
+  return handler->ReadChunkedBytes(buf, len);
 }
 
 ssize_t BufferEventWebStream::WslaySendCallback(wslay_event_context* ctx,
                                                 const uint8_t* data,
                                                 size_t len,
-                                                int flags,
+                                                int /*flags*/,
                                                 void* user_data) {
   BufferEventWebStream* handler = static_cast<BufferEventWebStream*>(user_data);
 
-  int rv = bufferevent_write(handler->bev_, data, len);
-  if (rv != 0) {
+  // Wrap the wslay frame bytes in a single HTTP/1.1 chunk:
+  //   <hex-len>\r\n<data>\r\n
+  char header[32];
+  int header_len = snprintf(header, sizeof(header), "%zx\r\n", len);
+  if (header_len <= 0) {
+    wslay_event_set_error(ctx, WSLAY_ERR_CALLBACK_FAILURE);
+    return -1;
+  }
+
+  if (bufferevent_write(handler->bev_, header, static_cast<size_t>(header_len)) != 0 ||
+      bufferevent_write(handler->bev_, data, len) != 0 ||
+      bufferevent_write(handler->bev_, "\r\n", 2) != 0) {
     std::cerr << "bufferevent_write() failed" << std::endl;
     wslay_event_set_error(ctx, WSLAY_ERR_CALLBACK_FAILURE);
     return -1;
@@ -309,6 +353,102 @@ void BufferEventWebStream::WslayOnMsgRecvCallback(wslay_event_context* ctx,
 }
 
 // ---- Private helpers ----
+
+// Decode Transfer-Encoding: chunked bytes from the inbound bufferevent into
+// buf[0..len).  Called by WslayRecvCallback on every wslay recv request.
+//
+// State machine (persists across calls via chunk_state_ / chunk_remaining_):
+//
+//   HEADER  — parse "<hex>\r\n"; if size == 0 set receive_closed_ then TRAILER
+//   DATA    — copy up to chunk_remaining_ payload bytes into buf
+//   TRAILER — consume the "\r\n" that follows each chunk body
+//
+// Returns the number of bytes placed in buf, or -1 (with wslay error set) when
+// no bytes are available yet or a protocol error is detected.
+ssize_t BufferEventWebStream::ReadChunkedBytes(uint8_t* buf, size_t len) {
+  evbuffer* input = bufferevent_get_input(bev_);
+
+  for (;;) {
+    switch (chunk_state_) {
+      case ChunkState::HEADER: {
+        // Find the "\r\n" that terminates the chunk-size line.
+        evbuffer_ptr pos = evbuffer_search(input, "\r\n", 2, nullptr);
+        if (pos.pos < 0) {
+          wslay_event_set_error(ctx_, WSLAY_ERR_WOULDBLOCK);
+          return -1;  // Wait for more data.
+        }
+        if (pos.pos == 0) {
+          std::cerr << "ReadChunkedBytes: empty chunk-size line" << std::endl;
+          wslay_event_set_error(ctx_, WSLAY_ERR_CALLBACK_FAILURE);
+          return -1;
+        }
+
+        // Read the entire "<hex>\r\n" line into a temporary buffer.
+        size_t line_len = static_cast<size_t>(pos.pos) + 2;  // include \r\n
+        std::vector<char> line(line_len + 1, '\0');
+        evbuffer_remove(input, line.data(), line_len);
+        // Null-terminate at the \r so strtoul sees only hex digits.
+        line[pos.pos] = '\0';
+
+        char* end = nullptr;
+        unsigned long chunk_size = std::strtoul(line.data(), &end, 16);
+        if (end == line.data()) {
+          std::cerr << "ReadChunkedBytes: malformed chunk size" << std::endl;
+          wslay_event_set_error(ctx_, WSLAY_ERR_CALLBACK_FAILURE);
+          return -1;
+        }
+
+        chunk_remaining_ = static_cast<size_t>(chunk_size);
+
+        if (chunk_remaining_ == 0) {
+          // Terminal chunk: signal receive-close after the trailing \r\n.
+          receive_closed_ = true;
+          chunk_state_ = ChunkState::TRAILER;
+          continue;  // Consume the TRAILER in the same call.
+        }
+
+        chunk_state_ = ChunkState::DATA;
+        continue;
+      }
+
+      case ChunkState::DATA: {
+        size_t avail = evbuffer_get_length(input);
+        if (avail == 0) {
+          wslay_event_set_error(ctx_, WSLAY_ERR_WOULDBLOCK);
+          return -1;
+        }
+
+        size_t n = std::min({len, chunk_remaining_, avail});
+        int rv = evbuffer_remove(input, buf, n);
+        if (rv < 0) {
+          std::cerr << "ReadChunkedBytes: evbuffer_remove() failed" << std::endl;
+          wslay_event_set_error(ctx_, WSLAY_ERR_CALLBACK_FAILURE);
+          return -1;
+        }
+        chunk_remaining_ -= n;
+        if (chunk_remaining_ == 0) {
+          chunk_state_ = ChunkState::TRAILER;
+        }
+        return static_cast<ssize_t>(n);
+      }
+
+      case ChunkState::TRAILER: {
+        if (evbuffer_get_length(input) < 2) {
+          wslay_event_set_error(ctx_, WSLAY_ERR_WOULDBLOCK);
+          return -1;
+        }
+        evbuffer_drain(input, 2);  // Discard "\r\n".
+        chunk_state_ = ChunkState::HEADER;
+        if (receive_closed_) {
+          // Terminal chunk fully consumed; let ReadCallback close the stream.
+          wslay_event_set_error(ctx_, WSLAY_ERR_WOULDBLOCK);
+          return -1;
+        }
+        continue;  // Parse the next chunk header.
+      }
+    }
+  }
+}
 
 int BufferEventWebStream::SendMessage(uint8_t opcode, const std::string& msg) {
   if (state_ != OPEN) {

@@ -24,6 +24,10 @@ class WebStream {
   virtual int SendText(const std::string& msg) = 0;
   virtual int SendBinary(const std::string& msg) = 0;
   virtual int SendMetadata(const std::string& msg) = 0;
+
+  // Signal EOF to the underlying HTTP message body.
+  // Returns 0 on success, or -1 if Close() has already been called.
+  virtual int Close() = 0;
 };
 
 #endif  // WISH_CPP_SRC_WEB_STREAM_H_

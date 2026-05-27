@@ -142,3 +142,42 @@ TEST_F(NGHTTP2WebStreamTest, ServerSendsUnmasked) {
   EXPECT_FALSE(is_masked)
       << "Server sent a masked frame! web-stream must not use masking.";
 }
+
+// Verify that Close() sets END_STREAM on the next ReadSendData() call and that
+// calling Close() a second time returns -1.
+TEST_F(NGHTTP2WebStreamTest, CloseSignalsEOF) {
+  NGHTTP2WebStream server(server_session_, 1, true /* is_server */);
+  NGHTTP2WebStream client(client_session_, 1, false /* is_server */);
+
+  bool client_close_fired = false;
+  client.SetOnClose([&]() { client_close_fired = true; });
+
+  server.OnOpen();
+  client.OnOpen();
+
+  // Send a message, then close the server side.
+  server.SendText("Hello");
+  EXPECT_EQ(server.Close(), 0);
+
+  // Second Close() must return an error.
+  EXPECT_EQ(server.Close(), -1);
+
+  // Drain the server's output: data frame(s) first, then the END_STREAM frame.
+  uint8_t buf[65536];
+  uint32_t flags = 0;
+  nghttp2_ssize n;
+
+  // Drain frames that carry wslay data.
+  while ((n = server.ReadSendData(buf, sizeof(buf), &flags)) > 0) {
+    client.OnDataChunk(buf, static_cast<size_t>(n));
+    flags = 0;
+  }
+
+  // The final ReadSendData() call should return 0 with NGHTTP2_DATA_FLAG_EOF.
+  EXPECT_EQ(n, 0);
+  EXPECT_NE(flags & NGHTTP2_DATA_FLAG_EOF, 0u);
+
+  // Simulate the H2 session notifying the client that the stream closed.
+  client.OnClose();
+  EXPECT_TRUE(client_close_fired);
+}

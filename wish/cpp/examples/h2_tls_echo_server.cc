@@ -72,7 +72,7 @@ int main(int argc, char** argv) {
       }
     });
 
-    stream->SetOnClose([]() { LOG(INFO) << "OnClose"; });
+    stream->SetOnClose([stream]() { LOG(INFO) << "OnClose"; stream->Close(); });
   });
 
   server.Run();
