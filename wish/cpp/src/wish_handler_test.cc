@@ -29,8 +29,8 @@ TEST_F(WishHandlerTest, HandshakeAndSimpleExchange) {
                                 pair);
   ASSERT_EQ(rv, 0);
 
-  WishHandler* server = new WishHandler(pair[0], true /* is_server */);
-  WishHandler* client = new WishHandler(pair[1], false /* is_server */);
+  BufferEventWebStream* server = new BufferEventWebStream(pair[0], true /* is_server */);
+  BufferEventWebStream* client = new BufferEventWebStream(pair[1], false /* is_server */);
 
   bool server_opened = false;
   bool client_opened = false;
@@ -91,18 +91,18 @@ static void DrainInput(bufferevent* bev) {
 // web-stream doesn't use masking (unlike WebSocket over TCP).
 //
 // Strategy: use a raw bufferevent on one end of a pair as a fake server.
-// Inject a valid HTTP 200 response to move the WishHandler into OPEN state,
+// Inject a valid HTTP 200 response to move the BufferEventWebStream into OPEN state,
 // then call SendText and inspect the raw bytes for the mask bit.
 TEST_F(WishHandlerTest, ClientSendsUnmasked) {
   // No DEFER_CALLBACKS: pair transfers data synchronously between loop ticks.
   bufferevent* pair[2];
   int rv = bufferevent_pair_new(base_, BEV_OPT_CLOSE_ON_FREE, pair);
   ASSERT_EQ(rv, 0);
-  // pair[0]: WishHandler client bev
+  // pair[0]: BufferEventWebStream client bev
   // pair[1]: raw observer (fake server)
   bufferevent_enable(pair[1], EV_READ | EV_WRITE);
 
-  WishHandler* client = new WishHandler(pair[0], false /* is_server */);
+  BufferEventWebStream* client = new BufferEventWebStream(pair[0], false /* is_server */);
   // Start writes the HTTP POST request and enables read on pair[0].
   client->Start();
 
@@ -137,7 +137,7 @@ TEST_F(WishHandlerTest, ClientSendsUnmasked) {
   bool is_masked = (bytes[1] & 0x80) != 0;
   EXPECT_FALSE(is_masked) << "Client sent a masked frame! web-stream must not use masking.";
 
-  // WishHandler destructor frees pair[0].
+  // BufferEventWebStream destructor frees pair[0].
   delete client;
   // free pair[1] manually.
   bufferevent_free(pair[1]);
@@ -148,11 +148,11 @@ TEST_F(WishHandlerTest, ServerSendsUnmasked) {
   bufferevent* pair[2];
   int rv = bufferevent_pair_new(base_, BEV_OPT_CLOSE_ON_FREE, pair);
   ASSERT_EQ(rv, 0);
-  // pair[0]: WishHandler server bev
+  // pair[0]: BufferEventWebStream server bev
   // pair[1]: raw observer (fake client)
   bufferevent_enable(pair[1], EV_READ | EV_WRITE);
 
-  WishHandler* server = new WishHandler(pair[0], true /* is_server */);
+  BufferEventWebStream* server = new BufferEventWebStream(pair[0], true /* is_server */);
   server->Start();
 
   // Fake client sends HTTP POST to open the connection.

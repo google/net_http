@@ -17,7 +17,7 @@
 // mTLS is used (client certificate required), matching TlsClient.
 class H2TlsClient {
  public:
-  using OpenCallback = std::function<void(H2WishStream*)>;
+  using OpenCallback = std::function<void(NGHTTP2WebStream*)>;
   using CloseCallback = std::function<void()>;
 
   H2TlsClient(const std::string& host,
@@ -38,7 +38,7 @@ class H2TlsClient {
     H2TlsClient* client;
     bufferevent* bev;
     nghttp2_session* h2session;
-    H2WishStream* wish_stream;
+    NGHTTP2WebStream* wish_stream;
     int32_t wish_stream_id;
   };
 

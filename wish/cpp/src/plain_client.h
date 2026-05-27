@@ -12,7 +12,7 @@
 
 class PlainClient {
  public:
-  using OpenCallback = std::function<void(WishHandler*)>;
+  using OpenCallback = std::function<void(BufferEventWebStream*)>;
   using MessageCallback = std::function<void(uint8_t, const std::string&)>;
   using CloseCallback = std::function<void()>;
 
@@ -33,7 +33,7 @@ class PlainClient {
   event_base* base_;
   evdns_base* dns_base_;
 
-  WishHandler* handler_;
+  BufferEventWebStream* handler_;
 
   OpenCallback on_open_;
   MessageCallback on_message_;

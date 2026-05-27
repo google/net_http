@@ -29,7 +29,7 @@ int main(int argc, char** argv) {
     return 1;
   }
 
-  server.SetOnStream([](H2WishStream* stream) {
+  server.SetOnStream([](NGHTTP2WebStream* stream) {
     LOG(INFO) << "New TLS WiSH stream (stream_id=" << stream->stream_id()
               << ")";
 

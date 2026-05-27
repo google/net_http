@@ -224,7 +224,7 @@ int H2Server::OnFrameRecvCallback(nghttp2_session* session,
   }
 
   // Create the web-stream stream object.
-  H2WishStream* wish_stream = new H2WishStream(session, stream_id, true);
+  NGHTTP2WebStream* wish_stream = new NGHTTP2WebStream(session, stream_id, true);
   sess->streams[stream_id] = wish_stream;
 
   // Set up the data provider so we can push web-stream DATA frames to the client.
@@ -284,7 +284,7 @@ ssize_t H2Server::DataSourceReadCallback(nghttp2_session* /*session*/,
                                          size_t length, uint32_t* data_flags,
                                          nghttp2_data_source* source,
                                          void* /*user_data*/) {
-  H2WishStream* stream = static_cast<H2WishStream*>(source->ptr);
+  NGHTTP2WebStream* stream = static_cast<NGHTTP2WebStream*>(source->ptr);
   return stream->ReadSendData(buf,
                               length,
                               data_flags);

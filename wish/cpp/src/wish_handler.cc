@@ -13,8 +13,8 @@
 #include <sstream>
 #include <vector>
 
-WishHandler::WishHandler(bufferevent* bev,
-                         bool is_server)
+BufferEventWebStream::BufferEventWebStream(bufferevent* bev,
+                                           bool is_server)
     : bev_(bev),
       is_server_(is_server),
       ctx_(nullptr),
@@ -35,14 +35,14 @@ WishHandler::WishHandler(bufferevent* bev,
   }
 }
 
-WishHandler::~WishHandler() {
+BufferEventWebStream::~BufferEventWebStream() {
   wslay_event_context_free(ctx_);
   if (bev_) {
     bufferevent_free(bev_);
   }
 }
 
-void WishHandler::Start() {
+void BufferEventWebStream::Start() {
   bufferevent_setcb(bev_,
                     ReadCallback,
                     nullptr,
@@ -59,30 +59,30 @@ void WishHandler::Start() {
   }
 }
 
-void WishHandler::SetOnMessage(MessageCallback cb) { on_message_ = cb; }
+void BufferEventWebStream::SetOnMessage(MessageCallback cb) { on_message_ = cb; }
 
-void WishHandler::SetOnOpen(OpenCallback cb) { on_open_ = cb; }
+void BufferEventWebStream::SetOnOpen(OpenCallback cb) { on_open_ = cb; }
 
-void WishHandler::SetOnClose(CloseCallback cb) { on_close_ = cb; }
+void BufferEventWebStream::SetOnClose(CloseCallback cb) { on_close_ = cb; }
 
 // ---- Public send methods ----
 
-int WishHandler::SendText(const std::string& msg) {
+int BufferEventWebStream::SendText(const std::string& msg) {
   return SendMessage(WEB_STREAM_OPCODE_TEXT, msg);
 }
 
-int WishHandler::SendBinary(const std::string& msg) {
+int BufferEventWebStream::SendBinary(const std::string& msg) {
   return SendMessage(WEB_STREAM_OPCODE_BINARY, msg);
 }
 
-int WishHandler::SendMetadata(const std::string& msg) {
+int BufferEventWebStream::SendMetadata(const std::string& msg) {
   return SendMessage(WEB_STREAM_OPCODE_METADATA, msg);
 }
 
 // ---- libevent callbacks ----
 
-void WishHandler::ReadCallback(bufferevent* bev, void* ctx) {
-  WishHandler* handler = static_cast<WishHandler*>(ctx);
+void BufferEventWebStream::ReadCallback(bufferevent* bev, void* ctx) {
+  BufferEventWebStream* handler = static_cast<BufferEventWebStream*>(ctx);
 
   for (;;) {
     switch (handler->state_) {
@@ -113,9 +113,9 @@ void WishHandler::ReadCallback(bufferevent* bev, void* ctx) {
   }
 }
 
-void WishHandler::EventCallback(bufferevent* bev,
-                                short what,  // NOLINT(runtime/int)
-                                void* ctx) {
+void BufferEventWebStream::EventCallback(bufferevent* bev,
+                                         short what,  // NOLINT(runtime/int)
+                                         void* ctx) {
   if (what & BEV_EVENT_ERROR) {
     std::cerr << "Error on socket: "
               << evutil_socket_error_to_string(EVUTIL_SOCKET_ERROR())
@@ -125,7 +125,7 @@ void WishHandler::EventCallback(bufferevent* bev,
   if (what & (BEV_EVENT_EOF | BEV_EVENT_ERROR)) {
     // Connection closed
     std::cout << "Connection closed." << std::endl;
-    WishHandler* handler = static_cast<WishHandler*>(ctx);
+    BufferEventWebStream* handler = static_cast<BufferEventWebStream*>(ctx);
     // Notify before self-deletion so Python-side handles can be invalidated
     // while the pointer is still valid.
     if (handler->on_close_) {
@@ -137,7 +137,7 @@ void WishHandler::EventCallback(bufferevent* bev,
 
 // ---- Handshake handling ----
 
-void WishHandler::HandleHandshake() {
+void BufferEventWebStream::HandleHandshake() {
   if (is_server_) {
     if (ReadHttpRequest()) {
       SendHttpResponse("200 OK", "application/web-stream");
@@ -161,7 +161,7 @@ void WishHandler::HandleHandshake() {
   }
 }
 
-bool WishHandler::ReadHttpRequest() {
+bool BufferEventWebStream::ReadHttpRequest() {
   evbuffer* input = bufferevent_get_input(bev_);
 
   size_t len = evbuffer_get_length(input);
@@ -195,8 +195,8 @@ bool WishHandler::ReadHttpRequest() {
   return true;
 }
 
-void WishHandler::SendHttpResponse(const std::string& status,
-                                   const std::string& content_type) {
+void BufferEventWebStream::SendHttpResponse(const std::string& status,
+                                            const std::string& content_type) {
   std::stringstream ss;
   ss << "HTTP/1.1 " << status << "\r\n";
   ss << "Content-Type: " << content_type << "\r\n";
@@ -205,7 +205,7 @@ void WishHandler::SendHttpResponse(const std::string& status,
   bufferevent_write(bev_, data.c_str(), data.length());
 }
 
-void WishHandler::SendHttpRequest() {
+void BufferEventWebStream::SendHttpRequest() {
   std::stringstream ss;
   ss << "POST / HTTP/1.1\r\n";
   ss << "Host: localhost\r\n";
@@ -215,7 +215,7 @@ void WishHandler::SendHttpRequest() {
   bufferevent_write(bev_, data.c_str(), data.length());
 }
 
-bool WishHandler::ReadHttpResponse() {
+bool BufferEventWebStream::ReadHttpResponse() {
   evbuffer* input = bufferevent_get_input(bev_);
 
   // Search for \r\n\r\n
@@ -243,12 +243,12 @@ bool WishHandler::ReadHttpResponse() {
 
 // ---- wslay callbacks ----
 
-ssize_t WishHandler::WslayRecvCallback(wslay_event_context* ctx,
-                                       uint8_t* buf,
-                                       size_t len,
-                                       int flags,
-                                       void* user_data) {
-  WishHandler* handler = static_cast<WishHandler*>(user_data);
+ssize_t BufferEventWebStream::WslayRecvCallback(wslay_event_context* ctx,
+                                                uint8_t* buf,
+                                                size_t len,
+                                                int flags,
+                                                void* user_data) {
+  BufferEventWebStream* handler = static_cast<BufferEventWebStream*>(user_data);
 
   evbuffer* input = bufferevent_get_input(handler->bev_);
 
@@ -268,12 +268,12 @@ ssize_t WishHandler::WslayRecvCallback(wslay_event_context* ctx,
   return static_cast<ssize_t>(copy_len);
 }
 
-ssize_t WishHandler::WslaySendCallback(wslay_event_context* ctx,
-                                       const uint8_t* data,
-                                       size_t len,
-                                       int flags,
-                                       void* user_data) {
-  WishHandler* handler = static_cast<WishHandler*>(user_data);
+ssize_t BufferEventWebStream::WslaySendCallback(wslay_event_context* ctx,
+                                                const uint8_t* data,
+                                                size_t len,
+                                                int flags,
+                                                void* user_data) {
+  BufferEventWebStream* handler = static_cast<BufferEventWebStream*>(user_data);
 
   int rv = bufferevent_write(handler->bev_, data, len);
   if (rv != 0) {
@@ -285,16 +285,16 @@ ssize_t WishHandler::WslaySendCallback(wslay_event_context* ctx,
   return static_cast<ssize_t>(len);
 }
 
-int WishHandler::WslayGenmaskCallback(wslay_event_context* ctx, uint8_t* buf,
-                                      size_t len, void* user_data) {
+int BufferEventWebStream::WslayGenmaskCallback(wslay_event_context* ctx, uint8_t* buf,
+                                               size_t len, void* user_data) {
   ABSL_UNREACHABLE();
   return 0;
 }
 
-void WishHandler::WslayOnMsgRecvCallback(wslay_event_context* ctx,
-                                         const wslay_event_on_msg_recv_arg* arg,
-                                         void* user_data) {
-  WishHandler* handler = static_cast<WishHandler*>(user_data);
+void BufferEventWebStream::WslayOnMsgRecvCallback(wslay_event_context* ctx,
+                                                  const wslay_event_on_msg_recv_arg* arg,
+                                                  void* user_data) {
+  BufferEventWebStream* handler = static_cast<BufferEventWebStream*>(user_data);
 
   // Consider implementing backpressure.
 
@@ -304,7 +304,7 @@ void WishHandler::WslayOnMsgRecvCallback(wslay_event_context* ctx,
   }
 }
 
-int WishHandler::SendMessage(uint8_t opcode, const std::string& msg) {
+int BufferEventWebStream::SendMessage(uint8_t opcode, const std::string& msg) {
   if (state_ != OPEN) {
     return -1;
   }

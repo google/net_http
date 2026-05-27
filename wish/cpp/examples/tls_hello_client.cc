@@ -16,7 +16,7 @@ int main() {
     return 1;
   }
 
-  client.SetOnOpen([](WishHandler* handler) {
+  client.SetOnOpen([](BufferEventWebStream* handler) {
     std::cout << "Connected and Handshake Complete!" << std::endl;
 
     handler->SendText("Hello web-stream text!");

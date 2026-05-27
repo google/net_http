@@ -17,12 +17,12 @@ struct wslay_event_context;
 struct wslay_event_on_msg_recv_arg;
 }
 
-// WishHandler implements the web-stream protocol defined at https://datatracker.ietf.org/doc/html/draft-yoshino-wish
+// BufferEventWebStream implements the web-stream protocol defined at https://datatracker.ietf.org/doc/html/draft-yoshino-wish
 //
 // It manages the lifecycle of a single web-stream connection, including the initial HTTP handshake and subsequent message framing/parsing.
 //
 // It uses libevent's bufferevent for async I/O. The underlying transport should be provided through it.
-class WishHandler {
+class BufferEventWebStream {
  public:
   using MessageCallback =
       std::function<void(uint8_t opcode, const std::string&)>;
@@ -30,8 +30,8 @@ class WishHandler {
   using CloseCallback = std::function<void()>;
 
   // Constructor takes an already created bufferevent
-  WishHandler(bufferevent* bev, bool is_server);
-  ~WishHandler();
+  BufferEventWebStream(bufferevent* bev, bool is_server);
+  ~BufferEventWebStream();
 
   // Start the handler (sets up callbacks and enables events)
   void Start();

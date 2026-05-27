@@ -15,13 +15,13 @@
 // H2Client establishes a plain (cleartext) HTTP/2 (h2c) connection and opens
 // a single web-stream (POST / with Content-Type: application/web-stream).
 //
-// The OpenCallback receives an H2WishStream* that can be used to send and
+// The OpenCallback receives an NGHTTP2WebStream* that can be used to send and
 // receive web-stream messages.  Message and close callbacks should be installed on
 // the stream inside the OpenCallback before returning.
 class H2Client {
  public:
-  // Called with the live H2WishStream once the server responds with 200.
-  using OpenCallback = std::function<void(H2WishStream*)>;
+  // Called with the live NGHTTP2WebStream once the server responds with 200.
+  using OpenCallback = std::function<void(NGHTTP2WebStream*)>;
   using CloseCallback = std::function<void()>;
 
   H2Client(const std::string& host, int port);
@@ -42,7 +42,7 @@ class H2Client {
     nghttp2_session* h2session;
 
     // The single web-stream stream created for this connection.
-    H2WishStream* wish_stream;
+    NGHTTP2WebStream* wish_stream;
     int32_t wish_stream_id;
   };
 

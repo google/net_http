@@ -16,7 +16,7 @@ int main() {
     return 1;
   }
 
-  client.SetOnOpen([](H2WishStream* stream) {
+  client.SetOnOpen([](NGHTTP2WebStream* stream) {
     std::cout << "TLS Connected! WiSH stream open (stream_id="
               << stream->stream_id() << ")" << std::endl;
 
