@@ -97,6 +97,7 @@ class H2Client {
   // Initialise nghttp2 and submit the web-stream request.
   // Called inside BEV_EVENT_CONNECTED so that TCP_NODELAY can be set first.
   void InitH2Session(Session* sess);
+  void HandleSessionError(Session* sess);
 
   std::string host_;
   int port_;
