@@ -30,8 +30,8 @@ class PlainClient {
   std::string host_;
   int port_;
 
-  struct event_base* base_;
-  struct evdns_base* dns_base_;
+  event_base* base_;
+  evdns_base* dns_base_;
 
   WishHandler* handler_;
 

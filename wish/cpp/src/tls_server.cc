@@ -48,7 +48,7 @@ bool TlsServer::Init() {
     return false;
   }
 
-  struct sockaddr_in sin;
+  sockaddr_in sin;
   memset(&sin, 0, sizeof(sin));
   sin.sin_family = AF_INET;
   sin.sin_addr.s_addr = htonl(0);
@@ -115,8 +115,8 @@ void TlsServer::AcceptConnCb(evconnlistener* listener,
   }
 }
 
-void TlsServer::AcceptErrorCb(struct evconnlistener* listener, void* ctx) {
-  struct event_base* base = evconnlistener_get_base(listener);
+void TlsServer::AcceptErrorCb(evconnlistener* listener, void* ctx) {
+  event_base* base = evconnlistener_get_base(listener);
   int err = EVUTIL_SOCKET_ERROR();
   std::cerr << "Got an error " << err << " ("
             << evutil_socket_error_to_string(err)
