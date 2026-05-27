@@ -120,6 +120,7 @@ void H2TlsServer::AcceptConnCb(evconnlistener* listener,
     LOG(ERROR) << "H2TlsServer: setsockopt(TCP_NODELAY) failed";
 
     evutil_closesocket(fd);
+
     return;
   }
 
@@ -132,7 +133,9 @@ void H2TlsServer::AcceptConnCb(evconnlistener* listener,
   if (!bev) {
     LOG(ERROR) << "H2TlsServer: bufferevent_openssl_socket_new() failed";
 
+    SSL_free(ssl);
     evutil_closesocket(fd);
+
     return;
   }
 
