@@ -53,14 +53,14 @@ TEST_F(WishHandlerTest, HandshakeAndSimpleExchange) {
   };
 
   server->SetOnMessage([&](uint8_t opcode, const std::string& msg) {
-    if (opcode == WISH_OPCODE_TEXT) {
+    if (opcode == WEB_STREAM_OPCODE_TEXT) {
       received_from_client = msg;
     }
     check_done();
   });
 
   client->SetOnMessage([&](uint8_t opcode, const std::string& msg) {
-    if (opcode == WISH_OPCODE_TEXT) {
+    if (opcode == WEB_STREAM_OPCODE_TEXT) {
       received_from_server = msg;
     }
     check_done();

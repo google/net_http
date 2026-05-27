@@ -1,0 +1,10 @@
+#ifndef WISH_CPP_SRC_WISH_OPCODES_H_
+#define WISH_CPP_SRC_WISH_OPCODES_H_
+
+#include <cstdint>
+
+const uint8_t WEB_STREAM_OPCODE_TEXT = 1;
+const uint8_t WEB_STREAM_OPCODE_BINARY = 2;
+const uint8_t WEB_STREAM_OPCODE_METADATA = 3;
+
+#endif  // WISH_CPP_SRC_WISH_OPCODES_H_

@@ -9,16 +9,13 @@
 #include <string>
 #include <vector>
 
+#include "wish_opcodes.h"
+
 // wslay forward decl
 extern "C" {
 struct wslay_event_context;
 struct wslay_event_on_msg_recv_arg;
 }
-
-const uint8_t WISH_OPCODE_TEXT = 1;
-const uint8_t WISH_OPCODE_BINARY = 2;
-const uint8_t WISH_OPCODE_TEXT_METADATA = 3;
-const uint8_t WISH_OPCODE_BINARY_METADATA = 4;
 
 // WishHandler implements the web-stream protocol defined at https://datatracker.ietf.org/doc/html/draft-yoshino-wish
 //
@@ -42,8 +39,7 @@ class WishHandler {
   // Send methods
   int SendText(const std::string& msg);
   int SendBinary(const std::string& msg);
-  int SendTextMetadata(const std::string& msg);
-  int SendBinaryMetadata(const std::string& msg);
+  int SendMetadata(const std::string& msg);
 
   void SetOnMessage(MessageCallback cb);
   void SetOnOpen(OpenCallback cb);

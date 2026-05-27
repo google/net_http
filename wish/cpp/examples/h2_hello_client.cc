@@ -19,17 +19,14 @@ int main() {
     stream->SetOnMessage([](uint8_t opcode, const std::string& msg) {
       std::string type;
       switch (opcode) {
-        case WISH_OPCODE_TEXT:
+        case WEB_STREAM_OPCODE_TEXT:
           type = "TEXT";
           break;
-        case WISH_OPCODE_BINARY:
+        case WEB_STREAM_OPCODE_BINARY:
           type = "BINARY";
           break;
-        case WISH_OPCODE_TEXT_METADATA:
-          type = "TEXT_METADATA";
-          break;
-        case WISH_OPCODE_BINARY_METADATA:
-          type = "BINARY_METADATA";
+        case WEB_STREAM_OPCODE_METADATA:
+          type = "METADATA";
           break;
         default:
           type = "UNKNOWN(" + std::to_string(opcode) + ")";
@@ -43,8 +40,7 @@ int main() {
 
     stream->SendText("Hello WiSH Text over HTTP/2!");
     stream->SendBinary("Hello WiSH Binary over HTTP/2!");
-    stream->SendTextMetadata("Hello WiSH TextMetadata over HTTP/2!");
-    stream->SendBinaryMetadata("Hello WiSH BinaryMetadata over HTTP/2!");
+    stream->SendMetadata("Hello WiSH TextMetadata over HTTP/2!");
   });
 
   client.Run();
