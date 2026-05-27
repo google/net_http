@@ -179,8 +179,8 @@ static void submit_request(struct ClientSession* client) {
   }
 }
 
-static void readcb(struct bufferevent* bev, void* ptr) {
-  struct ClientSession* client = (struct ClientSession*)ptr;
+static void readcb(struct bufferevent* bev, void* arg) {
+  struct ClientSession* client = (struct ClientSession*)arg;
 
   struct evbuffer* input = bufferevent_get_input(bev);
   size_t datalen = evbuffer_get_length(input);

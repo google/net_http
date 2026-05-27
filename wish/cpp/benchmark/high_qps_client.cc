@@ -65,7 +65,9 @@ struct TokenDispenser {
     {
       std::lock_guard<std::mutex> lk(mu_);
       interval_us_ = new_interval_us;
-      if (new_interval_us == 0) tokens_ = 0;
+      if (new_interval_us == 0) {
+        tokens_ = 0;
+      }
     }
     cv_.notify_all();
   }
@@ -94,7 +96,9 @@ struct TokenDispenser {
         return stop.load(std::memory_order_relaxed) || interval_us_ != iv;
       });
 
-      if (stop.load(std::memory_order_relaxed)) break;
+      if (stop.load(std::memory_order_relaxed)) {
+        break;
+      }
 
       if (woken_early) {
         next = std::chrono::steady_clock::now();
@@ -107,8 +111,9 @@ struct TokenDispenser {
         // Use -log(u)*iv where u ~ Uniform(0,1); clamp u away from 0 to
         // avoid infinite intervals.
         double u = uniform(rng_);
-        if (u < std::numeric_limits<double>::min())
+        if (u < std::numeric_limits<double>::min()) {
           u = std::numeric_limits<double>::min();
+        }
         next += std::chrono::microseconds(
             static_cast<int64_t>(-std::log(u) * static_cast<double>(iv)));
       } else {
@@ -120,15 +125,21 @@ struct TokenDispenser {
 
   bool Acquire(const std::atomic<bool>& stop) {
     std::unique_lock<std::mutex> lk(mu_);
-    if (interval_us_ <= 0) return true;
+    if (interval_us_ <= 0) {
+      return true;
+    }
 
     cv_.wait(lk, [&] {
       return stop.load(std::memory_order_relaxed) ||
              interval_us_ <= 0 || tokens_ > 0;
     });
 
-    if (stop.load(std::memory_order_relaxed)) return false;
-    if (interval_us_ <= 0) return true;
+    if (stop.load(std::memory_order_relaxed)) {
+      return false;
+    }
+    if (interval_us_ <= 0) {
+      return true;
+    }
 
     --tokens_;
     return true;
@@ -192,8 +203,7 @@ bool InitConnection(ClientState* client) {
     return false;
   }
 
-  if (bufferevent_socket_connect(client->bev, res->ai_addr,
-                                 static_cast<int>(res->ai_addrlen)) < 0) {
+  if (bufferevent_socket_connect(client->bev, res->ai_addr, static_cast<int>(res->ai_addrlen)) < 0) {
     LOG(ERROR) << "bufferevent_socket_connect() failed";
     freeaddrinfo(res);
     return false;
@@ -259,7 +269,9 @@ void WorkerLoop(SharedState* ss) {
   }
 
   while (!ss->stop.load(std::memory_order_relaxed)) {
-    if (!ss->dispenser.Acquire(ss->stop)) break;
+    if (!ss->dispenser.Acquire(ss->stop)) {
+      break;
+    }
 
     client.awaiting_response = true;
     client.request_start = std::chrono::steady_clock::now();
@@ -389,8 +401,7 @@ static void BM_PlainText_HighQPS(benchmark::State& state) {
     if (measured > 0.0) {
       const int64_t current_us = ss.dispenser.GetInterval();
       const int64_t new_us = std::max<int64_t>(
-          0, current_us + static_cast<int64_t>(
-                              (1.0 / target_qps - 1.0 / measured) * 1e6));
+          0, current_us + static_cast<int64_t>((1.0 / target_qps - 1.0 / measured) * 1e6));
       ss.dispenser.SetInterval(new_us);
 
       VLOG(2) << "Adjusting interval: " << current_us << " -> "
@@ -403,14 +414,16 @@ static void BM_PlainText_HighQPS(benchmark::State& state) {
         prev_qps > 0.0 &&
         std::abs(measured - prev_qps) / prev_qps < kPlateauBand;
 
-    if (near_target)
+    if (near_target) {
       ++near_target_count;
-    else
+    } else {
       near_target_count = 0;
-    if (plateau)
+    }
+    if (plateau) {
       ++plateau_count;
-    else
+    } else {
       plateau_count = 0;
+    }
 
     VLOG(2) << "Warm up condition check";
     VLOG(2) << "  Near-target count: " << near_target_count;
@@ -440,7 +453,9 @@ static void BM_PlainText_HighQPS(benchmark::State& state) {
       ss.result_cv.wait(lk, [&ss] {
         return ss.stop.load(std::memory_order_relaxed) || !ss.results.empty();
       });
-      if (ss.results.empty()) break;
+      if (ss.results.empty()) {
+        break;
+      }
       latency_us = ss.results.front();
       ss.results.pop_front();
     }
@@ -457,7 +472,9 @@ static void BM_PlainText_HighQPS(benchmark::State& state) {
   ss.result_cv.notify_all();
   ss.dispenser.cv_.notify_all();
   dispenser_thread.join();
-  for (auto& t : workers) t.join();
+  for (auto& t : workers) {
+    t.join();
+  }
 
   // ── Report counters ───────────────────────────────────────────────────────
 
