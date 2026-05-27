@@ -30,16 +30,19 @@ class H2Server {
  private:
   // Per-connection state.
   struct Session {
+    struct Http2Stream {
+      std::unordered_map<std::string, std::string> headers;
+      NGHTTP2WebStream* web_stream = nullptr;
+    };
+
     H2Server* server;
 
     bufferevent* bev;
 
     nghttp2_session* h2session;
 
-    // Live web-stream streams keyed by HTTP/2 stream id.
-    std::unordered_map<int32_t, NGHTTP2WebStream*> streams;
-    // Tracks whether a stream's HEADERS carried the web-stream content-type.
-    std::unordered_map<int32_t, bool> stream_is_wish;
+    // Tracks received headers and active web-streams per HTTP/2 stream.
+    std::unordered_map<int32_t, Http2Stream> incoming_streams;
   };
 
   // libevent listener callbacks
