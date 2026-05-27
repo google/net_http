@@ -65,67 +65,18 @@ void WishHandler::SetOnOpen(OpenCallback cb) { on_open_ = cb; }
 
 void WishHandler::SetOnClose(CloseCallback cb) { on_close_ = cb; }
 
-// ---- wslay callbacks ----
+// ---- Public send methods ----
 
-ssize_t WishHandler::WslayRecvCallback(wslay_event_context* ctx,
-                                       uint8_t* buf,
-                                       size_t len,
-                                       int flags,
-                                       void* user_data) {
-  WishHandler* handler = static_cast<WishHandler*>(user_data);
-
-  evbuffer* input = bufferevent_get_input(handler->bev_);
-
-  size_t data_len = evbuffer_get_length(input);
-  if (data_len == 0) {
-    wslay_event_set_error(ctx, WSLAY_ERR_WOULDBLOCK);
-    return -1;
-  }
-
-  size_t copy_len = std::min(len, data_len);
-  int rv = evbuffer_remove(input, buf, copy_len);
-  if (rv < 0) {
-    std::cerr << "evbuffer_remove() failed" << std::endl;
-    wslay_event_set_error(ctx, WSLAY_ERR_CALLBACK_FAILURE);
-    return -1;
-  }
-  return copy_len;
+int WishHandler::SendText(const std::string& msg) {
+  return SendMessage(WEB_STREAM_OPCODE_TEXT, msg);
 }
 
-ssize_t WishHandler::WslaySendCallback(wslay_event_context* ctx,
-                                       const uint8_t* data,
-                                       size_t len,
-                                       int flags,
-                                       void* user_data) {
-  WishHandler* handler = static_cast<WishHandler*>(user_data);
-
-  int rv = bufferevent_write(handler->bev_, data, len);
-  if (rv != 0) {
-    std::cerr << "bufferevent_write() failed" << std::endl;
-    wslay_event_set_error(ctx, WSLAY_ERR_CALLBACK_FAILURE);
-    return -1;
-  }
-
-  return len;
+int WishHandler::SendBinary(const std::string& msg) {
+  return SendMessage(WEB_STREAM_OPCODE_BINARY, msg);
 }
 
-int WishHandler::WslayGenmaskCallback(wslay_event_context* ctx, uint8_t* buf,
-                                      size_t len, void* user_data) {
-  ABSL_UNREACHABLE();
-  return 0;
-}
-
-void WishHandler::WslayOnMsgRecvCallback(wslay_event_context* ctx,
-                                         const wslay_event_on_msg_recv_arg* arg,
-                                         void* user_data) {
-  WishHandler* handler = static_cast<WishHandler*>(user_data);
-
-  // Consider implementing backpressure.
-
-  if (handler->on_message_) {
-    std::string msg(reinterpret_cast<const char*>(arg->msg), arg->msg_length);
-    handler->on_message_(arg->opcode, msg);
-  }
+int WishHandler::SendMetadata(const std::string& msg) {
+  return SendMessage(WEB_STREAM_OPCODE_METADATA, msg);
 }
 
 // ---- libevent callbacks ----
@@ -184,38 +135,7 @@ void WishHandler::EventCallback(bufferevent* bev,
   }
 }
 
-int WishHandler::SendMessage(uint8_t opcode, const std::string& msg) {
-  if (state_ != OPEN) {
-    return -1;
-  }
-
-  wslay_event_msg msg_frame = {
-      opcode,
-      reinterpret_cast<const uint8_t*>(msg.c_str()),
-      msg.length()};
-  // Queue msg
-  int rv = wslay_event_queue_msg(ctx_, &msg_frame);
-  if (rv != 0) {
-    return rv;
-  }
-
-  // Force send
-  return wslay_event_send(ctx_);
-}
-
-int WishHandler::SendText(const std::string& msg) {
-  return SendMessage(WEB_STREAM_OPCODE_TEXT, msg);
-}
-
-int WishHandler::SendBinary(const std::string& msg) {
-  return SendMessage(WEB_STREAM_OPCODE_BINARY, msg);
-}
-
-int WishHandler::SendMetadata(const std::string& msg) {
-  return SendMessage(WEB_STREAM_OPCODE_METADATA, msg);
-}
-
-// ---------------- Handshake Logic ----------------
+// ---- Handshake handling ----
 
 void WishHandler::HandleHandshake() {
   if (is_server_) {
@@ -319,4 +239,86 @@ bool WishHandler::ReadHttpResponse() {
     return false;
   }
   return true;
+}
+
+// ---- wslay callbacks ----
+
+ssize_t WishHandler::WslayRecvCallback(wslay_event_context* ctx,
+                                       uint8_t* buf,
+                                       size_t len,
+                                       int flags,
+                                       void* user_data) {
+  WishHandler* handler = static_cast<WishHandler*>(user_data);
+
+  evbuffer* input = bufferevent_get_input(handler->bev_);
+
+  size_t data_len = evbuffer_get_length(input);
+  if (data_len == 0) {
+    wslay_event_set_error(ctx, WSLAY_ERR_WOULDBLOCK);
+    return -1;
+  }
+
+  size_t copy_len = std::min(len, data_len);
+  int rv = evbuffer_remove(input, buf, copy_len);
+  if (rv < 0) {
+    std::cerr << "evbuffer_remove() failed" << std::endl;
+    wslay_event_set_error(ctx, WSLAY_ERR_CALLBACK_FAILURE);
+    return -1;
+  }
+  return copy_len;
+}
+
+ssize_t WishHandler::WslaySendCallback(wslay_event_context* ctx,
+                                       const uint8_t* data,
+                                       size_t len,
+                                       int flags,
+                                       void* user_data) {
+  WishHandler* handler = static_cast<WishHandler*>(user_data);
+
+  int rv = bufferevent_write(handler->bev_, data, len);
+  if (rv != 0) {
+    std::cerr << "bufferevent_write() failed" << std::endl;
+    wslay_event_set_error(ctx, WSLAY_ERR_CALLBACK_FAILURE);
+    return -1;
+  }
+
+  return len;
+}
+
+int WishHandler::WslayGenmaskCallback(wslay_event_context* ctx, uint8_t* buf,
+                                      size_t len, void* user_data) {
+  ABSL_UNREACHABLE();
+  return 0;
+}
+
+void WishHandler::WslayOnMsgRecvCallback(wslay_event_context* ctx,
+                                         const wslay_event_on_msg_recv_arg* arg,
+                                         void* user_data) {
+  WishHandler* handler = static_cast<WishHandler*>(user_data);
+
+  // Consider implementing backpressure.
+
+  if (handler->on_message_) {
+    std::string msg(reinterpret_cast<const char*>(arg->msg), arg->msg_length);
+    handler->on_message_(arg->opcode, msg);
+  }
+}
+
+int WishHandler::SendMessage(uint8_t opcode, const std::string& msg) {
+  if (state_ != OPEN) {
+    return -1;
+  }
+
+  wslay_event_msg msg_frame = {
+      opcode,
+      reinterpret_cast<const uint8_t*>(msg.c_str()),
+      msg.length()};
+  // Queue msg
+  int rv = wslay_event_queue_msg(ctx_, &msg_frame);
+  if (rv != 0) {
+    return rv;
+  }
+
+  // Force send
+  return wslay_event_send(ctx_);
 }

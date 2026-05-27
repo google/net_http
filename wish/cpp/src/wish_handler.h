@@ -36,23 +36,16 @@ class WishHandler {
   // Start the handler (sets up callbacks and enables events)
   void Start();
 
-  // Send methods
-  int SendText(const std::string& msg);
-  int SendBinary(const std::string& msg);
-  int SendMetadata(const std::string& msg);
-
   void SetOnMessage(MessageCallback cb);
   void SetOnOpen(OpenCallback cb);
   void SetOnClose(CloseCallback cb);
 
+  int SendText(const std::string& msg);
+  int SendBinary(const std::string& msg);
+  int SendMetadata(const std::string& msg);
+
  private:
   bufferevent* bev_;
-  bool is_server_;
-  wslay_event_context* ctx_;
-
-  MessageCallback on_message_;
-  OpenCallback on_open_;
-  CloseCallback on_close_;
 
   enum State {
     HANDSHAKE,
@@ -60,6 +53,28 @@ class WishHandler {
     CLOSED
   };
   State state_;
+
+  bool is_server_;
+  wslay_event_context* ctx_;
+
+  MessageCallback on_message_;
+  OpenCallback on_open_;
+  CloseCallback on_close_;
+
+  // libevent callbacks
+  static void ReadCallback(bufferevent* bev,
+                           void* ctx);
+  static void EventCallback(bufferevent* bev,
+                            short what,  // NOLINT(runtime/int)
+                            void* ctx);
+
+  // Handshake handling
+  void HandleHandshake();
+  bool ReadHttpRequest();
+  bool ReadHttpResponse();
+  void SendHttpResponse(const std::string& status,
+                        const std::string& content_type);
+  void SendHttpRequest();
 
   // wslay callbacks
   static ssize_t WslayRecvCallback(wslay_event_context* ctx,
@@ -79,20 +94,6 @@ class WishHandler {
   static void WslayOnMsgRecvCallback(wslay_event_context* ctx,
                                      const wslay_event_on_msg_recv_arg* arg,
                                      void* user_data);
-
-  // libevent callbacks
-  static void ReadCallback(bufferevent* bev,
-                           void* ctx);
-  static void EventCallback(bufferevent* bev,
-                            short what,  // NOLINT(runtime/int)
-                            void* ctx);
-
-  void HandleHandshake();
-  bool ReadHttpRequest();
-  bool ReadHttpResponse();
-  void SendHttpResponse(const std::string& status,
-                        const std::string& content_type);
-  void SendHttpRequest();
 
   int SendMessage(uint8_t opcode, const std::string& msg);
 };
