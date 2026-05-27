@@ -34,7 +34,7 @@ class PlainClient {
   event_base* base_;
   evdns_base* dns_base_;
 
-  BufferEventWebStream* handler_;
+  BufferEventWebStream* stream_;
 
   OpenCallback on_open_;
 };

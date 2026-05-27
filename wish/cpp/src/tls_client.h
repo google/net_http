@@ -44,7 +44,7 @@ class TlsClient {
 
   TlsContext tls_ctx_;
 
-  BufferEventWebStream* handler_;
+  BufferEventWebStream* stream_;
 
   OpenCallback on_open_;
 };
