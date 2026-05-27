@@ -154,18 +154,22 @@ include_directories(${nghttp2_BINARY_DIR}/lib/includes)
 include_directories(${picohttpparser_SOURCE_DIR})
 include_directories(src)
 
-# We will compile libevent's bufferevent_openssl.c inside our library
-# since we disabled it in libevent's own build.
-# Build as a static library: libevent is also static and was not compiled with
-# -fPIC, so it cannot be linked into a shared object.
-add_library(buffer_event_web_stream STATIC
-    src/web_stream.h
-    src/buffer_event_web_stream.cc
-    src/buffer_event_web_stream.h
+add_library(http1_handshake STATIC
     src/handshake.h
     src/handshake.cc
     ${picohttpparser_SOURCE_DIR}/picohttpparser.c
     ${picohttpparser_SOURCE_DIR}/picohttpparser.h
+)
+target_link_libraries(http1_handshake event absl::strings absl::log)
+
+# We will compile libevent's bufferevent_openssl.c inside our library
+# since we disabled it in libevent's own build.
+# Build as a static library: libevent is also static and was not compiled with
+# -fPIC, so it cannot be linked into a shared object.
+add_library(web_stream STATIC
+    src/web_stream.h
+    src/buffer_event_web_stream.cc
+    src/buffer_event_web_stream.h
     ${libevent_SOURCE_DIR}/bufferevent_openssl.c
     ${libevent_SOURCE_DIR}/bufferevent_ssl.c
     src/plain_server.cc
@@ -190,8 +194,8 @@ add_library(buffer_event_web_stream STATIC
     src/h2_tls_client.h
 )
 # BoringSSL targets: ssl and crypto.  nghttp2 for HTTP/2 framing.
-target_link_libraries(buffer_event_web_stream wslay event ssl crypto nghttp2_static absl::strings absl::log)
-target_compile_definitions(buffer_event_web_stream PUBLIC EVENT__HAVE_OPENSSL=1)
+target_link_libraries(web_stream http1_handshake wslay event ssl crypto nghttp2_static absl::strings absl::log)
+target_compile_definitions(web_stream PUBLIC EVENT__HAVE_OPENSSL=1)
 
 
 if(WISH_BUILD_EXAMPLES)
@@ -206,14 +210,14 @@ if(WISH_BUILD_TESTS)
     enable_testing()
 
     add_executable(buffer_event_web_stream_test src/buffer_event_web_stream_test.cc)
-    target_link_libraries(buffer_event_web_stream_test buffer_event_web_stream gtest_main gtest)
+    target_link_libraries(buffer_event_web_stream_test web_stream gtest_main gtest)
     add_test(NAME buffer_event_web_stream_test COMMAND buffer_event_web_stream_test)
 
     add_executable(nghttp2_web_stream_test src/nghttp2_web_stream_test.cc)
-    target_link_libraries(nghttp2_web_stream_test buffer_event_web_stream gtest_main gtest)
+    target_link_libraries(nghttp2_web_stream_test web_stream gtest_main gtest)
     add_test(NAME nghttp2_web_stream_test COMMAND nghttp2_web_stream_test)
 
     add_executable(handshake_test src/handshake_test.cc)
-    target_link_libraries(handshake_test buffer_event_web_stream gtest_main gtest event)
+    target_link_libraries(handshake_test http1_handshake gtest_main gtest event)
     add_test(NAME handshake_test COMMAND handshake_test)
 endif()
