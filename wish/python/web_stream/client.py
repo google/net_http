@@ -7,13 +7,16 @@ class WebStreamConnection:
     def __init__(self, host, port, tls, ca_file="", cert_file="", key_file=""):
         self._host = host
         self._port = port
+
         if tls:
             self._client = web_stream_ext.TlsClient(ca_file, cert_file, key_file, host, port)
         else:
             self._client = web_stream_ext.PlainClient(host, port)
+
         self._client.init()  # raises RuntimeError on failure
 
         self._loop = asyncio.get_running_loop()
+
         self._recv_queue = asyncio.Queue()
         self._open_future = self._loop.create_future()
         self._run_future = None
@@ -71,14 +74,20 @@ class _ConnectContextManager:
         self.tls = parsed.scheme in ("webstreams", "webstreams", "https")
         self.host = parsed.hostname
         self.port = parsed.port or (443 if self.tls else 80)
+
         self.ca_file = ca_file
         self.cert_file = cert_file
         self.key_file = key_file
+
         self.conn = None
 
     async def __aenter__(self):
-        self.conn = WebStreamConnection(self.host, self.port, self.tls,
-                                   self.ca_file, self.cert_file, self.key_file)
+        self.conn = WebStreamConnection(self.host,
+                                        self.port,
+                                        self.tls,
+                                        self.ca_file,
+                                        self.cert_file,
+                                        self.key_file)
         await self.conn.connect()
         return self.conn
 
