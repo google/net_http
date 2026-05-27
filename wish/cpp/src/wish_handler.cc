@@ -5,6 +5,7 @@
 #include <event2/event.h>
 #include <wslay/wslay.h>
 
+#include <algorithm>
 #include <cstring>
 #include <iostream>
 #include <random>
@@ -46,6 +47,11 @@ void WishHandler::Start() {
                     nullptr,
                     EventCallback,
                     this);
+
+  int enable_rv = bufferevent_enable(bev_, EV_READ | EV_WRITE);
+  if (enable_rv != 0) {
+    std::cerr << "bufferevent_enable() failed" << std::endl;
+  }
 
   if (!is_server_) {
     SendHttpRequest();
@@ -100,7 +106,7 @@ ssize_t WishHandler::SendCallback(wslay_event_context* ctx,
   return len;
 }
 
-int WishHandler::GenMaskCallback(wslay_event_context* ctx, uint8_t* buf,
+int WishHandler::GenmaskCallback(wslay_event_context* ctx, uint8_t* buf,
                                  size_t len, void* user_data) {
   static std::mt19937 rng(std::random_device{}());
   std::uniform_int_distribution<uint8_t> dist(0, 255);
@@ -114,32 +120,41 @@ void WishHandler::OnMsgRecvCallback(wslay_event_context* ctx,
                                     const wslay_event_on_msg_recv_arg* arg,
                                     void* user_data) {
   WishHandler* handler = static_cast<WishHandler*>(user_data);
+
+  // Consider implementing backpressure.
+
   if (handler->on_message_) {
     std::string msg(reinterpret_cast<const char*>(arg->msg), arg->msg_length);
     handler->on_message_(arg->opcode, msg);
   }
 }
 
-void WishHandler::ReadCallback(struct bufferevent* bev, void* ctx) {
+void WishHandler::ReadCallback(bufferevent* bev, void* ctx) {
   WishHandler* handler = static_cast<WishHandler*>(ctx);
 
-  if (handler->state_ == HANDSHAKE) {
-    handler->HandleHandshake();
-  }
-
-  if (handler->state_ == OPEN) {
-    int err = wslay_event_recv(handler->ctx_);
-    if (err != 0) {
-      std::cerr << "wslay_event_recv failed: " << err << std::endl;
-      // Should we close?
+  switch (handler->state_) {
+    case HANDSHAKE:
+      handler->HandleHandshake();
+      break;
+    case OPEN: {
+      int err = wslay_event_recv(handler->ctx_);
+      if (err != 0) {
+        std::cerr << "wslay_event_recv() failed: " << err << std::endl;
+        // Should we close?
+      }
+      break;
     }
+    case CLOSED:
+      break;
+    default:
+      break;
   }
 }
 
 void WishHandler::EventCallback(bufferevent* bev,
                                 short what,  // NOLINT(runtime/int)
                                 void* ctx) {
-  if (events & BEV_EVENT_ERROR) {
+  if (what & BEV_EVENT_ERROR) {
     std::cerr << "Error on socket: "
               << evutil_socket_error_to_string(EVUTIL_SOCKET_ERROR())
               << std::endl;
@@ -159,6 +174,10 @@ void WishHandler::EventCallback(bufferevent* bev,
 }
 
 int WishHandler::SendMessage(uint8_t opcode, const std::string& msg) {
+  if (state_ != OPEN) {
+    return -1;
+  }
+
   wslay_event_msg msg_frame = {
       opcode,
       reinterpret_cast<const uint8_t*>(msg.c_str()),
@@ -200,12 +219,15 @@ void WishHandler::HandleHandshake() {
         on_open_();
       }
     }
-  } else {
-    // Client waits for response
-    if (ReadHttpResponse()) {
-      state_ = OPEN;
-      // Maybe trigger some on_open callback?
-      std::cout << "Handshake complete!" << std::endl;
+
+    return;
+  }
+
+  // Client waits for response
+  if (ReadHttpResponse()) {
+    state_ = OPEN;
+    // Maybe trigger some on_open callback?
+    std::cout << "Handshake complete!" << std::endl;
     if (on_open_) {
       on_open_();
     }
@@ -237,10 +259,10 @@ bool WishHandler::ReadHttpRequest() {
   std::string data(headers);
   delete[] headers;
 
-  // Check for WiSH specific header
+  // Check for web-stream specific header
   if (data.find("Content-Type: application/web-stream") == std::string::npos &&
       data.find("content-type: application/web-stream") == std::string::npos) {
-    std::cerr << "Missing WiSH Content-Type!" << std::endl;
+    std::cerr << "Missing web-stream Content-Type!" << std::endl;
     return false;
   }
   return true;
@@ -267,13 +289,16 @@ void WishHandler::SendHttpRequest() {
 }
 
 bool WishHandler::ReadHttpResponse() {
-  struct evbuffer* input = bufferevent_get_input(bev_);
+  evbuffer* input = bufferevent_get_input(bev_);
 
   // Search for \r\n\r\n
   evbuffer_ptr ptr = evbuffer_search(input,
                                      "\r\n\r\n",
                                      4,
                                      nullptr);
+  if (ptr.pos == -1) {
+    return false;
+  }
 
   size_t header_len = ptr.pos + 4;
   char* headers = new char[header_len + 1];
