@@ -52,7 +52,7 @@ bool PlainClient::Init() {
     return false;
   }
 
-  handler_ = new WishHandler(bev, false);
+  handler_ = new BufferEventWebStream(bev, false);
 
   if (on_open_) {
     handler_->SetOnOpen([this]() { on_open_(handler_); });

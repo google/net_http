@@ -21,7 +21,7 @@ int main(int argc, char** argv) {
     return 1;
   }
 
-  server.SetOnStream([](H2WishStream* stream) {
+  server.SetOnStream([](NGHTTP2WebStream* stream) {
     LOG(INFO) << "New WiSH stream (stream_id=" << stream->stream_id() << ")";
 
     stream->SetOnMessage([stream](uint8_t opcode, const std::string& msg) {

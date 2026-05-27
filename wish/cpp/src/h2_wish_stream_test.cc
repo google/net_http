@@ -9,7 +9,7 @@
 #include "wish_opcodes.h"
 
 // Create a minimal nghttp2 session whose send callback discards all bytes.
-// This lets H2WishStream call nghttp2_session_resume_data /
+// This lets NGHTTP2WebStream call nghttp2_session_resume_data /
 // nghttp2_session_send without a real network connection.
 static nghttp2_session* MakeDiscardSession(bool is_server) {
   nghttp2_session_callbacks* cbs = nullptr;
@@ -27,7 +27,7 @@ static nghttp2_session* MakeDiscardSession(bool is_server) {
   return session;
 }
 
-class H2WishStreamTest : public ::testing::Test {
+class NGHTTP2WebStreamTest : public ::testing::Test {
  protected:
   void SetUp() override {
     server_session_ = MakeDiscardSession(true);
@@ -43,7 +43,7 @@ class H2WishStreamTest : public ::testing::Test {
 
   // Drain all wslay-framed bytes from src's output buffer and feed them to
   // dst's input via OnDataChunk.
-  static void Pipe(H2WishStream* src, H2WishStream* dst) {
+  static void Pipe(NGHTTP2WebStream* src, NGHTTP2WebStream* dst) {
     uint8_t buf[65536];
     uint32_t flags = 0;
     ssize_t n;
@@ -56,9 +56,9 @@ class H2WishStreamTest : public ::testing::Test {
   nghttp2_session* client_session_ = nullptr;
 };
 
-TEST_F(H2WishStreamTest, HandshakeAndSimpleExchange) {
-  H2WishStream server(server_session_, 1, true /* is_server */);
-  H2WishStream client(client_session_, 1, false /* is_server */);
+TEST_F(NGHTTP2WebStreamTest, HandshakeAndSimpleExchange) {
+  NGHTTP2WebStream server(server_session_, 1, true /* is_server */);
+  NGHTTP2WebStream client(client_session_, 1, false /* is_server */);
 
   bool server_opened = false;
   bool client_opened = false;
@@ -103,8 +103,8 @@ TEST_F(H2WishStreamTest, HandshakeAndSimpleExchange) {
 
 // Tests that the client does NOT mask frames when sending.
 // web-stream doesn't use masking (unlike WebSocket over TCP).
-TEST_F(H2WishStreamTest, ClientSendsUnmasked) {
-  H2WishStream client(client_session_, 1, false /* is_server */);
+TEST_F(NGHTTP2WebStreamTest, ClientSendsUnmasked) {
+  NGHTTP2WebStream client(client_session_, 1, false /* is_server */);
   client.OnOpen();
   client.SendText("Hello");
 
@@ -124,8 +124,8 @@ TEST_F(H2WishStreamTest, ClientSendsUnmasked) {
 }
 
 // Tests that the server does NOT mask frames when sending.
-TEST_F(H2WishStreamTest, ServerSendsUnmasked) {
-  H2WishStream server(server_session_, 1, true /* is_server */);
+TEST_F(NGHTTP2WebStreamTest, ServerSendsUnmasked) {
+  NGHTTP2WebStream server(server_session_, 1, true /* is_server */);
   server.OnOpen();
   server.SendText("Hello");
 

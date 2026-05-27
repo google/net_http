@@ -13,12 +13,12 @@
 #include "h2_wish_stream.h"
 
 // H2Server listens for plain (cleartext) HTTP/2 (h2c) connections and
-// exposes each incoming web-stream stream as an H2WishStream to the caller.
+// exposes each incoming web-stream stream as an NGHTTP2WebStream to the caller.
 class H2Server {
  public:
   // Called once per accepted web-stream stream.  The callback owns no lifetime;
   // the stream is deleted by H2Server when the HTTP/2 stream closes.
-  using StreamCallback = std::function<void(H2WishStream*)>;
+  using StreamCallback = std::function<void(NGHTTP2WebStream*)>;
 
   explicit H2Server(int port);
   ~H2Server();
@@ -35,7 +35,7 @@ class H2Server {
     nghttp2_session* h2session;
 
     // Live web-stream streams keyed by HTTP/2 stream id.
-    std::unordered_map<int32_t, H2WishStream*> streams;
+    std::unordered_map<int32_t, NGHTTP2WebStream*> streams;
     // Tracks whether a stream's HEADERS carried the web-stream content-type.
     std::unordered_map<int32_t, bool> stream_is_wish;
   };
@@ -62,7 +62,7 @@ class H2Server {
                                      const uint8_t*, size_t, void*);
   static int OnStreamCloseCallback(nghttp2_session*, int32_t, uint32_t, void*);
 
-  // nghttp2 data-source read callback (feeds H2WishStream output to H2 DATA)
+  // nghttp2 data-source read callback (feeds NGHTTP2WebStream output to H2 DATA)
   static ssize_t DataSourceReadCallback(nghttp2_session*, int32_t, uint8_t*,
                                         size_t, uint32_t*,
                                         nghttp2_data_source*, void*);

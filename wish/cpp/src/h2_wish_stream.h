@@ -13,16 +13,16 @@ struct wslay_event_context;
 struct wslay_event_on_msg_recv_arg;
 }
 
-// H2WishStream implements the web-stream protocol over a single HTTP/2 stream.
+// NGHTTP2WebStream implements the web-stream protocol over a single HTTP/2 stream.
 //
 // web-stream framing is layered on top of HTTP/2 DATA frames:
 //   - Incoming DATA bytes are buffered and fed to wslay's receive path.
 //   - wslay's send path writes framed bytes to an output buffer that is drained
 //     by nghttp2's data-source read callback.
 //
-// The public API mirrors WishHandler so callers can switch transports with
+// The public API mirrors BufferEventWebStream so callers can switch transports with
 // minimal changes.
-class H2WishStream {
+class NGHTTP2WebStream {
  public:
   using MessageCallback = std::function<void(uint8_t, const std::string&)>;
   using OpenCallback = std::function<void()>;
@@ -31,8 +31,8 @@ class H2WishStream {
   // session  : the nghttp2 session that owns this stream (not transferred).
   // stream_id: HTTP/2 stream identifier.
   // is_server: true when this end is the HTTP/2 server.
-  H2WishStream(nghttp2_session* session, int32_t stream_id, bool is_server);
-  ~H2WishStream();
+  NGHTTP2WebStream(nghttp2_session* session, int32_t stream_id, bool is_server);
+  ~NGHTTP2WebStream();
 
   void SetOnMessage(MessageCallback cb);
   void SetOnOpen(OpenCallback cb);

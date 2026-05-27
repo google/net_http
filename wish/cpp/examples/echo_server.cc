@@ -45,7 +45,7 @@ void accept_conn_cb(struct evconnlistener* listener,
     return;
   }
 
-  auto* handler = new WishHandler(bev, true);
+  auto* handler = new BufferEventWebStream(bev, true);
   handler->SetOnMessage([handler](uint8_t opcode, const std::string& msg) {
     std::string type;
     switch (opcode) {

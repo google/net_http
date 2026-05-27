@@ -245,7 +245,7 @@ int H2Client::OnStreamCloseCallback(nghttp2_session* /*session*/,
   return 0;
 }
 
-// DataSourceReadCallback looks up the H2WishStream via stream user-data so
+// DataSourceReadCallback looks up the NGHTTP2WebStream via stream user-data so
 // that the stream object can be created after nghttp2_submit_request returns
 // the real stream_id (the id is not known before that call).
 ssize_t H2Client::DataSourceReadCallback(nghttp2_session* session,
@@ -253,7 +253,7 @@ ssize_t H2Client::DataSourceReadCallback(nghttp2_session* session,
                                          size_t length, uint32_t* data_flags,
                                          nghttp2_data_source* /*source*/,
                                          void* /*user_data*/) {
-  H2WishStream* stream = static_cast<H2WishStream*>(
+  NGHTTP2WebStream* stream = static_cast<NGHTTP2WebStream*>(
       nghttp2_session_get_stream_user_data(session, stream_id));
   if (!stream) {
     return NGHTTP2_ERR_DEFERRED;
@@ -328,10 +328,10 @@ void H2Client::InitH2Session(Session* sess) {
   }
   sess->wish_stream_id = stream_id;
 
-  // Create the H2WishStream now that the real stream_id is known.
-  sess->wish_stream = new H2WishStream(sess->h2session,
-                                       stream_id,
-                                       false);
+  // Create the NGHTTP2WebStream now that the real stream_id is known.
+  sess->wish_stream = new NGHTTP2WebStream(sess->h2session,
+                                           stream_id,
+                                           false);
 
   // Register the stream object as stream user-data so DataSourceReadCallback
   // can find it.  This must happen before nghttp2_session_send().

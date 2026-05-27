@@ -267,7 +267,7 @@ ssize_t H2TlsClient::DataSourceReadCallback(nghttp2_session* session,
                                             uint32_t* data_flags,
                                             nghttp2_data_source* /*source*/,
                                             void* /*user_data*/) {
-  H2WishStream* stream = static_cast<H2WishStream*>(
+  NGHTTP2WebStream* stream = static_cast<NGHTTP2WebStream*>(
       nghttp2_session_get_stream_user_data(session, stream_id));
   if (!stream) {
     return NGHTTP2_ERR_DEFERRED;
@@ -342,9 +342,9 @@ void H2TlsClient::InitH2Session(Session* sess) {
   }
   sess->wish_stream_id = stream_id;
 
-  sess->wish_stream = new H2WishStream(sess->h2session,
-                                       stream_id,
-                                       false);
+  sess->wish_stream = new NGHTTP2WebStream(sess->h2session,
+                                           stream_id,
+                                           false);
   nghttp2_session_set_stream_user_data(sess->h2session,
                                        stream_id,
                                        sess->wish_stream);

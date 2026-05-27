@@ -165,7 +165,7 @@ struct SharedState {
 struct ClientState {
   struct event_base* base = nullptr;
   struct bufferevent* bev = nullptr;
-  WishHandler* handler = nullptr;
+  BufferEventWebStream* handler = nullptr;
 
   bool connected = false;
   bool awaiting_response = false;
@@ -210,7 +210,7 @@ bool InitConnection(ClientState* client) {
   }
   freeaddrinfo(res);
 
-  client->handler = new WishHandler(client->bev, false);
+  client->handler = new BufferEventWebStream(client->bev, false);
   client->handler->SetOnOpen([client]() {
     const int fd = bufferevent_getfd(client->bev);
     if (fd >= 0) {

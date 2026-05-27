@@ -10,7 +10,7 @@
 
 #include "wish_opcodes.h"
 
-H2WishStream::H2WishStream(nghttp2_session* session,
+NGHTTP2WebStream::NGHTTP2WebStream(nghttp2_session* session,
                            int32_t stream_id,
                            bool is_server)
     : h2session_(session),
@@ -35,48 +35,48 @@ H2WishStream::H2WishStream(nghttp2_session* session,
   }
 }
 
-H2WishStream::~H2WishStream() {
+NGHTTP2WebStream::~NGHTTP2WebStream() {
   wslay_event_context_free(ctx_);
   evbuffer_free(input_buf_);
   evbuffer_free(output_buf_);
 }
 
-void H2WishStream::SetOnMessage(MessageCallback cb) { on_message_ = cb; }
+void NGHTTP2WebStream::SetOnMessage(MessageCallback cb) { on_message_ = cb; }
 
-void H2WishStream::SetOnOpen(OpenCallback cb) { on_open_ = cb; }
+void NGHTTP2WebStream::SetOnOpen(OpenCallback cb) { on_open_ = cb; }
 
-void H2WishStream::SetOnClose(CloseCallback cb) { on_close_ = cb; }
+void NGHTTP2WebStream::SetOnClose(CloseCallback cb) { on_close_ = cb; }
 
 // ---- Public send methods ----
 
-int H2WishStream::SendText(const std::string& msg) {
+int NGHTTP2WebStream::SendText(const std::string& msg) {
   return SendMessage(WEB_STREAM_OPCODE_TEXT, msg);
 }
-int H2WishStream::SendBinary(const std::string& msg) {
+int NGHTTP2WebStream::SendBinary(const std::string& msg) {
   return SendMessage(WEB_STREAM_OPCODE_BINARY, msg);
 }
-int H2WishStream::SendMetadata(const std::string& msg) {
+int NGHTTP2WebStream::SendMetadata(const std::string& msg) {
   return SendMessage(WEB_STREAM_OPCODE_METADATA, msg);
 }
 
 // ---- Session callbacks (called by H2Server / H2Client) ----
 
-void H2WishStream::OnDataChunk(const uint8_t* data, size_t len) {
+void NGHTTP2WebStream::OnDataChunk(const uint8_t* data, size_t len) {
   evbuffer_add(input_buf_, data, len);
 
   int err = wslay_event_recv(ctx_);
   if (err != 0) {
-    std::cerr << "H2WishStream: wslay_event_recv failed: " << err << std::endl;
+    std::cerr << "NGHTTP2WebStream: wslay_event_recv failed: " << err << std::endl;
   }
 }
 
-void H2WishStream::OnOpen() {
+void NGHTTP2WebStream::OnOpen() {
   if (on_open_) {
     on_open_();
   }
 }
 
-void H2WishStream::OnClose() {
+void NGHTTP2WebStream::OnClose() {
   if (on_close_) {
     on_close_();
   }
@@ -84,7 +84,7 @@ void H2WishStream::OnClose() {
 
 // ---- nghttp2 data-source read callback ----
 
-ssize_t H2WishStream::ReadSendData(uint8_t* buf,
+ssize_t NGHTTP2WebStream::ReadSendData(uint8_t* buf,
                                    size_t length,
                                    uint32_t* data_flags) {
   size_t avail = evbuffer_get_length(output_buf_);
@@ -100,12 +100,12 @@ ssize_t H2WishStream::ReadSendData(uint8_t* buf,
 
 // ---- wslay callbacks ----
 
-ssize_t H2WishStream::WslayRecvCallback(wslay_event_context* ctx,
+ssize_t NGHTTP2WebStream::WslayRecvCallback(wslay_event_context* ctx,
                                         uint8_t* buf,
                                         size_t len,
                                         int /*flags*/,
                                         void* user_data) {
-  H2WishStream* s = static_cast<H2WishStream*>(user_data);
+  NGHTTP2WebStream* s = static_cast<NGHTTP2WebStream*>(user_data);
 
   evbuffer* input = s->input_buf_;
 
@@ -125,12 +125,12 @@ ssize_t H2WishStream::WslayRecvCallback(wslay_event_context* ctx,
   return static_cast<ssize_t>(copy_len);
 }
 
-ssize_t H2WishStream::WslaySendCallback(wslay_event_context* /*ctx*/,
+ssize_t NGHTTP2WebStream::WslaySendCallback(wslay_event_context* /*ctx*/,
                                         const uint8_t* data,
                                         size_t len,
                                         int /*flags*/,
                                         void* user_data) {
-  H2WishStream* s = static_cast<H2WishStream*>(user_data);
+  NGHTTP2WebStream* s = static_cast<NGHTTP2WebStream*>(user_data);
 
   int rv = evbuffer_add(s->output_buf_, data, len);
   if (rv != 0) {
@@ -142,7 +142,7 @@ ssize_t H2WishStream::WslaySendCallback(wslay_event_context* /*ctx*/,
   return static_cast<ssize_t>(len);
 }
 
-int H2WishStream::WslayGenmaskCallback(wslay_event_context* /*ctx*/,
+int NGHTTP2WebStream::WslayGenmaskCallback(wslay_event_context* /*ctx*/,
                                        uint8_t* buf,
                                        size_t len,
                                        void* /*user_data*/) {
@@ -150,10 +150,10 @@ int H2WishStream::WslayGenmaskCallback(wslay_event_context* /*ctx*/,
   return 0;
 }
 
-void H2WishStream::WslayOnMsgRecvCallback(wslay_event_context* /*ctx*/,
+void NGHTTP2WebStream::WslayOnMsgRecvCallback(wslay_event_context* /*ctx*/,
                                           const wslay_event_on_msg_recv_arg* arg,
                                           void* user_data) {
-  H2WishStream* s = static_cast<H2WishStream*>(user_data);
+  NGHTTP2WebStream* s = static_cast<NGHTTP2WebStream*>(user_data);
 
   if (s->on_message_) {
     std::string msg(reinterpret_cast<const char*>(arg->msg), arg->msg_length);
@@ -163,7 +163,7 @@ void H2WishStream::WslayOnMsgRecvCallback(wslay_event_context* /*ctx*/,
 
 // ---- Private helpers ----
 
-int H2WishStream::SendMessage(uint8_t opcode,
+int NGHTTP2WebStream::SendMessage(uint8_t opcode,
                               const std::string& msg) {
   wslay_event_msg msg_frame = {
       opcode,
@@ -185,14 +185,14 @@ int H2WishStream::SendMessage(uint8_t opcode,
   // meaning the data provider is already active – that is not an error here.
   int resume_data_rv = nghttp2_session_resume_data(h2session_, stream_id_);
   if (resume_data_rv < 0 && resume_data_rv != NGHTTP2_ERR_INVALID_ARGUMENT) {
-    std::cerr << "H2WishStream: nghttp2_session_resume_data failed: "
+    std::cerr << "NGHTTP2WebStream: nghttp2_session_resume_data failed: "
               << nghttp2_strerror(resume_data_rv) << std::endl;
     return resume_data_rv;
   }
 
   int h2_send_rv = nghttp2_session_send(h2session_);
   if (h2_send_rv < 0) {
-    std::cerr << "H2WishStream: nghttp2_session_send failed: "
+    std::cerr << "NGHTTP2WebStream: nghttp2_session_send failed: "
               << nghttp2_strerror(h2_send_rv) << std::endl;
     return h2_send_rv;
   }

@@ -13,7 +13,7 @@
 
 class TlsClient {
  public:
-  using OpenCallback = std::function<void(WishHandler*)>;
+  using OpenCallback = std::function<void(BufferEventWebStream*)>;
   using MessageCallback = std::function<void(uint8_t, const std::string&)>;
   using CloseCallback = std::function<void()>;
 
@@ -46,7 +46,7 @@ class TlsClient {
 
   TlsContext tls_ctx_;
 
-  WishHandler* handler_;
+  BufferEventWebStream* handler_;
 
   OpenCallback on_open_;
   MessageCallback on_message_;

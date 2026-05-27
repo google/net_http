@@ -36,7 +36,7 @@ int main(int argc, char** argv) {
   server.SetOnConnection([](struct bufferevent* bev) {
     LOG(INFO) << "Client connected.";
 
-    WishHandler* handler = new WishHandler(bev, true);
+    BufferEventWebStream* handler = new BufferEventWebStream(bev, true);
 
     handler->SetOnMessage([handler](uint8_t opcode, const std::string& msg) {
       std::string type;
