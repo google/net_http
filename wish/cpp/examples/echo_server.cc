@@ -1,3 +1,7 @@
+#include <absl/flags/flag.h>
+#include <absl/flags/parse.h>
+#include <absl/log/initialize.h>
+#include <absl/log/log.h>
 #include <arpa/inet.h>
 #include <event2/bufferevent.h>
 #include <event2/event.h>
@@ -10,10 +14,6 @@
 #include <string>
 
 #include "../src/wish_handler.h"
-#include "absl/flags/flag.h"
-#include "absl/flags/parse.h"
-#include "absl/log/initialize.h"
-#include "absl/log/log.h"
 
 ABSL_FLAG(int, port, 8080, "Port to listen on");
 

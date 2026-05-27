@@ -1,9 +1,10 @@
+#include <absl/flags/flag.h>
+#include <absl/flags/parse.h>
+#include <absl/log/initialize.h>
+#include <absl/log/log.h>
+
 #include "../src/h2_tls_server.h"
 #include "../src/wish_handler.h"
-#include "absl/flags/flag.h"
-#include "absl/flags/parse.h"
-#include "absl/log/initialize.h"
-#include "absl/log/log.h"
 
 ABSL_FLAG(int, port, 8080, "Port to listen on");
 ABSL_FLAG(std::string, ca_cert, "certs/ca.crt", "Path to CA certificate file");
