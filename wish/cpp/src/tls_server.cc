@@ -119,6 +119,8 @@ void TlsServer::AcceptConnCb(evconnlistener* listener,
     return;
   }
 
+  bufferevent_openssl_set_allow_dirty_shutdown(bev, 1);
+
   auto* handshake = new ServerHandshake(
       bev,
       [server](bufferevent* bev) {

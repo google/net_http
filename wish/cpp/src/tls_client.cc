@@ -74,6 +74,8 @@ bool TlsClient::Init() {
     return false;
   }
 
+  bufferevent_openssl_set_allow_dirty_shutdown(bev, 1);
+
   if (bufferevent_socket_connect_hostname(bev,
                                           dns_base_,
                                           AF_INET,

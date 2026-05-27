@@ -100,6 +100,8 @@ bool H2TlsClient::Init() {
     return false;
   }
 
+  bufferevent_openssl_set_allow_dirty_shutdown(bev, 1);
+
   session_ = new Session;
   session_->client = this;
   session_->bev = bev;

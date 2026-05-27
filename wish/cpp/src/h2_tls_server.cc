@@ -136,6 +136,8 @@ void H2TlsServer::AcceptConnCb(evconnlistener* listener,
     return;
   }
 
+  bufferevent_openssl_set_allow_dirty_shutdown(bev, 1);
+
   Session* sess = new Session;
   sess->server = server;
   sess->bev = bev;
