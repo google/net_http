@@ -198,10 +198,14 @@ bool ValidateHeaders(const phr_header* headers, size_t num_headers) {
 
 ClientHandshake::ClientHandshake(bufferevent* bev,
                                  OnOpenCallback on_open,
-                                 OnErrorCallback on_error)
+                                 OnErrorCallback on_error,
+                                 size_t max_header_size,
+                                 int timeout_seconds)
     : bev_(bev),
       on_open_(std::move(on_open)),
-      on_error_(std::move(on_error)) {}
+      on_error_(std::move(on_error)),
+      max_header_size_(max_header_size),
+      timeout_seconds_(timeout_seconds) {}
 
 ClientHandshake::~ClientHandshake() {
   if (bev_) {
@@ -211,6 +215,11 @@ ClientHandshake::~ClientHandshake() {
 
 void ClientHandshake::Start() {
   bufferevent_setcb(bev_, ReadCb, nullptr, EventCb, this);
+
+  if (timeout_seconds_ > 0) {
+    struct timeval tv = {timeout_seconds_, 0};
+    bufferevent_set_timeouts(bev_, &tv, nullptr);
+  }
 
   int enable_rv = bufferevent_enable(bev_, EV_READ | EV_WRITE);
   if (enable_rv != 0) {
@@ -249,6 +258,14 @@ void ClientHandshake::HandleRead() {
 
   size_t len = evbuffer_get_length(input);
   if (len == 0) {
+    return;
+  }
+
+  if (len > max_header_size_) {
+    VLOG(2) << "Client handshake header size exceeded limit: " << len;
+
+    InvokeError();
+
     return;
   }
 
@@ -360,11 +377,15 @@ void ClientHandshake::InvokeError() {
 ServerHandshake::ServerHandshake(bufferevent* bev,
                                  OnOpenCallback on_open,
                                  OnErrorCallback on_error,
-                                 CleanupCallback cleanup)
+                                 CleanupCallback cleanup,
+                                 size_t max_header_size,
+                                 int timeout_seconds)
     : bev_(bev),
       on_open_(std::move(on_open)),
       on_error_(std::move(on_error)),
-      cleanup_(std::move(cleanup)) {}
+      cleanup_(std::move(cleanup)),
+      max_header_size_(max_header_size),
+      timeout_seconds_(timeout_seconds) {}
 
 ServerHandshake::~ServerHandshake() {
   if (bev_) {
@@ -374,6 +395,11 @@ ServerHandshake::~ServerHandshake() {
 
 void ServerHandshake::Start() {
   bufferevent_setcb(bev_, ReadCb, nullptr, EventCb, this);
+
+  if (timeout_seconds_ > 0) {
+    struct timeval tv = {timeout_seconds_, 0};
+    bufferevent_set_timeouts(bev_, &tv, nullptr);
+  }
 
   int enable_rv = bufferevent_enable(bev_, EV_READ | EV_WRITE);
   if (enable_rv != 0) {
@@ -398,6 +424,14 @@ void ServerHandshake::HandleRead() {
 
   size_t len = evbuffer_get_length(input);
   if (len == 0) {
+    return;
+  }
+
+  if (len > max_header_size_) {
+    VLOG(2) << "Server handshake header size exceeded limit: " << len;
+
+    InvokeError();
+
     return;
   }
 

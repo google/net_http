@@ -24,12 +24,17 @@
 #include <memory>
 #include <string>
 
+constexpr size_t kDefaultMaxHeaderSize = 64 * 1024;       // 64 KB
+constexpr int kDefaultHandshakeTimeoutSeconds = 10;    // 10 seconds
+
 class ClientHandshake {
  public:
   using OnOpenCallback = std::function<void(bufferevent*)>;
   using OnErrorCallback = std::function<void()>;
 
-  ClientHandshake(bufferevent* bev, OnOpenCallback on_open, OnErrorCallback on_error);
+  ClientHandshake(bufferevent* bev, OnOpenCallback on_open, OnErrorCallback on_error,
+                  size_t max_header_size = kDefaultMaxHeaderSize,
+                  int timeout_seconds = kDefaultHandshakeTimeoutSeconds);
   ~ClientHandshake();
 
   void Start();
@@ -46,6 +51,8 @@ class ClientHandshake {
 
   OnOpenCallback on_open_;
   OnErrorCallback on_error_;
+  size_t max_header_size_;
+  int timeout_seconds_;
 };
 
 class ServerHandshake {
@@ -54,7 +61,10 @@ class ServerHandshake {
   using OnErrorCallback = std::function<void()>;
   using CleanupCallback = std::function<void(ServerHandshake*)>;
 
-  ServerHandshake(bufferevent* bev, OnOpenCallback on_open, OnErrorCallback on_error, CleanupCallback cleanup = nullptr);
+  ServerHandshake(bufferevent* bev, OnOpenCallback on_open, OnErrorCallback on_error,
+                  CleanupCallback cleanup = nullptr,
+                  size_t max_header_size = kDefaultMaxHeaderSize,
+                  int timeout_seconds = kDefaultHandshakeTimeoutSeconds);
   ~ServerHandshake();
 
   void Start();
@@ -72,6 +82,8 @@ class ServerHandshake {
   OnOpenCallback on_open_;
   OnErrorCallback on_error_;
   CleanupCallback cleanup_;
+  size_t max_header_size_;
+  int timeout_seconds_;
 };
 
 #endif  // WISH_CPP_SRC_HANDSHAKE_H_
