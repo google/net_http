@@ -137,23 +137,63 @@ void H2TlsServer::AcceptConnCb(evconnlistener* listener,
   nghttp2_settings_entry iv[] = {
       {NGHTTP2_SETTINGS_MAX_CONCURRENT_STREAMS, 100},
       {NGHTTP2_SETTINGS_INITIAL_WINDOW_SIZE, 1 << 20}};
-  nghttp2_submit_settings(sess->h2session,
-                          NGHTTP2_FLAG_NONE,
-                          iv,
-                          2);
-  nghttp2_session_set_local_window_size(sess->h2session,
-                                        NGHTTP2_FLAG_NONE,
-                                        0,
-                                        1 << 20);
-  nghttp2_session_send(sess->h2session);
+  int submit_settings_rv = nghttp2_submit_settings(sess->h2session,
+                                                   NGHTTP2_FLAG_NONE,
+                                                   iv,
+                                                   2);
+  if (submit_settings_rv != 0) {
+    std::cerr << "H2TlsServer: nghttp2_submit_settings() failed: "
+              << nghttp2_strerror(submit_settings_rv) << std::endl;
+
+    nghttp2_session_del(sess->h2session);
+    bufferevent_free(bev);
+    delete sess;
+
+    return;
+  }
+  int set_local_window_size_rv = nghttp2_session_set_local_window_size(sess->h2session,
+                                                                       NGHTTP2_FLAG_NONE,
+                                                                       0,
+                                                                       1 << 20);
+  if (set_local_window_size_rv != 0) {
+    std::cerr << "H2TlsServer: nghttp2_session_set_local_window_size() failed: "
+              << nghttp2_strerror(set_local_window_size_rv) << std::endl;
+
+    nghttp2_session_del(sess->h2session);
+    bufferevent_free(bev);
+    delete sess;
+
+    return;
+  }
+  int send_rv = nghttp2_session_send(sess->h2session);
+  if (send_rv != 0) {
+    std::cerr << "H2TlsServer: nghttp2_session_send() failed: "
+              << nghttp2_strerror(send_rv) << std::endl;
+
+    nghttp2_session_del(sess->h2session);
+    bufferevent_free(bev);
+    delete sess;
+
+    return;
+  }
 
   bufferevent_setcb(bev,
                     ReadCallback,
                     nullptr,
                     EventCallback,
                     sess);
-  bufferevent_enable(bev,
-                     EV_READ | EV_WRITE);
+
+  int enable_rv = bufferevent_enable(bev,
+                                     EV_READ | EV_WRITE);
+  if (enable_rv != 0) {
+    std::cerr << "H2TlsServer: bufferevent_enable() failed" << std::endl;
+
+    nghttp2_session_del(sess->h2session);
+    bufferevent_free(bev);
+    delete sess;
+
+    return;
+  }
 }
 
 void H2TlsServer::AcceptErrorCb(evconnlistener* listener,
@@ -226,9 +266,12 @@ ssize_t H2TlsServer::SendCallback(nghttp2_session* /*session*/,
                                   void* user_data) {
   Session* sess = static_cast<Session*>(user_data);
 
-  bufferevent_write(sess->bev,
-                    data,
-                    length);
+  int rv = bufferevent_write(sess->bev,
+                             data,
+                             length);
+  if (rv != 0) {
+    return NGHTTP2_ERR_CALLBACK_FAILURE;
+  }
 
   return static_cast<ssize_t>(length);
 }
@@ -274,12 +317,25 @@ int H2TlsServer::OnFrameRecvCallback(nghttp2_session* session,
   auto it = sess->stream_is_wish.find(stream_id);
   if (it == sess->stream_is_wish.end() || !it->second) {
     const nghttp2_nv hdrs[] = {H2TS_MAKE_NV(":status", "415")};
-    nghttp2_submit_response(session,
-                            stream_id,
-                            hdrs,
-                            1,
-                            nullptr);
-    nghttp2_session_send(session);
+    int submit_response_rv = nghttp2_submit_response(session,
+                                                     stream_id,
+                                                     hdrs,
+                                                     1,
+                                                     nullptr);
+    if (submit_response_rv != 0) {
+      std::cerr << "H2TlsServer: nghttp2_submit_response() failed: "
+                << nghttp2_strerror(submit_response_rv) << std::endl;
+
+      return NGHTTP2_ERR_CALLBACK_FAILURE;
+    }
+
+    int send_rv = nghttp2_session_send(session);
+    if (send_rv != 0) {
+      std::cerr << "H2TlsServer: nghttp2_session_send() failed: "
+                << nghttp2_strerror(send_rv) << std::endl;
+
+      return NGHTTP2_ERR_CALLBACK_FAILURE;
+    }
     return 0;
   }
 
@@ -293,12 +349,31 @@ int H2TlsServer::OnFrameRecvCallback(nghttp2_session* session,
   const nghttp2_nv hdrs[] = {
       H2TS_MAKE_NV(":status", "200"),
       H2TS_MAKE_NV("content-type", "application/web-stream")};
-  nghttp2_submit_response(session,
-                          stream_id,
-                          hdrs,
-                          2,
-                          &data_prd);
-  nghttp2_session_send(session);
+  int submit_response_rv = nghttp2_submit_response(session,
+                                                   stream_id,
+                                                   hdrs,
+                                                   2,
+                                                   &data_prd);
+  if (submit_response_rv != 0) {
+    std::cerr << "H2TlsServer: nghttp2_submit_response() failed: "
+              << nghttp2_strerror(submit_response_rv) << std::endl;
+
+    delete web_stream;
+    sess->streams.erase(stream_id);
+
+    return NGHTTP2_ERR_CALLBACK_FAILURE;
+  }
+
+  int send_rv = nghttp2_session_send(session);
+  if (send_rv != 0) {
+    std::cerr << "H2TlsServer: nghttp2_session_send() failed: "
+              << nghttp2_strerror(send_rv) << std::endl;
+
+    delete web_stream;
+    sess->streams.erase(stream_id);
+
+    return NGHTTP2_ERR_CALLBACK_FAILURE;
+  }
 
   if (sess->server->on_stream_) {
     sess->server->on_stream_(web_stream);
@@ -320,7 +395,12 @@ int H2TlsServer::OnDataChunkRecvCallback(nghttp2_session* session,
   auto it = sess->streams.find(stream_id);
   if (it != sess->streams.end()) {
     it->second->OnDataChunk(data, len);
-    nghttp2_session_send(session);
+
+    int rv = nghttp2_session_send(session);
+    if (rv != 0) {
+      std::cerr << "H2TlsServer: nghttp2_session_send() failed: "
+                << nghttp2_strerror(rv) << std::endl;
+    }
   }
 
   return 0;
@@ -360,7 +440,11 @@ ssize_t H2TlsServer::DataSourceReadCallback(nghttp2_session* /*session*/,
 
 nghttp2_session* H2TlsServer::CreateH2Session(Session* sess) {
   nghttp2_session_callbacks* cbs;
-  nghttp2_session_callbacks_new(&cbs);
+  int callbacks_new_rv = nghttp2_session_callbacks_new(&cbs);
+  if (callbacks_new_rv != 0) {
+    std::cerr << "H2TlsServer: nghttp2_session_callbacks_new() failed" << std::endl;
+    return nullptr;
+  }
   nghttp2_session_callbacks_set_send_callback(cbs,
                                               SendCallback);
   nghttp2_session_callbacks_set_on_header_callback(cbs,
@@ -373,9 +457,13 @@ nghttp2_session* H2TlsServer::CreateH2Session(Session* sess) {
                                                          OnStreamCloseCallback);
 
   nghttp2_session* session;
-  nghttp2_session_server_new(&session,
-                             cbs,
-                             sess);
+  int server_new_rv = nghttp2_session_server_new(&session,
+                                                 cbs,
+                                                 sess);
   nghttp2_session_callbacks_del(cbs);
+  if (server_new_rv != 0) {
+    std::cerr << "H2TlsServer: nghttp2_session_server_new() failed" << std::endl;
+    return nullptr;
+  }
   return session;
 }
