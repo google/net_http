@@ -7,6 +7,7 @@
 #include <cstring>
 
 #include "buffer_event_web_stream.h"
+#include "handshake.h"
 
 // To use BoringSSL
 #define EVENT__HAVE_OPENSSL 1
@@ -115,15 +116,22 @@ void TlsServer::AcceptConnCb(evconnlistener* listener,
                                                     BUFFEREVENT_SSL_ACCEPTING,
                                                     BEV_OPT_CLOSE_ON_FREE);
 
-  BufferEventWebStream* stream = new BufferEventWebStream(bev, true);
+  auto* handshake = new ServerHandshake(
+      bev,
+      [server](bufferevent* bev) {
+        BufferEventWebStream* stream = new BufferEventWebStream(bev, true);
+        if (server->on_stream_) {
+          server->on_stream_(stream);
+        } else {
+          LOG(WARNING) << "Warning: No stream handler registered.";
+        }
+        stream->Start();
+      },
+      []() {
+        LOG(ERROR) << "Server handshake failed";
+      });
 
-  if (server->on_stream_) {
-    server->on_stream_(stream);
-  } else {
-    LOG(WARNING) << "Warning: No stream handler registered.";
-  }
-
-  stream->Start();
+  handshake->Start();
 }
 
 void TlsServer::AcceptErrorCb(evconnlistener* listener, void* ctx) {

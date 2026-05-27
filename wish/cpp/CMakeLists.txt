@@ -155,6 +155,8 @@ add_library(buffer_event_web_stream STATIC
     src/web_stream.h
     src/buffer_event_web_stream.cc
     src/buffer_event_web_stream.h
+    src/handshake.h
+    src/handshake.cc
     ${libevent_SOURCE_DIR}/bufferevent_openssl.c
     ${libevent_SOURCE_DIR}/bufferevent_ssl.c
     src/plain_server.cc
@@ -199,4 +201,8 @@ if(WISH_BUILD_TESTS)
     add_executable(nghttp2_web_stream_test src/nghttp2_web_stream_test.cc)
     target_link_libraries(nghttp2_web_stream_test buffer_event_web_stream gtest_main gtest nghttp2::nghttp2 wslay)
     add_test(NAME nghttp2_web_stream_test COMMAND nghttp2_web_stream_test)
+
+    add_executable(handshake_test src/handshake_test.cc)
+    target_link_libraries(handshake_test buffer_event_web_stream gtest_main gtest event wslay)
+    add_test(NAME handshake_test COMMAND handshake_test)
 endif()

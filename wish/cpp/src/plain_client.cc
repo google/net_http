@@ -52,17 +52,27 @@ bool PlainClient::Init() {
                                           host_.c_str(),
                                           port_) < 0) {
     LOG(ERROR) << "bufferevent_socket_connect_hostname() failed";
+    bufferevent_free(bev);
 
     return false;
   }
 
-  stream_ = new BufferEventWebStream(bev, false);
+  handshake_ = std::make_unique<ClientHandshake>(
+      bev,
+      [this](bufferevent* bev) {
+        stream_ = new BufferEventWebStream(bev, false);
+        if (on_open_) {
+          stream_->SetOnOpen([this]() { on_open_(stream_); });
+        }
+        stream_->Start();
+        handshake_.reset();
+      },
+      [this]() {
+        LOG(ERROR) << "Client handshake failed";
+        handshake_.reset();
+      });
 
-  if (on_open_) {
-    stream_->SetOnOpen([this]() { on_open_(stream_); });
-  }
-
-  stream_->Start();
+  handshake_->Start();
 
   return true;
 }

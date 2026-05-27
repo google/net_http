@@ -9,6 +9,7 @@
 #include <cstring>
 
 #include "buffer_event_web_stream.h"
+#include "handshake.h"
 
 PlainServer::PlainServer(int port)
     : port_(port),
@@ -95,15 +96,22 @@ void PlainServer::AcceptConnCb(evconnlistener* listener,
     return;
   }
 
-  BufferEventWebStream* stream = new BufferEventWebStream(bev, true);
+  auto* handshake = new ServerHandshake(
+      bev,
+      [server](bufferevent* bev) {
+        BufferEventWebStream* stream = new BufferEventWebStream(bev, true);
+        if (server->on_stream_) {
+          server->on_stream_(stream);
+        } else {
+          LOG(WARNING) << "Warning: No stream handler registered.";
+        }
+        stream->Start();
+      },
+      []() {
+        LOG(ERROR) << "Server handshake failed";
+      });
 
-  if (server->on_stream_) {
-    server->on_stream_(stream);
-  } else {
-    LOG(WARNING) << "Warning: No stream handler registered.";
-  }
-
-  stream->Start();
+  handshake->Start();
 }
 
 void PlainServer::AcceptErrorCb(evconnlistener* listener, void* ctx) {

@@ -52,7 +52,6 @@ class BufferEventWebStream : public WebStream {
   bufferevent* bev_;
 
   enum State {
-    HANDSHAKE,
     OPEN,
     // Inbound terminal chunk received; draining outbound buffer before delete.
     DRAINING,
@@ -98,14 +97,6 @@ class BufferEventWebStream : public WebStream {
   static void EventCallback(bufferevent* bev,
                             short what,  // NOLINT(runtime/int)
                             void* ctx);
-
-  // Handshake handling
-  void HandleHandshake();
-  bool ReadHttpRequest();
-  bool ReadHttpResponse();
-  void SendHttpResponse(const std::string& status,
-                        const std::string& content_type);
-  void SendHttpRequest();
 
   // wslay callbacks
   static ssize_t WslayRecvCallback(wslay_event_context* ctx,
