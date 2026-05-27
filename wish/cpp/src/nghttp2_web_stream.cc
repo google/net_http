@@ -26,9 +26,9 @@ bool NGHTTP2WebStream::Init() {
       WslayRecvCallback,
       WslaySendCallback,
       WslayGenmaskCallback,
-      WslayOnFrameRecvStartCallback,  // on_frame_recv_start_callback
-      nullptr,                        // on_frame_recv_chunk_callback
-      nullptr,                        // on_frame_recv_end_callback
+      WslayOnFrameRecvStartCallback,
+      nullptr,  // on_frame_recv_chunk_callback
+      nullptr,  // on_frame_recv_end_callback
       WslayOnMsgRecvCallback};
 
   int rv;
