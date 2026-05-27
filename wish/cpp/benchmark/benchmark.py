@@ -3,7 +3,6 @@ import shlex
 import subprocess
 import time
 import os
-import signal
 
 BUILD_DIR = "./build"
 CERTS_DIR = "./certs"
