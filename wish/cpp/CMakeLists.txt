@@ -152,6 +152,7 @@ include_directories(src)
 # Build as a static library: libevent is also static and was not compiled with
 # -fPIC, so it cannot be linked into a shared object.
 add_library(buffer_event_web_stream STATIC
+    src/web_stream.h
     src/buffer_event_web_stream.cc
     src/buffer_event_web_stream.h
     ${libevent_SOURCE_DIR}/bufferevent_openssl.c
