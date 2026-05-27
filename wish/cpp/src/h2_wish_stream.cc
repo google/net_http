@@ -144,13 +144,19 @@ ssize_t H2WishStream::WslayRecvCallback(wslay_event_context* ctx,
                                         int /*flags*/,
                                         void* user_data) {
   H2WishStream* s = static_cast<H2WishStream*>(user_data);
+
   size_t avail = evbuffer_get_length(s->input_buf_);
   if (avail == 0) {
     wslay_event_set_error(ctx, WSLAY_ERR_WOULDBLOCK);
     return -1;
   }
   size_t copy_len = std::min(len, avail);
-  evbuffer_remove(s->input_buf_, buf, copy_len);
+  int rv = evbuffer_remove(s->input_buf_, buf, copy_len);
+  if (rv < 0) {
+    std::cerr << "evbuffer_remove() failed" << std::endl;
+    wslay_event_set_error(ctx, WSLAY_ERR_CALLBACK_FAILURE);
+    return -1;
+  }
   return static_cast<ssize_t>(copy_len);
 }
 
@@ -160,7 +166,14 @@ ssize_t H2WishStream::WslaySendCallback(wslay_event_context* /*ctx*/,
                                         int /*flags*/,
                                         void* user_data) {
   H2WishStream* s = static_cast<H2WishStream*>(user_data);
-  evbuffer_add(s->output_buf_, data, len);
+
+  int rv = evbuffer_add(s->output_buf_, data, len);
+  if (rv != 0) {
+    std::cerr << "evbuffer_add() failed" << std::endl;
+    wslay_event_set_error(s->ctx_, WSLAY_ERR_CALLBACK_FAILURE);
+    return -1;
+  }
+
   return static_cast<ssize_t>(len);
 }
 
@@ -176,6 +189,7 @@ void H2WishStream::WslayOnMsgRecvCallback(wslay_event_context* /*ctx*/,
                                           const wslay_event_on_msg_recv_arg* arg,
                                           void* user_data) {
   H2WishStream* s = static_cast<H2WishStream*>(user_data);
+
   if (s->on_message_) {
     std::string msg(reinterpret_cast<const char*>(arg->msg), arg->msg_length);
     s->on_message_(arg->opcode, msg);
