@@ -190,7 +190,7 @@ add_library(buffer_event_web_stream STATIC
     src/h2_tls_client.h
 )
 # BoringSSL targets: ssl and crypto.  nghttp2 for HTTP/2 framing.
-target_link_libraries(buffer_event_web_stream wslay event ssl crypto nghttp2::nghttp2 absl::strings absl::log)
+target_link_libraries(buffer_event_web_stream wslay event ssl crypto nghttp2_static absl::strings absl::log)
 target_compile_definitions(buffer_event_web_stream PUBLIC EVENT__HAVE_OPENSSL=1)
 
 
@@ -210,7 +210,7 @@ if(WISH_BUILD_TESTS)
     add_test(NAME buffer_event_web_stream_test COMMAND buffer_event_web_stream_test)
 
     add_executable(nghttp2_web_stream_test src/nghttp2_web_stream_test.cc)
-    target_link_libraries(nghttp2_web_stream_test buffer_event_web_stream gtest_main gtest nghttp2::nghttp2 wslay)
+    target_link_libraries(nghttp2_web_stream_test buffer_event_web_stream gtest_main gtest nghttp2_static wslay)
     add_test(NAME nghttp2_web_stream_test COMMAND nghttp2_web_stream_test)
 
     add_executable(handshake_test src/handshake_test.cc)
