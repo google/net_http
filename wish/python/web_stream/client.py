@@ -73,7 +73,9 @@ class WebStreamConnection:
 class _ConnectContextManager:
     def __init__(self, uri, ca_file="", cert_file="", key_file=""):
         parsed = urlparse(uri)
-        self.tls = parsed.scheme in ("webstreams", "webstreams", "https")
+
+        self.tls = parsed.scheme in ("webstream", "webstreams", "https")
+
         self.host = parsed.hostname
         self.port = parsed.port or (443 if self.tls else 80)
 
