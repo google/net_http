@@ -26,6 +26,9 @@ TlsClient::~TlsClient() {
     event_base_loopbreak(base_);
   }
 
+  handshake_.reset();
+  stream_.reset();
+
   if (dns_base_) {
     evdns_base_free(dns_base_, 0);
   }
