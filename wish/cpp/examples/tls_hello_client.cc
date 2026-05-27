@@ -1,10 +1,16 @@
-#include <iostream>
+#include <absl/flags/parse.h>
+#include <absl/log/initialize.h>
+#include <absl/log/log.h>
+
 #include <string>
 
 #include "../src/buffer_event_web_stream.h"
 #include "../src/tls_client.h"
 
-int main() {
+int main(int argc, char** argv) {
+  absl::ParseCommandLine(argc, argv);
+  absl::InitializeLog();
+
   TlsClient client("127.0.0.1",
                    8080,
                    "certs/ca.crt",
@@ -12,12 +18,12 @@ int main() {
                    "certs/client.key");
 
   if (!client.Init()) {
-    std::cerr << "Init() failed" << std::endl;
+    LOG(INFO) << "Init() failed";
     return 1;
   }
 
   client.SetOnOpen([](BufferEventWebStream* handler) {
-    std::cout << "OnOpen" << std::endl;
+    LOG(INFO) << "OnOpen";
 
     handler->SendText("Hello web-stream text!");
     handler->SendBinary("Hello web-stream binary!");
@@ -41,7 +47,7 @@ int main() {
         break;
     }
 
-    std::cout << "OnMessage (opcode: " << type << ", message: " << msg << ")" << std::endl;
+    LOG(INFO) << "OnMessage (opcode: " << type << ", message: " << msg << ")";
   });
 
   client.Run();
