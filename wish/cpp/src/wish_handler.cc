@@ -265,7 +265,7 @@ ssize_t WishHandler::WslayRecvCallback(wslay_event_context* ctx,
     wslay_event_set_error(ctx, WSLAY_ERR_CALLBACK_FAILURE);
     return -1;
   }
-  return copy_len;
+  return static_cast<ssize_t>(copy_len);
 }
 
 ssize_t WishHandler::WslaySendCallback(wslay_event_context* ctx,
@@ -282,7 +282,7 @@ ssize_t WishHandler::WslaySendCallback(wslay_event_context* ctx,
     return -1;
   }
 
-  return len;
+  return static_cast<ssize_t>(len);
 }
 
 int WishHandler::WslayGenmaskCallback(wslay_event_context* ctx, uint8_t* buf,
