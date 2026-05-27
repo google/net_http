@@ -112,7 +112,14 @@ void H2Server::AcceptConnCb(struct evconnlistener* listener,
   nghttp2_session_send(sess->h2session);
 
   bufferevent_setcb(bev, ReadCallback, nullptr, EventCallback, sess);
-  bufferevent_enable(bev, EV_READ | EV_WRITE);
+
+  int enable_rv = bufferevent_enable(bev, EV_READ | EV_WRITE);
+  if (enable_rv != 0) {
+    std::cerr << "H2Server: bufferevent_enable() failed" << std::endl;
+    bufferevent_free(bev);
+    delete sess;
+    return;
+  }
 }
 
 void H2Server::AcceptErrorCb(struct evconnlistener* listener, void* /*ctx*/) {
