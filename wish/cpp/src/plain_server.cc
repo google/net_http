@@ -8,6 +8,8 @@
 #include <cstring>
 #include <iostream>
 
+#include "buffer_event_web_stream.h"
+
 PlainServer::PlainServer(int port)
     : port_(port),
       base_(nullptr),

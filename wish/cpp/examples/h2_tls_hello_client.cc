@@ -5,8 +5,8 @@
 
 #include <string>
 
-#include "../src/buffer_event_web_stream.h"
 #include "../src/h2_tls_client.h"
+#include "../src/wish_opcodes.h"
 
 ABSL_FLAG(std::string, host, "127.0.0.1", "Server host address");
 ABSL_FLAG(int, port, 8080, "Server port");
@@ -47,7 +47,7 @@ int main(int argc, char** argv) {
     return 1;
   }
 
-  client.SetOnOpen([](NGHTTP2WebStream* stream) {
+  client.SetOnOpen([](WebStream* stream) {
     LOG(INFO) << "OnOpen";
 
     stream->SetOnMessage([](uint8_t opcode, const std::string& msg) {

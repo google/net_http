@@ -6,6 +6,8 @@
 #include <cstring>
 #include <iostream>
 
+#include "buffer_event_web_stream.h"
+
 // To use BoringSSL
 #define EVENT__HAVE_OPENSSL 1
 #include <event2/bufferevent_ssl.h>

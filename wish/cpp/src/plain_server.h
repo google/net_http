@@ -7,11 +7,11 @@
 
 #include <functional>
 
-#include "buffer_event_web_stream.h"
+#include "web_stream.h"
 
 class PlainServer {
  public:
-  using StreamCallback = std::function<void(BufferEventWebStream*)>;
+  using StreamCallback = std::function<void(WebStream*)>;
 
   explicit PlainServer(int port);
   ~PlainServer();

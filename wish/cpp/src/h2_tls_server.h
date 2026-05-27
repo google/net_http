@@ -18,7 +18,7 @@
 // mTLS is enforced (client certificates are required), matching TlsServer.
 class H2TlsServer {
  public:
-  using StreamCallback = std::function<void(NGHTTP2WebStream*)>;
+  using StreamCallback = std::function<void(WebStream*)>;
 
   H2TlsServer(const std::string& ca_file, const std::string& cert_file,
               const std::string& key_file, int port);
