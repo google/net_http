@@ -133,22 +133,32 @@ void WishHandler::WslayOnMsgRecvCallback(wslay_event_context* ctx,
 void WishHandler::ReadCallback(bufferevent* bev, void* ctx) {
   WishHandler* handler = static_cast<WishHandler*>(ctx);
 
-  switch (handler->state_) {
-    case HANDSHAKE:
-      handler->HandleHandshake();
-      break;
-    case OPEN: {
-      int err = wslay_event_recv(handler->ctx_);
-      if (err != 0) {
-        std::cerr << "wslay_event_recv() failed: " << err << std::endl;
-        // Should we close?
+  for (;;) {
+    switch (handler->state_) {
+      case HANDSHAKE:
+        handler->HandleHandshake();
+        if (handler->state_ == HANDSHAKE) {
+          // Handshake not complete, wait for more data.
+          return;
+        }
+        break;
+      case OPEN: {
+        int err = wslay_event_recv(handler->ctx_);
+        if (err != 0) {
+          std::cerr << "wslay_event_recv() failed: " << err << std::endl;
+
+          // Handle the error.
+
+          return;
+        }
+
+        return;
       }
-      break;
+      case CLOSED:
+        return;
+      default:
+        ABSL_UNREACHABLE();
     }
-    case CLOSED:
-      break;
-    default:
-      break;
   }
 }
 
