@@ -2,7 +2,7 @@ import asyncio
 import web_stream
 
 # Certs created for the tls_echo_server example (adjust paths if needed)
-CERTS_DIR = "/home/ysnysnysn/net_http/wish/cpp/certs"
+CERTS_DIR = "../../cpp/certs"
 
 async def main():
     print("Connecting to WebStream server...")
