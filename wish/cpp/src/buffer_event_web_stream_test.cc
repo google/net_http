@@ -31,8 +31,8 @@ TEST_F(BufferEventWebStreamTest, HandshakeAndSimpleExchange) {
                                 pair);
   ASSERT_EQ(rv, 0);
 
-  BufferEventWebStream* server = nullptr;
-  BufferEventWebStream* client = nullptr;
+  std::unique_ptr<BufferEventWebStream> server;
+  std::unique_ptr<BufferEventWebStream> client;
 
   bool server_opened = false;
   bool client_opened = false;
@@ -45,10 +45,10 @@ TEST_F(BufferEventWebStreamTest, HandshakeAndSimpleExchange) {
     }
   };
 
-  auto* server_handshake = new ServerHandshake(
+  auto server_handshake = std::make_unique<ServerHandshake>(
       pair[0],
       [&](bufferevent* bev) {
-        server = new BufferEventWebStream(bev, true);
+        server = std::make_unique<BufferEventWebStream>(bev, true);
         server_opened = true;
         server->SetOnMessage([&](uint8_t opcode, const std::string& msg) {
           if (opcode == WEB_STREAM_OPCODE_TEXT) {
@@ -65,7 +65,7 @@ TEST_F(BufferEventWebStreamTest, HandshakeAndSimpleExchange) {
   auto client_handshake = std::make_unique<ClientHandshake>(
       pair[1],
       [&](bufferevent* bev) {
-        client = new BufferEventWebStream(bev, false);
+        client = std::make_unique<BufferEventWebStream>(bev, false);
         client_opened = true;
         client->SetOnMessage([&](uint8_t opcode, const std::string& msg) {
           if (opcode == WEB_STREAM_OPCODE_TEXT) {
@@ -85,9 +85,6 @@ TEST_F(BufferEventWebStreamTest, HandshakeAndSimpleExchange) {
   EXPECT_TRUE(server_opened);
   EXPECT_EQ(received_from_client, "Hello, Server!");
   EXPECT_EQ(received_from_server, "Hello, Client!");
-
-  delete server;
-  delete client;
 }
 
 // Helper: drain all bytes from a bufferevent's input buffer.
@@ -104,11 +101,11 @@ TEST_F(BufferEventWebStreamTest, ClientSendsUnmasked) {
   ASSERT_EQ(rv, 0);
   bufferevent_enable(pair[1], EV_READ | EV_WRITE);
 
-  BufferEventWebStream* client = nullptr;
+  std::unique_ptr<BufferEventWebStream> client;
   auto client_handshake = std::make_unique<ClientHandshake>(
       pair[0],
       [&](bufferevent* bev) {
-        client = new BufferEventWebStream(bev, false);
+        client = std::make_unique<BufferEventWebStream>(bev, false);
         client->Start();
       },
       []() { ADD_FAILURE() << "Client handshake failed"; });
@@ -148,8 +145,6 @@ TEST_F(BufferEventWebStreamTest, ClientSendsUnmasked) {
 
   bool is_masked = (bytes[4] & 0x80) != 0;
   EXPECT_FALSE(is_masked) << "Client sent a masked frame! web-stream must not use masking.";
-
-  delete client;
   bufferevent_free(pair[1]);
 }
 
@@ -160,11 +155,11 @@ TEST_F(BufferEventWebStreamTest, ServerSendsUnmasked) {
   ASSERT_EQ(rv, 0);
   bufferevent_enable(pair[1], EV_READ | EV_WRITE);
 
-  BufferEventWebStream* server = nullptr;
-  auto* server_handshake = new ServerHandshake(
+  std::unique_ptr<BufferEventWebStream> server;
+  auto server_handshake = std::make_unique<ServerHandshake>(
       pair[0],
       [&](bufferevent* bev) {
-        server = new BufferEventWebStream(bev, true);
+        server = std::make_unique<BufferEventWebStream>(bev, true);
         server->Start();
       },
       []() { ADD_FAILURE() << "Server handshake failed"; });
@@ -196,8 +191,6 @@ TEST_F(BufferEventWebStreamTest, ServerSendsUnmasked) {
 
   bool is_masked = (bytes[4] & 0x80) != 0;
   EXPECT_FALSE(is_masked) << "Server sent a masked frame! web-stream must not use masking.";
-
-  delete server;
   bufferevent_free(pair[1]);
 }
 
@@ -210,14 +203,14 @@ TEST_F(BufferEventWebStreamTest, CloseSignalsEOF) {
                                 pair);
   ASSERT_EQ(rv, 0);
 
-  BufferEventWebStream* server = nullptr;
-  BufferEventWebStream* client = nullptr;
+  std::unique_ptr<BufferEventWebStream> server;
+  std::unique_ptr<BufferEventWebStream> client;
   bool client_close_fired = false;
 
-  auto* server_handshake = new ServerHandshake(
+  auto server_handshake = std::make_unique<ServerHandshake>(
       pair[0],
       [&](bufferevent* bev) {
-        server = new BufferEventWebStream(bev, true);
+        server = std::make_unique<BufferEventWebStream>(bev, true);
         server->Start();
         EXPECT_EQ(server->Close(), 0);
         EXPECT_EQ(server->Close(), -1);
@@ -228,7 +221,7 @@ TEST_F(BufferEventWebStreamTest, CloseSignalsEOF) {
   auto client_handshake = std::make_unique<ClientHandshake>(
       pair[1],
       [&](bufferevent* bev) {
-        client = new BufferEventWebStream(bev, false);
+        client = std::make_unique<BufferEventWebStream>(bev, false);
         client->SetOnClose([&]() {
           client_close_fired = true;
           event_base_loopbreak(base_);
@@ -241,7 +234,6 @@ TEST_F(BufferEventWebStreamTest, CloseSignalsEOF) {
   event_base_dispatch(base_);
 
   EXPECT_TRUE(client_close_fired);
-  delete server;
 }
 
 // Verify that metadata frames (opcode = 3) can be sent and received correctly by both client and server.
@@ -252,8 +244,8 @@ TEST_F(BufferEventWebStreamTest, HandshakeAndMetadataExchange) {
                                 pair);
   ASSERT_EQ(rv, 0);
 
-  BufferEventWebStream* server = nullptr;
-  BufferEventWebStream* client = nullptr;
+  std::unique_ptr<BufferEventWebStream> server;
+  std::unique_ptr<BufferEventWebStream> client;
 
   bool server_opened = false;
   bool client_opened = false;
@@ -266,10 +258,10 @@ TEST_F(BufferEventWebStreamTest, HandshakeAndMetadataExchange) {
     }
   };
 
-  auto* server_handshake = new ServerHandshake(
+  auto server_handshake = std::make_unique<ServerHandshake>(
       pair[0],
       [&](bufferevent* bev) {
-        server = new BufferEventWebStream(bev, true);
+        server = std::make_unique<BufferEventWebStream>(bev, true);
         server_opened = true;
         server->SetOnMessage([&](uint8_t opcode, const std::string& msg) {
           if (opcode == WEB_STREAM_OPCODE_METADATA) {
@@ -286,7 +278,7 @@ TEST_F(BufferEventWebStreamTest, HandshakeAndMetadataExchange) {
   auto client_handshake = std::make_unique<ClientHandshake>(
       pair[1],
       [&](bufferevent* bev) {
-        client = new BufferEventWebStream(bev, false);
+        client = std::make_unique<BufferEventWebStream>(bev, false);
         client_opened = true;
         client->SetOnMessage([&](uint8_t opcode, const std::string& msg) {
           if (opcode == WEB_STREAM_OPCODE_METADATA) {
@@ -306,9 +298,6 @@ TEST_F(BufferEventWebStreamTest, HandshakeAndMetadataExchange) {
   EXPECT_TRUE(server_opened);
   EXPECT_EQ(metadata_from_client, "Client Metadata");
   EXPECT_EQ(metadata_from_server, "Server Metadata");
-
-  delete server;
-  delete client;
 }
 
 // Verify that the local side can still receive messages from the peer after calling Close() (half-closed).
@@ -319,17 +308,17 @@ TEST_F(BufferEventWebStreamTest, ReceiveMessageAfterClose) {
                                 pair);
   ASSERT_EQ(rv, 0);
 
-  BufferEventWebStream* server = nullptr;
-  BufferEventWebStream* client = nullptr;
+  std::unique_ptr<BufferEventWebStream> server;
+  std::unique_ptr<BufferEventWebStream> client;
 
   bool server_received_msg_after_close = false;
   bool server_close_fired = false;
   bool client_close_fired = false;
 
-  auto* server_handshake = new ServerHandshake(
+  auto server_handshake = std::make_unique<ServerHandshake>(
       pair[0],
       [&](bufferevent* bev) {
-        server = new BufferEventWebStream(bev, true);
+        server = std::make_unique<BufferEventWebStream>(bev, true);
         server->SetOnMessage([&](uint8_t opcode, const std::string& msg) {
           if (opcode == WEB_STREAM_OPCODE_TEXT && msg == "Hello after server close") {
             server_received_msg_after_close = true;
@@ -347,7 +336,7 @@ TEST_F(BufferEventWebStreamTest, ReceiveMessageAfterClose) {
   auto client_handshake = std::make_unique<ClientHandshake>(
       pair[1],
       [&](bufferevent* bev) {
-        client = new BufferEventWebStream(bev, false);
+        client = std::make_unique<BufferEventWebStream>(bev, false);
         client->SetOnClose([&]() {
           client_close_fired = true;
           client->SendText("Hello after server close");
@@ -374,16 +363,16 @@ TEST_F(BufferEventWebStreamTest, WarningOnExtraDataPostClose) {
                                 pair);
   ASSERT_EQ(rv, 0);
 
-  BufferEventWebStream* server = nullptr;
-  BufferEventWebStream* client = nullptr;
+  std::unique_ptr<BufferEventWebStream> server;
+  std::unique_ptr<BufferEventWebStream> client;
 
   bool server_close_fired = false;
   bool client_close_fired = false;
 
-  auto* server_handshake = new ServerHandshake(
+  auto server_handshake = std::make_unique<ServerHandshake>(
       pair[0],
       [&](bufferevent* bev) {
-        server = new BufferEventWebStream(bev, true);
+        server = std::make_unique<BufferEventWebStream>(bev, true);
         server->SetOnClose([&]() {
           server_close_fired = true;
         });
@@ -396,7 +385,7 @@ TEST_F(BufferEventWebStreamTest, WarningOnExtraDataPostClose) {
   auto client_handshake = std::make_unique<ClientHandshake>(
       pair[1],
       [&](bufferevent* bev) {
-        client = new BufferEventWebStream(bev, false);
+        client = std::make_unique<BufferEventWebStream>(bev, false);
         client->SetOnClose([&]() {
           client_close_fired = true;
           client->Close();
@@ -423,14 +412,14 @@ TEST_F(BufferEventWebStreamTest, OnErrorOnMidMessageEOF) {
                                 pair);
   ASSERT_EQ(rv, 0);
 
-  BufferEventWebStream* server = nullptr;
+  std::unique_ptr<BufferEventWebStream> server;
   bool server_close_fired = false;
   bool server_error_fired = false;
 
-  auto* server_handshake = new ServerHandshake(
+  auto server_handshake = std::make_unique<ServerHandshake>(
       pair[0],
       [&](bufferevent* bev) {
-        server = new BufferEventWebStream(bev, true);
+        server = std::make_unique<BufferEventWebStream>(bev, true);
         server->SetOnClose([&]() {
           server_close_fired = true;
         });
@@ -477,14 +466,14 @@ TEST_F(BufferEventWebStreamTest, OnErrorOnConnectionClosedMidMessage) {
                                 pair);
   ASSERT_EQ(rv, 0);
 
-  BufferEventWebStream* server = nullptr;
+  std::unique_ptr<BufferEventWebStream> server;
   bool server_close_fired = false;
   bool server_error_fired = false;
 
-  auto* server_handshake = new ServerHandshake(
+  auto server_handshake = std::make_unique<ServerHandshake>(
       pair[0],
       [&](bufferevent* bev) {
-        server = new BufferEventWebStream(bev, true);
+        server = std::make_unique<BufferEventWebStream>(bev, true);
         server->SetOnClose([&]() {
           server_close_fired = true;
         });

@@ -31,6 +31,9 @@ class BufferEventWebStream : public WebStream {
                        bool is_server);
   ~BufferEventWebStream() override;
 
+  using CleanupCallback = std::function<void(BufferEventWebStream*)>;
+  void SetCleanupCallback(CleanupCallback cb);
+
   // Start the handler (sets up callbacks and enables events)
   void Start();
 
@@ -86,6 +89,8 @@ class BufferEventWebStream : public WebStream {
   MessageCallback on_message_;
   CloseCallback on_close_;
   ErrorCallback on_error_;
+
+  CleanupCallback cleanup_cb_;
 
   // libevent callbacks
   static void ReadCallback(bufferevent* bev,

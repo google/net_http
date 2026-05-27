@@ -41,9 +41,19 @@ BufferEventWebStream::BufferEventWebStream(bufferevent* bev,
 
 BufferEventWebStream::~BufferEventWebStream() {
   wslay_event_context_free(ctx_);
+
   if (bev_) {
+    bufferevent_setcb(bev_,
+                      nullptr,
+                      nullptr,
+                      nullptr,
+                      nullptr);
     bufferevent_free(bev_);
   }
+}
+
+void BufferEventWebStream::SetCleanupCallback(CleanupCallback cb) {
+  cleanup_cb_ = std::move(cb);
 }
 
 void BufferEventWebStream::Start() {
@@ -96,6 +106,7 @@ int BufferEventWebStream::Close() {
   int rv = bufferevent_write(bev_, kTerminalChunk, sizeof(kTerminalChunk) - 1);
   if (rv != 0) {
     LOG(ERROR) << "bufferevent_write() failed";
+
     return -1;
   }
 
@@ -158,7 +169,10 @@ void BufferEventWebStream::ReadCallback(bufferevent* bev, void* ctx) {
                               stream);
           } else {
             stream->state_ = CLOSED;
-            delete stream;
+            auto cleanup = std::move(stream->cleanup_cb_);
+            if (cleanup) {
+              cleanup(stream);
+            }
           }
           return;
         }
@@ -190,7 +204,10 @@ void BufferEventWebStream::DrainCallback(bufferevent* bev,
   size_t output_len = evbuffer_get_length(bufferevent_get_output(bev));
   if (output_len == 0) {
     stream->state_ = CLOSED;
-    delete stream;
+    auto cleanup = std::move(stream->cleanup_cb_);
+    if (cleanup) {
+      cleanup(stream);
+    }
   }
 }
 
@@ -217,7 +234,10 @@ void BufferEventWebStream::EventCallback(bufferevent* bev,
         stream->on_error_();
       }
     }
-    delete stream;
+    auto cleanup = std::move(stream->cleanup_cb_);
+    if (cleanup) {
+      cleanup(stream);
+    }
   }
 }
 

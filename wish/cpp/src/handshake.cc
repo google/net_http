@@ -339,10 +339,12 @@ void ClientHandshake::InvokeError() {
 
 ServerHandshake::ServerHandshake(bufferevent* bev,
                                  OnOpenCallback on_open,
-                                 OnErrorCallback on_error)
+                                 OnErrorCallback on_error,
+                                 CleanupCallback cleanup)
     : bev_(bev),
       on_open_(std::move(on_open)),
-      on_error_(std::move(on_error)) {}
+      on_error_(std::move(on_error)),
+      cleanup_(std::move(cleanup)) {}
 
 ServerHandshake::~ServerHandshake() {
   if (bev_) {
@@ -461,9 +463,12 @@ void ServerHandshake::HandleRead() {
   bufferevent_setcb(bev, nullptr, nullptr, nullptr, nullptr);
 
   auto on_open = std::move(on_open_);
-  // Save callback, delete this, then call callback
-  delete this;
+  auto cleanup = std::move(cleanup_);
+  auto* raw_ptr = this;
   on_open(bev);
+  if (cleanup) {
+    cleanup(raw_ptr);
+  }
 }
 
 void ServerHandshake::HandleEvent(short what) {
@@ -484,8 +489,12 @@ void ServerHandshake::HandleEvent(short what) {
 
 void ServerHandshake::InvokeError() {
   auto on_error = std::move(on_error_);
-  delete this;
+  auto cleanup = std::move(cleanup_);
+  auto* raw_ptr = this;
   if (on_error) {
     on_error();
+  }
+  if (cleanup) {
+    cleanup(raw_ptr);
   }
 }

@@ -36,8 +36,9 @@ class ServerHandshake {
  public:
   using OnOpenCallback = std::function<void(bufferevent*)>;
   using OnErrorCallback = std::function<void()>;
+  using CleanupCallback = std::function<void(ServerHandshake*)>;
 
-  ServerHandshake(bufferevent* bev, OnOpenCallback on_open, OnErrorCallback on_error);
+  ServerHandshake(bufferevent* bev, OnOpenCallback on_open, OnErrorCallback on_error, CleanupCallback cleanup = nullptr);
   ~ServerHandshake();
 
   void Start();
@@ -54,6 +55,7 @@ class ServerHandshake {
 
   OnOpenCallback on_open_;
   OnErrorCallback on_error_;
+  CleanupCallback cleanup_;
 };
 
 #endif  // WISH_CPP_SRC_HANDSHAKE_H_

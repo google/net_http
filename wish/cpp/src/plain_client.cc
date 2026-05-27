@@ -62,10 +62,13 @@ bool PlainClient::Init() {
   handshake_ = std::make_unique<ClientHandshake>(
       bev,
       [this](bufferevent* bev) {
-        stream_ = new BufferEventWebStream(bev, false);
+        stream_ = std::make_unique<BufferEventWebStream>(bev, false);
+        stream_->SetCleanupCallback([this](BufferEventWebStream* s) {
+          stream_.reset();
+        });
 
         if (on_open_) {
-          on_open_(stream_);
+          on_open_(stream_.get());
         }
 
         stream_->Start();
