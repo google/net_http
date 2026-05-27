@@ -67,14 +67,14 @@ void H2Server::Run() {
 
 // ---- libevent listener callbacks ----
 
-void H2Server::AcceptConnCb(struct evconnlistener* listener,
+void H2Server::AcceptConnCb(evconnlistener* listener,
                             evutil_socket_t fd,
-                            struct sockaddr* /*address*/,
+                            sockaddr* /*address*/,
                             int /*socklen*/,
                             void* ctx) {
   H2Server* server = static_cast<H2Server*>(ctx);
 
-  struct event_base* base = evconnlistener_get_base(listener);
+  event_base* base = evconnlistener_get_base(listener);
 
   int one = 1;
   int set_rv = setsockopt(fd,
@@ -88,9 +88,9 @@ void H2Server::AcceptConnCb(struct evconnlistener* listener,
     return;
   }
 
-  struct bufferevent* bev = bufferevent_socket_new(base,
-                                                   fd,
-                                                   BEV_OPT_CLOSE_ON_FREE);
+  bufferevent* bev = bufferevent_socket_new(base,
+                                            fd,
+                                            BEV_OPT_CLOSE_ON_FREE);
   if (!bev) {
     LOG(ERROR) << "H2Server: bufferevent_socket_new() failed";
     evutil_closesocket(fd);

@@ -126,8 +126,11 @@ void H2TlsServer::AcceptConnCb(evconnlistener* listener,
   }
 
   SSL* ssl = SSL_new(server->tls_ctx_.ssl_ctx());
-  bufferevent* bev = bufferevent_openssl_socket_new(
-      base, fd, ssl, BUFFEREVENT_SSL_ACCEPTING, BEV_OPT_CLOSE_ON_FREE);
+  bufferevent* bev = bufferevent_openssl_socket_new(base,
+                                                    fd,
+                                                    ssl,
+                                                    BUFFEREVENT_SSL_ACCEPTING,
+                                                    BEV_OPT_CLOSE_ON_FREE);
   if (!bev) {
     LOG(ERROR) << "H2TlsServer: bufferevent_openssl_socket_new() failed";
 
