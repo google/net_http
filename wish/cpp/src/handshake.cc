@@ -4,56 +4,35 @@
 #include <event2/buffer.h>
 #include <event2/bufferevent.h>
 #include <event2/event.h>
+#include <picohttpparser.h>
 
+#include <algorithm>
 #include <cstring>
 #include <sstream>
+#include <string_view>
 
 namespace {
 
-bool ReadHttpHeaders(evbuffer* input, std::string* headers_out) {
-  size_t len = evbuffer_get_length(input);
-  if (len == 0) {
-    return false;
+bool CheckHeader(const phr_header* headers,
+                 size_t num_headers,
+                 std::string_view target_name,
+                 std::string_view target_value) {
+  for (size_t i = 0; i < num_headers; ++i) {
+    std::string_view name(headers[i].name, headers[i].name_len);
+    std::string_view value(headers[i].value, headers[i].value_len);
+    if (name.size() == target_name.size() &&
+        std::equal(name.begin(), name.end(), target_name.begin(), [](char a, char b) {
+          return std::tolower(static_cast<unsigned char>(a)) == std::tolower(static_cast<unsigned char>(b));
+        })) {
+      if (value.size() == target_value.size() &&
+          std::equal(value.begin(), value.end(), target_value.begin(), [](char a, char b) {
+            return std::tolower(static_cast<unsigned char>(a)) == std::tolower(static_cast<unsigned char>(b));
+          })) {
+        return true;
+      }
+    }
   }
-
-  // Search for \r\n\r\n
-  evbuffer_ptr ptr = evbuffer_search(input, "\r\n\r\n", 4, nullptr);
-  if (ptr.pos == -1) {
-    return false;  // Not full headers yet
-  }
-
-  // Read up to the end of headers
-  size_t header_len = ptr.pos + 4;
-  char* headers = new char[header_len + 1];
-  evbuffer_remove(input, headers, header_len);
-  headers[header_len] = '\0';
-  *headers_out = std::string(headers);
-  delete[] headers;
-
-  return true;
-}
-
-void SendHttpRequest(bufferevent* bev) {
-  std::stringstream ss;
-  ss << "POST / HTTP/1.1\r\n";
-  ss << "Host: localhost\r\n";
-  ss << "Content-Type: application/web-stream\r\n";
-  ss << "Transfer-Encoding: chunked\r\n";
-  ss << "\r\n";
-  std::string data = ss.str();
-  bufferevent_write(bev, data.c_str(), data.length());
-}
-
-void SendHttpResponse(bufferevent* bev,
-                      const std::string& status,
-                      const std::string& content_type) {
-  std::stringstream ss;
-  ss << "HTTP/1.1 " << status << "\r\n";
-  ss << "Content-Type: " << content_type << "\r\n";
-  ss << "Transfer-Encoding: chunked\r\n";
-  ss << "\r\n";  // End of headers
-  std::string data = ss.str();
-  bufferevent_write(bev, data.c_str(), data.length());
+  return false;
 }
 
 }  // namespace
@@ -75,11 +54,29 @@ ClientHandshake::~ClientHandshake() {
 
 void ClientHandshake::Start() {
   bufferevent_setcb(bev_, ReadCb, nullptr, EventCb, this);
+
   int enable_rv = bufferevent_enable(bev_, EV_READ | EV_WRITE);
   if (enable_rv != 0) {
-    LOG(ERROR) << "bufferevent_enable() failed in ClientHandshake";
+    LOG(ERROR) << "bufferevent_enable() failed";
+
+    InvokeError();
+
+    return;
   }
-  SendHttpRequest(bev_);
+
+  std::stringstream ss;
+  ss << "POST / HTTP/1.1\r\n";
+  ss << "Host: localhost\r\n";
+  ss << "Content-Type: application/web-stream\r\n";
+  ss << "Transfer-Encoding: chunked\r\n";
+  ss << "\r\n";
+  std::string data = ss.str();
+  int write_rv = bufferevent_write(bev_, data.c_str(), data.length());
+  if (write_rv != 0) {
+    LOG(ERROR) << "bufferevent_write() failed";
+
+    InvokeError();
+  }
 }
 
 void ClientHandshake::ReadCb(bufferevent* bev, void* ctx) {
@@ -92,16 +89,53 @@ void ClientHandshake::EventCb(bufferevent* bev, short what, void* ctx) {
 
 void ClientHandshake::HandleRead() {
   evbuffer* input = bufferevent_get_input(bev_);
-  std::string headers;
-  if (!ReadHttpHeaders(input, &headers)) {
-    return;  // Wait for more data
-  }
 
-  if (headers.find("200 OK") == std::string::npos) {
-    LOG(ERROR) << "Bad Handy handshake response: " << headers;
-    HandleEvent(BEV_EVENT_ERROR);
+  size_t len = evbuffer_get_length(input);
+  if (len == 0) {
     return;
   }
+
+  const char* data = reinterpret_cast<const char*>(evbuffer_pullup(input, -1));
+  if (!data) {
+    ABSL_UNREACHABLE();
+  }
+
+  int minor_version;
+  int status;
+  const char* msg;
+  size_t msg_len;
+  struct phr_header headers[100];
+  size_t num_headers = 100;
+
+  int parse_rv = phr_parse_response(data, len, &minor_version, &status, &msg, &msg_len, headers, &num_headers, 0);
+  if (parse_rv == -1) {
+    LOG(ERROR) << "Failed to parse client handshake HTTP response";
+
+    InvokeError();
+
+    return;
+  }
+  if (parse_rv == -2) {
+    return;  // Incomplete headers, wait for more data
+  }
+
+  if (status != 200) {
+    LOG(ERROR) << "Bad client handshake response status: " << status;
+
+    InvokeError();
+
+    return;
+  }
+
+  if (!CheckHeader(headers, num_headers, "content-type", "application/web-stream")) {
+    LOG(ERROR) << "Client handshake response missing web-stream Content-Type!";
+
+    InvokeError();
+
+    return;
+  }
+
+  evbuffer_drain(input, parse_rv);
 
   // Handshake successful. Hand over bufferevent and trigger success callback.
   bufferevent* bev = bev_;
@@ -119,21 +153,25 @@ void ClientHandshake::HandleEvent(short what) {
     return;
   }
 
-  if (what & (BEV_EVENT_EOF | BEV_EVENT_ERROR | BEV_EVENT_TIMEOUT)) {
-    if (what & BEV_EVENT_ERROR) {
-      int err = EVUTIL_SOCKET_ERROR();
-      if (err != 0) {
-        LOG(ERROR) << "Error during client handshake: "
-                   << evutil_socket_error_to_string(err);
-      } else {
-        LOG(ERROR) << "Error during client handshake";
-      }
+  if (what & BEV_EVENT_ERROR) {
+    int err = EVUTIL_SOCKET_ERROR();
+    if (err != 0) {
+      LOG(ERROR) << "Error during client handshake: "
+                 << evutil_socket_error_to_string(err);
+    } else {
+      LOG(ERROR) << "Error during client handshake";
     }
+  }
 
-    auto on_error = std::move(on_error_);
-    if (on_error) {
-      on_error();
-    }
+  if (what & (BEV_EVENT_EOF | BEV_EVENT_ERROR | BEV_EVENT_TIMEOUT)) {
+    InvokeError();
+  }
+}
+
+void ClientHandshake::InvokeError() {
+  auto on_error = std::move(on_error_);
+  if (on_error) {
+    on_error();
   }
 }
 
@@ -154,9 +192,14 @@ ServerHandshake::~ServerHandshake() {
 
 void ServerHandshake::Start() {
   bufferevent_setcb(bev_, ReadCb, nullptr, EventCb, this);
+
   int enable_rv = bufferevent_enable(bev_, EV_READ | EV_WRITE);
   if (enable_rv != 0) {
-    LOG(ERROR) << "bufferevent_enable() failed in ServerHandshake";
+    LOG(ERROR) << "bufferevent_enable() failed";
+
+    InvokeError();
+
+    return;
   }
 }
 
@@ -170,21 +213,69 @@ void ServerHandshake::EventCb(bufferevent* bev, short what, void* ctx) {
 
 void ServerHandshake::HandleRead() {
   evbuffer* input = bufferevent_get_input(bev_);
-  std::string headers;
-  if (!ReadHttpHeaders(input, &headers)) {
-    return;  // Wait for more data
+
+  size_t len = evbuffer_get_length(input);
+  if (len == 0) {
+    return;
   }
 
-  // Check for web-stream specific header
-  if (headers.find("Content-Type: application/web-stream") == std::string::npos &&
-      headers.find("content-type: application/web-stream") == std::string::npos) {
+  const char* data = reinterpret_cast<const char*>(evbuffer_pullup(input, -1));
+  if (!data) {
+    ABSL_UNREACHABLE();
+  }
+
+  int minor_version;
+  const char* method;
+  size_t method_len;
+  const char* path;
+  size_t path_len;
+  struct phr_header headers[100];
+  size_t num_headers = 100;
+
+  int parse_rv = phr_parse_request(data, len, &method, &method_len, &path, &path_len, &minor_version, headers, &num_headers, 0);
+  if (parse_rv == -1) {
+    LOG(ERROR) << "Failed to parse server handshake HTTP request";
+
+    InvokeError();
+
+    return;
+  }
+  if (parse_rv == -2) {
+    return;  // Incomplete headers, wait for more data
+  }
+
+  if (!CheckHeader(headers, num_headers, "content-type", "application/web-stream")) {
     LOG(ERROR) << "Missing web-stream Content-Type!";
-    HandleEvent(BEV_EVENT_ERROR);
+
+    InvokeError();
+
+    return;
+  }
+
+  int drain_rv = evbuffer_drain(input, parse_rv);
+  if (drain_rv != 0) {
+    LOG(ERROR) << "evbuffer_drain() failed";
+
+    InvokeError();
+
     return;
   }
 
   // Send the HTTP 200 response
-  SendHttpResponse(bev_, "200 OK", "application/web-stream");
+  std::stringstream ss;
+  ss << "HTTP/1.1 200 OK\r\n";
+  ss << "Content-Type: application/web-stream\r\n";
+  ss << "Transfer-Encoding: chunked\r\n";
+  ss << "\r\n";  // End of headers
+  std::string response_data = ss.str();
+  int write_rv = bufferevent_write(bev_, response_data.c_str(), response_data.length());
+  if (write_rv != 0) {
+    LOG(ERROR) << "bufferevent_write() failed";
+
+    InvokeError();
+
+    return;
+  }
 
   // Handshake successful. Hand over bufferevent and trigger success callback.
   bufferevent* bev = bev_;
@@ -200,21 +291,25 @@ void ServerHandshake::HandleRead() {
 }
 
 void ServerHandshake::HandleEvent(short what) {
-  if (what & (BEV_EVENT_EOF | BEV_EVENT_ERROR | BEV_EVENT_TIMEOUT)) {
-    if (what & BEV_EVENT_ERROR) {
-      int err = EVUTIL_SOCKET_ERROR();
-      if (err != 0) {
-        LOG(ERROR) << "Error during server handshake: "
-                   << evutil_socket_error_to_string(err);
-      } else {
-        LOG(ERROR) << "Error during server handshake";
-      }
+  if (what & BEV_EVENT_ERROR) {
+    int err = EVUTIL_SOCKET_ERROR();
+    if (err != 0) {
+      LOG(ERROR) << "Error during server handshake: "
+                 << evutil_socket_error_to_string(err);
+    } else {
+      LOG(ERROR) << "Error during server handshake";
     }
+  }
 
-    auto on_error = std::move(on_error_);
-    delete this;
-    if (on_error) {
-      on_error();
-    }
+  if (what & (BEV_EVENT_EOF | BEV_EVENT_ERROR | BEV_EVENT_TIMEOUT)) {
+    InvokeError();
+  }
+}
+
+void ServerHandshake::InvokeError() {
+  auto on_error = std::move(on_error_);
+  delete this;
+  if (on_error) {
+    on_error();
   }
 }

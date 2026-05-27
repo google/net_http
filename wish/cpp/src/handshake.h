@@ -1,8 +1,9 @@
 #ifndef WISH_CPP_SRC_HANDSHAKE_H_
 #define WISH_CPP_SRC_HANDSHAKE_H_
 
-#include <event2/bufferevent.h>
 #include <event2/buffer.h>
+#include <event2/bufferevent.h>
+
 #include <functional>
 #include <memory>
 #include <string>
@@ -23,8 +24,10 @@ class ClientHandshake {
 
   void HandleRead();
   void HandleEvent(short what);
+  void InvokeError();
 
   bufferevent* bev_;
+
   OnOpenCallback on_open_;
   OnErrorCallback on_error_;
 };
@@ -45,8 +48,10 @@ class ServerHandshake {
 
   void HandleRead();
   void HandleEvent(short what);
+  void InvokeError();
 
   bufferevent* bev_;
+
   OnOpenCallback on_open_;
   OnErrorCallback on_error_;
 };
