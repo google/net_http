@@ -651,3 +651,66 @@ TEST_F(HandshakeTest, ServerHandshakeRejectsHTTP10) {
   EXPECT_TRUE(error_called);
   bufferevent_free(pair[1]);
 }
+
+TEST_F(HandshakeTest, ServerHandshakeRejectsExceededHeaderSize) {
+  bufferevent* pair[2];
+  int rv = bufferevent_pair_new(base_, BEV_OPT_CLOSE_ON_FREE | BEV_OPT_DEFER_CALLBACKS, pair);
+  ASSERT_EQ(rv, 0);
+  bufferevent_enable(pair[1], EV_READ | EV_WRITE);
+
+  bool open_called = false;
+  bool error_called = false;
+  // Set tiny max header size limit of 100 bytes
+  auto server = std::make_unique<ServerHandshake>(
+      pair[0],
+      [&](bufferevent* bev) { open_called = true; bufferevent_free(bev); event_base_loopbreak(base_); },
+      [&]() { error_called = true; event_base_loopbreak(base_); },
+      nullptr,
+      100);
+  server->Start();
+
+  // Send incomplete header larger than 100 bytes
+  std::string huge_header = "POST / HTTP/1.1\r\nHost: localhost\r\nX-Custom-Header: ";
+  huge_header.append(200, 'A');
+  bufferevent_write(pair[1], huge_header.c_str(), huge_header.size());
+  event_base_dispatch(base_);
+
+  EXPECT_FALSE(open_called);
+  EXPECT_TRUE(error_called);
+  bufferevent_free(pair[1]);
+}
+
+TEST_F(HandshakeTest, ClientHandshakeRejectsExceededHeaderSize) {
+  bufferevent* pair[2];
+  int rv = bufferevent_pair_new(base_, BEV_OPT_CLOSE_ON_FREE | BEV_OPT_DEFER_CALLBACKS, pair);
+  ASSERT_EQ(rv, 0);
+  bufferevent_enable(pair[1], EV_READ | EV_WRITE);
+
+  bool open_called = false;
+  bool error_called = false;
+  // Set tiny max header size limit of 100 bytes
+  auto client = std::make_unique<ClientHandshake>(
+      pair[0],
+      [&](bufferevent* bev) { open_called = true; bufferevent_free(bev); event_base_loopbreak(base_); },
+      [&]() { error_called = true; event_base_loopbreak(base_); },
+      100);
+  client->Start();
+
+  // Drain request
+  int limit = 100;
+  while (evbuffer_get_length(bufferevent_get_input(pair[1])) == 0 && --limit > 0) {
+    event_base_loop(base_, EVLOOP_NONBLOCK);
+  }
+  std::string req = ReadAllData(pair[1]); (void)req;
+
+  // Send incomplete response header larger than 100 bytes
+  std::string huge_header = "HTTP/1.1 200 OK\r\nContent-Type: application/web-stream\r\nX-Custom: ";
+  huge_header.append(200, 'B');
+  bufferevent_write(pair[1], huge_header.c_str(), huge_header.size());
+  event_base_dispatch(base_);
+
+  EXPECT_FALSE(open_called);
+  EXPECT_TRUE(error_called);
+  bufferevent_free(pair[1]);
+}
+
