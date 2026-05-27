@@ -119,8 +119,15 @@ void H2TlsServer::AcceptConnCb(evconnlistener* listener,
                                int /*socklen*/,
                                void* ctx) {
   H2TlsServer* server = static_cast<H2TlsServer*>(ctx);
-
   event_base* base = evconnlistener_get_base(listener);
+
+  if (server->max_connections_ > 0 && server->active_sessions_count_ >= server->max_connections_) {
+    VLOG(1) << "H2TlsServer: Max connections limit reached (" << server->max_connections_ << "). Rejecting connection.";
+
+    evutil_closesocket(fd);
+
+    return;
+  }
 
   int one = 1;
   int set_rv = setsockopt(fd,
@@ -175,6 +182,7 @@ void H2TlsServer::AcceptConnCb(evconnlistener* listener,
 
     return;
   }
+  server->active_sessions_count_++;
 
   nghttp2_settings_entry iv[] = {
       {NGHTTP2_SETTINGS_MAX_CONCURRENT_STREAMS, 100},
@@ -251,6 +259,9 @@ void H2TlsServer::AcceptErrorCb(evconnlistener* listener,
 void H2TlsServer::HandleSessionError(Session* sess) {
   if (!sess) {
     return;
+  }
+  if (sess->server && sess->server->active_sessions_count_ > 0) {
+    sess->server->active_sessions_count_--;
   }
   for (auto& [sid, info] : sess->incoming_streams) {
     if (info.web_stream) {

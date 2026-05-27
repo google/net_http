@@ -32,6 +32,8 @@
 // H2TlsServer listens for TLS-encrypted HTTP/2 connections.
 // ALPN "h2" is advertised so standard HTTP/2 clients can connect.
 // mTLS is enforced (client certificates are required), matching TlsServer.
+constexpr size_t kDefaultMaxH2TlsConnections = 10000;
+
 class H2TlsServer {
  public:
   using StreamCallback = std::function<void(WebStream*)>;
@@ -45,6 +47,8 @@ class H2TlsServer {
 
   bool Init();
   void SetOnStream(StreamCallback cb);
+  void SetMaxConnections(size_t max_connections) { max_connections_ = max_connections; }
+  size_t active_connections() const { return active_sessions_count_; }
   int Run();
 
  private:
@@ -133,6 +137,9 @@ class H2TlsServer {
   TlsContext tls_ctx_;
 
   StreamCallback on_stream_;
+
+  size_t max_connections_ = kDefaultMaxH2TlsConnections;
+  size_t active_sessions_count_ = 0;
 };
 
 #endif  // WISH_CPP_SRC_H2_TLS_SERVER_H_

@@ -70,3 +70,31 @@ TEST_F(H2ServerTest, InvalidConnectionPrefaceCleanlyDeallocatesSession) {
   close(client_fd);
   event_base_loop(base_, EVLOOP_NONBLOCK);
 }
+
+TEST_F(H2ServerTest, MaxConnectionsLimitRejectsExtraConnections) {
+  H2Server server(base_, 0);
+  server.SetMaxConnections(1);
+  ASSERT_TRUE(server.Init());
+
+  sockaddr_in addr{};
+  addr.sin_family = AF_INET;
+  addr.sin_port = htons(server.GetPort());
+  inet_pton(AF_INET, "127.0.0.1", &addr.sin_addr);
+
+  // Connection 1
+  int fd1 = socket(AF_INET, SOCK_STREAM, 0);
+  ASSERT_GE(fd1, 0);
+  ASSERT_EQ(connect(fd1, reinterpret_cast<sockaddr*>(&addr), sizeof(addr)), 0);
+  event_base_loop(base_, EVLOOP_NONBLOCK);
+  EXPECT_EQ(server.active_connections(), 1u);
+
+  // Connection 2 (Should be rejected)
+  int fd2 = socket(AF_INET, SOCK_STREAM, 0);
+  ASSERT_GE(fd2, 0);
+  ASSERT_EQ(connect(fd2, reinterpret_cast<sockaddr*>(&addr), sizeof(addr)), 0);
+  event_base_loop(base_, EVLOOP_NONBLOCK);
+  EXPECT_EQ(server.active_connections(), 1u);
+
+  close(fd1);
+  close(fd2);
+}
