@@ -127,8 +127,8 @@ void H2TlsClient::Stop() {
 
 // ---- libevent bufferevent callbacks ----
 
-void H2TlsClient::ReadCallback(struct bufferevent* bev, void* arg) {
-  Session* sess = static_cast<Session*>(arg);
+void H2TlsClient::ReadCallback(struct bufferevent* bev, void* ctx) {
+  Session* sess = static_cast<Session*>(ctx);
 
   if (!sess->h2session) {
     return;
@@ -142,8 +142,9 @@ void H2TlsClient::ReadCallback(struct bufferevent* bev, void* arg) {
   }
 
   unsigned char* data = evbuffer_pullup(input, -1);
-  ssize_t recv_len =
-      nghttp2_session_mem_recv(sess->h2session, data, len);
+  ssize_t recv_len = nghttp2_session_mem_recv(sess->h2session,
+                                              data,
+                                              len);
   if (recv_len < 0) {
     std::cerr << "nghttp2_session_mem_recv() failed: "
               << nghttp2_strerror(static_cast<int>(recv_len)) << std::endl;
@@ -196,6 +197,7 @@ void H2TlsClient::EventCallback(struct bufferevent* bev,
       if (sess->client->on_close_) {
         sess->client->on_close_();
       }
+
       delete sess->web_stream;
       sess->web_stream = nullptr;
     }
@@ -272,6 +274,7 @@ int H2TlsClient::OnDataChunkRecvCallback(nghttp2_session* session,
     sess->web_stream->OnDataChunk(data, len);
     nghttp2_session_send(session);
   }
+
   return 0;
 }
 
@@ -286,9 +289,11 @@ int H2TlsClient::OnStreamCloseCallback(nghttp2_session* /*session*/,
     if (sess->client->on_close_) {
       sess->client->on_close_();
     }
+
     delete sess->web_stream;
     sess->web_stream = nullptr;
   }
+
   return 0;
 }
 
@@ -303,6 +308,7 @@ ssize_t H2TlsClient::DataSourceReadCallback(nghttp2_session* session,
   if (!web_stream) {
     return NGHTTP2_ERR_DEFERRED;
   }
+
   return web_stream->ReadSendData(buf,
                                   length,
                                   data_flags);

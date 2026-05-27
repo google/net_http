@@ -103,8 +103,8 @@ void H2Client::Stop() {
 
 // ---- libevent bufferevent callbacks ----
 
-void H2Client::ReadCallback(struct bufferevent* bev, void* arg) {
-  Session* sess = static_cast<Session*>(arg);
+void H2Client::ReadCallback(struct bufferevent* bev, void* ctx) {
+  Session* sess = static_cast<Session*>(ctx);
 
   if (!sess->h2session) {
     return;
@@ -140,16 +140,20 @@ void H2Client::ReadCallback(struct bufferevent* bev, void* arg) {
 }
 
 void H2Client::EventCallback(struct bufferevent* bev,
-                             short events,  // NOLINT(runtime/int)
-                             void* arg) {
-  Session* sess = static_cast<Session*>(arg);
+                             short what,  // NOLINT(runtime/int)
+                             void* ctx) {
+  Session* sess = static_cast<Session*>(ctx);
 
-  if (events & BEV_EVENT_CONNECTED) {
+  if (what & BEV_EVENT_CONNECTED) {
     // Set TCP_NODELAY now that we have the real fd.
     int fd = bufferevent_getfd(bev);
     if (fd >= 0) {
       int one = 1;
-      int rv = setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &one, sizeof(one));
+      int rv = setsockopt(fd,
+                          IPPROTO_TCP,
+                          TCP_NODELAY,
+                          &one,
+                          sizeof(one));
       if (rv != 0) {
         std::cerr << "H2Client: setsockopt(TCP_NODELAY) failed" << std::endl;
       }
@@ -160,16 +164,17 @@ void H2Client::EventCallback(struct bufferevent* bev,
     return;
   }
 
-  if (events & BEV_EVENT_ERROR) {
+  if (what & BEV_EVENT_ERROR) {
     std::cerr << "BEV_EVENT_ERROR event" << std::endl;
   }
 
-  if (events & (BEV_EVENT_EOF | BEV_EVENT_ERROR)) {
+  if (what & (BEV_EVENT_EOF | BEV_EVENT_ERROR)) {
     if (sess->web_stream) {
       sess->web_stream->OnClose();
       if (sess->client->on_close_) {
         sess->client->on_close_();
       }
+
       delete sess->web_stream;
       sess->web_stream = nullptr;
     }
@@ -254,6 +259,7 @@ int H2Client::OnDataChunkRecvCallback(nghttp2_session* session,
                                   len);
     nghttp2_session_send(session);
   }
+
   return 0;
 }
 
@@ -268,9 +274,11 @@ int H2Client::OnStreamCloseCallback(nghttp2_session* /*session*/,
     if (sess->client->on_close_) {
       sess->client->on_close_();
     }
+
     delete sess->web_stream;
     sess->web_stream = nullptr;
   }
+
   return 0;
 }
 
@@ -289,7 +297,10 @@ ssize_t H2Client::DataSourceReadCallback(nghttp2_session* session,
   if (!web_stream) {
     return NGHTTP2_ERR_DEFERRED;
   }
-  return web_stream->ReadSendData(buf, length, data_flags);
+
+  return web_stream->ReadSendData(buf,
+                                  length,
+                                  data_flags);
 }
 
 // ---- Helper: initialise nghttp2 after TCP connection ----
@@ -308,10 +319,11 @@ void H2Client::InitH2Session(Session* sess) {
   nghttp2_session_callbacks_set_on_stream_close_callback(cbs,
                                                          OnStreamCloseCallback);
 
-  nghttp2_session_client_new(&sess->h2session, cbs, sess);
+  nghttp2_session_client_new(&sess->h2session,
+                             cbs,
+                             sess);
   nghttp2_session_callbacks_del(cbs);
 
-  // Send client connection preface (SETTINGS).
   nghttp2_settings_entry iv[] = {
       {NGHTTP2_SETTINGS_INITIAL_WINDOW_SIZE, 1 << 20}};
   nghttp2_submit_settings(sess->h2session,
