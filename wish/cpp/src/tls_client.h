@@ -34,6 +34,7 @@ class TlsClient {
   using OpenCallback = std::function<void(WebStream*)>;
   using MessageCallback = std::function<void(uint8_t, const std::string&)>;
   using CloseCallback = std::function<void()>;
+  using ErrorCallback = std::function<void()>;
 
   TlsClient(event_base* base,
             const std::string& host,
@@ -46,6 +47,7 @@ class TlsClient {
   bool Init();
 
   void SetOnOpen(OpenCallback cb);
+  void SetOnError(ErrorCallback cb);
 
   int Run();
   int Stop();
@@ -68,6 +70,7 @@ class TlsClient {
   std::unique_ptr<BufferEventWebStream> stream_;
 
   OpenCallback on_open_;
+  ErrorCallback on_error_;
 };
 
 #endif  // WISH_CPP_SRC_TLS_CLIENT_H_

@@ -35,6 +35,7 @@ class H2TlsClient {
  public:
   using OpenCallback = std::function<void(WebStream*)>;
   using CloseCallback = std::function<void()>;
+  using ErrorCallback = std::function<void()>;
 
   H2TlsClient(event_base* base,
               const std::string& host,
@@ -47,6 +48,7 @@ class H2TlsClient {
   bool Init();
 
   void SetOnOpen(OpenCallback cb);
+  void SetOnError(ErrorCallback cb);
 
   int Run();
   int Stop();
@@ -127,6 +129,7 @@ class H2TlsClient {
   Session* session_;
 
   OpenCallback on_open_;
+  ErrorCallback on_error_;
 };
 
 #endif  // WISH_CPP_SRC_H2_TLS_CLIENT_H_

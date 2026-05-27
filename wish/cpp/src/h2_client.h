@@ -39,6 +39,7 @@ class H2Client {
   // Called with the live WebStream once the server responds with 200.
   using OpenCallback = std::function<void(WebStream*)>;
   using CloseCallback = std::function<void()>;
+  using ErrorCallback = std::function<void()>;
 
   H2Client(event_base* base,
            const std::string& host,
@@ -48,6 +49,7 @@ class H2Client {
   bool Init();
 
   void SetOnOpen(OpenCallback cb);
+  void SetOnError(ErrorCallback cb);
 
   int Run();
   int Stop();
@@ -127,6 +129,7 @@ class H2Client {
   Session* session_;
 
   OpenCallback on_open_;
+  ErrorCallback on_error_;
 };
 
 #endif  // WISH_CPP_SRC_H2_CLIENT_H_

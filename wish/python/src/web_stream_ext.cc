@@ -28,6 +28,7 @@ struct WebStreamHandlerRef {
 
   int send_text(const std::string& msg) {
     std::lock_guard<std::mutex> lock(mu);
+
     if (!ptr) {
       throw std::runtime_error("Connection is closed");
     }
@@ -36,10 +37,20 @@ struct WebStreamHandlerRef {
 
   int send_binary(const std::string& msg) {
     std::lock_guard<std::mutex> lock(mu);
+
     if (!ptr) {
       throw std::runtime_error("Connection is closed");
     }
     return ptr->SendBinary(msg);
+  }
+
+  int close() {
+    std::lock_guard<std::mutex> lock(mu);
+
+    if (!ptr) {
+      throw std::runtime_error("Connection is closed");
+    }
+    return ptr->Close();
   }
 };
 
@@ -60,8 +71,10 @@ struct TlsClientPy {
   std::unique_ptr<event_base, EventBaseDeleter> base;
 
   TlsClient client;
+
   nb::object on_open_cb;
   nb::object on_message_cb;
+  nb::object on_error_cb;
 
   std::shared_ptr<WebStreamHandlerRef> handler_ref;
 
@@ -83,15 +96,32 @@ struct TlsClientPy {
                port,
                ca,
                cert,
-               key) {}
+               key) {
+    client.SetOnError([this]() {
+      client.Stop();
+
+      if (on_error_cb) {
+        nb::gil_scoped_acquire acquire;
+
+        try {
+          on_error_cb();
+        } catch (nb::python_error& e) {
+          e.restore();
+          PyErr_WriteUnraisable(on_error_cb.ptr());
+        }
+      }
+    });
+  }
 };
 
 struct PlainClientPy {
   std::unique_ptr<event_base, EventBaseDeleter> base;
 
   PlainClient client;
+
   nb::object on_open_cb;
   nb::object on_message_cb;
+  nb::object on_error_cb;
 
   std::shared_ptr<WebStreamHandlerRef> handler_ref;
 
@@ -106,7 +136,22 @@ struct PlainClientPy {
       : base(event_base_new()),
         client(base.get(),
                host,
-               port) {}
+               port) {
+    client.SetOnError([this]() {
+      client.Stop();
+
+      if (on_error_cb) {
+        nb::gil_scoped_acquire acquire;
+
+        try {
+          on_error_cb();
+        } catch (nb::python_error& e) {
+          e.restore();
+          PyErr_WriteUnraisable(on_error_cb.ptr());
+        }
+      }
+    });
+  }
 };
 
 // ---------------------------------------------------------------------------
@@ -151,15 +196,20 @@ static int tls_traverse(PyObject* self, visitproc visit, void* arg) {
 
   Py_VISIT(w->on_open_cb.ptr());
   Py_VISIT(w->on_message_cb.ptr());
+  Py_VISIT(w->on_error_cb.ptr());
 
   return 0;
 }
 
 static int tls_clear(PyObject* self) {
   TlsClientPy* w = nb::inst_ptr<TlsClientPy>(nb::handle(self));
+
   tls_do_cleanup(w);
+
   w->on_open_cb = nb::object();
   w->on_message_cb = nb::object();
+  w->on_error_cb = nb::object();
+
   return 0;
 }
 
@@ -205,15 +255,20 @@ static int plain_traverse(PyObject* self, visitproc visit, void* arg) {
 
   Py_VISIT(w->on_open_cb.ptr());
   Py_VISIT(w->on_message_cb.ptr());
+  Py_VISIT(w->on_error_cb.ptr());
 
   return 0;
 }
 
 static int plain_clear(PyObject* self) {
   PlainClientPy* w = nb::inst_ptr<PlainClientPy>(nb::handle(self));
+
   plain_do_cleanup(w);
+
   w->on_open_cb = nb::object();
   w->on_message_cb = nb::object();
+  w->on_error_cb = nb::object();
+
   return 0;
 }
 
@@ -245,7 +300,8 @@ NB_MODULE(web_stream_ext, m) {
           throw std::runtime_error("Connection is closed");
         }
         return self.ptr->SendBinary(s);
-      });
+      })
+      .def("close", &WebStreamHandlerRef::close);
 
   // ---- TlsClient --------------------------------------------------------
   static PyType_Slot tls_slots[] = {
@@ -282,17 +338,23 @@ NB_MODULE(web_stream_ext, m) {
         self.client.SetOnOpen([&self, ref](WebStream* handler) {
           {
             std::lock_guard<std::mutex> lock(ref->mu);
+
             ref->ptr = handler;
           }
 
-          handler->SetOnClose([ref]() {
+          handler->SetOnClose([ref, &self]() {
             std::lock_guard<std::mutex> lock(ref->mu);
+
             ref->ptr = nullptr;
+            self.client.Stop();
           });
+
           handler->SetOnError([ref]() {
             std::lock_guard<std::mutex> lock(ref->mu);
+
             ref->ptr = nullptr;
           });
+
           handler->SetOnMessage([&self](uint8_t opcode, const std::string& msg) {
             nb::gil_scoped_acquire acquire;
             try {
@@ -318,6 +380,9 @@ NB_MODULE(web_stream_ext, m) {
       })
       .def("set_on_message", [](TlsClientPy& self, nb::object cb) {
         self.on_message_cb = cb;
+      })
+      .def("set_on_error", [](TlsClientPy& self, nb::object cb) {
+        self.on_error_cb = cb;
       })
       .def("run", [](TlsClientPy& self) {
         self.running.store(true, std::memory_order_release);
@@ -377,17 +442,23 @@ NB_MODULE(web_stream_ext, m) {
         self.client.SetOnOpen([&self, ref](WebStream* handler) {
           {
             std::lock_guard<std::mutex> lock(ref->mu);
+
             ref->ptr = handler;
           }
 
-          handler->SetOnClose([ref]() {
+          handler->SetOnClose([ref, &self]() {
             std::lock_guard<std::mutex> lock(ref->mu);
+
             ref->ptr = nullptr;
+            self.client.Stop();
           });
+
           handler->SetOnError([ref]() {
             std::lock_guard<std::mutex> lock(ref->mu);
+
             ref->ptr = nullptr;
           });
+
           handler->SetOnMessage([&self](uint8_t opcode, const std::string& msg) {
             nb::gil_scoped_acquire acquire;
             try {
@@ -413,6 +484,9 @@ NB_MODULE(web_stream_ext, m) {
       })
       .def("set_on_message", [](PlainClientPy& self, nb::object cb) {
         self.on_message_cb = cb;
+      })
+      .def("set_on_error", [](PlainClientPy& self, nb::object cb) {
+        self.on_error_cb = cb;
       })
       .def("run", [](PlainClientPy& self) {
         self.running.store(true, std::memory_order_release);
