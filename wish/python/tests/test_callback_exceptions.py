@@ -1,7 +1,7 @@
-"""Tests that Python exceptions raised inside wish_ext callbacks do not
+"""Tests that Python exceptions raised inside web_stream_ext callbacks do not
 propagate through the C libevent stack and crash the process.
 
-Each callback lambda in wish_ext.cc wraps the Python call in
+Each callback lambda in web_stream_ext.cc wraps the Python call in
 try/catch(nb::python_error) and routes the exception through
 PyErr_WriteUnraisable, which invokes sys.unraisablehook.  These tests
 install a temporary hook to capture that notification and assert on it.
@@ -28,18 +28,18 @@ def get_free_port() -> int:
         return s.getsockname()[1]
 
 
-def _import_wish_ext():
+def _import_web_stream_ext():
     try:
-        from wish import wish_ext
-        return wish_ext
+        from web_stream import web_stream_ext
+        return web_stream_ext
     except ImportError:
         return None
 
 
-wish_ext = _import_wish_ext()
+web_stream_ext = _import_web_stream_ext()
 
 
-@unittest.skipIf(wish_ext is None, "wish_ext extension module not available - run 'pip install .'")
+@unittest.skipIf(web_stream_ext is None, "web_stream_ext extension module not available - run 'pip install .'")
 @unittest.skipUnless(
     os.path.exists(SERVER_PLAIN_BIN),
     f"Plain echo server not found at {SERVER_PLAIN_BIN} - compile the C++ project first",
@@ -96,7 +96,7 @@ class TestCallbackExceptions(unittest.TestCase):
         return captured, lambda: setattr(sys, "unraisablehook", original)
 
     def _make_plain_client(self):
-        client = wish_ext.PlainClient("127.0.0.1", self.port)
+        client = web_stream_ext.PlainClient("127.0.0.1", self.port)
         self.assertTrue(client.init(), "PlainClient.init() returned False")
         return client
 

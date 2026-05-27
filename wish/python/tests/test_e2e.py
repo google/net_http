@@ -5,7 +5,7 @@ import socket
 import tempfile
 import sys
 import unittest
-import wish
+import web_stream
 
 # Project root based on known directory structure (wish/python/tests/test_client.py)
 TEST_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -22,7 +22,7 @@ def get_free_port():
     s.close()
     return port
 
-class TestWishClientE2E(unittest.TestCase):
+class TestWebStreamClientE2E(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         if not os.path.exists(SERVER_BIN):
@@ -60,9 +60,9 @@ class TestWishClientE2E(unittest.TestCase):
             # Allow the server more time to start up to avoid Connection reset
             await asyncio.sleep(1.0)
             
-            uri = f"wishs://127.0.0.1:{self.port}"
+            uri = f"webstreams://127.0.0.1:{self.port}"
             
-            async with wish.connect(
+            async with web_stream.connect(
                 uri,
                 ca_file=os.path.join(CERTS_DIR, "ca.crt"),
                 cert_file=os.path.join(CERTS_DIR, "client.crt"),
@@ -80,7 +80,7 @@ class TestWishClientE2E(unittest.TestCase):
         loop.run_until_complete(run())
 
 
-class TestWishClientPlainE2E(unittest.TestCase):
+class TestWebStreamClientPlainE2E(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         if not os.path.exists(SERVER_PLAIN_BIN):
@@ -115,9 +115,9 @@ class TestWishClientPlainE2E(unittest.TestCase):
             # Allow the server more time to start up to avoid Connection reset
             await asyncio.sleep(1.0)
             
-            uri = f"wish://127.0.0.1:{self.port}"
+            uri = f"webstream://127.0.0.1:{self.port}"
             
-            async with wish.connect(uri) as ws:
+            async with web_stream.connect(uri) as ws:
                 test_msg = "Hello E2E from Python over plain TCP!"
                 await ws.send(test_msg)
                 

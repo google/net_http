@@ -1,9 +1,9 @@
-"""Tests that accessing a WishHandler after the connection closes does not
+"""Tests that accessing a BufferEventWebStream after the connection closes does not
 cause a use-after-free crash.
 
-After the server closes the connection (EOF), WishHandler::EventCallback calls
-on_close_() which nullifies WishHandlerRef::ptr under a mutex.  Any subsequent
-call through the Python WishHandler object must raise RuntimeError rather than
+After the server closes the connection (EOF), BufferEventWebStream::EventCallback calls
+on_close_() which nullifies WebStreamHandlerRef::ptr under a mutex.  Any subsequent
+call through the Python BufferEventWebStream object must raise RuntimeError rather than
 dereferencing freed memory.
 """
 
@@ -27,24 +27,24 @@ def get_free_port() -> int:
         return s.getsockname()[1]
 
 
-def _import_wish_ext():
+def _import_web_stream_ext():
     try:
-        from wish import wish_ext  # noqa: PLC0415
-        return wish_ext
+        from web_stream import web_stream_ext  # noqa: PLC0415
+        return web_stream_ext
     except ImportError:
         return None
 
 
-wish_ext = _import_wish_ext()
+web_stream_ext = _import_web_stream_ext()
 
 
-@unittest.skipIf(wish_ext is None, "wish_ext extension module not available – run 'pip install .'")
+@unittest.skipIf(web_stream_ext is None, "web_stream_ext extension module not available – run 'pip install .'")
 @unittest.skipUnless(
     os.path.exists(SERVER_PLAIN_BIN),
     f"Plain echo server not found at {SERVER_PLAIN_BIN} – compile the C++ project first",
 )
 class TestDanglingPointer(unittest.TestCase):
-    """Verify that WishHandler cannot be used after the connection is closed."""
+    """Verify that BufferEventWebStream cannot be used after the connection is closed."""
 
     port: int
     server_proc: subprocess.Popen
@@ -74,7 +74,7 @@ class TestDanglingPointer(unittest.TestCase):
     # ------------------------------------------------------------------
 
     def _make_plain_client(self):
-        client = wish_ext.PlainClient("127.0.0.1", self.port)
+        client = web_stream_ext.PlainClient("127.0.0.1", self.port)
         self.assertTrue(client.init(), "PlainClient.init() returned False")
         return client
 
@@ -109,7 +109,7 @@ class TestDanglingPointer(unittest.TestCase):
 
         handler = captured_handler[0]
         # The event loop has exited and stop() was called.  The handler's
-        # WishHandlerRef was invalidated when the connection closed.
+        # WebStreamHandlerRef was invalidated when the connection closed.
         # send_text must raise RuntimeError, not segfault.
         with self.assertRaises(RuntimeError):
             handler.send_text("should fail")
@@ -143,7 +143,7 @@ class TestDanglingPointer(unittest.TestCase):
 
     def test_handler_invalidated_before_on_close_returns(self):
         """By the time the Python on_close callback (if any) runs, the
-        WishHandlerRef must already be invalidated.
+        WebStreamHandlerRef must already be invalidated.
 
         We verify this indirectly: open a connection, stop the client,
         and confirm that the handler ref is invalid immediately after stop()
