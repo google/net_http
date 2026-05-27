@@ -2,33 +2,27 @@
 
 #include <absl/log/log.h>
 
-PlainClient::PlainClient(const std::string& host, int port)
-    : host_(host),
+PlainClient::PlainClient(event_base* base,
+                         const std::string& host,
+                         int port)
+    : base_(base),
+      host_(host),
       port_(port),
-      base_(nullptr),
       dns_base_(nullptr),
       stream_(nullptr) {}
 
 PlainClient::~PlainClient() {
-  if (base_) {
-    event_base_loopbreak(base_);
-  }
-
   handshake_.reset();
   stream_.reset();
 
   if (dns_base_) {
     evdns_base_free(dns_base_, 0);
   }
-  if (base_) {
-    event_base_free(base_);
-  }
 }
 
 bool PlainClient::Init() {
-  base_ = event_base_new();
   if (!base_) {
-    VLOG(1) << "event_base_new() failed";
+    VLOG(1) << "event_base is null";
 
     return false;
   }

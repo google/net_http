@@ -6,9 +6,8 @@
 #include <event2/event.h>
 
 #include <functional>
-#include <string>
-
 #include <memory>
+#include <string>
 
 #include "buffer_event_web_stream.h"
 #include "handshake.h"
@@ -20,7 +19,8 @@ class TlsClient {
   using MessageCallback = std::function<void(uint8_t, const std::string&)>;
   using CloseCallback = std::function<void()>;
 
-  TlsClient(const std::string& host,
+  TlsClient(event_base* base,
+            const std::string& host,
             int port,
             const std::string& ca_file,
             const std::string& cert_file,
@@ -35,6 +35,8 @@ class TlsClient {
   void Stop();
 
  private:
+  event_base* base_;
+
   std::string host_;
   int port_;
 
@@ -42,7 +44,6 @@ class TlsClient {
   std::string cert_file_;
   std::string key_file_;
 
-  event_base* base_;
   evdns_base* dns_base_;
 
   TlsContext tls_ctx_;

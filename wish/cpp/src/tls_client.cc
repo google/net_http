@@ -4,36 +4,27 @@
 #include <event2/bufferevent_ssl.h>
 #include <openssl/ssl.h>
 
-TlsClient::TlsClient(const std::string& host,
+TlsClient::TlsClient(event_base* base,
+                     const std::string& host,
                      int port,
                      const std::string& ca_file,
                      const std::string& cert_file,
                      const std::string& key_file)
-    : host_(host),
+    : base_(base),
+      host_(host),
       port_(port),
       ca_file_(ca_file),
       cert_file_(cert_file),
       key_file_(key_file),
-      base_(nullptr),
       dns_base_(nullptr),
       stream_(nullptr) {}
 
 TlsClient::~TlsClient() {
-  // Signal the event loop to exit before freeing it.  If Run() is still
-  // executing in another thread (e.g. the caller forgot to call Stop()),
-  // event_base_loopbreak wakes it up immediately so event_base_free is safe.
-  if (base_) {
-    event_base_loopbreak(base_);
-  }
-
   handshake_.reset();
   stream_.reset();
 
   if (dns_base_) {
     evdns_base_free(dns_base_, 0);
-  }
-  if (base_) {
-    event_base_free(base_);
   }
 }
 
@@ -51,9 +42,8 @@ bool TlsClient::Init() {
     return false;
   }
 
-  base_ = event_base_new();
   if (!base_) {
-    VLOG(1) << "event_base_new() failed";
+    VLOG(1) << "event_base is null";
 
     return false;
   }

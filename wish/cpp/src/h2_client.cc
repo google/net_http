@@ -12,18 +12,16 @@
   {                              \
       (uint8_t*)(name), (uint8_t*)(value), strlen(name), strlen(value), NGHTTP2_NV_FLAG_NONE}
 
-H2Client::H2Client(const std::string& host, int port)
-    : host_(host),
+H2Client::H2Client(event_base* base,
+                   const std::string& host,
+                   int port)
+    : base_(base),
+      host_(host),
       port_(port),
-      base_(nullptr),
       dns_base_(nullptr),
       session_(nullptr) {}
 
 H2Client::~H2Client() {
-  if (base_) {
-    event_base_loopbreak(base_);
-  }
-
   if (session_) {
     if (session_->web_stream) {
       delete session_->web_stream;
@@ -41,15 +39,11 @@ H2Client::~H2Client() {
   if (dns_base_) {
     evdns_base_free(dns_base_, 0);
   }
-  if (base_) {
-    event_base_free(base_);
-  }
 }
 
 bool H2Client::Init() {
-  base_ = event_base_new();
   if (!base_) {
-    VLOG(1) << "event_base_new() failed";
+    VLOG(1) << "event_base is null";
 
     return false;
   }

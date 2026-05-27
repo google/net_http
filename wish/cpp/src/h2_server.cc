@@ -11,24 +11,21 @@
   {                              \
       (uint8_t*)(name), (uint8_t*)(value), strlen(name), strlen(value), NGHTTP2_NV_FLAG_NONE}
 
-H2Server::H2Server(int port)
-    : port_(port),
-      base_(nullptr),
+H2Server::H2Server(event_base* base,
+                   int port)
+    : base_(base),
+      port_(port),
       listener_(nullptr) {}
 
 H2Server::~H2Server() {
   if (listener_) {
     evconnlistener_free(listener_);
   }
-  if (base_) {
-    event_base_free(base_);
-  }
 }
 
 bool H2Server::Init() {
-  base_ = event_base_new();
   if (!base_) {
-    VLOG(1) << "H2Server: event_base_new() failed";
+    VLOG(1) << "H2Server: event_base is null";
 
     return false;
   }

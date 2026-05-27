@@ -20,7 +20,8 @@ class H2TlsClient {
   using OpenCallback = std::function<void(WebStream*)>;
   using CloseCallback = std::function<void()>;
 
-  H2TlsClient(const std::string& host,
+  H2TlsClient(event_base* base,
+              const std::string& host,
               int port,
               const std::string& ca_file,
               const std::string& cert_file,
@@ -94,6 +95,8 @@ class H2TlsClient {
   void InitH2Session(Session* sess);
   void HandleSessionError(Session* sess);
 
+  event_base* base_;
+
   std::string host_;
   int port_;
 
@@ -101,7 +104,6 @@ class H2TlsClient {
   std::string cert_file_;
   std::string key_file_;
 
-  event_base* base_;
   evdns_base* dns_base_;
 
   TlsContext tls_ctx_;

@@ -20,7 +20,8 @@ class TlsServer {
  public:
   using StreamCallback = std::function<void(WebStream*)>;
 
-  TlsServer(int port,
+  TlsServer(event_base* base,
+            int port,
             const std::string& ca_file,
             const std::string& cert_file,
             const std::string& key_file);
@@ -42,13 +43,14 @@ class TlsServer {
   void RemoveHandshake(ServerHandshake* handshake);
   void RemoveStream(BufferEventWebStream* stream);
 
+  event_base* base_;
+
   int port_;
 
   std::string ca_file_;
   std::string cert_file_;
   std::string key_file_;
 
-  event_base* base_;
   evconnlistener* listener_;
 
   TlsContext tls_ctx_;
