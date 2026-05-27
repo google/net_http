@@ -20,13 +20,13 @@ WishHandler::WishHandler(bufferevent* bev,
       ctx_(nullptr),
       state_(HANDSHAKE) {
   wslay_event_callbacks callbacks = {
-      RecvCallback,
-      SendCallback,
-      GenmaskCallback,
+      WslayRecvCallback,
+      WslaySendCallback,
+      WslayGenmaskCallback,
       nullptr,  // on_frame_recv_start_callback
       nullptr,  // on_frame_recv_chunk_callback
       nullptr,  // on_frame_recv_end_callback
-      OnMsgRecvCallback};
+      WslayOnMsgRecvCallback};
 
   if (is_server_) {
     wslay_event_context_server_init(&ctx_, &callbacks, this);
@@ -65,11 +65,13 @@ void WishHandler::SetOnOpen(OpenCallback cb) { on_open_ = cb; }
 
 void WishHandler::SetOnClose(CloseCallback cb) { on_close_ = cb; }
 
-ssize_t WishHandler::RecvCallback(wslay_event_context* ctx,
-                                  uint8_t* buf,
-                                  size_t len,
-                                  int flags,
-                                  void* user_data) {
+// ---- wslay callbacks ----
+
+ssize_t WishHandler::WslayRecvCallback(wslay_event_context* ctx,
+                                       uint8_t* buf,
+                                       size_t len,
+                                       int flags,
+                                       void* user_data) {
   WishHandler* handler = static_cast<WishHandler*>(user_data);
 
   evbuffer* input = bufferevent_get_input(handler->bev_);
@@ -90,11 +92,11 @@ ssize_t WishHandler::RecvCallback(wslay_event_context* ctx,
   return copy_len;
 }
 
-ssize_t WishHandler::SendCallback(wslay_event_context* ctx,
-                                  const uint8_t* data,
-                                  size_t len,
-                                  int flags,
-                                  void* user_data) {
+ssize_t WishHandler::WslaySendCallback(wslay_event_context* ctx,
+                                       const uint8_t* data,
+                                       size_t len,
+                                       int flags,
+                                       void* user_data) {
   WishHandler* handler = static_cast<WishHandler*>(user_data);
 
   int rv = bufferevent_write(handler->bev_, data, len);
@@ -107,15 +109,15 @@ ssize_t WishHandler::SendCallback(wslay_event_context* ctx,
   return len;
 }
 
-int WishHandler::GenmaskCallback(wslay_event_context* ctx, uint8_t* buf,
-                                 size_t len, void* user_data) {
+int WishHandler::WslayGenmaskCallback(wslay_event_context* ctx, uint8_t* buf,
+                                      size_t len, void* user_data) {
   ABSL_UNREACHABLE();
   return 0;
 }
 
-void WishHandler::OnMsgRecvCallback(wslay_event_context* ctx,
-                                    const wslay_event_on_msg_recv_arg* arg,
-                                    void* user_data) {
+void WishHandler::WslayOnMsgRecvCallback(wslay_event_context* ctx,
+                                         const wslay_event_on_msg_recv_arg* arg,
+                                         void* user_data) {
   WishHandler* handler = static_cast<WishHandler*>(user_data);
 
   // Consider implementing backpressure.
@@ -125,6 +127,8 @@ void WishHandler::OnMsgRecvCallback(wslay_event_context* ctx,
     handler->on_message_(arg->opcode, msg);
   }
 }
+
+// ---- libevent callbacks ----
 
 void WishHandler::ReadCallback(bufferevent* bev, void* ctx) {
   WishHandler* handler = static_cast<WishHandler*>(ctx);
