@@ -60,13 +60,21 @@ bool TlsClient::Init() {
   }
 
   SSL* ssl = SSL_new(tls_ctx_.ssl_ctx());
-  struct bufferevent* bev = bufferevent_openssl_socket_new(
-      base_, -1, ssl, BUFFEREVENT_SSL_CONNECTING, BEV_OPT_CLOSE_ON_FREE);
+  bufferevent* bev = bufferevent_openssl_socket_new(base_,
+                                                    -1,
+                                                    ssl,
+                                                    BUFFEREVENT_SSL_CONNECTING,
+                                                    BEV_OPT_CLOSE_ON_FREE);
   if (!bev) {
     std::cerr << "bufferevent_openssl_socket_new() failed" << std::endl;
     return false;
   }
 
+  if (bufferevent_socket_connect_hostname(bev,
+                                          dns_base_,
+                                          AF_INET,
+                                          host_.c_str(),
+                                          port_) < 0) {
     std::cerr << "bufferevent_socket_connect_hostname() failed" << std::endl;
     return false;
   }

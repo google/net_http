@@ -56,9 +56,13 @@ bool TlsServer::Init() {
 
   // passing 'this' instead of &tls_ctx_ because we can pass TlsServer
   // and access tls_ctx_ from it
-  listener_ = evconnlistener_new_bind(
-      base_, AcceptConnCb, this, LEV_OPT_CLOSE_ON_FREE | LEV_OPT_REUSEABLE, -1,
-      (struct sockaddr*)&sin, sizeof(sin));
+  listener_ = evconnlistener_new_bind(base_,
+                                      AcceptConnCb,
+                                      this,
+                                      LEV_OPT_CLOSE_ON_FREE | LEV_OPT_REUSEABLE,
+                                      -1,
+                                      (sockaddr*)&sin,
+                                      sizeof(sin));
 
   if (!listener_) {
     std::cerr << "Could not create a listener!" << std::endl;
@@ -79,20 +83,29 @@ void TlsServer::SetOnConnection(ConnectCallback cb) {
   on_connection_ = cb;
 }
 
-void TlsServer::AcceptConnCb(struct evconnlistener* listener,
-                             evutil_socket_t fd, struct sockaddr* address,
-                             int socklen, void* ctx) {
-  struct event_base* base = evconnlistener_get_base(listener);
+void TlsServer::AcceptConnCb(evconnlistener* listener,
+                             evutil_socket_t fd,
+                             sockaddr* address,
+                             int socklen,
+                             void* ctx) {
+  event_base* base = evconnlistener_get_base(listener);
   TlsServer* server = static_cast<TlsServer*>(ctx);
 
   int one = 1;
-  if (setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &one, sizeof(one)) < 0) {
+  if (setsockopt(fd,
+                 IPPROTO_TCP,
+                 TCP_NODELAY,
+                 &one,
+                 sizeof(one)) < 0) {
     std::cerr << "Failed to set TCP_NODELAY: " << strerror(errno) << std::endl;
   }
 
   SSL* ssl = SSL_new(server->tls_ctx_.ssl_ctx());
-  struct bufferevent* bev = bufferevent_openssl_socket_new(
-      base, fd, ssl, BUFFEREVENT_SSL_ACCEPTING, BEV_OPT_CLOSE_ON_FREE);
+  bufferevent* bev = bufferevent_openssl_socket_new(base,
+                                                    fd,
+                                                    ssl,
+                                                    BUFFEREVENT_SSL_ACCEPTING,
+                                                    BEV_OPT_CLOSE_ON_FREE);
 
   if (server->on_connection_) {
     server->on_connection_(bev);

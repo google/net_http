@@ -63,22 +63,30 @@ class WishHandler {
   State state_;
 
   // wslay callbacks
-  static ssize_t RecvCallback(struct wslay_event_context* ctx, uint8_t* buf,
-                              size_t len, int flags, void* user_data);
-  static ssize_t SendCallback(struct wslay_event_context* ctx,
-                              const uint8_t* data, size_t len, int flags,
+  static ssize_t RecvCallback(wslay_event_context* ctx,
+                              uint8_t* buf,
+                              size_t len,
+                              int flags,
                               void* user_data);
-  static int GenMaskCallback(struct wslay_event_context* ctx, uint8_t* buf,
-                             size_t len, void* user_data);
-  static void OnMsgRecvCallback(struct wslay_event_context* ctx,
-                                const struct wslay_event_on_msg_recv_arg* arg,
+  static ssize_t SendCallback(wslay_event_context* ctx,
+                              const uint8_t* data,
+                              size_t len,
+                              int flags,
+                              void* user_data);
+  static int GenmaskCallback(wslay_event_context* ctx,
+                             uint8_t* buf,
+                             size_t len,
+                             void* user_data);
+  static void OnMsgRecvCallback(wslay_event_context* ctx,
+                                const wslay_event_on_msg_recv_arg* arg,
                                 void* user_data);
 
   // libevent callbacks
-  static void ReadCallback(struct bufferevent* bev, void* ctx);
-  // We might not need a write callback unless we want flow control
-  // static void WriteCallback(struct bufferevent *bev, void *ctx);
-  static void EventCallback(struct bufferevent* bev, short events, void* ctx);
+  static void ReadCallback(bufferevent* bev,
+                           void* ctx);
+  static void EventCallback(bufferevent* bev,
+                            short what,  // NOLINT(runtime/int)
+                            void* ctx);
 
   void HandleHandshake();
   bool ReadHttpRequest();

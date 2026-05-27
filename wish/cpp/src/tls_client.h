@@ -16,8 +16,11 @@ class TlsClient {
   using MessageCallback = std::function<void(uint8_t, const std::string&)>;
   using CloseCallback = std::function<void()>;
 
-  TlsClient(const std::string& ca_file, const std::string& cert_file,
-            const std::string& key_file, const std::string& host, int port);
+  TlsClient(const std::string& host,
+            int port,
+            const std::string& ca_file,
+            const std::string& cert_file,
+            const std::string& key_file);
   ~TlsClient();
 
   bool Init();
