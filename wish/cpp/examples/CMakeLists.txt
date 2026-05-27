@@ -11,6 +11,17 @@ target_link_libraries(plain_echo_server
     "$<LINK_LIBRARY:WHOLE_ARCHIVE,absl::log_flags>"
 )
 
+add_executable(plain_hello_client
+    plain_hello_client.cc
+)
+target_link_libraries(plain_hello_client
+    buffer_event_web_stream
+    absl::flags_parse
+    absl::log
+    absl::log_initialize
+    "$<LINK_LIBRARY:WHOLE_ARCHIVE,absl::log_flags>"
+)
+
 add_executable(tls_echo_server
     tls_echo_server.cc
 )
