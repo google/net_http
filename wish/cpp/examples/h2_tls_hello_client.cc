@@ -12,13 +12,12 @@ int main() {
                      "certs/client.key");
 
   if (!client.Init()) {
-    std::cerr << "Failed to initialize H2TlsClient" << std::endl;
+    std::cerr << "Init() failed" << std::endl;
     return 1;
   }
 
   client.SetOnOpen([](NGHTTP2WebStream* stream) {
-    std::cout << "TLS Connected! WiSH stream open (stream_id="
-              << stream->stream_id() << ")" << std::endl;
+    std::cout << "OnOpen" << std::endl;
 
     stream->SetOnMessage([](uint8_t opcode, const std::string& msg) {
       std::string type;
@@ -36,11 +35,12 @@ int main() {
           type = "UNKNOWN(" + std::to_string(opcode) + ")";
           break;
       }
-      std::cout << "Server says [" << type << "]: " << msg << std::endl;
+
+      std::cout << "Message (opcode: " << type << ", message: " << msg << ")" << std::endl;
     });
 
     stream->SetOnClose(
-        []() { std::cout << "TLS WiSH stream closed." << std::endl; });
+        []() { std::cout << "OnClose" << std::endl; });
 
     stream->SendText("Hello web-stream text over HTTP/2+TLS!");
     stream->SendBinary("Hello web-stream binary over HTTP/2+TLS!");

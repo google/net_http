@@ -8,13 +8,12 @@ int main() {
   H2Client client("127.0.0.1", 8080);
 
   if (!client.Init()) {
-    std::cerr << "Failed to initialize H2Client" << std::endl;
+    std::cerr << "Init() failed" << std::endl;
     return 1;
   }
 
   client.SetOnOpen([](NGHTTP2WebStream* stream) {
-    std::cout << "Connected! WiSH stream open (stream_id="
-              << stream->stream_id() << ")" << std::endl;
+    std::cout << "OnOpen" << std::endl;
 
     stream->SetOnMessage([](uint8_t opcode, const std::string& msg) {
       std::string type;
@@ -32,11 +31,12 @@ int main() {
           type = "UNKNOWN(" + std::to_string(opcode) + ")";
           break;
       }
-      std::cout << "Server says [" << type << "]: " << msg << std::endl;
+
+      std::cout << "Message (opcode: " << type << ", message: " << msg << ")" << std::endl;
     });
 
     stream->SetOnClose(
-        []() { std::cout << "WiSH stream closed." << std::endl; });
+        []() { std::cout << "OnClose" << std::endl; });
 
     stream->SendText("Hello web-stream text over HTTP/2!");
     stream->SendBinary("Hello web-stream binary over HTTP/2!");
