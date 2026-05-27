@@ -32,8 +32,8 @@ class H2TlsClient {
 
   void SetOnOpen(OpenCallback cb);
 
-  void Run();
-  void Stop();
+  int Run();
+  int Stop();
 
  private:
   struct Session {

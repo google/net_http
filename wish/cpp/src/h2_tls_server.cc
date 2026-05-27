@@ -93,8 +93,8 @@ bool H2TlsServer::Init() {
 
 void H2TlsServer::SetOnStream(StreamCallback cb) { on_stream_ = cb; }
 
-void H2TlsServer::Run() {
-  event_base_dispatch(base_);
+int H2TlsServer::Run() {
+  return event_base_dispatch(base_);
 }
 
 // ---- libevent listener callbacks ----
@@ -117,7 +117,9 @@ void H2TlsServer::AcceptConnCb(evconnlistener* listener,
   if (set_rv != 0) {
     VLOG(1) << "H2TlsServer: setsockopt(TCP_NODELAY) failed";
 
-    evutil_closesocket(fd);
+    if (evutil_closesocket(fd) != 0) {
+      VLOG(2) << "evutil_closesocket failed";
+    }
 
     return;
   }
@@ -132,7 +134,10 @@ void H2TlsServer::AcceptConnCb(evconnlistener* listener,
     VLOG(1) << "H2TlsServer: bufferevent_openssl_socket_new() failed";
 
     SSL_free(ssl);
-    evutil_closesocket(fd);
+
+    if (evutil_closesocket(fd) != 0) {
+      VLOG(2) << "evutil_closesocket failed";
+    }
 
     return;
   }
@@ -143,6 +148,19 @@ void H2TlsServer::AcceptConnCb(evconnlistener* listener,
   sess->server = server;
   sess->bev = bev;
   sess->h2session = CreateH2Session(sess);
+  if (!sess->h2session) {
+    VLOG(1) << "H2TlsServer: CreateH2Session() failed";
+
+    bufferevent_free(bev);
+
+    if (evutil_closesocket(fd) != 0) {
+      VLOG(2) << "evutil_closesocket failed";
+    }
+
+    delete sess;
+
+    return;
+  }
 
   nghttp2_settings_entry iv[] = {
       {NGHTTP2_SETTINGS_MAX_CONCURRENT_STREAMS, 100},
@@ -208,12 +226,18 @@ void H2TlsServer::AcceptConnCb(evconnlistener* listener,
 }
 
 void H2TlsServer::AcceptErrorCb(evconnlistener* listener,
-                                void* /*ctx*/) {
+                                void* ctx) {
+  (void)ctx;
+
   event_base* base = evconnlistener_get_base(listener);
   int err = EVUTIL_SOCKET_ERROR();
-  VLOG(1) << "H2TlsServer: listener error " << err << " ("
-          << evutil_socket_error_to_string(err) << ")";
-  event_base_loopexit(base, nullptr);
+  VLOG(1) << "H2TlsServer: Got an error " << err << " ("
+          << evutil_socket_error_to_string(err)
+          << ") on the listener. Shutting down.";
+
+  if (event_base_loopexit(base, nullptr) != 0) {
+    VLOG(2) << "event_base_loopexit failed";
+  }
 }
 
 // ---- libevent bufferevent callbacks ----
@@ -385,6 +409,15 @@ int H2TlsServer::OnFrameRecvCallback(nghttp2_session* session,
   }
 
   web_stream = new NGHTTP2WebStream(session, stream_id, true);
+
+  if (!web_stream->Init()) {
+    VLOG(1) << "H2TlsServer: NGHTTP2WebStream::Init() failed";
+
+    delete web_stream;
+
+    return -1;
+  }
+
   sess->incoming_streams[stream_id].web_stream = web_stream;
 
   nghttp2_data_provider2 data_prd;

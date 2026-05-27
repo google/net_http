@@ -59,7 +59,17 @@ bool PlainClient::Init() {
   handshake_ = std::make_unique<ClientHandshake>(
       bev,
       [this](bufferevent* bev) {
-        stream_ = std::make_unique<BufferEventWebStream>(bev, false);
+        auto s = std::make_unique<BufferEventWebStream>(bev, false);
+
+        if (!s->Init()) {
+          VLOG(1) << "BufferEventWebStream::Init() failed";
+
+          handshake_.reset();
+
+          return;
+        }
+
+        stream_ = std::move(s);
         stream_->SetCleanupCallback([this](BufferEventWebStream* s) {
           stream_.reset();
         });
@@ -85,12 +95,13 @@ void PlainClient::SetOnOpen(OpenCallback cb) {
   on_open_ = cb;
 }
 
-void PlainClient::Run() {
-  event_base_dispatch(base_);
+int PlainClient::Run() {
+  return event_base_dispatch(base_);
 }
 
-void PlainClient::Stop() {
+int PlainClient::Stop() {
   if (base_) {
-    event_base_loopexit(base_, nullptr);
+    return event_base_loopexit(base_, nullptr);
   }
+  return -1;
 }

@@ -31,6 +31,8 @@ class BufferEventWebStream : public WebStream {
                        bool is_server);
   ~BufferEventWebStream() override;
 
+  bool Init();
+
   using CleanupCallback = std::function<void(BufferEventWebStream*)>;
   void SetCleanupCallback(CleanupCallback cb);
 

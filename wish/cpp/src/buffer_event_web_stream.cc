@@ -18,7 +18,9 @@ BufferEventWebStream::BufferEventWebStream(bufferevent* bev,
     : bev_(bev),
       is_server_(is_server),
       ctx_(nullptr),
-      state_(OPEN) {
+      state_(OPEN) {}
+
+bool BufferEventWebStream::Init() {
   wslay_event_callbacks callbacks = {
       WslayRecvCallback,
       WslaySendCallback,
@@ -28,15 +30,17 @@ BufferEventWebStream::BufferEventWebStream(bufferevent* bev,
       nullptr,                        // on_frame_recv_end_callback
       WslayOnMsgRecvCallback};
 
+  int rv;
   if (is_server_) {
-    wslay_event_context_server_init(&ctx_,
-                                    &callbacks,
-                                    this);
+    rv = wslay_event_context_server_init(&ctx_,
+                                         &callbacks,
+                                         this);
   } else {
-    wslay_event_context_client_init(&ctx_,
-                                    &callbacks,
-                                    this);
+    rv = wslay_event_context_client_init(&ctx_,
+                                         &callbacks,
+                                         this);
   }
+  return rv == 0;
 }
 
 BufferEventWebStream::~BufferEventWebStream() {
@@ -134,7 +138,10 @@ void BufferEventWebStream::ReadCallback(bufferevent* bev, void* ctx) {
           size_t extra_len = evbuffer_get_length(input);
           if (extra_len > 0) {
             VLOG(2) << "Warning: received " << extra_len << " bytes of extra data after stream close.";
-            evbuffer_drain(input, extra_len);
+
+            if (evbuffer_drain(input, extra_len) != 0) {
+              VLOG(2) << "evbuffer_drain failed";
+            }
           }
 
           // Keep the read callback as ReadCallback; receive direction is done.
@@ -184,7 +191,10 @@ void BufferEventWebStream::ReadCallback(bufferevent* bev, void* ctx) {
         size_t len = evbuffer_get_length(input);
         if (len > 0) {
           VLOG(2) << "Warning: received " << len << " bytes of extra data after stream close.";
-          evbuffer_drain(input, len);
+
+          if (evbuffer_drain(input, len) != 0) {
+            VLOG(2) << "evbuffer_drain failed";
+          }
         }
         return;
       }
@@ -376,7 +386,16 @@ ssize_t BufferEventWebStream::ReadChunkedBytes(uint8_t* buf, size_t len) {
         // Read the entire "<hex>\r\n" line into a temporary buffer.
         size_t line_len = static_cast<size_t>(pos.pos) + 2;  // include \r\n
         std::vector<char> line(line_len + 1, '\0');
-        evbuffer_remove(input, line.data(), line_len);
+
+        int remove_rv = evbuffer_remove(input, line.data(), line_len);
+        if (remove_rv < 0 || static_cast<size_t>(remove_rv) != line_len) {
+          VLOG(3) << "ReadChunkedBytes: evbuffer_remove() failed";
+
+          wslay_event_set_error(ctx_, WSLAY_ERR_CALLBACK_FAILURE);
+
+          return -1;
+        }
+
         // Null-terminate at the \r so strtoul sees only hex digits.
         line[pos.pos] = '\0';
 
@@ -436,7 +455,9 @@ ssize_t BufferEventWebStream::ReadChunkedBytes(uint8_t* buf, size_t len) {
           return -1;
         }
 
-        evbuffer_drain(input, 2);  // Discard "\r\n".
+        if (evbuffer_drain(input, 2) != 0) {
+          VLOG(2) << "evbuffer_drain failed";
+        }
         chunk_state_ = ChunkState::HEADER;
 
         if (terminal_chunk_seen_) {

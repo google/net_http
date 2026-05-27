@@ -1,6 +1,7 @@
 #ifndef WISH_CPP_SRC_WEB_STREAM_H_
 #define WISH_CPP_SRC_WEB_STREAM_H_
 
+#include <cstdint>
 #include <functional>
 #include <string>
 

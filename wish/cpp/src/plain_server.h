@@ -24,7 +24,7 @@ class PlainServer {
 
   bool Init();
   void SetOnStream(StreamCallback cb);
-  void Run();
+  int Run();
 
  private:
   static void AcceptConnCb(evconnlistener* listener,

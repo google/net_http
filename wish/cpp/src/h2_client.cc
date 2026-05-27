@@ -103,14 +103,15 @@ bool H2Client::Init() {
 
 void H2Client::SetOnOpen(OpenCallback cb) { on_open_ = cb; }
 
-void H2Client::Run() {
-  event_base_dispatch(base_);
+int H2Client::Run() {
+  return event_base_dispatch(base_);
 }
 
-void H2Client::Stop() {
+int H2Client::Stop() {
   if (base_) {
-    event_base_loopexit(base_, nullptr);
+    return event_base_loopexit(base_, nullptr);
   }
+  return -1;
 }
 
 // ---- libevent bufferevent callbacks ----
@@ -210,7 +211,9 @@ void H2Client::EventCallback(bufferevent* bev,
       sess->h2session = nullptr;
     }
 
-    sess->client->Stop();
+    if (sess->client->Stop() != 0) {
+      VLOG(2) << "H2Client::Stop failed";
+    }
 
     bufferevent_free(bev);
 
@@ -238,7 +241,9 @@ void H2Client::HandleSessionError(Session* sess) {
     sess->bev = nullptr;
   }
 
-  Stop();
+  if (Stop() != 0) {
+    VLOG(2) << "H2Client::Stop failed";
+  }
 
   if (session_ == sess) {
     session_ = nullptr;
@@ -404,7 +409,16 @@ nghttp2_ssize H2Client::DataSourceReadCallback(nghttp2_session* session,
 
 void H2Client::InitH2Session(Session* sess) {
   nghttp2_session_callbacks* cbs;
-  nghttp2_session_callbacks_new(&cbs);
+
+  int cb_new_rv = nghttp2_session_callbacks_new(&cbs);
+  if (cb_new_rv != 0) {
+    VLOG(1) << "nghttp2_session_callbacks_new() failed: " << nghttp2_strerror(cb_new_rv);
+
+    HandleSessionError(sess);
+
+    return;
+  }
+
   nghttp2_session_callbacks_set_send_callback2(cbs,
                                                SendCallback);
   nghttp2_session_callbacks_set_on_header_callback(cbs,
@@ -416,21 +430,42 @@ void H2Client::InitH2Session(Session* sess) {
   nghttp2_session_callbacks_set_on_stream_close_callback(cbs,
                                                          OnStreamCloseCallback);
 
-  nghttp2_session_client_new(&sess->h2session,
-                             cbs,
-                             sess);
+  int session_new_rv = nghttp2_session_client_new(&sess->h2session,
+                                                  cbs,
+                                                  sess);
   nghttp2_session_callbacks_del(cbs);
+  if (session_new_rv != 0) {
+    VLOG(1) << "nghttp2_session_client_new() failed: " << nghttp2_strerror(session_new_rv);
+
+    HandleSessionError(sess);
+
+    return;
+  }
 
   nghttp2_settings_entry iv[] = {
       {NGHTTP2_SETTINGS_INITIAL_WINDOW_SIZE, 1 << 20}};
-  nghttp2_submit_settings(sess->h2session,
-                          NGHTTP2_FLAG_NONE,
-                          iv,
-                          1);
-  nghttp2_session_set_local_window_size(sess->h2session,
-                                        NGHTTP2_FLAG_NONE,
-                                        0,
-                                        1 << 20);
+  int submit_settings_rv = nghttp2_submit_settings(sess->h2session,
+                                                   NGHTTP2_FLAG_NONE,
+                                                   iv,
+                                                   1);
+  if (submit_settings_rv != 0) {
+    VLOG(1) << "nghttp2_submit_settings failed: " << nghttp2_strerror(submit_settings_rv);
+
+    HandleSessionError(sess);
+
+    return;
+  }
+  int set_local_window_size_rv = nghttp2_session_set_local_window_size(sess->h2session,
+                                                                       NGHTTP2_FLAG_NONE,
+                                                                       0,
+                                                                       1 << 20);
+  if (set_local_window_size_rv != 0) {
+    VLOG(1) << "nghttp2_session_set_local_window_size failed: " << nghttp2_strerror(set_local_window_size_rv);
+
+    HandleSessionError(sess);
+
+    return;
+  }
 
   // Construct the :authority pseudo-header value (variable-length host:port).
   std::string authority = host_ + ":" + std::to_string(port_);
@@ -476,11 +511,26 @@ void H2Client::InitH2Session(Session* sess) {
                                           stream_id,
                                           false);
 
+  if (!sess->web_stream->Init()) {
+    VLOG(1) << "H2Client: NGHTTP2WebStream::Init() failed";
+
+    HandleSessionError(sess);
+
+    return;
+  }
+
   // Register the stream object as stream user-data so DataSourceReadCallback
   // can find it.  This must happen before nghttp2_session_send().
-  nghttp2_session_set_stream_user_data(sess->h2session,
-                                       stream_id,
-                                       sess->web_stream);
+  int set_stream_user_data_rv = nghttp2_session_set_stream_user_data(sess->h2session,
+                                                                     stream_id,
+                                                                     sess->web_stream);
+  if (set_stream_user_data_rv != 0) {
+    VLOG(1) << "nghttp2_session_set_stream_user_data failed: " << nghttp2_strerror(set_stream_user_data_rv);
+
+    HandleSessionError(sess);
+
+    return;
+  }
 
   int send_rv = nghttp2_session_send(sess->h2session);
   if (send_rv < 0) {
