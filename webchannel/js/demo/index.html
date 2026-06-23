@@ -41,6 +41,11 @@
     button:hover {
       background-color: #0056b3;
     }
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      background-color: #6c757d !important;
+    }
     textarea {
       width: 100%;
       height: 400px;
@@ -55,7 +60,7 @@
 </head>
 <body>
   <div class="container">
-    <h1>WebChannel TypeScript Web Demo</h1>
+    <h1>WebChannel TypeScript Web Demo <span id="status-badge" style="font-size: 14px; font-weight: bold; padding: 4px 8px; border-radius: 12px; margin-left: 15px; vertical-align: middle; background-color: #6c757d; color: white;">Disconnected</span></h1>
     <p>This demo uses the compiled Closure WebChannel JS bundle to talk to the local echo server backend.</p>
     
     <div class="input-group" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
