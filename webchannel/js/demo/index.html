@@ -58,9 +58,32 @@
     <h1>WebChannel TypeScript Web Demo</h1>
     <p>This demo uses the compiled Closure WebChannel JS bundle to talk to the local echo server backend.</p>
     
+    <div class="input-group" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+      <label for="endpoint" style="font-weight: bold;">Endpoint:</label>
+      <select id="endpoint" style="padding: 6px; font-size: 15px; border-radius: 4px; border: 1px solid #ccc;">
+        <option value="https://webchannel.sandbox.google.com/staging/channel/generator" selected>Generator Server (Streaming)</option>
+        <option value="https://webchannel.sandbox.google.com/staging/channel/echo">Echo Server (Latency Test)</option>
+        <option value="custom">Custom Endpoint...</option>
+      </select>
+      <input type="text" id="custom-endpoint" value="" placeholder="Enter custom URL..." style="display: none; width: 45%; padding: 6px; font-size: 15px; border-radius: 4px; border: 1px solid #ccc;" />
+    </div>
+
+    <div class="input-group" style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap; margin-bottom: 20px;">
+      <span style="font-weight: bold;">Options:</span>
+      <label><input type="checkbox" id="sendRawJson" checked> sendRawJson</label>
+      <label><input type="checkbox" id="detectBufferingProxy"> detectBufferingProxy</label>
+      <label><input type="checkbox" id="forceLongPolling"> forceLongPolling</label>
+      <label><input type="checkbox" id="fastHandshake"> fastHandshake</label>
+    </div>
+
+    <div class="input-group" style="display: flex; gap: 10px;">
+      <button id="connect" style="background-color: #28a745;">Connect</button>
+      <button id="disconnect" style="background-color: #dc3545;" disabled>Disconnect</button>
+    </div>
+
     <div class="input-group">
-      <input type="text" id="message" value="Hello WebChannel!" placeholder="Enter echo message..." />
-      <button id="send">Send Streaming Echo</button>
+      <input type="text" id="message" value="Hello WebChannel!" placeholder="Enter message to send..." />
+      <button id="send" disabled>Send Message</button>
     </div>
     
     <h3>Connection Logs</h3>

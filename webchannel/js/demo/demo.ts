@@ -1,6 +1,15 @@
 import { createWebChannelTransport, WebChannel } from '../dist/webchannel_blob_es2022';
 
 const logElement = document.getElementById('log') as HTMLTextAreaElement;
+const endpointSelect = document.getElementById('endpoint') as HTMLSelectElement;
+const customEndpointInput = document.getElementById('custom-endpoint') as HTMLInputElement;
+const sendRawJsonCheckbox = document.getElementById('sendRawJson') as HTMLInputElement;
+const detectBufferingProxyCheckbox = document.getElementById('detectBufferingProxy') as HTMLInputElement;
+const forceLongPollingCheckbox = document.getElementById('forceLongPolling') as HTMLInputElement;
+const fastHandshakeCheckbox = document.getElementById('fastHandshake') as HTMLInputElement;
+
+const connectButton = document.getElementById('connect') as HTMLButtonElement;
+const disconnectButton = document.getElementById('disconnect') as HTMLButtonElement;
 const sendButton = document.getElementById('send') as HTMLButtonElement;
 const messageInput = document.getElementById('message') as HTMLInputElement;
 
@@ -15,66 +24,131 @@ function log(msg: string) {
 log('Initializing WebChannel demo...');
 
 const channelFactory = createWebChannelTransport();
-const url = 'https://webchannel.sandbox.google.com/staging/channel/generator';
-
 let activeChannel: any = null;
+let lastSendTime: number = 0;
+let isPendingEcho: boolean = false;
 
-sendButton?.addEventListener('click', () => {
+function updateUIState(connected: boolean) {
+  if (connectButton) connectButton.disabled = connected;
+  if (disconnectButton) disconnectButton.disabled = !connected;
+  if (sendButton) sendButton.disabled = !connected;
+  if (endpointSelect) endpointSelect.disabled = connected;
+  if (customEndpointInput) customEndpointInput.disabled = connected;
+  
+  // Disable options toggles while connected
+  if (sendRawJsonCheckbox) sendRawJsonCheckbox.disabled = connected;
+  if (detectBufferingProxyCheckbox) detectBufferingProxyCheckbox.disabled = connected;
+  if (forceLongPollingCheckbox) forceLongPollingCheckbox.disabled = connected;
+  if (fastHandshakeCheckbox) fastHandshakeCheckbox.disabled = connected;
+}
+
+connectButton?.addEventListener('click', () => {
+  try {
+    const url = endpointSelect?.value === 'custom'
+      ? (customEndpointInput?.value || '')
+      : (endpointSelect?.value || 'https://webchannel.sandbox.google.com/staging/channel/generator');
+    
+    const options: any = {
+      supportsCrossDomainXhr: true,
+      httpSessionIdParam: 'gsessionid',
+      sendRawJson: sendRawJsonCheckbox?.checked,
+      detectBufferingProxy: detectBufferingProxyCheckbox?.checked,
+      forceLongPolling: forceLongPollingCheckbox?.checked,
+      fastHandshake: fastHandshakeCheckbox?.checked
+    };
+    
+    log(`>>> Opening WebChannel connection to: ${url}`);
+    log(`>>> With options: ${JSON.stringify(options)}`);
+    
+    const channel = channelFactory.createWebChannel(url, options);
+    activeChannel = channel;
+    
+    channel.listen(WebChannel.EventType.OPEN, () => {
+      log('>>> WebChannel connection established!');
+      updateUIState(true);
+    });
+    
+    channel.listen(WebChannel.EventType.MESSAGE, (event: any) => {
+      const inbound = event.data;
+      log(`<<< Received message event. Raw data: ${JSON.stringify(inbound)}`);
+      
+      if (isPendingEcho) {
+        const duration = (performance.now() - lastSendTime).toFixed(2);
+        log(`<<< [E2E Latency] Round-trip echo completed in ${duration} ms.`);
+        isPendingEcho = false;
+      }
+
+      const result = Array.isArray(inbound) ? inbound[0] : inbound;
+      if (result) {
+        if (result.error) {
+          log(`<<< ERROR from server: ${result.error.message}`);
+        } else if (result.message) {
+          log(`<<< Echo response message: "${result.message}"`);
+        }
+      }
+    });
+    
+    channel.listen(WebChannel.EventType.ERROR, (error: any) => {
+      log(`<<< WebChannel error: ${JSON.stringify(error)}`);
+      if (activeChannel === channel) {
+        activeChannel = null;
+        updateUIState(false);
+      }
+    });
+    
+    channel.listen(WebChannel.EventType.CLOSE, () => {
+      log('<<< WebChannel closed!');
+      if (activeChannel === channel) {
+        activeChannel = null;
+        updateUIState(false);
+      }
+    });
+    
+    channel.open();
+  } catch (err: any) {
+    log(`!!! Exception caught during connect: ${err.message}\n${err.stack}`);
+  }
+});
+
+disconnectButton?.addEventListener('click', () => {
   if (activeChannel) {
-    log('>>> Closing previous active WebChannel connection...');
+    log('>>> Closing active WebChannel connection...');
     activeChannel.close();
   }
+});
+
+sendButton?.addEventListener('click', () => {
+  if (!activeChannel) return;
+  
   const text = messageInput?.value || 'Hello from WebChannel TS Demo!';
-  log(`>>> Sending request with message: "${text}"`);
+  const endpoint = endpointSelect?.value === 'custom'
+    ? (customEndpointInput?.value || '')
+    : (endpointSelect?.value || '');
   
-  const options = {
-    supportsCrossDomainXhr: true,
-    httpSessionIdParam: 'gsessionid'
-  };
-  
-  const channel = channelFactory.createWebChannel(url, options);
-  activeChannel = channel;
-  
-  channel.listen(WebChannel.EventType.OPEN, () => {
-    log('>>> WebChannel opened!');
-    
-    const payload = {
+  let payload: any;
+  if (endpoint.includes('/staging/channel/generator')) {
+    payload = {
       message: text,
       num_messages: 5,
       message_interval: 1000
     };
-    
-    channel.send(payload);
-    log(`>>> Sent request payload: ${JSON.stringify(payload)}`);
-  });
+    log(`>>> Sending request payload to generator: ${JSON.stringify(payload)}`);
+  } else {
+    payload = {
+      message: text
+    };
+    log(`>>> Sending request payload to echo: ${JSON.stringify(payload)}`);
+  }
   
-  channel.listen(WebChannel.EventType.MESSAGE, (event: any) => {
-    const inbound = event.data;
-    log(`<<< Received message event. Raw data: ${JSON.stringify(inbound)}`);
-    
-    const result = Array.isArray(inbound) ? inbound[0] : inbound;
-    if (result) {
-      if (result.error) {
-        log(`<<< ERROR from server: ${result.error.message}`);
-      } else if (result.message) {
-        log(`<<< Echo response message: "${result.message}"`);
-      }
-    }
-  });
-  
-  channel.listen(WebChannel.EventType.ERROR, (error: any) => {
-    log(`<<< WebChannel error: ${JSON.stringify(error)}`);
-    if (activeChannel === channel) {
-      activeChannel = null;
-    }
-  });
-  
-  channel.listen(WebChannel.EventType.CLOSE, () => {
-    log('<<< WebChannel closed!');
-    if (activeChannel === channel) {
-      activeChannel = null;
-    }
-  });
-  
-  channel.open();
+  lastSendTime = performance.now();
+  isPendingEcho = true;
+  activeChannel.send(payload);
 });
+
+endpointSelect?.addEventListener('change', () => {
+  if (customEndpointInput) {
+    customEndpointInput.style.display = endpointSelect.value === 'custom' ? 'inline-block' : 'none';
+  }
+});
+
+log('Initialization completed. Ready.');
