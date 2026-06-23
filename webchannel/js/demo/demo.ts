@@ -13,6 +13,24 @@ const disconnectButton = document.getElementById('disconnect') as HTMLButtonElem
 const sendButton = document.getElementById('send') as HTMLButtonElement;
 const messageInput = document.getElementById('message') as HTMLInputElement;
 const clearButton = document.getElementById('clear') as HTMLButtonElement;
+const statusBadge = document.getElementById('status-badge') as HTMLSpanElement;
+
+function updateStatus(status: 'disconnected' | 'connecting' | 'connected') {
+  if (!statusBadge) return;
+  if (status === 'disconnected') {
+    statusBadge.textContent = 'Disconnected';
+    statusBadge.style.backgroundColor = '#6c757d'; // Grey
+    statusBadge.style.color = 'white';
+  } else if (status === 'connecting') {
+    statusBadge.textContent = 'Connecting...';
+    statusBadge.style.backgroundColor = '#ffc107'; // Yellow
+    statusBadge.style.color = '#333';
+  } else if (status === 'connected') {
+    statusBadge.textContent = 'Connected';
+    statusBadge.style.backgroundColor = '#28a745'; // Green
+    statusBadge.style.color = 'white';
+  }
+}
 
 function log(msg: string) {
   console.log(msg);
@@ -67,6 +85,7 @@ connectButton?.addEventListener('click', () => {
     channel.listen(WebChannel.EventType.OPEN, () => {
       log('>>> WebChannel connection established!');
       updateUIState(true);
+      updateStatus('connected');
     });
     
     channel.listen(WebChannel.EventType.MESSAGE, (event: any) => {
@@ -94,6 +113,7 @@ connectButton?.addEventListener('click', () => {
       if (activeChannel === channel) {
         activeChannel = null;
         updateUIState(false);
+        updateStatus('disconnected');
       }
     });
     
@@ -102,12 +122,15 @@ connectButton?.addEventListener('click', () => {
       if (activeChannel === channel) {
         activeChannel = null;
         updateUIState(false);
+        updateStatus('disconnected');
       }
     });
     
+    updateStatus('connecting');
     channel.open();
   } catch (err: any) {
     log(`!!! Exception caught during connect: ${err.message}\n${err.stack}`);
+    updateStatus('disconnected');
   }
 });
 
