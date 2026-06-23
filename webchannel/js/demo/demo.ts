@@ -12,6 +12,7 @@ const connectButton = document.getElementById('connect') as HTMLButtonElement;
 const disconnectButton = document.getElementById('disconnect') as HTMLButtonElement;
 const sendButton = document.getElementById('send') as HTMLButtonElement;
 const messageInput = document.getElementById('message') as HTMLInputElement;
+const clearButton = document.getElementById('clear') as HTMLButtonElement;
 
 function log(msg: string) {
   console.log(msg);
@@ -148,6 +149,12 @@ sendButton?.addEventListener('click', () => {
 endpointSelect?.addEventListener('change', () => {
   if (customEndpointInput) {
     customEndpointInput.style.display = endpointSelect.value === 'custom' ? 'inline-block' : 'none';
+  }
+});
+
+clearButton?.addEventListener('click', () => {
+  if (logElement) {
+    logElement.value = '';
   }
 });
 
