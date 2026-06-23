@@ -60,7 +60,7 @@
 </head>
 <body>
   <div class="container">
-    <h1>WebChannel TypeScript Web Demo <span id="status-badge" style="font-size: 14px; font-weight: bold; padding: 4px 8px; border-radius: 12px; margin-left: 15px; vertical-align: middle; background-color: #6c757d; color: white;">Disconnected</span></h1>
+    <h1>WebChannel TypeScript Web Demo</h1>
     <p>This demo uses the compiled Closure WebChannel JS bundle to talk to the local echo server backend.</p>
     
     <div class="input-group" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
@@ -81,9 +81,10 @@
       <label><input type="checkbox" id="fastHandshake"> fastHandshake</label>
     </div>
 
-    <div class="input-group" style="display: flex; gap: 10px;">
+    <div class="input-group" style="display: flex; gap: 10px; align-items: center;">
       <button id="connect" style="background-color: #28a745;">Connect</button>
       <button id="disconnect" style="background-color: #dc3545;" disabled>Disconnect</button>
+      <span id="status-badge" style="font-size: 14px; font-weight: bold; padding: 4px 8px; border-radius: 12px; margin-left: 10px; background-color: #6c757d; color: white;">Disconnected</span>
     </div>
 
     <div class="input-group">
