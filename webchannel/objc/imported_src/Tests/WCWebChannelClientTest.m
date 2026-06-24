@@ -1,15 +1,15 @@
-#import "../Support/WCDefaultJSONDecoder.h"
-#import "../Support/WCFakeHTTPRequest.h"
-#import "../Support/WCHTTPRequest.h"
-#import "../Support/WCJSONDecoder.h"
-#import "../WCChannelRequest.h"
-#import "../WCForwardChannelRequestPool.h"
-#import "../WCOptions.h"
-#import "../WCQueuedMap.h"
-#import "../WCSupport.h"
-#import "../WCTimer.h"
-#import "../WCWebChannelClient.h"
-#import "../WCWebChannelClientInternal.h"
+#import "WCDefaultJSONDecoder.h"
+#import "WCFakeHTTPRequest.h"
+#import "WCHTTPRequest.h"
+#import "WCJSONDecoder.h"
+#import "WCChannelRequest.h"
+#import "WCForwardChannelRequestPool.h"
+#import "WCOptions.h"
+#import "WCQueuedMap.h"
+#import "WCSupport.h"
+#import "WCTimer.h"
+#import "WCWebChannelClient.h"
+#import "WCWebChannelClientInternal.h"
 
 #import <XCTest/XCTest.h>
 
@@ -49,10 +49,13 @@ static const double kRunLoopDelay = 0.1;
   OCMStub([_mockSupport setTimeout:0 block:[OCMArg any]])
       .ignoringNonObjectArgs()
       .andReturn(dummyTimer)
-      .andDo(^id<WCTimer>(id<WCSupport> localSelf, NSTimeInterval timeout, void (^block)()) {
+      .andDo(^(NSInvocation *invocation) {
+        NSTimeInterval timeout;
+        [invocation getArgument:&timeout atIndex:2];
+        __unsafe_unretained void (^block)(void);
+        [invocation getArgument:&block atIndex:3];
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(timeout * NSEC_PER_SEC)),
                        dispatch_get_main_queue(), block);
-        return dummyTimer;
       });
   OCMStub([_mockSupport clearTimeout:[OCMArg any]]);
 

@@ -14,9 +14,9 @@
 
 #import <XCTest/XCTest.h>
 
-#import "../WCDefaultSupport.h"
-#import "../WCSupport.h"
-#import "../WCTimer.h"
+#import "WCDefaultSupport.h"
+#import "WCSupport.h"
+#import "WCTimer.h"
 #import <GTMSessionFetcher/GTMSessionFetcherService.h>
 
 @interface WCDefaultSupportTest : XCTestCase

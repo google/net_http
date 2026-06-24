@@ -1,7 +1,7 @@
 #import "WCWireV8.h"
 
-#import "Support/WCJSONDecoder.h"
-#import "Support/WCURLEncoder.h"
+#import "WCJSONDecoder.h"
+#import "WCURLEncoder.h"
 #import "WCQueuedMap.h"
 #import "WCSupport.h"
 

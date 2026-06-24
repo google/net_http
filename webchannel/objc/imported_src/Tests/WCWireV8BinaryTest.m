@@ -1,7 +1,7 @@
 #import <XCTest/XCTest.h>
-#import "../WCQueuedMap.h"
-#import "../WCSupport.h"
-#import "../WCWireV8Binary.h"
+#import "WCQueuedMap.h"
+#import "WCSupport.h"
+#import "WCWireV8Binary.h"
 #import <OCMock/OCMock.h>
 
 @interface WCWireV8BinaryTest : XCTestCase

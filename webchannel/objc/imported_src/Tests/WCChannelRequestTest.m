@@ -1,11 +1,11 @@
-#import "../Support/WCHTTPRequest.h"
-#import "../WCChannelRequest.h"
+#import "WCHTTPRequest.h"
+#import "WCChannelRequest.h"
 
 #import <XCTest/XCTest.h>
 
-#import "../WCSupport.h"
-#import "../WCTimer.h"
-#import "../WCWebChannelClientInternal.h"
+#import "WCSupport.h"
+#import "WCTimer.h"
+#import "WCWebChannelClientInternal.h"
 #import <GTMSessionFetcher/GTMSessionFetcherService.h>
 #import <OCMock/OCMock.h>
 
@@ -30,15 +30,17 @@ static NSString *const kFakeGETResponse = @"14\n[[1,[\"noop\"]]]14\n[[2,[\"noop\
   _mockHttpRequest = OCMProtocolMock(@protocol(WCHTTPRequest));
   OCMStub([_mockSupport HTTPRequest:[OCMArg any]]).andReturn(_mockHttpRequest);
   OCMStub(_mockSupport.dispatchQueue).andReturn(dispatch_get_main_queue());
-
   id<WCTimer> dummyTimer = OCMProtocolMock(@protocol(WCTimer));
   OCMStub([_mockSupport setTimeout:0 block:[OCMArg any]])
       .ignoringNonObjectArgs()
       .andReturn(dummyTimer)
-      .andDo(^id<WCTimer>(id<WCSupport> localSelf, NSTimeInterval timeout, void (^block)()) {
+      .andDo(^(NSInvocation *invocation) {
+        NSTimeInterval timeout;
+        [invocation getArgument:&timeout atIndex:2];
+        __unsafe_unretained void (^block)(void);
+        [invocation getArgument:&block atIndex:3];
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(timeout * NSEC_PER_SEC)),
                        dispatch_get_main_queue(), block);
-        return dummyTimer;
       });
   OCMStub([_mockSupport clearTimeout:[OCMArg any]]);
 

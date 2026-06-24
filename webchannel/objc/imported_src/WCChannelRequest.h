@@ -1,6 +1,6 @@
 #import <Foundation/Foundation.h>
 
-#import "Support/WCHTTPRequest.h"
+#import "WCHTTPRequest.h"
 
 @protocol WCWebChannelInternalHTTPHandler;
 @protocol WCHTTPRequest;

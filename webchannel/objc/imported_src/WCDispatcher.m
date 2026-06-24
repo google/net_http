@@ -1,6 +1,6 @@
 #import "WCDispatcher.h"
 
-#import "Support/WCLogger.h"
+#import "WCLogger.h"
 
 #include <objc/runtime.h>
 

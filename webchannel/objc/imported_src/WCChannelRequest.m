@@ -1,7 +1,7 @@
 #import "WCChannelRequest.h"
 
-#import "Support/WCHTTPRequest.h"
-#import "Support/WCLogger.h"
+#import "WCHTTPRequest.h"
+#import "WCLogger.h"
 #import "WCSupport.h"
 #import "WCTimer.h"
 #import "WCWebChannelClientInternal.h"
