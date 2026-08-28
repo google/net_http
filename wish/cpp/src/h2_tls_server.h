@@ -29,11 +29,11 @@
 #include "nghttp2_web_stream.h"
 #include "tls_context.h"
 
+constexpr size_t kDefaultMaxH2TlsConnections = 10000;
+
 // H2TlsServer listens for TLS-encrypted HTTP/2 connections.
 // ALPN "h2" is advertised so standard HTTP/2 clients can connect.
 // mTLS is enforced (client certificates are required), matching TlsServer.
-constexpr size_t kDefaultMaxH2TlsConnections = 10000;
-
 class H2TlsServer {
  public:
   using StreamCallback = std::function<void(WebStream*)>;

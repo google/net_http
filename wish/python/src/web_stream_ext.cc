@@ -13,7 +13,9 @@
 
 #include "buffer_event_web_stream.h"
 #include "plain_client.h"
+#include "plain_server.h"
 #include "tls_client.h"
+#include "tls_server.h"
 #include "wish_opcodes.h"
 
 namespace nb = nanobind;
@@ -25,6 +27,10 @@ namespace nb = nanobind;
 struct WebStreamHandlerRef {
   std::mutex mu;
   WebStream* ptr = nullptr;
+
+  nb::object on_message_cb;
+  nb::object on_close_cb;
+  nb::object on_error_cb;
 
   int send_text(const std::string& msg) {
     std::lock_guard<std::mutex> lock(mu);
@@ -42,6 +48,15 @@ struct WebStreamHandlerRef {
       throw std::runtime_error("Connection is closed");
     }
     return ptr->SendBinary(msg);
+  }
+
+  int send_metadata(const std::string& msg) {
+    std::lock_guard<std::mutex> lock(mu);
+
+    if (!ptr) {
+      throw std::runtime_error("Connection is closed");
+    }
+    return ptr->SendMetadata(msg);
   }
 
   int close() {
@@ -291,6 +306,137 @@ static int plain_clear(PyObject* self) {
 }
 
 // ---------------------------------------------------------------------------
+// PlainServerPy & TlsServerPy
+// ---------------------------------------------------------------------------
+
+struct PlainServerPy {
+  std::unique_ptr<event_base, EventBaseDeleter> base;
+  PlainServer server;
+
+  nb::object on_stream_cb;
+
+  std::atomic<bool> running{false};
+  std::mutex stopped_mu;
+  std::condition_variable stopped_cv;
+  std::atomic<bool> finalized{false};
+
+  PlainServerPy(int port)
+      : base(event_base_new()),
+        server(base.get(), port) {
+    if (!base) {
+      throw std::runtime_error("Failed to create event_base");
+    }
+  }
+
+  void stop() {
+    if (base) {
+      event_base_loopbreak(base.get());
+    }
+  }
+};
+
+static void plain_server_do_cleanup(PlainServerPy* w) {
+  if (w->finalized.exchange(true, std::memory_order_acq_rel)) {
+    return;
+  }
+  w->stop();
+  {
+    PyThreadState* ts = PyEval_SaveThread();
+    std::unique_lock<std::mutex> lk(w->stopped_mu);
+    bool stopped = w->stopped_cv.wait_for(lk,
+                                          std::chrono::seconds(5),
+                                          [w] { return !w->running.load(std::memory_order_acquire); });
+    PyEval_RestoreThread(ts);
+    if (!stopped) {
+      PySys_WriteStderr("web_stream_ext: WARNING: server event loop did not stop within timeout\n");
+    }
+  }
+}
+
+static void plain_server_finalize(PyObject* self) {
+  PlainServerPy* w = nb::inst_ptr<PlainServerPy>(nb::handle(self));
+  plain_server_do_cleanup(w);
+}
+
+static int plain_server_traverse(PyObject* self, visitproc visit, void* arg) {
+  PlainServerPy* w = nb::inst_ptr<PlainServerPy>(nb::handle(self));
+  Py_VISIT(w->on_stream_cb.ptr());
+  return 0;
+}
+
+static int plain_server_clear(PyObject* self) {
+  PlainServerPy* w = nb::inst_ptr<PlainServerPy>(nb::handle(self));
+  plain_server_do_cleanup(w);
+  w->on_stream_cb = nb::object();
+  return 0;
+}
+
+struct TlsServerPy {
+  std::unique_ptr<event_base, EventBaseDeleter> base;
+  TlsServer server;
+
+  nb::object on_stream_cb;
+
+  std::atomic<bool> running{false};
+  std::mutex stopped_mu;
+  std::condition_variable stopped_cv;
+  std::atomic<bool> finalized{false};
+
+  TlsServerPy(const std::string& ca,
+              const std::string& cert,
+              const std::string& key,
+              int port)
+      : base(event_base_new()),
+        server(base.get(), port, ca, cert, key) {
+    if (!base) {
+      throw std::runtime_error("Failed to create event_base");
+    }
+  }
+
+  void stop() {
+    if (base) {
+      event_base_loopbreak(base.get());
+    }
+  }
+};
+
+static void tls_server_do_cleanup(TlsServerPy* w) {
+  if (w->finalized.exchange(true, std::memory_order_acq_rel)) {
+    return;
+  }
+  w->stop();
+  {
+    PyThreadState* ts = PyEval_SaveThread();
+    std::unique_lock<std::mutex> lk(w->stopped_mu);
+    bool stopped = w->stopped_cv.wait_for(lk,
+                                          std::chrono::seconds(5),
+                                          [w] { return !w->running.load(std::memory_order_acquire); });
+    PyEval_RestoreThread(ts);
+    if (!stopped) {
+      PySys_WriteStderr("web_stream_ext: WARNING: TLS server event loop did not stop within timeout\n");
+    }
+  }
+}
+
+static void tls_server_finalize(PyObject* self) {
+  TlsServerPy* w = nb::inst_ptr<TlsServerPy>(nb::handle(self));
+  tls_server_do_cleanup(w);
+}
+
+static int tls_server_traverse(PyObject* self, visitproc visit, void* arg) {
+  TlsServerPy* w = nb::inst_ptr<TlsServerPy>(nb::handle(self));
+  Py_VISIT(w->on_stream_cb.ptr());
+  return 0;
+}
+
+static int tls_server_clear(PyObject* self) {
+  TlsServerPy* w = nb::inst_ptr<TlsServerPy>(nb::handle(self));
+  tls_server_do_cleanup(w);
+  w->on_stream_cb = nb::object();
+  return 0;
+}
+
+// ---------------------------------------------------------------------------
 
 NB_MODULE(web_stream_ext, m) {
 #ifdef _WIN32
@@ -319,7 +465,265 @@ NB_MODULE(web_stream_ext, m) {
         }
         return self.ptr->SendBinary(s);
       })
+      .def("send_metadata", [](WebStreamHandlerRef& self, nb::object data) {
+        std::string s;
+        if (nb::isinstance<nb::bytes>(data)) {
+          nb::bytes b = nb::cast<nb::bytes>(data);
+          s = std::string(b.c_str(), b.size());
+        } else if (nb::isinstance<nb::str>(data)) {
+          nb::str str_obj = nb::cast<nb::str>(data);
+          s = str_obj.c_str();
+        } else {
+          throw nb::type_error("send_metadata() expects bytes or str");
+        }
+
+        std::lock_guard<std::mutex> lock(self.mu);
+        if (!self.ptr) {
+          throw std::runtime_error("Connection is closed");
+        }
+        return self.ptr->SendMetadata(s);
+      })
+      .def("set_on_message", [](WebStreamHandlerRef& self, nb::object cb) {
+        std::lock_guard<std::mutex> lock(self.mu);
+        self.on_message_cb = cb;
+      })
+      .def("set_on_close", [](WebStreamHandlerRef& self, nb::object cb) {
+        std::lock_guard<std::mutex> lock(self.mu);
+        self.on_close_cb = cb;
+      })
+      .def("set_on_error", [](WebStreamHandlerRef& self, nb::object cb) {
+        std::lock_guard<std::mutex> lock(self.mu);
+        self.on_error_cb = cb;
+      })
       .def("close", &WebStreamHandlerRef::close);
+
+  // ---- PlainServer ------------------------------------------------------
+  static PyType_Slot plain_server_slots[] = {
+      {Py_tp_traverse, (void*)plain_server_traverse},
+      {Py_tp_clear, (void*)plain_server_clear},
+      {Py_tp_finalize, (void*)plain_server_finalize},
+      {0, nullptr},
+  };
+
+  nb::class_<PlainServerPy>(m, "PlainServer", nb::type_slots(plain_server_slots))
+      .def(nb::init<int>())
+      .def("init", [](PlainServerPy& self) -> bool {
+        self.server.SetOnStream([&self](WebStream* stream) {
+          auto ref = std::make_shared<WebStreamHandlerRef>();
+          {
+            std::lock_guard<std::mutex> lock(ref->mu);
+            ref->ptr = stream;
+          }
+
+          stream->SetOnMessage([ref](uint8_t opcode, const std::string& msg) {
+            nb::object cb;
+            {
+              std::lock_guard<std::mutex> lock(ref->mu);
+              cb = ref->on_message_cb;
+            }
+            if (cb.ptr() && !cb.is_none()) {
+              nb::gil_scoped_acquire acquire;
+              try {
+                cb(opcode, nb::bytes(msg.data(), msg.size()));
+              } catch (nb::python_error& e) {
+                e.restore();
+                PyErr_WriteUnraisable(cb.ptr());
+              }
+            }
+          });
+
+          stream->SetOnClose([ref]() {
+            nb::object cb;
+            {
+              std::lock_guard<std::mutex> lock(ref->mu);
+              cb = ref->on_close_cb;
+              ref->ptr = nullptr;
+              ref->on_message_cb = nb::object();
+              ref->on_close_cb = nb::object();
+              ref->on_error_cb = nb::object();
+            }
+            if (cb.ptr() && !cb.is_none()) {
+              nb::gil_scoped_acquire acquire;
+              try {
+                cb();
+              } catch (nb::python_error& e) {
+                e.restore();
+                PyErr_WriteUnraisable(cb.ptr());
+              }
+            }
+          });
+
+          stream->SetOnError([ref]() {
+            nb::object cb;
+            {
+              std::lock_guard<std::mutex> lock(ref->mu);
+              cb = ref->on_error_cb;
+              ref->ptr = nullptr;
+              ref->on_message_cb = nb::object();
+              ref->on_close_cb = nb::object();
+              ref->on_error_cb = nb::object();
+            }
+            if (cb.ptr() && !cb.is_none()) {
+              nb::gil_scoped_acquire acquire;
+              try {
+                cb();
+              } catch (nb::python_error& e) {
+                e.restore();
+                PyErr_WriteUnraisable(cb.ptr());
+              }
+            }
+          });
+
+          if (self.on_stream_cb.ptr() && !self.on_stream_cb.is_none()) {
+            nb::gil_scoped_acquire acquire;
+            try {
+              self.on_stream_cb(ref);
+            } catch (nb::python_error& e) {
+              e.restore();
+              PyErr_WriteUnraisable(self.on_stream_cb.ptr());
+            }
+          }
+        });
+
+        if (!self.server.Init()) {
+          throw std::runtime_error("PlainServer.init() failed");
+        }
+        return true;
+      })
+      .def("set_on_stream", [](PlainServerPy& self, nb::object cb) {
+        self.on_stream_cb = cb;
+      })
+      .def("run", [](PlainServerPy& self) {
+        self.running.store(true, std::memory_order_release);
+        struct RunGuard {
+          PlainServerPy& s;
+          ~RunGuard() noexcept {
+            {
+              std::lock_guard<std::mutex> lk(s.stopped_mu);
+              s.running.store(false, std::memory_order_release);
+            }
+            s.stopped_cv.notify_all();
+          }
+        } guard{self};
+        self.server.Run();
+      }, nb::call_guard<nb::gil_scoped_release>())
+      .def("stop", [](PlainServerPy& self) {
+        self.stop();
+      });
+
+  // ---- TlsServer --------------------------------------------------------
+  static PyType_Slot tls_server_slots[] = {
+      {Py_tp_traverse, (void*)tls_server_traverse},
+      {Py_tp_clear, (void*)tls_server_clear},
+      {Py_tp_finalize, (void*)tls_server_finalize},
+      {0, nullptr},
+  };
+
+  nb::class_<TlsServerPy>(m, "TlsServer", nb::type_slots(tls_server_slots))
+      .def(nb::init<const std::string&, const std::string&, const std::string&, int>())
+      .def("init", [](TlsServerPy& self) -> bool {
+        self.server.SetOnStream([&self](WebStream* stream) {
+          auto ref = std::make_shared<WebStreamHandlerRef>();
+          {
+            std::lock_guard<std::mutex> lock(ref->mu);
+            ref->ptr = stream;
+          }
+
+          stream->SetOnClose([ref]() {
+            nb::object cb;
+            {
+              std::lock_guard<std::mutex> lock(ref->mu);
+              cb = ref->on_close_cb;
+              ref->ptr = nullptr;
+              ref->on_message_cb = nb::object();
+              ref->on_close_cb = nb::object();
+              ref->on_error_cb = nb::object();
+            }
+            if (cb.ptr() && !cb.is_none()) {
+              nb::gil_scoped_acquire acquire;
+              try {
+                cb();
+              } catch (nb::python_error& e) {
+                e.restore();
+                PyErr_WriteUnraisable(cb.ptr());
+              }
+            }
+          });
+
+          stream->SetOnError([ref]() {
+            nb::object cb;
+            {
+              std::lock_guard<std::mutex> lock(ref->mu);
+              cb = ref->on_error_cb;
+              ref->ptr = nullptr;
+              ref->on_message_cb = nb::object();
+              ref->on_close_cb = nb::object();
+              ref->on_error_cb = nb::object();
+            }
+            if (cb.ptr() && !cb.is_none()) {
+              nb::gil_scoped_acquire acquire;
+              try {
+                cb();
+              } catch (nb::python_error& e) {
+                e.restore();
+                PyErr_WriteUnraisable(cb.ptr());
+              }
+            }
+          });
+
+          stream->SetOnMessage([ref](uint8_t opcode, const std::string& msg) {
+            nb::object cb;
+            {
+              std::lock_guard<std::mutex> lock(ref->mu);
+              cb = ref->on_message_cb;
+            }
+            if (cb.ptr() && !cb.is_none()) {
+              nb::gil_scoped_acquire acquire;
+              try {
+                cb(opcode, nb::bytes(msg.data(), msg.size()));
+              } catch (nb::python_error& e) {
+                e.restore();
+                PyErr_WriteUnraisable(cb.ptr());
+              }
+            }
+          });
+
+          if (self.on_stream_cb.ptr() && !self.on_stream_cb.is_none()) {
+            nb::gil_scoped_acquire acquire;
+            try {
+              self.on_stream_cb(ref);
+            } catch (nb::python_error& e) {
+              e.restore();
+              PyErr_WriteUnraisable(self.on_stream_cb.ptr());
+            }
+          }
+        });
+
+        if (!self.server.Init()) {
+          throw std::runtime_error("TlsServer.init() failed");
+        }
+        return true;
+      })
+      .def("set_on_stream", [](TlsServerPy& self, nb::object cb) {
+        self.on_stream_cb = cb;
+      })
+      .def("run", [](TlsServerPy& self) {
+        self.running.store(true, std::memory_order_release);
+        struct RunGuard {
+          TlsServerPy& s;
+          ~RunGuard() noexcept {
+            {
+              std::lock_guard<std::mutex> lk(s.stopped_mu);
+              s.running.store(false, std::memory_order_release);
+            }
+            s.stopped_cv.notify_all();
+          }
+        } guard{self};
+        self.server.Run();
+      }, nb::call_guard<nb::gil_scoped_release>())
+      .def("stop", [](TlsServerPy& self) {
+        self.stop();
+      });
 
   // ---- TlsClient --------------------------------------------------------
   static PyType_Slot tls_slots[] = {
