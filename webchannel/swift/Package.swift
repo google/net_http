@@ -14,11 +14,19 @@ let package = Package(
             name: "WebChannel",
             targets: ["WebChannel"]
         ),
+        .executable(
+            name: "WebChannelDemo",
+            targets: ["WebChannelDemo"]
+        )
     ],
     targets: [
         .target(
             name: "WebChannel",
             dependencies: []
+        ),
+        .executableTarget(
+            name: "WebChannelDemo",
+            dependencies: ["WebChannel"]
         ),
         .testTarget(
             name: "WebChannelTests",

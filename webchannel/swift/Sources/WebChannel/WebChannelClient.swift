@@ -18,12 +18,14 @@ public final class WebChannelClient: WebChannelClientProtocol, WebChannelClientR
     private let internalClient: WebChannelClientInternal
 
     public init(url baseURL: URL, options: WebChannelOptions = WebChannelOptions(), delegate: WebChannelClientHandlerDelegate? = nil, support: SupportProtocol = DefaultSupport()) {
-        self.internalClient = WebChannelClientInternal(
+        let client = WebChannelClientInternal(
             url: baseURL.absoluteString,
             options: options,
             delegate: delegate,
             support: support
         )
+        self.internalClient = client
+        client.ownerClient = self
     }
 
     public func open() {
