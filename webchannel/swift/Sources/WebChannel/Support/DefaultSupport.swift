@@ -111,44 +111,32 @@ public final class DefaultHTTPRequest: NSObject, HTTPRequest, URLSessionDataDele
     // MARK: - URLSessionDataDelegate
 
     public func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive response: URLResponse, completionHandler: @escaping (URLSession.ResponseDisposition) -> Void) {
-        dispatchQueue.async { [weak self] in
-            guard let self = self else {
-                completionHandler(.cancel)
-                return
-            }
-            self.httpResponse = response as? HTTPURLResponse
-            self.requestReadyState = .loaded
-            self.requestReadyStateChangeHandler?.stateChanged(for: self, responseData: nil)
-            completionHandler(.allow)
-        }
+        self.httpResponse = response as? HTTPURLResponse
+        self.requestReadyState = .loaded
+        self.requestReadyStateChangeHandler?.stateChanged(for: self, responseData: nil)
+        completionHandler(.allow)
     }
 
     public func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive data: Data) {
-        dispatchQueue.async { [weak self] in
-            guard let self = self else { return }
-            self.requestReadyState = .interactive
-            self.requestReadyStateChangeHandler?.stateChanged(for: self, responseData: data)
-        }
+        self.requestReadyState = .interactive
+        self.requestReadyStateChangeHandler?.stateChanged(for: self, responseData: data)
     }
 
     public func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
-        dispatchQueue.async { [weak self] in
-            guard let self = self else { return }
-            if let error = error {
-                let nsError = error as NSError
-                if nsError.domain == NSURLErrorDomain && nsError.code == NSURLErrorTimedOut {
-                    self.requestErrorCode = .timeout
-                } else if nsError.domain == NSURLErrorDomain && nsError.code == NSURLErrorCancelled {
-                    self.requestErrorCode = .abort
-                } else {
-                    self.requestErrorCode = .exception
-                }
-            } else if let status = self.httpResponse?.statusCode, status != 200 {
-                self.requestErrorCode = .httpError
+        if let error = error {
+            let nsError = error as NSError
+            if nsError.domain == NSURLErrorDomain && nsError.code == NSURLErrorTimedOut {
+                self.requestErrorCode = .timeout
+            } else if nsError.domain == NSURLErrorDomain && nsError.code == NSURLErrorCancelled {
+                self.requestErrorCode = .abort
+            } else {
+                self.requestErrorCode = .exception
             }
-            self.requestReadyState = .complete
-            self.requestReadyStateChangeHandler?.stateChanged(for: self, responseData: nil)
+        } else if let status = self.httpResponse?.statusCode, status != 200 {
+            self.requestErrorCode = .httpError
         }
+        self.requestReadyState = .complete
+        self.requestReadyStateChangeHandler?.stateChanged(for: self, responseData: nil)
     }
 }
 
