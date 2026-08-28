@@ -28,27 +28,34 @@ class WebStreamConnection:
         self._thread = None
         self._handler = None
 
+        def safe_call(func, *args):
+            if not self._loop.is_closed():
+                try:
+                    self._loop.call_soon_threadsafe(func, *args)
+                except RuntimeError:
+                    pass
+
         def on_open(handler):
             def set_handler():
                 self._handler = handler
                 self._open_future.set_result(True)
-            self._loop.call_soon_threadsafe(set_handler)
+            safe_call(set_handler)
 
         def on_message(opcode, msg):
-            self._loop.call_soon_threadsafe(self._recv_queue.put_nowait, (opcode, msg))
+            safe_call(self._recv_queue.put_nowait, (opcode, msg))
 
         def on_error():
             def set_error():
                 if not self._open_future.done():
                     self._open_future.set_exception(ConnectionError("Connection failed or lost"))
                 else:
-                    self._recv_queue.put_nowait(ConnectionError("Connection lost"))
-            self._loop.call_soon_threadsafe(set_error)
+                    safe_call(self._recv_queue.put_nowait, ConnectionError("Connection lost"))
+            safe_call(set_error)
 
         def on_close():
             def set_close():
-                self._recv_queue.put_nowait(ConnectionAbortedError("Connection closed"))
-            self._loop.call_soon_threadsafe(set_close)
+                safe_call(self._recv_queue.put_nowait, ConnectionAbortedError("Connection closed"))
+            safe_call(set_close)
 
         self._client.set_on_open(on_open)
         self._client.set_on_message(on_message)
@@ -67,6 +74,7 @@ class WebStreamConnection:
         """Sends EoF (Close) over the WebStream connection."""
         if self._handler:
             self._handler.close()
+            self._handler = None
         self._client = None
 
     async def send(self, data):
