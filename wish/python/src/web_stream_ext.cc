@@ -23,9 +23,30 @@ namespace nb = nanobind;
 // WebStreamHandlerRef: a shared, nullable handle to WebStream.
 // ---------------------------------------------------------------------------
 
-struct WebStreamHandlerRef {
+struct WebStreamHandlerRef : std::enable_shared_from_this<WebStreamHandlerRef> {
+  enum class CommandType { kSendText, kSendBinary, kSendMetadata, kClose };
+
+  struct Command {
+    Command(CommandType type, std::string message,
+            std::shared_ptr<WebStreamHandlerRef> ref)
+        : type(type), message(std::move(message)), ref(std::move(ref)) {}
+
+    CommandType type;
+    std::string message;
+    std::shared_ptr<WebStreamHandlerRef> ref;
+    std::mutex mu;
+    std::condition_variable done_cv;
+    bool done = false;
+    int result = -1;
+  };
+
+  struct ScheduledCommand {
+    std::shared_ptr<Command> command;
+  };
+
   std::mutex mu;
   WebStream* ptr = nullptr;
+  event_base* base = nullptr;
 
   nb::object on_message_cb;
   nb::object on_close_cb;
@@ -44,40 +65,25 @@ struct WebStreamHandlerRef {
     }
   }
 
-  int send_text(const std::string& msg) {
+  void bind(event_base* event_base) {
     std::lock_guard<std::mutex> lock(mu);
+    base = event_base;
+  }
 
-    if (!ptr) {
-      throw std::runtime_error("Connection is closed");
-    }
-    return ptr->SendText(msg);
+  int send_text(const std::string& msg) {
+    return Dispatch(CommandType::kSendText, msg);
   }
 
   int send_binary(const std::string& msg) {
-    std::lock_guard<std::mutex> lock(mu);
-
-    if (!ptr) {
-      throw std::runtime_error("Connection is closed");
-    }
-    return ptr->SendBinary(msg);
-  }
-
-  int send_metadata(const std::string& msg) {
-    std::lock_guard<std::mutex> lock(mu);
-
-    if (!ptr) {
-      throw std::runtime_error("Connection is closed");
-    }
-    return ptr->SendMetadata(msg);
+    return Dispatch(CommandType::kSendBinary, msg);
   }
 
   int close() {
-    std::lock_guard<std::mutex> lock(mu);
+    return Dispatch(CommandType::kClose, "");
+  }
 
-    if (!ptr) {
-      return 0;
-    }
-    return ptr->Close();
+  int send_metadata(const std::string& msg) {
+    return Dispatch(CommandType::kSendMetadata, msg);
   }
 
   std::string path() {
@@ -87,6 +93,72 @@ struct WebStreamHandlerRef {
       return "";
     }
     return ptr->path();
+  }
+
+ private:
+  static void RunCommand(evutil_socket_t, short, void* arg) {
+  std::unique_ptr<ScheduledCommand> scheduled_command(
+    static_cast<ScheduledCommand*>(arg));
+  std::shared_ptr<Command> command = std::move(scheduled_command->command);
+
+    {
+      std::lock_guard<std::mutex> ref_lock(command->ref->mu);
+      if (command->ref->ptr) {
+        switch (command->type) {
+          case CommandType::kSendText:
+            command->result = command->ref->ptr->SendText(command->message);
+            break;
+          case CommandType::kSendBinary:
+            command->result = command->ref->ptr->SendBinary(command->message);
+            break;
+          case CommandType::kSendMetadata:
+            command->result = command->ref->ptr->SendMetadata(command->message);
+            break;
+          case CommandType::kClose:
+            command->result = command->ref->ptr->Close();
+            break;
+        }
+      } else if (command->type == CommandType::kClose) {
+        command->result = 0;
+      }
+    }
+
+    {
+      std::lock_guard<std::mutex> command_lock(command->mu);
+      command->done = true;
+    }
+    command->done_cv.notify_one();
+  }
+
+  int Dispatch(CommandType type, const std::string& message) {
+    std::shared_ptr<WebStreamHandlerRef> self = shared_from_this();
+    event_base* event_base = nullptr;
+    {
+      std::lock_guard<std::mutex> lock(mu);
+      if (!ptr) {
+        if (type == CommandType::kClose) {
+          return 0;
+        }
+        throw std::runtime_error("Connection is closed");
+      }
+      event_base = base;
+    }
+    if (!event_base) {
+      throw std::runtime_error("Connection event loop is unavailable");
+    }
+
+    auto command = std::make_shared<Command>(type, message, std::move(self));
+    auto* scheduled_command = new ScheduledCommand{command};
+    timeval immediately = {0, 0};
+    if (event_base_once(event_base, -1, EV_TIMEOUT, RunCommand, scheduled_command,
+                        &immediately) != 0) {
+      delete scheduled_command;
+      throw std::runtime_error("Failed to schedule connection operation");
+    }
+
+    std::unique_lock<std::mutex> command_lock(command->mu);
+    command->done_cv.wait(command_lock, [&command] { return command->done; });
+    return command->result;
   }
 };
 
@@ -532,6 +604,7 @@ NB_MODULE(web_stream_ext, m) {
       .def("init", [](PlainServerPy& self) -> bool {
         self.server.SetOnStream([&self](WebStream* stream) {
           auto ref = std::make_shared<WebStreamHandlerRef>();
+          ref->bind(self.base.get());
           {
             std::lock_guard<std::mutex> lock(ref->mu);
             ref->ptr = stream;
@@ -647,6 +720,7 @@ NB_MODULE(web_stream_ext, m) {
       .def("init", [](TlsServerPy& self) -> bool {
         self.server.SetOnStream([&self](WebStream* stream) {
           auto ref = std::make_shared<WebStreamHandlerRef>();
+          ref->bind(self.base.get());
           {
             std::lock_guard<std::mutex> lock(ref->mu);
             ref->ptr = stream;
@@ -787,6 +861,7 @@ NB_MODULE(web_stream_ext, m) {
         self.on_open_cb = cb;
 
         auto ref = std::make_shared<WebStreamHandlerRef>();
+  ref->bind(self.base.get());
         self.handler_ref = ref;
 
         self.client.SetOnOpen([&self, ref](WebStream* handler) {
@@ -928,6 +1003,7 @@ NB_MODULE(web_stream_ext, m) {
         self.on_open_cb = cb;
 
         auto ref = std::make_shared<WebStreamHandlerRef>();
+  ref->bind(self.base.get());
         self.handler_ref = ref;
 
         self.client.SetOnOpen([&self, ref](WebStream* handler) {
