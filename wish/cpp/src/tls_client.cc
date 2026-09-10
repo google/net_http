@@ -23,13 +23,15 @@ TlsClient::TlsClient(event_base* base,
                      int port,
                      const std::string& ca_file,
                      const std::string& cert_file,
-                     const std::string& key_file)
+                     const std::string& key_file,
+                     const std::string& path)
     : base_(base),
       host_(host),
       port_(port),
       ca_file_(ca_file),
       cert_file_(cert_file),
       key_file_(key_file),
+      path_(path),
       dns_base_(nullptr),
       stream_(nullptr) {}
 
@@ -74,7 +76,7 @@ bool TlsClient::Init() {
                                                     -1,
                                                     ssl,
                                                     BUFFEREVENT_SSL_CONNECTING,
-                                                    BEV_OPT_CLOSE_ON_FREE);
+                                                    BEV_OPT_CLOSE_ON_FREE | BEV_OPT_THREADSAFE);
   if (!bev) {
     VLOG(1) << "bufferevent_openssl_socket_new() failed";
 
@@ -137,7 +139,10 @@ bool TlsClient::Init() {
         if (on_error_) {
           on_error_();
         }
-      });
+      },
+      kDefaultMaxHeaderSize,
+      kDefaultHandshakeTimeoutSeconds,
+      path_);
 
   handshake_->Start();
 

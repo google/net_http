@@ -41,7 +41,8 @@ class TlsClient {
             int port,
             const std::string& ca_file,
             const std::string& cert_file,
-            const std::string& key_file);
+            const std::string& key_file,
+            const std::string& path = "/");
   ~TlsClient();
 
   bool Init();
@@ -57,6 +58,7 @@ class TlsClient {
 
   std::string host_;
   int port_;
+  std::string path_;
 
   std::string ca_file_;
   std::string cert_file_;

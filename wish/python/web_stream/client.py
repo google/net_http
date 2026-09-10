@@ -10,14 +10,15 @@ WEB_STREAM_OPCODE_BINARY = 2
 WEB_STREAM_OPCODE_METADATA = 3
 
 class WebStreamConnection:
-    def __init__(self, host, port, tls, ca_file="", cert_file="", key_file=""):
+    def __init__(self, host, port, tls, ca_file="", cert_file="", key_file="", path="/"):
         self._host = host
         self._port = port
+        self.path = path or "/"
 
         if tls:
-            self._client = web_stream_ext.TlsClient(ca_file, cert_file, key_file, host, port)
+            self._client = web_stream_ext.TlsClient(ca_file, cert_file, key_file, host, port, self.path)
         else:
-            self._client = web_stream_ext.PlainClient(host, port)
+            self._client = web_stream_ext.PlainClient(host, port, self.path)
 
         self._client.init()  # raises RuntimeError on failure
 
@@ -27,6 +28,7 @@ class WebStreamConnection:
         self._open_future = self._loop.create_future()
         self._thread = None
         self._handler = None
+        self._closed = False
 
         def safe_call(func, *args):
             if not self._loop.is_closed():
@@ -46,6 +48,7 @@ class WebStreamConnection:
 
         def on_error():
             def set_error():
+                self._closed = True
                 if not self._open_future.done():
                     self._open_future.set_exception(ConnectionError("Connection failed or lost"))
                 else:
@@ -54,7 +57,11 @@ class WebStreamConnection:
 
         def on_close():
             def set_close():
-                safe_call(self._recv_queue.put_nowait, ConnectionAbortedError("Connection closed"))
+                self._closed = True
+                if not self._open_future.done():
+                    self._open_future.set_exception(ConnectionAbortedError("Connection closed before open"))
+                else:
+                    self._recv_queue.put_nowait(ConnectionAbortedError("Connection closed"))
             safe_call(set_close)
 
         self._client.set_on_open(on_open)
@@ -67,14 +74,28 @@ class WebStreamConnection:
         self._thread = threading.Thread(target=self._client.run, daemon=True)
         self._thread.start()
         # Wait until the on_open callback fires
-        await self._open_future
+        try:
+            await self._open_future
+        except Exception:
+            await self.close()
+            raise
         return self
 
     async def close(self):
         """Sends EoF (Close) over the WebStream connection."""
         if self._handler:
-            self._handler.close()
+            try:
+                self._handler.close()
+            except Exception:
+                pass
             self._handler = None
+        self._closed = True
+        self._recv_queue.put_nowait(ConnectionAbortedError("Connection closed"))
+        if self._client:
+            self._client.stop()
+        if self._thread and self._thread.is_alive():
+            await asyncio.to_thread(self._thread.join)
+        self._thread = None
         self._client = None
 
     async def send(self, data):
@@ -132,6 +153,7 @@ class _ConnectContextManager:
 
         self.host = parsed.hostname
         self.port = parsed.port or (443 if self.tls else 80)
+        self.path = parsed.path or "/"
 
         self.ca_file = ca_file
         self.cert_file = cert_file
@@ -145,7 +167,8 @@ class _ConnectContextManager:
                                         self.tls,
                                         self.ca_file,
                                         self.cert_file,
-                                        self.key_file)
+                                        self.key_file,
+                                        path=self.path)
         await self.conn.connect()
         return self.conn
 

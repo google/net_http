@@ -18,10 +18,12 @@
 
 PlainClient::PlainClient(event_base* base,
                          const std::string& host,
-                         int port)
+                         int port,
+                         const std::string& path)
     : base_(base),
       host_(host),
       port_(port),
+      path_(path),
       dns_base_(nullptr),
       stream_(nullptr) {}
 
@@ -50,7 +52,7 @@ bool PlainClient::Init() {
 
   bufferevent* bev = bufferevent_socket_new(base_,
                                             -1,
-                                            BEV_OPT_CLOSE_ON_FREE);
+                                            BEV_OPT_CLOSE_ON_FREE | BEV_OPT_THREADSAFE);
   if (!bev) {
     VLOG(1) << "bufferevent_socket_new() failed";
 
@@ -110,7 +112,10 @@ bool PlainClient::Init() {
         if (on_error_) {
           on_error_();
         }
-      });
+      },
+      kDefaultMaxHeaderSize,
+      kDefaultHandshakeTimeoutSeconds,
+      path_);
 
   handshake_->Start();
 

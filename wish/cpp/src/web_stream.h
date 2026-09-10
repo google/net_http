@@ -56,6 +56,11 @@ class WebStream {
   // Signal EOF to the underlying HTTP message body.
   // Returns 0 on success, or -1 if Close() has already been called.
   virtual int Close() = 0;
+
+  virtual const std::string& path() const {
+    static const std::string empty;
+    return empty;
+  }
 };
 
 #endif  // WISH_CPP_SRC_WEB_STREAM_H_

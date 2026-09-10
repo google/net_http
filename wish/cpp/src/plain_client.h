@@ -37,7 +37,8 @@ class PlainClient {
 
   PlainClient(event_base* base,
               const std::string& host,
-              int port);
+              int port,
+              const std::string& path = "/");
   ~PlainClient();
 
   bool Init();
@@ -53,6 +54,7 @@ class PlainClient {
 
   std::string host_;
   int port_;
+  std::string path_;
 
   evdns_base* dns_base_;
 

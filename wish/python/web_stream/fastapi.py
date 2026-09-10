@@ -41,28 +41,28 @@ class WebStreamRouter:
         cert_file: str = "",
         key_file: str = ""
     ) -> WebStreamServer:
-        """Creates a WebStreamServer configured with this router's endpoints."""
-        server = WebStreamServer(port=port, tls=tls, ca_file=ca_file, cert_file=cert_file, key_file=key_file)
+        server = WebStreamServer(
+            port=port,
+            tls=tls,
+            ca_file=ca_file,
+            cert_file=cert_file,
+            key_file=key_file,
+            connection_cls=WebStreamSession
+        )
 
-        async def on_connection(conn: WebStreamServerConnection):
-            session = WebStreamSession(conn._handler_ref, conn._loop)
+        async def on_connection(session: WebStreamSession):
             routes = self._routes
             if not routes:
+                await session.close()
                 return
 
             try:
-                # TODO: This is an interim implementation. The underlying C++ server
-                # handshake does not currently forward the requested HTTP URI path
-                # to the Python connection object. For now, dispatch to the sole
-                # registered handler or fall back to "/" / first registered handler.
-                # In the future, pass the request path from C++ (e.g. conn.path)
-                # and route based on `routes.get(conn.path)` or reject unknown paths.
-                if len(routes) == 1:
-                    handler = next(iter(routes.values()))
+                req_path = session.path.rstrip("/") if session.path != "/" else "/"
+                handler = routes.get(req_path)
+                if handler:
                     await handler(session)
                 else:
-                    handler = routes.get("/") or next(iter(routes.values()))
-                    await handler(session)
+                    await session.close()
             finally:
                 await session.close()
 

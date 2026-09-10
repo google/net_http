@@ -200,12 +200,14 @@ ClientHandshake::ClientHandshake(bufferevent* bev,
                                  OnOpenCallback on_open,
                                  OnErrorCallback on_error,
                                  size_t max_header_size,
-                                 int timeout_seconds)
+                                 int timeout_seconds,
+                                 const std::string& path)
     : bev_(bev),
       on_open_(std::move(on_open)),
       on_error_(std::move(on_error)),
       max_header_size_(max_header_size),
-      timeout_seconds_(timeout_seconds) {}
+      timeout_seconds_(timeout_seconds),
+      path_(path) {}
 
 ClientHandshake::~ClientHandshake() {
   if (bev_) {
@@ -231,7 +233,7 @@ void ClientHandshake::Start() {
   }
 
   std::stringstream ss;
-  ss << "POST / HTTP/1.1\r\n";
+  ss << "POST " << (path_.empty() ? "/" : path_) << " HTTP/1.1\r\n";
   ss << "Host: localhost\r\n";
   ss << "Content-Type: application/web-stream\r\n";
   ss << "Transfer-Encoding: chunked\r\n";
@@ -387,6 +389,21 @@ ServerHandshake::ServerHandshake(bufferevent* bev,
       max_header_size_(max_header_size),
       timeout_seconds_(timeout_seconds) {}
 
+ServerHandshake::ServerHandshake(bufferevent* bev,
+                                 LegacyOnOpenCallback on_open,
+                                 OnErrorCallback on_error,
+                                 CleanupCallback cleanup,
+                                 size_t max_header_size,
+                                 int timeout_seconds)
+    : bev_(bev),
+      on_open_([cb = std::move(on_open)](bufferevent* b, const std::string&) {
+        if (cb) cb(b);
+      }),
+      on_error_(std::move(on_error)),
+      cleanup_(std::move(cleanup)),
+      max_header_size_(max_header_size),
+      timeout_seconds_(timeout_seconds) {}
+
 ServerHandshake::~ServerHandshake() {
   if (bev_) {
     bufferevent_free(bev_);
@@ -460,6 +477,8 @@ void ServerHandshake::HandleRead() {
     return;  // Incomplete headers, wait for more data
   }
 
+  path_ = std::string(path, path_len);
+
   if (minor_version < 1) {
     VLOG(2) << "HTTP version must be at least 1.1, got 1." << minor_version;
 
@@ -519,7 +538,9 @@ void ServerHandshake::HandleRead() {
   auto on_open = std::move(on_open_);
   auto cleanup = std::move(cleanup_);
   auto* raw_ptr = this;
-  on_open(bev);
+  if (on_open) {
+    on_open(bev, path_);
+  }
   if (cleanup) {
     cleanup(raw_ptr);
   }

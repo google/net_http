@@ -140,8 +140,10 @@ void BufferEventWebStream::ReadCallback(bufferevent* bev, void* ctx) {
     switch (stream->state_) {
       case OPEN: {
         int rv = wslay_event_recv(stream->ctx_);
+
         if (rv != 0) {
           VLOG(2) << "wslay_event_recv() failed: " << rv;
+          stream->Fail();
           return;
         }
 
@@ -467,7 +469,10 @@ ssize_t BufferEventWebStream::ReadChunkedBytes(uint8_t* buf, size_t len) {
 
         if (terminal_chunk_seen_) {
           receive_closed_ = true;
-          // Terminal chunk fully consumed; let ReadCallback close the stream.
+          // Terminal chunk fully consumed. Wslay does not understand HTTP
+          // chunked-body EOF, so use WSLAY_ERR_WOULDBLOCK to stop its receive
+          // loop safely. ReadCallback then observes receive_closed_ and
+          // completes the WebStream close sequence.
           wslay_event_set_error(ctx_, WSLAY_ERR_WOULDBLOCK);
 
           return -1;
@@ -506,5 +511,23 @@ void BufferEventWebStream::TryDrain() {
     if (cleanup) {
       cleanup(this);
     }
+  }
+}
+
+void BufferEventWebStream::Fail() {
+  if (state_ == CLOSED) {
+    return;
+  }
+
+  state_ = CLOSED;
+  bufferevent_setcb(bev_, nullptr, nullptr, nullptr, nullptr);
+
+  if (on_error_) {
+    on_error_();
+  }
+
+  auto cleanup = std::move(cleanup_cb_);
+  if (cleanup) {
+    cleanup(this);
   }
 }

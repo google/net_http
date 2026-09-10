@@ -68,8 +68,12 @@ class BufferEventWebStream : public WebStream {
   // Returns 0 on success, or -1 if Close() has already been called.
   int Close() override;
 
+  const std::string& path() const override { return path_; }
+  void set_path(const std::string& path) { path_ = path; }
+
  private:
   bufferevent* bev_;
+  std::string path_;
 
   enum State {
     OPEN,
@@ -143,6 +147,7 @@ class BufferEventWebStream : public WebStream {
 
   int SendMessage(uint8_t opcode, const std::string& msg);
   void TryDrain();
+  void Fail();
 
   // Decode one batch of Transfer-Encoding: chunked bytes from the inbound
   // bufferevent into buf[0..len).  Mirrors the wslay recv-callback signature:
