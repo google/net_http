@@ -10,8 +10,15 @@ class WebStreamServerConnection:
     def __init__(self, handler_ref, loop):
         self._handler_ref = handler_ref
         self._loop = loop
+        self.path = handler_ref.path() or "/"
         self._recv_queue = asyncio.Queue()
         self._closed = False
+
+        def terminate(error):
+            if self._closed:
+                return
+            self._closed = True
+            self._recv_queue.put_nowait(error)
 
         def safe_call(func, *args):
             if not self._loop.is_closed():
@@ -24,20 +31,15 @@ class WebStreamServerConnection:
             safe_call(self._recv_queue.put_nowait, (opcode, msg))
 
         def on_error():
-            def set_error():
-                self._closed = True
-                safe_call(self._recv_queue.put_nowait, ConnectionError("Connection lost or error occurred"))
-            safe_call(set_error)
+            safe_call(terminate, ConnectionError("Connection lost or error occurred"))
 
         def on_close():
-            def set_close():
-                self._closed = True
-                safe_call(self._recv_queue.put_nowait, ConnectionAbortedError("Connection closed by client"))
-            safe_call(set_close)
+            safe_call(terminate, ConnectionAbortedError("Connection closed by client"))
 
         self._handler_ref.set_on_message(on_message)
         self._handler_ref.set_on_error(on_error)
         self._handler_ref.set_on_close(on_close)
+        self._terminate = terminate
 
     async def send_text(self, text: str):
         if self._closed:
@@ -80,15 +82,17 @@ class WebStreamServerConnection:
             return msg
 
     async def close(self):
-        if not self._closed:
-            self._closed = True
+        self._terminate(ConnectionAbortedError("Connection closed"))
+        if self._handler_ref:
+            ref = self._handler_ref
+            self._handler_ref = None
             try:
-                self._handler_ref.set_on_message(None)
-                self._handler_ref.set_on_close(None)
-                self._handler_ref.set_on_error(None)
+                ref.set_on_message(None)
+                ref.set_on_close(None)
+                ref.set_on_error(None)
+                ref.close()
             except Exception:
                 pass
-            self._handler_ref.close()
 
     async def __aiter__(self):
         try:
@@ -99,9 +103,10 @@ class WebStreamServerConnection:
 
 
 class WebStreamServer:
-    def __init__(self, port, tls=False, ca_file="", cert_file="", key_file=""):
+    def __init__(self, port, tls=False, ca_file="", cert_file="", key_file="", connection_cls=WebStreamServerConnection):
         self.port = port
         self.tls = tls
+        self._connection_cls = connection_cls
         if tls:
             self._server = web_stream_ext.TlsServer(ca_file, cert_file, key_file, port)
         else:
@@ -110,6 +115,7 @@ class WebStreamServer:
         self._loop = None
         self._thread = None
         self._stream_handler = None
+        self._connections = set()
 
     def set_stream_handler(self, handler):
         """handler is an async function: async def handler(conn: WebStreamServerConnection)"""
@@ -119,9 +125,18 @@ class WebStreamServer:
         self._loop = asyncio.get_running_loop()
 
         def on_stream(handler_ref):
-            conn = WebStreamServerConnection(handler_ref, self._loop)
-            if self._stream_handler:
-                asyncio.run_coroutine_threadsafe(self._stream_handler(conn), self._loop)
+            conn = self._connection_cls(handler_ref, self._loop)
+            self._connections.add(conn)
+
+            async def handle():
+                try:
+                    if self._stream_handler:
+                        await self._stream_handler(conn)
+                finally:
+                    await conn.close()
+                    self._connections.discard(conn)
+
+            asyncio.run_coroutine_threadsafe(handle(), self._loop)
 
         self._server.set_on_stream(on_stream)
         self._server.init()
@@ -130,6 +145,16 @@ class WebStreamServer:
         self._thread.start()
 
     async def stop(self):
+        for conn in list(self._connections):
+            try:
+                await conn.close()
+            except Exception:
+                pass
+        self._connections.clear()
+
         if self._server:
             self._server.stop()
-            self._server = None
+        if self._thread and self._thread.is_alive():
+            await asyncio.to_thread(self._thread.join)
+        self._thread = None
+        self._server = None

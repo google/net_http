@@ -6,7 +6,6 @@
 #include <nanobind/stl/string.h>
 
 #include <atomic>
-#include <chrono>
 #include <condition_variable>
 #include <memory>
 #include <mutex>
@@ -31,6 +30,19 @@ struct WebStreamHandlerRef {
   nb::object on_message_cb;
   nb::object on_close_cb;
   nb::object on_error_cb;
+
+  ~WebStreamHandlerRef() {
+    if (Py_IsInitialized()) {
+      nb::gil_scoped_acquire acquire;
+      on_message_cb = nb::object();
+      on_close_cb = nb::object();
+      on_error_cb = nb::object();
+    } else {
+      on_message_cb.release();
+      on_close_cb.release();
+      on_error_cb.release();
+    }
+  }
 
   int send_text(const std::string& msg) {
     std::lock_guard<std::mutex> lock(mu);
@@ -66,6 +78,15 @@ struct WebStreamHandlerRef {
       return 0;
     }
     return ptr->Close();
+  }
+
+  std::string path() {
+    std::lock_guard<std::mutex> lock(mu);
+
+    if (!ptr) {
+      return "";
+    }
+    return ptr->path();
   }
 };
 
@@ -105,15 +126,21 @@ struct TlsClientPy {
               const std::string& cert,
               const std::string& key,
               const std::string& host,
-              int port)
+              int port,
+              const std::string& path = "/")
       : base(event_base_new()),
         client(base.get(),
                host,
                port,
                ca,
                cert,
-               key) {
+               key,
+               path) {
+    if (base) {
+      evthread_make_base_notifiable(base.get());
+    }
     client.SetOnError([this]() {
+      nb::gil_scoped_acquire acquire;
       client.Stop();
 
       if (handler_ref) {
@@ -122,9 +149,7 @@ struct TlsClientPy {
         handler_ref->ptr = nullptr;
       }
 
-      if (on_error_cb) {
-        nb::gil_scoped_acquire acquire;
-
+      if (on_error_cb.ptr() && !on_error_cb.is_none()) {
         try {
           on_error_cb();
         } catch (nb::python_error& e) {
@@ -155,12 +180,18 @@ struct PlainClientPy {
   std::atomic<bool> finalized{false};
 
   PlainClientPy(const std::string& host,
-                int port)
+                int port,
+                const std::string& path = "/")
       : base(event_base_new()),
         client(base.get(),
                host,
-               port) {
+               port,
+               path) {
+    if (base) {
+      evthread_make_base_notifiable(base.get());
+    }
     client.SetOnError([this]() {
+      nb::gil_scoped_acquire acquire;
       client.Stop();
 
       if (handler_ref) {
@@ -169,9 +200,7 @@ struct PlainClientPy {
         handler_ref->ptr = nullptr;
       }
 
-      if (on_error_cb) {
-        nb::gil_scoped_acquire acquire;
-
+      if (on_error_cb.ptr() && !on_error_cb.is_none()) {
         try {
           on_error_cb();
         } catch (nb::python_error& e) {
@@ -197,13 +226,10 @@ static void tls_do_cleanup(TlsClientPy* w) {
   {
     PyThreadState* ts = PyEval_SaveThread();  // release GIL
     std::unique_lock<std::mutex> lk(w->stopped_mu);
-    bool stopped = w->stopped_cv.wait_for(lk,
-                                          std::chrono::seconds(5),
-                                          [w] { return !w->running.load(std::memory_order_acquire); });
+    w->stopped_cv.wait(lk, [w] {
+      return !w->running.load(std::memory_order_acquire);
+    });
     PyEval_RestoreThread(ts);  // reacquire GIL
-    if (!stopped) {
-      PySys_WriteStderr("web_stream_ext: WARNING: event loop did not stop within timeout\n");
-    }
   }
 
   w->client.SetOnOpen({});
@@ -258,13 +284,10 @@ static void plain_do_cleanup(PlainClientPy* w) {
   {
     PyThreadState* ts = PyEval_SaveThread();
     std::unique_lock<std::mutex> lk(w->stopped_mu);
-    bool stopped = w->stopped_cv.wait_for(lk,
-                                          std::chrono::seconds(5),
-                                          [w] { return !w->running.load(std::memory_order_acquire); });
+    w->stopped_cv.wait(lk, [w] {
+      return !w->running.load(std::memory_order_acquire);
+    });
     PyEval_RestoreThread(ts);
-    if (!stopped) {
-      PySys_WriteStderr("web_stream_ext: WARNING: event loop did not stop within timeout\n");
-    }
   }
 
   w->client.SetOnOpen({});
@@ -326,10 +349,12 @@ struct PlainServerPy {
     if (!base) {
       throw std::runtime_error("Failed to create event_base");
     }
+    evthread_make_base_notifiable(base.get());
   }
 
   void stop() {
     if (base) {
+      event_base_loopexit(base.get(), nullptr);
       event_base_loopbreak(base.get());
     }
   }
@@ -343,13 +368,10 @@ static void plain_server_do_cleanup(PlainServerPy* w) {
   {
     PyThreadState* ts = PyEval_SaveThread();
     std::unique_lock<std::mutex> lk(w->stopped_mu);
-    bool stopped = w->stopped_cv.wait_for(lk,
-                                          std::chrono::seconds(5),
-                                          [w] { return !w->running.load(std::memory_order_acquire); });
+    w->stopped_cv.wait(lk, [w] {
+      return !w->running.load(std::memory_order_acquire);
+    });
     PyEval_RestoreThread(ts);
-    if (!stopped) {
-      PySys_WriteStderr("web_stream_ext: WARNING: server event loop did not stop within timeout\n");
-    }
   }
 }
 
@@ -391,10 +413,12 @@ struct TlsServerPy {
     if (!base) {
       throw std::runtime_error("Failed to create event_base");
     }
+    evthread_make_base_notifiable(base.get());
   }
 
   void stop() {
     if (base) {
+      event_base_loopexit(base.get(), nullptr);
       event_base_loopbreak(base.get());
     }
   }
@@ -408,13 +432,10 @@ static void tls_server_do_cleanup(TlsServerPy* w) {
   {
     PyThreadState* ts = PyEval_SaveThread();
     std::unique_lock<std::mutex> lk(w->stopped_mu);
-    bool stopped = w->stopped_cv.wait_for(lk,
-                                          std::chrono::seconds(5),
-                                          [w] { return !w->running.load(std::memory_order_acquire); });
+    w->stopped_cv.wait(lk, [w] {
+      return !w->running.load(std::memory_order_acquire);
+    });
     PyEval_RestoreThread(ts);
-    if (!stopped) {
-      PySys_WriteStderr("web_stream_ext: WARNING: TLS server event loop did not stop within timeout\n");
-    }
   }
 }
 
@@ -446,7 +467,10 @@ NB_MODULE(web_stream_ext, m) {
 #endif
 
   nb::class_<WebStreamHandlerRef>(m, "BufferEventWebStream")
-      .def("send_text", &WebStreamHandlerRef::send_text)
+      .def("send_text", [](WebStreamHandlerRef& self, const std::string& msg) {
+        nb::gil_scoped_release release;
+        return self.send_text(msg);
+      })
       .def("send_binary", [](WebStreamHandlerRef& self, nb::object data) {
         std::string s;
         if (nb::isinstance<nb::bytes>(data)) {
@@ -459,11 +483,8 @@ NB_MODULE(web_stream_ext, m) {
           throw nb::type_error("send_binary() expects bytes or str");
         }
 
-        std::lock_guard<std::mutex> lock(self.mu);
-        if (!self.ptr) {
-          throw std::runtime_error("Connection is closed");
-        }
-        return self.ptr->SendBinary(s);
+        nb::gil_scoped_release release;
+        return self.send_binary(s);
       })
       .def("send_metadata", [](WebStreamHandlerRef& self, nb::object data) {
         std::string s;
@@ -477,11 +498,8 @@ NB_MODULE(web_stream_ext, m) {
           throw nb::type_error("send_metadata() expects bytes or str");
         }
 
-        std::lock_guard<std::mutex> lock(self.mu);
-        if (!self.ptr) {
-          throw std::runtime_error("Connection is closed");
-        }
-        return self.ptr->SendMetadata(s);
+        nb::gil_scoped_release release;
+        return self.send_metadata(s);
       })
       .def("set_on_message", [](WebStreamHandlerRef& self, nb::object cb) {
         std::lock_guard<std::mutex> lock(self.mu);
@@ -495,7 +513,11 @@ NB_MODULE(web_stream_ext, m) {
         std::lock_guard<std::mutex> lock(self.mu);
         self.on_error_cb = cb;
       })
-      .def("close", &WebStreamHandlerRef::close);
+      .def("close", [](WebStreamHandlerRef& self) {
+        nb::gil_scoped_release release;
+        return self.close();
+      })
+      .def("path", &WebStreamHandlerRef::path);
 
   // ---- PlainServer ------------------------------------------------------
   static PyType_Slot plain_server_slots[] = {
@@ -516,13 +538,13 @@ NB_MODULE(web_stream_ext, m) {
           }
 
           stream->SetOnMessage([ref](uint8_t opcode, const std::string& msg) {
+            nb::gil_scoped_acquire acquire;
             nb::object cb;
             {
               std::lock_guard<std::mutex> lock(ref->mu);
               cb = ref->on_message_cb;
             }
             if (cb.ptr() && !cb.is_none()) {
-              nb::gil_scoped_acquire acquire;
               try {
                 cb(opcode, nb::bytes(msg.data(), msg.size()));
               } catch (nb::python_error& e) {
@@ -533,6 +555,7 @@ NB_MODULE(web_stream_ext, m) {
           });
 
           stream->SetOnClose([ref]() {
+            nb::gil_scoped_acquire acquire;
             nb::object cb;
             {
               std::lock_guard<std::mutex> lock(ref->mu);
@@ -543,7 +566,6 @@ NB_MODULE(web_stream_ext, m) {
               ref->on_error_cb = nb::object();
             }
             if (cb.ptr() && !cb.is_none()) {
-              nb::gil_scoped_acquire acquire;
               try {
                 cb();
               } catch (nb::python_error& e) {
@@ -554,6 +576,7 @@ NB_MODULE(web_stream_ext, m) {
           });
 
           stream->SetOnError([ref]() {
+            nb::gil_scoped_acquire acquire;
             nb::object cb;
             {
               std::lock_guard<std::mutex> lock(ref->mu);
@@ -564,7 +587,6 @@ NB_MODULE(web_stream_ext, m) {
               ref->on_error_cb = nb::object();
             }
             if (cb.ptr() && !cb.is_none()) {
-              nb::gil_scoped_acquire acquire;
               try {
                 cb();
               } catch (nb::python_error& e) {
@@ -574,8 +596,8 @@ NB_MODULE(web_stream_ext, m) {
             }
           });
 
+          nb::gil_scoped_acquire acquire;
           if (self.on_stream_cb.ptr() && !self.on_stream_cb.is_none()) {
-            nb::gil_scoped_acquire acquire;
             try {
               self.on_stream_cb(ref);
             } catch (nb::python_error& e) {
@@ -608,6 +630,7 @@ NB_MODULE(web_stream_ext, m) {
         self.server.Run();
       }, nb::call_guard<nb::gil_scoped_release>())
       .def("stop", [](PlainServerPy& self) {
+        nb::gil_scoped_release release;
         self.stop();
       });
 
@@ -630,6 +653,7 @@ NB_MODULE(web_stream_ext, m) {
           }
 
           stream->SetOnClose([ref]() {
+            nb::gil_scoped_acquire acquire;
             nb::object cb;
             {
               std::lock_guard<std::mutex> lock(ref->mu);
@@ -640,7 +664,6 @@ NB_MODULE(web_stream_ext, m) {
               ref->on_error_cb = nb::object();
             }
             if (cb.ptr() && !cb.is_none()) {
-              nb::gil_scoped_acquire acquire;
               try {
                 cb();
               } catch (nb::python_error& e) {
@@ -651,6 +674,7 @@ NB_MODULE(web_stream_ext, m) {
           });
 
           stream->SetOnError([ref]() {
+            nb::gil_scoped_acquire acquire;
             nb::object cb;
             {
               std::lock_guard<std::mutex> lock(ref->mu);
@@ -661,7 +685,6 @@ NB_MODULE(web_stream_ext, m) {
               ref->on_error_cb = nb::object();
             }
             if (cb.ptr() && !cb.is_none()) {
-              nb::gil_scoped_acquire acquire;
               try {
                 cb();
               } catch (nb::python_error& e) {
@@ -672,13 +695,13 @@ NB_MODULE(web_stream_ext, m) {
           });
 
           stream->SetOnMessage([ref](uint8_t opcode, const std::string& msg) {
+            nb::gil_scoped_acquire acquire;
             nb::object cb;
             {
               std::lock_guard<std::mutex> lock(ref->mu);
               cb = ref->on_message_cb;
             }
             if (cb.ptr() && !cb.is_none()) {
-              nb::gil_scoped_acquire acquire;
               try {
                 cb(opcode, nb::bytes(msg.data(), msg.size()));
               } catch (nb::python_error& e) {
@@ -688,8 +711,8 @@ NB_MODULE(web_stream_ext, m) {
             }
           });
 
+          nb::gil_scoped_acquire acquire;
           if (self.on_stream_cb.ptr() && !self.on_stream_cb.is_none()) {
-            nb::gil_scoped_acquire acquire;
             try {
               self.on_stream_cb(ref);
             } catch (nb::python_error& e) {
@@ -722,6 +745,7 @@ NB_MODULE(web_stream_ext, m) {
         self.server.Run();
       }, nb::call_guard<nb::gil_scoped_release>())
       .def("stop", [](TlsServerPy& self) {
+        nb::gil_scoped_release release;
         self.stop();
       });
 
@@ -738,7 +762,14 @@ NB_MODULE(web_stream_ext, m) {
                     const std::string&,
                     const std::string&,
                     const std::string&,
-                    int>())
+                    int,
+                    const std::string&>(),
+           nb::arg("ca"),
+           nb::arg("cert"),
+           nb::arg("key"),
+           nb::arg("host"),
+           nb::arg("port"),
+           nb::arg("path") = "/")
       .def("init", [](TlsClientPy& self) -> bool {
         if (!self.client.Init()) {
           throw std::runtime_error("TlsClient.init() failed");
@@ -774,9 +805,8 @@ NB_MODULE(web_stream_ext, m) {
 
             self.client.Stop();
 
-            if (self.on_close_cb) {
-              nb::gil_scoped_acquire acquire;
-
+            nb::gil_scoped_acquire acquire;
+            if (self.on_close_cb.ptr() && !self.on_close_cb.is_none()) {
               try {
                 self.on_close_cb();
               } catch (nb::python_error& e) {
@@ -786,22 +816,45 @@ NB_MODULE(web_stream_ext, m) {
             }
           });
 
+          handler->SetOnError([ref, &self]() {
+            {
+              std::lock_guard<std::mutex> lock(ref->mu);
+              ref->ptr = nullptr;
+            }
+
+            self.client.Stop();
+
+            nb::gil_scoped_acquire acquire;
+            if (self.on_error_cb.ptr() && !self.on_error_cb.is_none()) {
+              try {
+                self.on_error_cb();
+              } catch (nb::python_error& e) {
+                e.restore();
+                PyErr_WriteUnraisable(self.on_error_cb.ptr());
+              }
+            }
+          });
+
           handler->SetOnMessage([&self](uint8_t opcode, const std::string& msg) {
             nb::gil_scoped_acquire acquire;
-            try {
-              self.on_message_cb(opcode, nb::bytes(msg.data(), msg.size()));
-            } catch (nb::python_error& e) {
-              e.restore();
-              PyErr_WriteUnraisable(self.on_message_cb.ptr());
+            if (self.on_message_cb.ptr() && !self.on_message_cb.is_none()) {
+              try {
+                self.on_message_cb(opcode, nb::bytes(msg.data(), msg.size()));
+              } catch (nb::python_error& e) {
+                e.restore();
+                PyErr_WriteUnraisable(self.on_message_cb.ptr());
+              }
             }
           });
 
           nb::gil_scoped_acquire acquire;
-          try {
-            self.on_open_cb(ref);
-          } catch (nb::python_error& e) {
-            e.restore();
-            PyErr_WriteUnraisable(self.on_open_cb.ptr());
+          if (self.on_open_cb.ptr() && !self.on_open_cb.is_none()) {
+            try {
+              self.on_open_cb(ref);
+            } catch (nb::python_error& e) {
+              e.restore();
+              PyErr_WriteUnraisable(self.on_open_cb.ptr());
+            }
           }
         });
       })
@@ -828,17 +881,21 @@ NB_MODULE(web_stream_ext, m) {
         } guard{self};
         self.client.Run(); }, nb::call_guard<nb::gil_scoped_release>())
       .def("stop", [](TlsClientPy& self) {
+        auto handler_ref = self.handler_ref;
+        nb::gil_scoped_release release;
         self.client.Stop();
-        if (self.handler_ref) {
-          std::lock_guard<std::mutex> lock(self.handler_ref->mu);
-          self.handler_ref->ptr = nullptr;
+        if (handler_ref) {
+          std::lock_guard<std::mutex> lock(handler_ref->mu);
+          handler_ref->ptr = nullptr;
         } })
       .def("__enter__", [](TlsClientPy& self) -> TlsClientPy& { return self; })
       .def("__exit__", [](TlsClientPy& self, nb::object, nb::object, nb::object) {
+        auto handler_ref = self.handler_ref;
+        nb::gil_scoped_release release;
         self.client.Stop();
-        if (self.handler_ref) {
-          std::lock_guard<std::mutex> lock(self.handler_ref->mu);
-          self.handler_ref->ptr = nullptr;
+        if (handler_ref) {
+          std::lock_guard<std::mutex> lock(handler_ref->mu);
+          handler_ref->ptr = nullptr;
         } });
 
   // ---- PlainClient ------------------------------------------------------
@@ -850,7 +907,10 @@ NB_MODULE(web_stream_ext, m) {
   };
 
   nb::class_<PlainClientPy>(m, "PlainClient", nb::type_slots(plain_slots))
-      .def(nb::init<const std::string&, int>())
+      .def(nb::init<const std::string&, int, const std::string&>(),
+           nb::arg("host"),
+           nb::arg("port"),
+           nb::arg("path") = "/")
       .def("init", [](PlainClientPy& self) -> bool {
         if (!self.client.Init()) {
           throw std::runtime_error("PlainClient.init() failed");
@@ -886,9 +946,8 @@ NB_MODULE(web_stream_ext, m) {
 
             self.client.Stop();
 
-            if (self.on_close_cb) {
-              nb::gil_scoped_acquire acquire;
-
+            nb::gil_scoped_acquire acquire;
+            if (self.on_close_cb.ptr() && !self.on_close_cb.is_none()) {
               try {
                 self.on_close_cb();
               } catch (nb::python_error& e) {
@@ -898,22 +957,45 @@ NB_MODULE(web_stream_ext, m) {
             }
           });
 
+          handler->SetOnError([ref, &self]() {
+            {
+              std::lock_guard<std::mutex> lock(ref->mu);
+              ref->ptr = nullptr;
+            }
+
+            self.client.Stop();
+
+            nb::gil_scoped_acquire acquire;
+            if (self.on_error_cb.ptr() && !self.on_error_cb.is_none()) {
+              try {
+                self.on_error_cb();
+              } catch (nb::python_error& e) {
+                e.restore();
+                PyErr_WriteUnraisable(self.on_error_cb.ptr());
+              }
+            }
+          });
+
           handler->SetOnMessage([&self](uint8_t opcode, const std::string& msg) {
             nb::gil_scoped_acquire acquire;
-            try {
-              self.on_message_cb(opcode, nb::bytes(msg.data(), msg.size()));
-            } catch (nb::python_error& e) {
-              e.restore();
-              PyErr_WriteUnraisable(self.on_message_cb.ptr());
+            if (self.on_message_cb.ptr() && !self.on_message_cb.is_none()) {
+              try {
+                self.on_message_cb(opcode, nb::bytes(msg.data(), msg.size()));
+              } catch (nb::python_error& e) {
+                e.restore();
+                PyErr_WriteUnraisable(self.on_message_cb.ptr());
+              }
             }
           });
 
           nb::gil_scoped_acquire acquire;
-          try {
-            self.on_open_cb(ref);
-          } catch (nb::python_error& e) {
-            e.restore();
-            PyErr_WriteUnraisable(self.on_open_cb.ptr());
+          if (self.on_open_cb.ptr() && !self.on_open_cb.is_none()) {
+            try {
+              self.on_open_cb(ref);
+            } catch (nb::python_error& e) {
+              e.restore();
+              PyErr_WriteUnraisable(self.on_open_cb.ptr());
+            }
           }
         });
       })
@@ -940,16 +1022,20 @@ NB_MODULE(web_stream_ext, m) {
         } guard{self};
         self.client.Run(); }, nb::call_guard<nb::gil_scoped_release>())
       .def("stop", [](PlainClientPy& self) {
+        auto handler_ref = self.handler_ref;
+        nb::gil_scoped_release release;
         self.client.Stop();
-        if (self.handler_ref) {
-          std::lock_guard<std::mutex> lock(self.handler_ref->mu);
-          self.handler_ref->ptr = nullptr;
+        if (handler_ref) {
+          std::lock_guard<std::mutex> lock(handler_ref->mu);
+          handler_ref->ptr = nullptr;
         } })
       .def("__enter__", [](PlainClientPy& self) -> PlainClientPy& { return self; })
       .def("__exit__", [](PlainClientPy& self, nb::object, nb::object, nb::object) {
+        auto handler_ref = self.handler_ref;
+        nb::gil_scoped_release release;
         self.client.Stop();
-        if (self.handler_ref) {
-          std::lock_guard<std::mutex> lock(self.handler_ref->mu);
-          self.handler_ref->ptr = nullptr;
+        if (handler_ref) {
+          std::lock_guard<std::mutex> lock(handler_ref->mu);
+          handler_ref->ptr = nullptr;
         } });
 }

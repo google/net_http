@@ -34,7 +34,8 @@ class ClientHandshake {
 
   ClientHandshake(bufferevent* bev, OnOpenCallback on_open, OnErrorCallback on_error,
                   size_t max_header_size = kDefaultMaxHeaderSize,
-                  int timeout_seconds = kDefaultHandshakeTimeoutSeconds);
+                  int timeout_seconds = kDefaultHandshakeTimeoutSeconds,
+                  const std::string& path = "/");
   ~ClientHandshake();
 
   void Start();
@@ -53,11 +54,13 @@ class ClientHandshake {
   OnErrorCallback on_error_;
   size_t max_header_size_;
   int timeout_seconds_;
+  std::string path_;
 };
 
 class ServerHandshake {
  public:
-  using OnOpenCallback = std::function<void(bufferevent*)>;
+  using OnOpenCallback = std::function<void(bufferevent*, const std::string& path)>;
+  using LegacyOnOpenCallback = std::function<void(bufferevent*)>;
   using OnErrorCallback = std::function<void()>;
   using CleanupCallback = std::function<void(ServerHandshake*)>;
 
@@ -65,9 +68,16 @@ class ServerHandshake {
                   CleanupCallback cleanup = nullptr,
                   size_t max_header_size = kDefaultMaxHeaderSize,
                   int timeout_seconds = kDefaultHandshakeTimeoutSeconds);
+
+  ServerHandshake(bufferevent* bev, LegacyOnOpenCallback on_open, OnErrorCallback on_error,
+                  CleanupCallback cleanup = nullptr,
+                  size_t max_header_size = kDefaultMaxHeaderSize,
+                  int timeout_seconds = kDefaultHandshakeTimeoutSeconds);
   ~ServerHandshake();
 
   void Start();
+
+  const std::string& path() const { return path_; }
 
  private:
   static void ReadCb(bufferevent* bev, void* ctx);
@@ -84,6 +94,7 @@ class ServerHandshake {
   CleanupCallback cleanup_;
   size_t max_header_size_;
   int timeout_seconds_;
+  std::string path_;
 };
 
 #endif  // WISH_CPP_SRC_HANDSHAKE_H_

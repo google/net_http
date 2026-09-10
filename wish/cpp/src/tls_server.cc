@@ -134,7 +134,7 @@ void TlsServer::AcceptConnCb(evconnlistener* listener,
                                                     fd,
                                                     ssl,
                                                     BUFFEREVENT_SSL_ACCEPTING,
-                                                    BEV_OPT_CLOSE_ON_FREE);
+                                                    BEV_OPT_CLOSE_ON_FREE | BEV_OPT_THREADSAFE);
   if (!bev) {
     VLOG(1) << "bufferevent_openssl_socket_new() failed";
 
@@ -151,8 +151,9 @@ void TlsServer::AcceptConnCb(evconnlistener* listener,
 
   auto handshake = std::make_unique<ServerHandshake>(
       bev,
-      [server](bufferevent* bev) {
+      [server](bufferevent* bev, const std::string& path) {
         auto stream = std::make_unique<BufferEventWebStream>(bev, true);
+        stream->set_path(path);
 
         if (!stream->Init()) {
           VLOG(1) << "BufferEventWebStream::Init() failed";
