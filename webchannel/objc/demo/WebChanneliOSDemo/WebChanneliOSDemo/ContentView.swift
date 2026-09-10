@@ -223,6 +223,7 @@ struct ContentView: View {
     private func logTextColor(for type: LogType) -> Color {
         switch type {
         case .info: return .primary
+        case .diagnostic: return .secondary
         case .open: return .green
         case .send: return .blue
         case .receive: return .purple
