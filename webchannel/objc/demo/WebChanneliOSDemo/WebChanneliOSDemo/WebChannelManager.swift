@@ -32,6 +32,7 @@ enum ConnectionState: String {
 
 enum LogType {
     case info
+    case diagnostic
     case open
     case send
     case receive
@@ -42,6 +43,7 @@ enum LogType {
     var icon: String {
         switch self {
         case .info: return "ℹ️"
+        case .diagnostic: return "🔎"
         case .open: return "✅"
         case .send: return "📤"
         case .receive: return "📥"
@@ -78,10 +80,26 @@ final class WebChannelManager: NSObject, ObservableObject, WCWebChannelClientHan
     @Published var logs: [LogItem] = []
     
     private var client: WCWebChannelClient?
+    private var diagnosticObserver: NSObjectProtocol?
     
     override init() {
         super.init()
+        diagnosticObserver = NotificationCenter.default.addObserver(
+            forName: Notification.Name("com.google.webchannel.DiagnosticNotification"),
+            object: nil,
+            queue: .main
+        ) { [weak self] notification in
+            Task { @MainActor [weak self] in
+                self?.appendDiagnostic(notification)
+            }
+        }
         appendLog(.info, "Ready. Tap 'Connect & Test' to start.")
+    }
+
+    deinit {
+        if let diagnosticObserver {
+            NotificationCenter.default.removeObserver(diagnosticObserver)
+        }
     }
     
     func connectAndRunDemo() {
@@ -134,6 +152,35 @@ final class WebChannelManager: NSObject, ObservableObject, WCWebChannelClientHan
     private func appendLog(_ type: LogType, _ message: String) {
         let item = LogItem(timestamp: Date(), type: type, message: message)
         logs.append(item)
+    }
+
+    private func appendDiagnostic(_ notification: Notification) {
+        guard let values = notification.userInfo as? [String: Any],
+              let event = values["event"] as? String else {
+            return
+        }
+
+        let method = values["method"] as? String
+        let channel = values["channel"] as? String ?? (method == "POST" ? "forward" : "back")
+        let attempt = values["attempt"] as? NSNumber
+        let timeout = values["timeout"] as? NSNumber
+        let delay = values["delay"] as? NSNumber
+        let requestID = values["requestID"] as? String
+        let error = values["error"] as? NSNumber
+        let statusCode = values["statusCode"] as? NSNumber
+
+        switch event {
+        case "request-start":
+            appendLog(.diagnostic, "\(channel.uppercased()) \(method ?? "request") id=\(requestID ?? "?") attempt=\(attempt?.intValue ?? 0) timeout=\(timeout?.doubleValue ?? 0)s")
+        case "timeout":
+            appendLog(.diagnostic, "\(channel.uppercased()) timeout id=\(requestID ?? "?") attempt=\(attempt?.intValue ?? 0) after \(timeout?.doubleValue ?? 0)s")
+        case "request-complete":
+            appendLog(.diagnostic, "\(channel.uppercased()) \(method ?? "request") complete id=\(requestID ?? "?") attempt=\(attempt?.intValue ?? 0) status=\(statusCode?.intValue ?? 0) transportError=\(error?.intValue ?? 0)")
+        case "retry-scheduled":
+            appendLog(.diagnostic, "\(channel.uppercased()) retry attempt=\(attempt?.intValue ?? 0) delay=\(delay?.doubleValue ?? 0)s")
+        default:
+            break
+        }
     }
     
     // MARK: - WCWebChannelClientHandlerDelegate

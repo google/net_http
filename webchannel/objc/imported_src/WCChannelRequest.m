@@ -1,5 +1,6 @@
 #import "WCChannelRequest.h"
 
+#import "WCEventNotification.h"
 #import "WCHTTPRequest.h"
 #import "WCLogger.h"
 #import "WCSupport.h"
@@ -200,6 +201,16 @@ static NSString *const kPageIDKey = @"X-Goog-PageId";
   } else {
     [_request sendGET:_baseURLComponent.URL withHeaders:headers timeout:_timeout];
   }
+  [[NSNotificationCenter defaultCenter]
+      postNotificationName:kWCDiagnosticNotificationName
+                    object:self
+                  userInfo:@{
+                    kWCDiagnosticEventKey : @"request-start",
+                    kWCDiagnosticMethodKey : _POST ? kHTTPMethodPOST : kHTTPMethodGET,
+                    kWCDiagnosticRequestIDKey : _requestID,
+                    kWCDiagnosticAttemptKey : @(_retryID),
+                    kWCDiagnosticTimeoutKey : @(_timeout),
+                  }];
   [_support notifyServerReachabilityEvent:WCServerReachabilityRequestMade];
   [_support.logger logHTTPRequest:_POST ? kHTTPMethodPOST : kHTTPMethodGET
                               URL:_baseURLComponent.URL
@@ -247,6 +258,16 @@ static NSString *const kPageIDKey = @"X-Goog-PageId";
   }
   [_support.logger
       logInfo:[NSString stringWithFormat:@"TIMEOUT: %@", _baseURLComponent.URL.absoluteString]];
+  [[NSNotificationCenter defaultCenter]
+      postNotificationName:kWCDiagnosticNotificationName
+                    object:self
+                  userInfo:@{
+                    kWCDiagnosticEventKey : @"timeout",
+                    kWCDiagnosticMethodKey : _POST ? kHTTPMethodPOST : kHTTPMethodGET,
+                    kWCDiagnosticRequestIDKey : _requestID,
+                    kWCDiagnosticAttemptKey : @(_retryID),
+                    kWCDiagnosticTimeoutKey : @(_timeout),
+                  }];
 
   if (_type != WCChannelRequestTypeCloseRequest) {
     [_support notifyServerReachabilityEvent:WCServerReachabilityFailed];
@@ -291,6 +312,17 @@ static NSString *const kPageIDKey = @"X-Goog-PageId";
                                           attempt:_retryID
                                             state:readyState
                                        statusCode:statusCode];
+  [[NSNotificationCenter defaultCenter]
+      postNotificationName:kWCDiagnosticNotificationName
+                    object:self
+                  userInfo:@{
+                    kWCDiagnosticEventKey : @"request-complete",
+                    kWCDiagnosticMethodKey : _POST ? kHTTPMethodPOST : kHTTPMethodGET,
+                    kWCDiagnosticRequestIDKey : _requestID,
+                    kWCDiagnosticAttemptKey : @(_retryID),
+                    kWCDiagnosticErrorKey : @(errorCode),
+                    kWCDiagnosticStatusCodeKey : @(statusCode),
+                  }];
 
   NSString *responseText = [[NSString alloc] initWithData:_responseData
                                                  encoding:NSUTF8StringEncoding];

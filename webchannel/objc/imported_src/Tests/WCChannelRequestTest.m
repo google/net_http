@@ -1,5 +1,6 @@
 #import "WCHTTPRequest.h"
 #import "WCChannelRequest.h"
+#import "WCEventNotification.h"
 
 #import <XCTest/XCTest.h>
 
@@ -63,6 +64,28 @@ static NSString *const kFakeGETResponse = @"14\n[[1,[\"noop\"]]]14\n[[2,[\"noop\
 
   XCTAssertTrue(_request.POST);
   XCTAssertEqualObjects(_request.POSTData, data);
+}
+
+- (void)testSendPOSTPublishesDiagnostic {
+  XCTestExpectation *expectation = [self expectationWithDescription:@"request diagnostic"];
+  id observer = [[NSNotificationCenter defaultCenter]
+      addObserverForName:kWCDiagnosticNotificationName
+                  object:_request
+                   queue:nil
+              usingBlock:^(NSNotification *notification) {
+                XCTAssertEqualObjects(notification.userInfo[kWCDiagnosticEventKey], @"request-start");
+                XCTAssertEqualObjects(notification.userInfo[kWCDiagnosticMethodKey], @"POST");
+                XCTAssertEqualObjects(notification.userInfo[kWCDiagnosticRequestIDKey], @"requestID");
+                XCTAssertEqualObjects(notification.userInfo[kWCDiagnosticAttemptKey], @1);
+                XCTAssertEqualObjects(notification.userInfo[kWCDiagnosticTimeoutKey], @45);
+                [expectation fulfill];
+              }];
+
+  NSURLComponents *URLComponent = [NSURLComponents componentsWithString:@"url"];
+  [_request sendPOST:URLComponent withData:@"data" chunkDecoded:YES];
+
+  [self waitForExpectationsWithTimeout:1.0 handler:nil];
+  [[NSNotificationCenter defaultCenter] removeObserver:observer];
 }
 
 - (void)testSendPOSTBinarySuccess {

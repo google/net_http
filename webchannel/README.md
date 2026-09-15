@@ -24,6 +24,9 @@ The raw imported source files are located in `js/imported_src/`.
 
 The Objective-C implementation provides `WCWebChannelClient` for macOS and iOS.
 An interactive SwiftUI iOS demo app is located in `objc/demo/WebChanneliOSDemo/`.
+Its [network failure testing guide](objc/demo/WebChanneliOSDemo/README.md#network-failure-testing)
+documents reproducible on-device checks for loss of connectivity, network handoffs, and silent
+packet drops, together with the current client timeout and retry baseline.
 
 ## Swift Client (`webchannel/swift`)
 

@@ -1,6 +1,7 @@
 #import "WCWebChannelClientInternal.h"
 #import "WCTimer.h"
 #import "WCHTTPRequest.h"
+#import "WCEventNotification.h"
 #import "WCLogger.h"
 #import "WCChannelRequest.h"
 #import "WCFailureRecoveryContext.h"
@@ -860,6 +861,16 @@ static NSString *const kQueryParamCharacterEncodedComma = @"%2C";
   context.channelType = WCChannelTypeForwardChannel;
 
   NSTimeInterval delay = [self getRetryTime:_forwardChannelRetryCount];
+  [[NSNotificationCenter defaultCenter]
+      postNotificationName:kWCDiagnosticNotificationName
+                    object:self
+                  userInfo:@{
+                    kWCDiagnosticEventKey : @"retry-scheduled",
+                    kWCDiagnosticChannelKey : @"forward",
+                    kWCDiagnosticAttemptKey : @(_forwardChannelRetryCount + 1),
+                    kWCDiagnosticDelayKey : @(delay),
+                    kWCDiagnosticErrorKey : @(request.lastError),
+                  }];
   __weak __typeof__(self) weakSelf = self;
   _forwardChannelDelayTimer =
       [_support setTimeout:delay
@@ -905,6 +916,16 @@ static NSString *const kQueryParamCharacterEncodedComma = @"%2C";
   }
 
   NSTimeInterval delay = [self getRetryTime:_backChannelRetryCount];
+  [[NSNotificationCenter defaultCenter]
+      postNotificationName:kWCDiagnosticNotificationName
+                    object:self
+                  userInfo:@{
+                    kWCDiagnosticEventKey : @"retry-scheduled",
+                    kWCDiagnosticChannelKey : @"back",
+                    kWCDiagnosticAttemptKey : @(_backChannelAttemptID),
+                    kWCDiagnosticDelayKey : @(delay),
+                    kWCDiagnosticErrorKey : @(error),
+                  }];
   __weak __typeof__(self) weakSelf = self;
   _backChannelDelayTimer = [_support setTimeout:delay
                                           block:^{
