@@ -1,5 +1,7 @@
 #import "WCWebChannelClientInternal.h"
 #import "WCTimer.h"
+
+#import "googlemac/Shared/Weakify/Macros.h"
 #import "WCHTTPRequest.h"
 #import "WCLogger.h"
 #import "WCChannelRequest.h"
@@ -88,6 +90,10 @@ static NSString *const kQueryParamCharacterEncodedComma = @"%2C";
   NSMutableArray<WCQueuedMap *> *_nonAckedMapsWithClosedChannel;
 
   dispatch_queue_t _dispatchQueue;
+
+  BOOL _nonBlockingSendEnabled;
+  BOOL _nonBlockingSendFailed;
+  NSString *_handshakeRequestID;
 }
 
 - (instancetype)initWithURL:(NSString *)baseURL
@@ -132,6 +138,14 @@ static NSString *const kQueryParamCharacterEncodedComma = @"%2C";
     _sessionID = @"";
     _forwardChannelRequestPool = [[WCForwardChannelRequestPool alloc]
         initWithMaxPoolSize:options.concurrentRequestLimit ?: 0];
+
+    _nonBlockingSendEnabled = options.nonBlockingSend;
+    if (_nonBlockingSendEnabled && _fastHandshake) {
+      [_support.logger logWarning:@"nonBlockingSend is ignored because fastHandshake is set."];
+      _nonBlockingSendEnabled = NO;
+    }
+    _nonBlockingSendFailed = NO;
+    _handshakeRequestID = nil;
 
     [self configureByOptions:options];
     _channelVersion = kWCLastChannelVersion;
@@ -181,7 +195,6 @@ static NSString *const kQueryParamCharacterEncodedComma = @"%2C";
   [self sendMap:rawJSON context:nil];
 }
 
-
 #pragma mark - WCWebChannelInternalHTTPHandler
 
 - (void)didReceiveInput:(NSData *)response withRequest:(WCChannelRequest *)request {
@@ -195,8 +208,13 @@ static NSString *const kQueryParamCharacterEncodedComma = @"%2C";
     return;
   }
 
+  BOOL isHandshake = _handshakeRequestID &&
+                     [request.requestID isEqualToString:_handshakeRequestID] &&
+                     _handshakeRequestID.length > 0;
+
   if (!request.initialResponseDecoded && [_forwardChannelRequestPool hasRequest:request] &&
-      currentState == WCWebChannelClientStateOpened) {
+      (currentState == WCWebChannelClientStateOpened ||
+       (currentState == WCWebChannelClientStateOpening && !isHandshake))) {
     NSArray<id> *responseArray = [_wireCodec decodeMessage:response level:kDecodeLevelOne];
     if (responseArray.count == kResponseArrayCountThree) {
       [self handlePOSTResponse:responseArray request:request];
@@ -249,6 +267,7 @@ static NSString *const kQueryParamCharacterEncodedComma = @"%2C";
     }
     return;
   }
+
   [self attemptRetryForFailedRequest:request channelType:type pendingMessages:pendingMessages];
 }
 
@@ -325,6 +344,20 @@ static NSString *const kQueryParamCharacterEncodedComma = @"%2C";
 
 #pragma mark - Private
 
+// LINT.IfChange(generateClientSID)
+- (NSString *)generateClientSID {
+  static NSString *const kAlphaNum =
+      @"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+  NSMutableString *sid = [NSMutableString stringWithString:@"c-"];
+  for (int i = 0; i < 22; ++i) {
+    uint32_t index = arc4random_uniform((uint32_t)kAlphaNum.length);
+    unichar c = [kAlphaNum characterAtIndex:index];
+    [sid appendFormat:@"%C", c];
+  }
+  return [sid copy];
+}
+
+
 - (void)configureByOptions:(WCOptions *)options {
   if (!options) {
     return;
@@ -376,7 +409,9 @@ static NSString *const kQueryParamCharacterEncodedComma = @"%2C";
   [_outgoingMaps addObject:[[WCQueuedMap alloc] initWithMapID:_nextMapID++
                                                           map:map
                                                       context:context]];
-  if (currentState == WCWebChannelClientStateOpened) {
+  if (currentState == WCWebChannelClientStateOpened ||
+      (_nonBlockingSendEnabled && currentState == WCWebChannelClientStateOpening &&
+       !_nonBlockingSendFailed)) {
     [self checkForwardChannelAvailabilityThenStart];
   }
 }
@@ -411,10 +446,10 @@ static NSString *const kQueryParamCharacterEncodedComma = @"%2C";
   }
   __weak typeof(self) weakSelf = self;
   dispatch_async(_dispatchQueue, ^{
-    __strong typeof(self) strongSelf = weakSelf;
+    typeof(self) strongSelf = weakSelf;
     if (!strongSelf) return;
-    strongSelf->_forwardChannelRequestInProgress = NO;
-    [strongSelf startForwardChannelWithRetryRequest:nil];
+    self->_forwardChannelRequestInProgress = NO;
+    [self startForwardChannelWithRetryRequest:nil];
   });
   _forwardChannelRequestInProgress = YES;
   _forwardChannelRetryCount = 0;
@@ -429,9 +464,9 @@ static NSString *const kQueryParamCharacterEncodedComma = @"%2C";
   }
   __weak typeof(self) weakSelf = self;
   dispatch_async(_dispatchQueue, ^{
-    __strong typeof(self) strongSelf = weakSelf;
+    typeof(self) strongSelf = weakSelf;
     if (!strongSelf) return;
-    [strongSelf onStartBackChannelTimer];
+    [self onStartBackChannelTimer];
   });
   _backChannelRequestInProgress = YES;
   _backChannelRetryCount = 0;
@@ -448,6 +483,18 @@ static NSString *const kQueryParamCharacterEncodedComma = @"%2C";
       return;
     }
     [self openForwardChannel];
+  }
+  if (currentState == WCWebChannelClientStateOpening) {
+    if (_nonBlockingSendEnabled && !_nonBlockingSendFailed) {
+      if (retryRequest != nil) {
+        // Retry requests are deferred until state becomes OPENED.
+        return;
+      }
+      if (_outgoingMaps.count == 0 || _forwardChannelRequestPool.full) {
+        return;
+      }
+      [self makeForwardChannelRequest:nil];
+    }
   }
   if (currentState == WCWebChannelClientStateOpened) {
     if (retryRequest != nil) {
@@ -469,10 +516,18 @@ static NSString *const kQueryParamCharacterEncodedComma = @"%2C";
   [_support.logger logDebug:@"Opening Forward Channel."];
   _nextRequestID = arc4random_uniform(100000);
   NSString *requestID = [NSString stringWithFormat:@"%d", _nextRequestID++];
-  WCChannelRequest *request = [[WCChannelRequest alloc] initWithSessionID:@""
-                                                                requestID:requestID
-                                                                  support:_support
-                                                                 delegate:self];
+  _handshakeRequestID = requestID;
+  _nonBlockingSendFailed = NO;
+
+  if (_nonBlockingSendEnabled) {
+    _sessionID = [self generateClientSID];
+  }
+
+  WCChannelRequest *request =
+      [[WCChannelRequest alloc] initWithSessionID:_nonBlockingSendEnabled ? _sessionID : @""
+                                        requestID:requestID
+                                          support:_support
+                                         delegate:self];
   NSMutableDictionary<NSString *, NSString *> *extraHeaders = [_extraHeaders mutableCopy];
   [extraHeaders addEntriesFromDictionary:_initialHeaders];
   request.extraHeaders = extraHeaders;
@@ -481,6 +536,9 @@ static NSString *const kQueryParamCharacterEncodedComma = @"%2C";
   NSURLComponents *components = [NSURLComponents componentsWithURL:_forwardChannelURL
                                            resolvingAgainstBaseURL:NO];
   [self addQueryParameterToURLComponents:components name:kQueryItemNameRID value:requestID];
+  if (_nonBlockingSendEnabled) {
+    [self addQueryParameterToURLComponents:components name:kQueryItemNameSID value:_sessionID];
+  }
   if (_clientVersion > 0) {
     [self addQueryParameterToURLComponents:components
                                       name:kQueryItemNameCVER
@@ -778,7 +836,22 @@ static NSString *const kQueryParamCharacterEncodedComma = @"%2C";
                      pendingMessages:(NSMutableArray<WCQueuedMap *> *)pendingMessages {
   WCChannelRequestError lastError = request.lastError;
   _forwardRetryPendingMessagesScheduled = NO;
-  if (!request.lastErrorFatal) {
+  BOOL isFatal = request.lastErrorFatal;
+  BOOL isHandshake = _handshakeRequestID && [request.requestID isEqualToString:_handshakeRequestID];
+  if (_nonBlockingSendEnabled && self.state == WCWebChannelClientStateOpening &&
+      type == WCChannelTypeForwardChannel && !isHandshake) {
+    if (request.lastError == WCChannelRequestErrorUnknownSessionId || !request.lastErrorFatal) {
+      _nonBlockingSendFailed = YES;
+      if (pendingMessages.count > 0) {
+        [_outgoingMaps
+            insertObjects:pendingMessages
+                atIndexes:[NSIndexSet
+                              indexSetWithIndexesInRange:NSMakeRange(0, pendingMessages.count)]];
+      }
+      return;
+    }
+  }
+  if (!isFatal) {
     [_support.logger logDebug:[NSString stringWithFormat:@"Maybe retrying, last error: %@",
                                                          [request formatErrorToString:lastError]]];
     if (type == WCChannelTypeForwardChannel) {
@@ -920,6 +993,8 @@ static NSString *const kQueryParamCharacterEncodedComma = @"%2C";
 
 - (void)onClose {
   _state = WCWebChannelClientStateClosed;
+  _handshakeRequestID = nil;
+  _nonBlockingSendFailed = NO;
   _nonAckedMapsWithClosedChannel = [@[] mutableCopy];
   NSArray<WCQueuedMap *> *copyOfpendingMessages = [_forwardChannelRequestPool.pendingMessages copy];
   NSArray<WCQueuedMap *> *copyOfUndeliveredMaps = [_outgoingMaps copy];
@@ -975,6 +1050,7 @@ static NSString *const kQueryParamCharacterEncodedComma = @"%2C";
     [self applyControlHeaders:request];
 
     _state = WCWebChannelClientStateOpened;
+    _handshakeRequestID = nil;
     [self triggerOpened];
     if (_detectBufferingProxy) {
       _handshakeRTT = [[NSDate date] timeIntervalSinceDate:request.requestStartTime];

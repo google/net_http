@@ -19,7 +19,7 @@
 @protocol WCSupport;
 
 static const int kWCLastChannelVersion = 8;
-static const int kWCClientVersion = 23;
+static const int kWCClientVersion = 24;
 static const NSTimeInterval kWCDefaultBaseRetryDelay = 5;
 static const NSTimeInterval kWCDefaultRetryDelaySeed = 10;
 static const int kWCDefaultForwardChannelMaxRetries = 2;
