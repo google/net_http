@@ -42,7 +42,8 @@ typedef NS_ENUM(NSInteger, WCChannelRequestError) {
 @property(nonatomic, readonly) NSMutableData *responseData;
 @property(nonatomic, readonly) WCChannelRequestError lastError;
 @property(nonatomic, readonly, getter=isLastErrorFatal) BOOL lastErrorFatal;
-@property(nonatomic, getter=isInitialResponseDecoded) BOOL initialResponseDecoded;
+@property(nonatomic) BOOL decodeInitialResponse;
+@property(nonatomic, readonly, getter=isInitialResponseDecoded) BOOL initialResponseDecoded;
 @property(nonatomic) BOOL isBinaryMessage;
 
 /**

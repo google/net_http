@@ -27,6 +27,8 @@ static NSString *const kQueryItemNameT = @"t";
 static NSString *const kHeaderContentTypeValue = @"application/x-www-form-urlencoded";
 static NSString *const kHeaderBinaryContentTypeValue = @"application/octet-stream";
 static NSString *const kHeaderContentTypeKey = @"Content-Type";
+static NSString *const kHeaderAcceptKey = @"Accept";
+static NSString *const kHeaderAcceptBinaryValue = @"application/octet-stream";
 static NSString *const kHTTPMethodGET = @"GET";
 static NSString *const kHTTPMethodPOST = @"POST";
 static NSString *const kUnknownSessionID = @"Unknown SID";
@@ -164,7 +166,9 @@ static NSString *const kPageIDKey = @"X-Goog-PageId";
   }
 
   if (![request isEqual:_request]) {
-    [_support.logger logWarning:[NSString stringWithFormat:@"Called back with an unexpected http request%@, %@", request, _request]];
+    [_support.logger
+        logWarning:[NSString stringWithFormat:@"Called back with an unexpected http request%@, %@",
+                                              request, _request]];
     return;
   }
   [_responseData appendData:data];
@@ -178,7 +182,8 @@ static NSString *const kPageIDKey = @"X-Goog-PageId";
   [self startReadyStateTimer];
 
   NSURLQueryItem *queryItem =
-      [NSURLQueryItem queryItemWithName:kQueryItemNameT value:[NSString stringWithFormat:@"%d", _retryID]];
+      [NSURLQueryItem queryItemWithName:kQueryItemNameT
+                                  value:[NSString stringWithFormat:@"%d", _retryID]];
   NSMutableArray<NSURLQueryItem *> *queryItems = [_baseURLComponent.queryItems mutableCopy];
   [queryItems addObject:queryItem];
   [_baseURLComponent setQueryItems:queryItems];
@@ -196,8 +201,14 @@ static NSString *const kPageIDKey = @"X-Goog-PageId";
     } else {
       [headers setObject:kHeaderContentTypeValue forKey:kHeaderContentTypeKey];
     }
-    [_request sendPOST:_baseURLComponent.URL withData:_POSTData withHeaders:headers timeout:_timeout];
+    [_request sendPOST:_baseURLComponent.URL
+              withData:_POSTData
+           withHeaders:headers
+               timeout:_timeout];
   } else {
+    if (_isBinaryMessage) {
+      [headers setObject:kHeaderAcceptBinaryValue forKey:kHeaderAcceptKey];
+    }
     [_request sendGET:_baseURLComponent.URL withHeaders:headers timeout:_timeout];
   }
   [_support notifyServerReachabilityEvent:WCServerReachabilityRequestMade];
@@ -243,7 +254,8 @@ static NSString *const kPageIDKey = @"X-Goog-PageId";
 
 - (void)handleTimeout {
   if (_successful) {
-    [_support.logger logError:@"Received readyStateTimer timeout even though request loaded successfully"];
+    [_support.logger
+        logError:@"Received readyStateTimer timeout even though request loaded successfully"];
   }
   [_support.logger
       logInfo:[NSString stringWithFormat:@"TIMEOUT: %@", _baseURLComponent.URL.absoluteString]];

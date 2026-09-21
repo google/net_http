@@ -6,13 +6,6 @@
  *      To enable assert for WC in your DEBUG build, either build the project with the
  *      @c WC_DEV_ASSERT preprocessor symbol defined or set the @c gWCDevAssertEnabled global to
  *      YES.
- *
- *      Example of YouTube Usage:
- *      @code
- *        googlemac/iPhone/YouTube/Tools/Bazel/GenerateMyProject.py \
- *            --project=YouTube \
- *            --objccopt=WC_DEV_ASSERT=1
- *      @endcode
  */
 extern BOOL gWCDevAssertEnabled;
 

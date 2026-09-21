@@ -16,6 +16,7 @@
 @property(nonatomic, getter=isLongPollingForced) BOOL longPollingForced;
 @property(nonatomic, getter=shouldDetectBufferingProxy) BOOL detectBufferingProxy;
 @property(nonatomic, getter=isFastHandshake) BOOL fastHandshake;
+@property(nonatomic, getter=isFastHandshake2) BOOL fastHandshake2;
 @property(nonatomic, getter=isBlockingHandshake) BOOL blockingHandshake;
 @property(nonatomic, getter=isNonBlockingSend) BOOL nonBlockingSend;
 @property(nonatomic) BOOL enableBinaryEncoding;

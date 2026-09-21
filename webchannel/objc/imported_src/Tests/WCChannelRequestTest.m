@@ -35,10 +35,13 @@ static NSString *const kFakeGETResponse = @"14\n[[1,[\"noop\"]]]14\n[[2,[\"noop\
   OCMStub([_mockSupport setTimeout:0 block:[OCMArg any]])
       .ignoringNonObjectArgs()
       .andReturn(dummyTimer)
-      .andDo(^id<WCTimer>(id<WCSupport> localSelf, NSTimeInterval timeout, void (^block)()) {
+      .andDo(^(NSInvocation *invocation) {
+        NSTimeInterval timeout;
+        [invocation getArgument:&timeout atIndex:2];
+        __unsafe_unretained void (^block)(void);
+        [invocation getArgument:&block atIndex:3];
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(timeout * NSEC_PER_SEC)),
                        dispatch_get_main_queue(), block);
-        return dummyTimer;
       });
   OCMStub([_mockSupport clearTimeout:[OCMArg any]]);
 
@@ -93,6 +96,22 @@ static NSString *const kFakeGETResponse = @"14\n[[1,[\"noop\"]]]14\n[[2,[\"noop\
   XCTAssertFalse(_request.POST);
 }
 
+- (void)testSendGETBinarySuccess {
+  NSURLComponents *URLComponent = [NSURLComponents componentsWithString:@"url"];
+  _request.isBinaryMessage = YES;
+
+  OCMExpect([_mockHttpRequest sendGET:URLComponent.URL
+                          withHeaders:@{@"Accept" : @"application/octet-stream"}
+                              timeout:kChannelRequestDefaultTimeout])
+      .ignoringNonObjectArgs;
+
+  [_request sendGET:URLComponent chunkDecoded:YES];
+
+  XCTAssertFalse(_request.POST);
+  XCTAssertTrue(_request.isBinaryMessage);
+  OCMVerifyAll((id)_mockHttpRequest);
+}
+
 - (void)testDecodePOSTResponseChunkSuccess {
   OCMExpect([_mockHTTPInternalHandler didReceivedFirstByteOfRequest:_request
                                                        responseText:kFakePOSTResponse]);
@@ -122,7 +141,7 @@ static NSString *const kFakeGETResponse = @"14\n[[1,[\"noop\"]]]14\n[[2,[\"noop\
 
 - (void)testDecodeInvalidChunks {
   [_request decodeNextChunks:[NSData data] state:WCRequestReadyStateComplete];
-  XCTAssertFalse(_request.isSuccessful);
+  XCTAssertFalse([_request isSuccessful]);
 }
 
 - (void)testDecodeInvalidChunksWithNegativeSize {
@@ -132,7 +151,7 @@ static NSString *const kFakeGETResponse = @"14\n[[1,[\"noop\"]]]14\n[[2,[\"noop\
   NSString *corruptedResponse = @"10\n12345\n12\n[-5,\"data\"]\n";
   [_request decodeNextChunks:[corruptedResponse dataUsingEncoding:NSUTF8StringEncoding]
                        state:WCRequestReadyStateInteractive];
-  XCTAssertFalse(_request.isSuccessful);
+  XCTAssertFalse([_request isSuccessful]);
 }
 
 - (void)testDecodeNegativeChunkSize {
@@ -140,7 +159,7 @@ static NSString *const kFakeGETResponse = @"14\n[[1,[\"noop\"]]]14\n[[2,[\"noop\
   NSString *negativeSizeResponse = @"-5\n";
   [_request decodeNextChunks:[negativeSizeResponse dataUsingEncoding:NSUTF8StringEncoding]
                        state:WCRequestReadyStateInteractive];
-  XCTAssertFalse(_request.isSuccessful);
+  XCTAssertFalse([_request isSuccessful]);
 }
 
 - (void)testDecodeIncompleteChunkWithMissingNewlineDoesNotCrash {
@@ -270,6 +289,66 @@ static NSString *const kFakeGETResponse = @"14\n[[1,[\"noop\"]]]14\n[[2,[\"noop\
 
   [_request decodeNextChunks:responseData state:WCRequestReadyStateComplete];
   OCMVerifyAll((id)_mockHTTPInternalHandler);
+}
+
+- (void)testDecodeInitialResponseSuccess {
+  NSURLComponents *URLComponent = [NSURLComponents componentsWithString:@"url"];
+  _request.decodeInitialResponse = YES;
+  [_request sendGET:URLComponent chunkDecoded:YES];
+
+  NSString *initialResponse = @"[[0,[\"c\",\"test_sid\",\"null\",25]]]";
+  OCMStub([_mockHttpRequest responseHeaderForName:kWCXHTTPInitialResponse])
+      .andReturn(initialResponse);
+  OCMStub([_mockHttpRequest requestReadyState]).andReturn(WCRequestReadyStateInteractive);
+  OCMStub([_mockHttpRequest status]).andReturn(200);
+
+  NSData *expectedInitialInput = [initialResponse dataUsingEncoding:NSUTF8StringEncoding];
+  OCMExpect([_mockHTTPInternalHandler didReceiveInput:expectedInitialInput
+                                             isBinary:NO
+                                          withRequest:_request]);
+
+  NSData *chunkData = [@"14\n[[1,[\"noop\"]]]" dataUsingEncoding:NSUTF8StringEncoding];
+  NSData *expectedChunkInput = [@"[[1,[\"noop\"]]]" dataUsingEncoding:NSUTF8StringEncoding];
+  OCMExpect([_mockHTTPInternalHandler didReceiveInput:expectedChunkInput
+                                             isBinary:NO
+                                          withRequest:_request]);
+
+  [_request stateChangedForRequest:_mockHttpRequest responseData:chunkData];
+
+  XCTAssertTrue([_request isInitialResponseDecoded]);
+  OCMVerifyAll((id)_mockHTTPInternalHandler);
+}
+
+- (void)testDecodeInitialResponseMissingHeaderFails {
+  NSURLComponents *URLComponent = [NSURLComponents componentsWithString:@"url"];
+  _request.decodeInitialResponse = YES;
+  [_request sendGET:URLComponent chunkDecoded:YES];
+
+  OCMStub([_mockHttpRequest responseHeaderForName:kWCXHTTPInitialResponse]).andReturn(nil);
+  OCMStub([_mockHttpRequest requestReadyState]).andReturn(WCRequestReadyStateInteractive);
+  OCMStub([_mockHttpRequest status]).andReturn(200);
+
+  NSData *chunkData = [@"14\n[[1,[\"noop\"]]]" dataUsingEncoding:NSUTF8StringEncoding];
+  [_request stateChangedForRequest:_mockHttpRequest responseData:chunkData];
+
+  XCTAssertFalse([_request isSuccessful]);
+  XCTAssertEqual(WCChannelRequestErrorUnknownSessionId, _request.lastError);
+}
+
+- (void)testBadRequestWithUnknownSIDResponseBodySetsUnknownSessionIdError {
+  NSURLComponents *URLComponent = [NSURLComponents componentsWithString:@"url"];
+  [_request sendPOST:URLComponent withData:@"body" chunkDecoded:NO];
+
+  OCMStub([_mockHttpRequest requestReadyState]).andReturn(WCRequestReadyStateComplete);
+  OCMStub([_mockHttpRequest status]).andReturn(400);
+
+  NSData *errorBody =
+      [@"<HTML><BODY>Unknown SID</BODY></HTML>" dataUsingEncoding:NSUTF8StringEncoding];
+  [_request stateChangedForRequest:_mockHttpRequest responseData:errorBody];
+
+  XCTAssertFalse([_request isSuccessful]);
+  XCTAssertEqual(WCChannelRequestErrorUnknownSessionId, _request.lastError);
+  XCTAssertEqual(400, _request.lastStatusCode);
 }
 
 @end

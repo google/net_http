@@ -116,7 +116,7 @@
     }
     strongSelf->_requestReadyState = WCRequestReadyStateComplete;
     [strongSelf->_requestReadyStateChangeHandler stateChangedForRequest:strongSelf
-                                                           responseData:NULL];
+                                                           responseData:data];
   }];
 }
 

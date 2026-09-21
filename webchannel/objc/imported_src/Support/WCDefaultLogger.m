@@ -1,6 +1,5 @@
 #import "WCDefaultLogger.h"
 
-#import "googlemac/Shared/Logging/GIPLog.h"
 #import "WCHTTPRequest.h"
 
 #if WC_VERBOSE_LOGGING
