@@ -2,3 +2,4 @@
 
 NSNotificationName const kWCEventNotificationName = @"com.google.webchannel.EventNotification";
 NSString *const kWCEventNotificationHandshakeRttKey = @"WCEventNotificationHandshakeRttKey";
+NSString *const kWCEventNotificationHandshakeHeadersKey = @"WCEventNotificationHandshakeHeadersKey";

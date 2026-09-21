@@ -15,6 +15,7 @@
 #import <XCTest/XCTest.h>
 
 #import "WCDefaultSupport.h"
+#import "WCEventNotification.h"
 #import "WCSupport.h"
 #import "WCTimer.h"
 #import <GTMSessionFetcher/GTMSessionFetcherService.h>
@@ -87,6 +88,45 @@
   [self waitForExpectationsWithTimeout:2.0 handler:nil];
 
   XCTAssertFalse(fired, @"Timer must not fire after cancellation");
+}
+
+- (void)testNotifyHandshakeTimingEventPostsNotificationWithRTT {
+  WCDefaultSupport *support = [[WCDefaultSupport alloc] init];
+  NSTimeInterval fakeRTT = 0.123;
+
+  [self expectationForNotification:kWCEventNotificationName
+                            object:support
+                           handler:^BOOL(NSNotification *notification) {
+                             NSDictionary<NSString *, id> *userInfo = notification.userInfo;
+                             XCTAssertEqualObjects(userInfo[kWCEventNotificationHandshakeRttKey],
+                                                   @(fakeRTT));
+                             XCTAssertNil(userInfo[kWCEventNotificationHandshakeHeadersKey]);
+                             return YES;
+                           }];
+
+  [support notifyHandshakeTimingEventWithRtt:fakeRTT];
+
+  [self waitForExpectationsWithTimeout:2.0 handler:nil];
+}
+
+- (void)testNotifyHandshakeResponseHeadersPostsNotificationWithHeaders {
+  WCDefaultSupport *support = [[WCDefaultSupport alloc] init];
+  NSDictionary<NSString *, NSString *> *fakeHeaders =
+      @{@"Server-Timing" : @"gfet4t7; dur=42", @"Some-Header" : @"Some-Value"};
+
+  [self expectationForNotification:kWCEventNotificationName
+                            object:support
+                           handler:^BOOL(NSNotification *notification) {
+                             NSDictionary<NSString *, id> *userInfo = notification.userInfo;
+                             XCTAssertEqualObjects(
+                                 userInfo[kWCEventNotificationHandshakeHeadersKey], fakeHeaders);
+                             XCTAssertNil(userInfo[kWCEventNotificationHandshakeRttKey]);
+                             return YES;
+                           }];
+
+  [support notifyHandshakeResponseHeaders:fakeHeaders];
+
+  [self waitForExpectationsWithTimeout:2.0 handler:nil];
 }
 
 @end

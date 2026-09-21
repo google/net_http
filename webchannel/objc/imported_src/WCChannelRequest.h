@@ -42,7 +42,8 @@ typedef NS_ENUM(NSInteger, WCChannelRequestError) {
 @property(nonatomic, readonly) NSMutableData *responseData;
 @property(nonatomic, readonly) WCChannelRequestError lastError;
 @property(nonatomic, readonly, getter=isLastErrorFatal) BOOL lastErrorFatal;
-@property(nonatomic, getter=isInitialResponseDecoded) BOOL initialResponseDecoded;
+@property(nonatomic) BOOL decodeInitialResponse;
+@property(nonatomic, readonly, getter=isInitialResponseDecoded) BOOL initialResponseDecoded;
 @property(nonatomic) BOOL isBinaryMessage;
 
 /**
@@ -121,9 +122,9 @@ typedef NS_ENUM(NSInteger, WCChannelRequestError) {
 /**
  * Decode chunks of responses. Exposed for testing.
  *
- * @param responseText The responses sent back from server.
+ * @param responseData The responses sent back from server.
  * @param readyState The enum indicate if the request is complete.
  */
-- (void)decodeNextChunks:(NSString *)responseText state:(WCRequestReadyState)readyState;
+- (void)decodeNextChunks:(NSData *)responseData state:(WCRequestReadyState)readyState;
 
 @end

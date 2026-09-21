@@ -39,6 +39,9 @@ typedef NS_ENUM(NSInteger, WCServerReachability) {
 /** Reports the round trip time of the handshake request to establish the channel. */
 - (void)notifyHandshakeTimingEventWithRtt:(NSTimeInterval)rtt;
 
+/** Reports the HTTP response headers of the handshake request to establish the channel. */
+- (void)notifyHandshakeResponseHeaders:(NSDictionary<NSString *, NSString *> *)headers;
+
 - (id<WCTimer>)setTimeout:(NSTimeInterval)timeout block:(void (^)())block;
 
 /**

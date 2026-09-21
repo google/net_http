@@ -22,6 +22,10 @@
   return _channel.lastStatusCode;
 }
 
+- (BOOL)isBackChannelBinaryEncodingEnabled {
+  return _channel.isBackChannelBinaryEncodingEnabled;
+}
+
 - (NSArray<NSString *> *)nonAckedMessages {
   NSMutableArray<NSString*> *nonAckedMessages = [@[] mutableCopy];
   for (WCQueuedMap *nonAckedMap in _channel.nonAckedMaps) {

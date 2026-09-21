@@ -34,6 +34,10 @@
   return [_response valueForHTTPHeaderField:name];
 }
 
+- (NSDictionary<NSString *, NSString *> *)allResponseHeaders {
+  return (NSDictionary<NSString *, NSString *> *)_response.allHeaderFields;
+}
+
 - (int)status {
   return (int)_fetcher.statusCode;
 }
@@ -112,7 +116,7 @@
     }
     strongSelf->_requestReadyState = WCRequestReadyStateComplete;
     [strongSelf->_requestReadyStateChangeHandler stateChangedForRequest:strongSelf
-                                                           responseData:NULL];
+                                                           responseData:data];
   }];
 }
 

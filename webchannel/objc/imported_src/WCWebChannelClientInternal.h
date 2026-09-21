@@ -8,7 +8,6 @@
 @class GTMSessionFetcherService;
 @class WCForwardChannelRequestPool;
 @class WCWireV8;
-@class WCWireV8Binary;
 @class WCChannelRequest;
 @class WCQueuedMap;
 @class WCInternalChannelParams;
@@ -19,7 +18,7 @@
 @protocol WCSupport;
 
 static const int kWCLastChannelVersion = 8;
-static const int kWCClientVersion = 23;
+static const int kWCClientVersion = 25;
 static const NSTimeInterval kWCDefaultBaseRetryDelay = 5;
 static const NSTimeInterval kWCDefaultRetryDelaySeed = 10;
 static const int kWCDefaultForwardChannelMaxRetries = 2;
@@ -48,9 +47,12 @@ static NSString *const kMetadataKey = @"__sm__";
  * it handles messages by calling WCWebChannelClientDelegate:didReceiveMessage.
  *
  * @param input The response data passed from @c NSURLSessionDataTask.
+ * @param isBinary Whether the input is binary.
  * @param request The request triggering response data.
  */
-- (void)didReceiveInput:(NSString *)input withRequest:(WCChannelRequest *)request;
+- (void)didReceiveInput:(NSData *)input
+               isBinary:(BOOL)isBinary
+            withRequest:(WCChannelRequest *)request;
 
 /**
  * This function handles success connection by calling WCWebChannelClientDelegate:webChannelOpened.
@@ -84,7 +86,6 @@ static NSString *const kMetadataKey = @"__sm__";
 @property(nonatomic, readonly) NSURL *backChannelURL;
 @property(nonatomic, readonly) WCForwardChannelRequestPool *forwardChannelRequestPool;
 @property(nonatomic, readonly) WCWireV8 *wireCodec;
-@property(nonatomic, readonly) WCWireV8Binary *wireCodecBinary;
 @property(nonatomic, readonly) NSString *sessionID;
 @property(nonatomic) NSMutableDictionary<NSString *, NSString *> *extraHeaders;
 @property(nonatomic) NSMutableDictionary<NSString *, NSString *> *initialHeaders;
@@ -102,6 +103,8 @@ static NSString *const kMetadataKey = @"__sm__";
 @property(nonatomic, readonly) NSMutableArray<WCQueuedMap *> *nonAckedMaps;
 @property(nonatomic, readonly) int backChannelRetryCount;
 @property(nonatomic) WCAckCommitCallbackBlock forwardChannelFlushedCallback;
+@property(nonatomic, readonly, getter=isBackChannelBinaryEncodingEnabled)
+    BOOL backChannelBinaryEncodingEnabled;
 
 /**
  * @param URL The base URL of the channel.

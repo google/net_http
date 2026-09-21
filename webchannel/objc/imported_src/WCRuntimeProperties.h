@@ -1,6 +1,5 @@
 #import <Foundation/Foundation.h>
 
-
 typedef void (^WCAckCommitCallbackBlock)(void);
 
 /** The runtime properties of the WebChannel instance. */
@@ -8,6 +7,10 @@ typedef void (^WCAckCommitCallbackBlock)(void);
 
 /** The last HTTP status code received by the channel. */
 @property(nonatomic, readonly) int lastStatusCode;
+
+/** Whether the backchannel is currently utilizing binary encoding. */
+@property(nonatomic, readonly, getter=isBackChannelBinaryEncodingEnabled)
+    BOOL backChannelBinaryEncodingEnabled;
 
 /**
  * The list of messages that have not received commit-ack from the server;

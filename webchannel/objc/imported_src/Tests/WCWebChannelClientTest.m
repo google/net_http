@@ -31,6 +31,7 @@ static const double kRunLoopDelay = 0.1;
   id<WCSupport> _mockSupport;
   id<WCWebChannelClientHandlerDelegate> _mockDelegate;
   GTMSessionFetcherService *_fetcherService;
+  WCFakeHTTPRequest *_fakeRequest;
 }
 
 - (void)setUp {
@@ -39,7 +40,7 @@ static const double kRunLoopDelay = 0.1;
   _mockDelegate = OCMProtocolMock(@protocol(WCWebChannelClientHandlerDelegate));
   _fetcherService = [GTMSessionFetcherService mockFetcherServiceWithFakedData:[NSData data]
                                                                    fakedError:nil];
-  id<WCHTTPRequest> _fakeRequest = [[WCFakeHTTPRequest alloc] init];
+  _fakeRequest = [[WCFakeHTTPRequest alloc] init];
   id<WCJSONDecoder> _decoder = [[WCDefaultJSONDecoder alloc] init];
   OCMStub(_mockSupport.JSONDecoder).andReturn(_decoder);
   OCMStub([_mockSupport HTTPRequest:OCMOCK_ANY]).andReturn(_fakeRequest);
@@ -47,6 +48,17 @@ static const double kRunLoopDelay = 0.1;
 
   id<WCTimer> dummyTimer = OCMProtocolMock(@protocol(WCTimer));
   OCMStub([_mockSupport setTimeout:0 block:[OCMArg any]])
+      .ignoringNonObjectArgs()
+      .andReturn(dummyTimer)
+      .andDo(^(NSInvocation *invocation) {
+        NSTimeInterval timeout;
+        [invocation getArgument:&timeout atIndex:2];
+        __unsafe_unretained void (^block)(void);
+        [invocation getArgument:&block atIndex:3];
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(timeout * NSEC_PER_SEC)),
+                       dispatch_get_main_queue(), block);
+      });
+  OCMStub([_mockSupport setTimeout:0 block:[OCMArg any] context:[OCMArg any]])
       .ignoringNonObjectArgs()
       .andReturn(dummyTimer)
       .andDo(^(NSInvocation *invocation) {
@@ -207,7 +219,9 @@ static const double kRunLoopDelay = 0.1;
   NSString *responseString =
       @"[[5,{\"__headers__\":{\"test_header\":\"test_vlaue\",\"x-webchannel-metadata\":"
       @"\"echo the headers/status\"},\"__status__\":404}],[6,{\"message\":\"abc\"}]]";
-  [_channel didReceiveInput:responseString withRequest:_channel.backChannelRequest];
+  [_channel didReceiveInput:[responseString dataUsingEncoding:NSUTF8StringEncoding]
+                   isBinary:NO
+                withRequest:_channel.backChannelRequest];
   [_channel handleCompleteRequest:_channel.backChannelRequest];
   XCTAssertNil(_channel.backChannelRequest);
 }
@@ -249,7 +263,9 @@ static const double kRunLoopDelay = 0.1;
       @"  ],"
       @"  [3,[\"close\"]]"
       @"]";
-  [_channel didReceiveInput:response withRequest:_channel.backChannelRequest];
+  [_channel didReceiveInput:[response dataUsingEncoding:NSUTF8StringEncoding]
+                   isBinary:NO
+                withRequest:_channel.backChannelRequest];
   [_channel handleCompleteRequest:_channel.backChannelRequest];
   XCTAssertNil(_channel.backChannelRequest);
 }
@@ -335,7 +351,9 @@ static const double kRunLoopDelay = 0.1;
   WCChannelRequest *mockForwardRequest = OCMPartialMock(forwardRequest);
   OCMStub([mockForwardRequest isSuccessful]).andReturn(YES);
   [_channel handleCompleteRequest:mockForwardRequest];
-  [_channel didReceiveInput:responseData withRequest:forwardRequest];
+  [_channel didReceiveInput:[responseData dataUsingEncoding:NSUTF8StringEncoding]
+                   isBinary:NO
+                withRequest:forwardRequest];
 }
 
 - (WCChannelRequest *)getSingleForwardRequest {
@@ -344,7 +362,9 @@ static const double kRunLoopDelay = 0.1;
 
 - (void)completeBackChannel {
   [[NSRunLoop mainRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:kRunLoopDelay]];
-  [_channel didReceiveInput:@"[[1,[\"foo\"]]]" withRequest:_channel.backChannelRequest];
+  [_channel didReceiveInput:[@"[[1,[\"foo\"]]]" dataUsingEncoding:NSUTF8StringEncoding]
+                   isBinary:NO
+                withRequest:_channel.backChannelRequest];
   [_channel handleCompleteRequest:_channel.backChannelRequest];
 }
 
@@ -353,14 +373,18 @@ static const double kRunLoopDelay = 0.1;
 }
 
 - (void)receive:(NSString *)data {
-  [_channel didReceiveInput:[NSString stringWithFormat:@"[[1,%@]]", data]
+  NSString *inputStr = [NSString stringWithFormat:@"[[1,%@]]", data];
+  [_channel didReceiveInput:[inputStr dataUsingEncoding:NSUTF8StringEncoding]
+                   isBinary:NO
                 withRequest:_channel.backChannelRequest];
   [_channel handleCompleteRequest:_channel.backChannelRequest];
 }
 
 - (void)receivedResponse {
   WCChannelRequest *forwardRequest = [self getSingleForwardRequest];
-  [_channel didReceiveInput:@"[1,0,0]" withRequest:forwardRequest];
+  [_channel didReceiveInput:[@"[1,0,0]" dataUsingEncoding:NSUTF8StringEncoding]
+                   isBinary:NO
+                withRequest:forwardRequest];
   [_channel handleCompleteRequest:forwardRequest];
 }
 
@@ -370,11 +394,574 @@ static const double kRunLoopDelay = 0.1;
                                                        error:nil];
   NSString *jsonString = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
   WCChannelRequest *request = [self getSingleForwardRequest];
-  [_channel didReceiveInput:jsonString withRequest:request];
+  [_channel didReceiveInput:[jsonString dataUsingEncoding:NSUTF8StringEncoding]
+                   isBinary:NO
+                withRequest:request];
   [_channel handleCompleteRequest:request];
 }
 
 - (void)close {
   [_channel close];
 }
+
+- (void)testNonBlockingSendSuccess {
+  WCOptions *options = [[WCOptions alloc] init];
+  options.nonBlockingSend = YES;
+  _channel = [[WCWebChannelClientInternal alloc] initWithURL:@""
+                                                     options:options
+                                             connectionState:nil
+                                               clientVersion:1
+                                                    delegate:_mockDelegate
+                                                     support:_mockSupport];
+
+  XCTAssertEqualObjects(@"", _channel.sessionID);
+
+  // 1. Open channel (handshake starts)
+  [_channel open];
+  [[NSRunLoop mainRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:kRunLoopDelay]];
+
+  XCTAssertEqual(WCWebChannelClientStateOpening, _channel.state);
+
+  // Handshake request should be in pool
+  WCChannelRequest *handshakeRequest = [self getSingleForwardRequest];
+  XCTAssertNotNil(handshakeRequest);
+
+  // Session ID should be generated (starts with "c-")
+  XCTAssertTrue([_channel.sessionID hasPrefix:@"c-"]);
+
+  // 2. Send message immediately (while still opening)
+  [self send:@"foo" value:@"bar"];
+  [[NSRunLoop mainRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:kRunLoopDelay]];
+
+  // There should be 2 requests in the pool (handshake + early send)
+  XCTAssertEqual(2, _channel.forwardChannelRequestPool.requestPool.count);
+
+  // Complete handshake
+  NSString *serverVersionString = [NSString stringWithFormat:@"%d", kRealServerVersion];
+  NSString *responseData = [NSString stringWithFormat:@"[[0,[\"c\",\"%@\",\"null\", %@]]]",
+                                                      _channel.sessionID, serverVersionString];
+
+  // Complete the handshake request
+  id mockHandshakeRequest = OCMPartialMock(handshakeRequest);
+  OCMStub([mockHandshakeRequest isSuccessful]).andReturn(YES);
+
+  [_channel didReceiveInput:[responseData dataUsingEncoding:NSUTF8StringEncoding]
+                   isBinary:NO
+                withRequest:handshakeRequest];
+  [_channel handleCompleteRequest:handshakeRequest];
+
+  XCTAssertEqual(WCWebChannelClientStateOpened, _channel.state);
+}
+
+- (void)testNonBlockingSendFailureAndRecovery {
+  WCOptions *options = [[WCOptions alloc] init];
+  options.nonBlockingSend = YES;
+  _channel = [[WCWebChannelClientInternal alloc] initWithURL:@""
+                                                     options:options
+                                             connectionState:nil
+                                               clientVersion:1
+                                                    delegate:_mockDelegate
+                                                     support:_mockSupport];
+
+  // 1. Open channel (handshake starts)
+  [_channel open];
+  [[NSRunLoop mainRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:kRunLoopDelay]];
+
+  WCChannelRequest *handshakeRequest = [self getSingleForwardRequest];
+  XCTAssertNotNil(handshakeRequest);
+
+  // 2. Send message immediately
+  [self send:@"foo" value:@"bar"];
+  [[NSRunLoop mainRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:kRunLoopDelay]];
+
+  // Find the early send request (the one that is NOT the handshake request)
+  WCChannelRequest *earlySendRequest = nil;
+  for (WCChannelRequest *req in _channel.forwardChannelRequestPool.requestPool) {
+    if (![req.requestID isEqualToString:handshakeRequest.requestID]) {
+      earlySendRequest = req;
+      break;
+    }
+  }
+  XCTAssertNotNil(earlySendRequest);
+
+  // 3. Simulate failure of early send with UnknownSessionId
+  [earlySendRequest setValue:@(WCChannelRequestErrorUnknownSessionId) forKey:@"lastError"];
+  id mockEarlySendRequest = OCMPartialMock(earlySendRequest);
+  OCMStub([mockEarlySendRequest isSuccessful]).andReturn(NO);
+
+  [_channel handleCompleteRequest:earlySendRequest];
+
+  // Channel should STILL be Opening, not Closed
+  XCTAssertEqual(WCWebChannelClientStateOpening, _channel.state);
+
+  // Failed message should be requeued to outgoingMaps
+  XCTAssertEqual(1, _channel.outgoingMaps.count);
+  XCTAssertTrue([_channel.outgoingMaps[0].map[@"__data__"] isEqualToString:@"foo:bar"]);
+
+  // 4. Complete handshake
+  NSString *serverVersionString = [NSString stringWithFormat:@"%d", kRealServerVersion];
+  NSString *responseData = [NSString stringWithFormat:@"[[0,[\"c\",\"%@\",\"null\", %@]]]",
+                                                      _channel.sessionID, serverVersionString];
+
+  id mockHandshakeRequest = OCMPartialMock(handshakeRequest);
+  OCMStub([mockHandshakeRequest isSuccessful]).andReturn(YES);
+
+  [_channel didReceiveInput:[responseData dataUsingEncoding:NSUTF8StringEncoding]
+                   isBinary:NO
+                withRequest:handshakeRequest];
+  [_channel handleCompleteRequest:handshakeRequest];
+
+  XCTAssertEqual(WCWebChannelClientStateOpened, _channel.state);
+
+  // Requeued message should be sent again (new request in pool)
+  [[NSRunLoop mainRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:kRunLoopDelay]];
+  XCTAssertEqual(1, _channel.forwardChannelRequestPool.requestPool.count);
+}
+
+- (void)testNonBlockingSendHandshakeCompletesBeforeFailure {
+  WCOptions *options = [[WCOptions alloc] init];
+  options.nonBlockingSend = YES;
+  _channel = [[WCWebChannelClientInternal alloc] initWithURL:@""
+                                                     options:options
+                                             connectionState:nil
+                                               clientVersion:1
+                                                    delegate:_mockDelegate
+                                                     support:_mockSupport];
+
+  // 1. Open channel (handshake starts)
+  [_channel open];
+  [[NSRunLoop mainRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:kRunLoopDelay]];
+
+  WCChannelRequest *handshakeRequest = [self getSingleForwardRequest];
+  XCTAssertNotNil(handshakeRequest);
+
+  // 2. Send message immediately during Opening
+  [self send:@"foo" value:@"bar"];
+  [[NSRunLoop mainRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:kRunLoopDelay]];
+
+  WCChannelRequest *earlySendRequest = nil;
+  for (WCChannelRequest *req in _channel.forwardChannelRequestPool.requestPool) {
+    if (![req.requestID isEqualToString:handshakeRequest.requestID]) {
+      earlySendRequest = req;
+      break;
+    }
+  }
+  XCTAssertNotNil(earlySendRequest);
+
+  // 3. Handshake completes FIRST -> channel transitions to Opened
+  NSString *serverVersionString = [NSString stringWithFormat:@"%d", kRealServerVersion];
+  NSString *responseData = [NSString stringWithFormat:@"[[0,[\"c\",\"%@\",\"null\", %@]]]",
+                                                      _channel.sessionID, serverVersionString];
+  id mockHandshakeRequest = OCMPartialMock(handshakeRequest);
+  OCMStub([mockHandshakeRequest isSuccessful]).andReturn(YES);
+
+  [_channel didReceiveInput:[responseData dataUsingEncoding:NSUTF8StringEncoding]
+                   isBinary:NO
+                withRequest:handshakeRequest];
+  [_channel handleCompleteRequest:handshakeRequest];
+  [[NSRunLoop mainRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:kRunLoopDelay]];
+
+  XCTAssertEqual(WCWebChannelClientStateOpened, _channel.state);
+
+  // 4. Early send fails with UnknownSessionId AFTER handshake already completed
+  [earlySendRequest setValue:@(WCChannelRequestErrorUnknownSessionId) forKey:@"lastError"];
+  id mockEarlySendRequest = OCMPartialMock(earlySendRequest);
+  OCMStub([mockEarlySendRequest isSuccessful]).andReturn(NO);
+
+  [_channel handleCompleteRequest:earlySendRequest];
+
+  // Channel should STILL be Opened, not Closed
+  XCTAssertEqual(WCWebChannelClientStateOpened, _channel.state);
+
+  // Verify retry is scheduled and the message is resent
+  [[NSRunLoop mainRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:kRunLoopDelay]];
+  XCTAssertEqual(1, _channel.forwardChannelRequestPool.requestPool.count);
+}
+
+- (void)testNonBlockingSendTimeoutFailureAndRecovery {
+  WCOptions *options = [[WCOptions alloc] init];
+  options.nonBlockingSend = YES;
+  _channel = [[WCWebChannelClientInternal alloc] initWithURL:@""
+                                                     options:options
+                                             connectionState:nil
+                                               clientVersion:1
+                                                    delegate:_mockDelegate
+                                                     support:_mockSupport];
+
+  // 1. Open channel (handshake starts)
+  [_channel open];
+  [[NSRunLoop mainRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:kRunLoopDelay]];
+
+  WCChannelRequest *handshakeRequest = [self getSingleForwardRequest];
+  XCTAssertNotNil(handshakeRequest);
+
+  // 2. Send message immediately
+  [self send:@"foo" value:@"bar"];
+  [[NSRunLoop mainRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:kRunLoopDelay]];
+
+  // Find the early send request (the one that is NOT the handshake request)
+  WCChannelRequest *earlySendRequest = nil;
+  for (WCChannelRequest *req in _channel.forwardChannelRequestPool.requestPool) {
+    if (![req.requestID isEqualToString:handshakeRequest.requestID]) {
+      earlySendRequest = req;
+      break;
+    }
+  }
+  XCTAssertNotNil(earlySendRequest);
+
+  // 3. Simulate failure of early send with Timeout (non-fatal)
+  [earlySendRequest setValue:@(WCChannelRequestErrorTimeout) forKey:@"lastError"];
+  id mockEarlySendRequest = OCMPartialMock(earlySendRequest);
+  OCMStub([mockEarlySendRequest isSuccessful]).andReturn(NO);
+
+  [_channel handleCompleteRequest:earlySendRequest];
+
+  // Channel should STILL be Opening, not Closed
+  XCTAssertEqual(WCWebChannelClientStateOpening, _channel.state);
+
+  // Failed message should be requeued to outgoingMaps
+  XCTAssertEqual(1, _channel.outgoingMaps.count);
+  XCTAssertTrue([_channel.outgoingMaps[0].map[@"__data__"] isEqualToString:@"foo:bar"]);
+
+  // 4. Complete handshake
+  NSString *serverVersionString = [NSString stringWithFormat:@"%d", kRealServerVersion];
+  NSString *responseData = [NSString stringWithFormat:@"[[0,[\"c\",\"%@\",\"null\", %@]]]",
+                                                      _channel.sessionID, serverVersionString];
+
+  id mockHandshakeRequest = OCMPartialMock(handshakeRequest);
+  OCMStub([mockHandshakeRequest isSuccessful]).andReturn(YES);
+
+  [_channel didReceiveInput:[responseData dataUsingEncoding:NSUTF8StringEncoding]
+                   isBinary:NO
+                withRequest:handshakeRequest];
+  [_channel handleCompleteRequest:handshakeRequest];
+
+  XCTAssertEqual(WCWebChannelClientStateOpened, _channel.state);
+
+  // Requeued message should be sent again (new request in pool)
+  [[NSRunLoop mainRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:kRunLoopDelay]];
+  XCTAssertEqual(1, _channel.forwardChannelRequestPool.requestPool.count);
+}
+
+- (void)testNonBlockingSendDisabled {
+  WCOptions *options = [[WCOptions alloc] init];
+  options.nonBlockingSend = NO;
+  _channel = [[WCWebChannelClientInternal alloc] initWithURL:@""
+                                                     options:options
+                                             connectionState:nil
+                                               clientVersion:1
+                                                    delegate:_mockDelegate
+                                                     support:_mockSupport];
+
+  XCTAssertEqualObjects(@"", _channel.sessionID);
+
+  [_channel open];
+  [[NSRunLoop mainRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:kRunLoopDelay]];
+
+  XCTAssertEqual(WCWebChannelClientStateOpening, _channel.state);
+
+  // Session ID should NOT be generated (should remain empty)
+  XCTAssertEqualObjects(@"", _channel.sessionID);
+}
+- (void)testHandshakeHeadersPropagation {
+  NSDictionary<NSString *, NSString *> *fakeHeaders =
+      @{@"Server-Timing" : @"gfet4t7; dur=50", @"Some-Other-Header" : @"value"};
+
+  _fakeRequest.fakeResponseHeaders = fakeHeaders;
+
+  // Expect support to be notified of handshake response headers.
+  OCMExpect([_mockSupport notifyHandshakeResponseHeaders:fakeHeaders]);
+
+  // Now open the channel (starts handshake with our mock request)
+  [self connectForwardChannel];
+
+  // Verify expect
+  OCMVerifyAll((id)_mockSupport);
+}
+
+- (void)testReceiveBinaryBackChannelMessage {
+  [self connectForwardChannel];
+  [[NSRunLoop mainRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:kRunLoopDelay]];
+  XCTAssertNotNil(_channel.backChannelRequest);
+  XCTAssertFalse(_channel.isBackChannelBinaryEncodingEnabled);
+  XCTAssertFalse(_channel.runtimeProperties.isBackChannelBinaryEncodingEnabled);
+
+  const char rawBytes[] = {'f', 'o', 'o', 0x00, 'b', 'a', 'r', (char)0xFF};
+  NSData *payloadBytes = [NSData dataWithBytes:rawBytes length:8];
+
+  NSMutableData *binaryPayload = [NSMutableData data];
+  [binaryPayload appendData:[@"id=1&size=8\r\n" dataUsingEncoding:NSUTF8StringEncoding]];
+  [binaryPayload appendData:payloadBytes];
+
+  OCMExpect([_mockDelegate webChannel:[OCMArg any] didReceiveMessage:payloadBytes]);
+
+  [_channel didReceiveInput:binaryPayload isBinary:YES withRequest:_channel.backChannelRequest];
+  [_channel handleCompleteRequest:_channel.backChannelRequest];
+
+  OCMVerifyAll((id)_mockDelegate);
+  XCTAssertTrue(_channel.isBackChannelBinaryEncodingEnabled);
+  XCTAssertTrue(_channel.runtimeProperties.isBackChannelBinaryEncodingEnabled);
+
+  [_channel close];
+  XCTAssertFalse(_channel.isBackChannelBinaryEncodingEnabled);
+  XCTAssertFalse(_channel.runtimeProperties.isBackChannelBinaryEncodingEnabled);
+}
+
+- (void)testReceiveInvalidBinaryBackChannelMessage {
+  [self connectForwardChannel];
+  [[NSRunLoop mainRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:kRunLoopDelay]];
+  XCTAssertNotNil(_channel.backChannelRequest);
+  XCTAssertFalse(_channel.isBackChannelBinaryEncodingEnabled);
+
+  OCMExpect([_mockDelegate webChannel:[OCMArg any]
+                     encounteredError:WCWebChannelClientErrorBadResponse]);
+
+  NSData *badPayload = [@"invalid_binary_data" dataUsingEncoding:NSUTF8StringEncoding];
+
+  [_channel didReceiveInput:badPayload isBinary:YES withRequest:_channel.backChannelRequest];
+
+  OCMVerifyAll((id)_mockDelegate);
+  XCTAssertEqual(_channel.state, WCWebChannelClientStateClosed);
+  XCTAssertFalse(_channel.isBackChannelBinaryEncodingEnabled);
+}
+
+- (void)testDefaultClientVersion {
+  XCTAssertEqual(kWCClientVersion, 25);
+}
+
+- (void)testFastHandshake2WithBinaryEncoding {
+  WCOptions *options = [[WCOptions alloc] init];
+  options.fastHandshake2 = YES;
+  options.enableBinaryEncoding = YES;
+  _channel = [[WCWebChannelClientInternal alloc] initWithURL:@""
+                                                     options:options
+                                             connectionState:nil
+                                               clientVersion:1
+                                                    delegate:_mockDelegate
+                                                     support:_mockSupport];
+
+  // 1. Open channel (handshake starts)
+  [_channel open];
+  [[NSRunLoop mainRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:kRunLoopDelay]];
+
+  XCTAssertEqual(WCWebChannelClientStateOpening, _channel.state);
+  WCChannelRequest *handshakeRequest = [self getSingleForwardRequest];
+  XCTAssertNotNil(handshakeRequest);
+  XCTAssertTrue(handshakeRequest.isBinaryMessage);
+  XCTAssertTrue(handshakeRequest.decodeInitialResponse);
+  XCTAssertFalse([handshakeRequest isInitialResponseDecoded]);
+  XCTAssertFalse(handshakeRequest.POST);
+  XCTAssertTrue([handshakeRequest.sessionID hasPrefix:@"c-"]);
+
+  // 2. Early non-blocking send while in Opening state
+  [self send:@"foo" value:@"bar"];
+  [[NSRunLoop mainRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:kRunLoopDelay]];
+
+  WCChannelRequest *earlySendRequest = nil;
+  for (WCChannelRequest *req in _channel.forwardChannelRequestPool.requestPool) {
+    if (![req.requestID isEqualToString:handshakeRequest.requestID]) {
+      earlySendRequest = req;
+      break;
+    }
+  }
+  XCTAssertNotNil(earlySendRequest);
+  XCTAssertTrue(earlySendRequest.isBinaryMessage);
+  XCTAssertTrue(earlySendRequest.POST);
+
+  // 3. Complete handshake
+  NSString *serverVersionString = [NSString stringWithFormat:@"%d", kRealServerVersion];
+  NSString *responseData = [NSString stringWithFormat:@"[[0,[\"c\",\"%@\",\"null\", %@]]]",
+                                                      _channel.sessionID, serverVersionString];
+  id mockHandshakeRequest = OCMPartialMock(handshakeRequest);
+  OCMStub([mockHandshakeRequest isSuccessful]).andReturn(YES);
+  OCMStub([mockHandshakeRequest isInitialResponseDecoded]).andReturn(YES);
+
+  [_channel didReceiveInput:[responseData dataUsingEncoding:NSUTF8StringEncoding]
+                   isBinary:NO
+                withRequest:handshakeRequest];
+
+  XCTAssertEqual(WCWebChannelClientStateOpened, _channel.state);
+  // Handshake request was upgraded to backChannelRequest
+  XCTAssertEqualObjects(_channel.backChannelRequest, handshakeRequest);
+  XCTAssertTrue(_channel.backChannelRequest.isBinaryMessage);
+
+  [_channel handleCompleteRequest:handshakeRequest];
+  [[NSRunLoop mainRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:kRunLoopDelay]];
+
+  XCTAssertEqual(WCWebChannelClientStateOpened, _channel.state);
+}
+
+- (void)testFastHandshakeIgnoredWhenBinaryEncodingEnabledWithoutFastHandshake2 {
+  WCOptions *options = [[WCOptions alloc] init];
+  options.fastHandshake = YES;
+  options.fastHandshake2 = NO;
+  options.enableBinaryEncoding = YES;
+  _channel = [[WCWebChannelClientInternal alloc] initWithURL:@""
+                                                     options:options
+                                             connectionState:nil
+                                               clientVersion:1
+                                                    delegate:_mockDelegate
+                                                     support:_mockSupport];
+
+  [_channel open];
+  [[NSRunLoop mainRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:kRunLoopDelay]];
+
+  XCTAssertEqual(WCWebChannelClientStateOpening, _channel.state);
+  WCChannelRequest *handshakeRequest = [self getSingleForwardRequest];
+  XCTAssertNotNil(handshakeRequest);
+  XCTAssertTrue(handshakeRequest.isBinaryMessage);
+  // fastHandshake was ignored, so sent as POST rather than GET
+  XCTAssertTrue(handshakeRequest.POST);
+  XCTAssertFalse(handshakeRequest.decodeInitialResponse);
+  XCTAssertFalse([handshakeRequest isInitialResponseDecoded]);
+}
+
+- (void)testFastHandshake2DoesNotEncodeInitialMessagesInGetUri {
+  WCOptions *options = [[WCOptions alloc] init];
+  options.fastHandshake2 = YES;
+  _channel = [[WCWebChannelClientInternal alloc] initWithURL:@""
+                                                     options:options
+                                             connectionState:nil
+                                               clientVersion:1
+                                                    delegate:_mockDelegate
+                                                     support:_mockSupport];
+
+  [_channel open];
+  [[NSRunLoop mainRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:kRunLoopDelay]];
+
+  XCTAssertEqual(WCWebChannelClientStateOpening, _channel.state);
+  WCChannelRequest *handshakeRequest = [self getSingleForwardRequest];
+  XCTAssertNotNil(handshakeRequest);
+  XCTAssertFalse(handshakeRequest.POST);
+  XCTAssertEqual(0, handshakeRequest.pendingMessages.count);
+  XCTAssertTrue([handshakeRequest.sessionID hasPrefix:@"c-"]);
+
+  // Send early messages while in OPENING state
+  [self send:@"k1" value:@"v1"];
+  [self send:@"k2" value:@"v2"];
+  [[NSRunLoop mainRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:kRunLoopDelay]];
+
+  // Handshake GET request should have no pending messages
+  XCTAssertEqual(0, handshakeRequest.pendingMessages.count);
+
+  // Early forward POST requests contain the messages
+  int totalPostMessages = 0;
+  for (WCChannelRequest *req in _channel.forwardChannelRequestPool.requestPool) {
+    if (![req.requestID isEqualToString:handshakeRequest.requestID]) {
+      totalPostMessages += req.pendingMessages.count;
+      XCTAssertTrue([req.sessionID hasPrefix:@"c-"]);
+      XCTAssertTrue(req.POST);
+    }
+  }
+  XCTAssertEqual(2, totalPostMessages);
+}
+
+- (void)testNonBlockingSendWithFastHandshakeGetsClientSid {
+  WCOptions *options = [[WCOptions alloc] init];
+  options.fastHandshake2 = YES;
+  _channel = [[WCWebChannelClientInternal alloc] initWithURL:@""
+                                                     options:options
+                                             connectionState:nil
+                                               clientVersion:1
+                                                    delegate:_mockDelegate
+                                                     support:_mockSupport];
+
+  [_channel open];
+  [[NSRunLoop mainRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:kRunLoopDelay]];
+
+  XCTAssertEqual(WCWebChannelClientStateOpening, _channel.state);
+
+  // Retrieve the handshake GET request
+  WCChannelRequest *handshakeRequest = [self getSingleForwardRequest];
+  XCTAssertNotNil(handshakeRequest);
+  // Verify that it is using a client-generated SID instead of "null"
+  XCTAssertTrue([handshakeRequest.sessionID hasPrefix:@"c-"]);
+}
+
+- (void)testFastHandshakeSetsDecodeInitialResponse {
+  WCOptions *options = [[WCOptions alloc] init];
+  options.fastHandshake = YES;
+  _channel = [[WCWebChannelClientInternal alloc] initWithURL:@""
+                                                     options:options
+                                             connectionState:nil
+                                               clientVersion:1
+                                                    delegate:_mockDelegate
+                                                     support:_mockSupport];
+
+  [_channel open];
+  [[NSRunLoop mainRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:kRunLoopDelay]];
+
+  XCTAssertEqual(WCWebChannelClientStateOpening, _channel.state);
+  WCChannelRequest *handshakeRequest = [self getSingleForwardRequest];
+  XCTAssertNotNil(handshakeRequest);
+  XCTAssertFalse(handshakeRequest.POST);
+  XCTAssertTrue(handshakeRequest.decodeInitialResponse);
+  XCTAssertFalse([handshakeRequest isInitialResponseDecoded]);
+}
+
+- (void)testNonBlockingSendEarlySendFailsWithStatus400RequeuesAndRecovers {
+  WCOptions *options = [[WCOptions alloc] init];
+  options.fastHandshake2 = YES;
+  _channel = [[WCWebChannelClientInternal alloc] initWithURL:@""
+                                                     options:options
+                                             connectionState:nil
+                                               clientVersion:1
+                                                    delegate:_mockDelegate
+                                                     support:_mockSupport];
+
+  // 1. Open channel (handshake starts)
+  [_channel open];
+  [[NSRunLoop mainRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:kRunLoopDelay]];
+
+  WCChannelRequest *handshakeRequest = [self getSingleForwardRequest];
+  XCTAssertNotNil(handshakeRequest);
+
+  // 2. Send message immediately
+  [self send:@"foo" value:@"bar"];
+  [[NSRunLoop mainRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:kRunLoopDelay]];
+
+  WCChannelRequest *earlySendRequest = nil;
+  for (WCChannelRequest *req in _channel.forwardChannelRequestPool.requestPool) {
+    if (![req.requestID isEqualToString:handshakeRequest.requestID]) {
+      earlySendRequest = req;
+      break;
+    }
+  }
+  XCTAssertNotNil(earlySendRequest);
+
+  // 3. Simulate failure of early send with generic Status error (code 400)
+  [earlySendRequest setValue:@(WCChannelRequestErrorStatus) forKey:@"lastError"];
+  [earlySendRequest setValue:@(400) forKey:@"lastStatusCode"];
+  id mockEarlySendRequest = OCMPartialMock(earlySendRequest);
+  OCMStub([mockEarlySendRequest isSuccessful]).andReturn(NO);
+
+  [_channel handleCompleteRequest:earlySendRequest];
+
+  // Channel should STILL be Opening, not Closed
+  XCTAssertEqual(WCWebChannelClientStateOpening, _channel.state);
+
+  // Failed message should be requeued to outgoingMaps
+  XCTAssertEqual(1, _channel.outgoingMaps.count);
+  XCTAssertTrue([_channel.outgoingMaps[0].map[@"__data__"] isEqualToString:@"foo:bar"]);
+
+  // 4. Complete handshake
+  NSString *serverVersionString = [NSString stringWithFormat:@"%d", kRealServerVersion];
+  NSString *responseData = [NSString stringWithFormat:@"[[0,[\"c\",\"%@\",\"null\", %@]]]",
+                                                      _channel.sessionID, serverVersionString];
+
+  id mockHandshakeRequest = OCMPartialMock(handshakeRequest);
+  OCMStub([mockHandshakeRequest isSuccessful]).andReturn(YES);
+
+  [_channel didReceiveInput:[responseData dataUsingEncoding:NSUTF8StringEncoding]
+                   isBinary:NO
+                withRequest:handshakeRequest];
+  [_channel handleCompleteRequest:handshakeRequest];
+
+  XCTAssertEqual(WCWebChannelClientStateOpened, _channel.state);
+
+  // Requeued message should be sent again (new request in pool)
+  [[NSRunLoop mainRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:kRunLoopDelay]];
+  XCTAssertEqual(1, _channel.forwardChannelRequestPool.requestPool.count);
+}
+
 @end
