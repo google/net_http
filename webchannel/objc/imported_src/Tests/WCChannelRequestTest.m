@@ -146,4 +146,16 @@ static NSString *const kFakeGETResponse = @"14\n[[1,[\"noop\"]]]14\n[[2,[\"noop\
   // treated as incomplete data and simply skipped (no NSRangeException).
   OCMVerifyAll((id)_mockHTTPInternalHandler);
 }
+
+// Verify UTF-16 chunk length framing with Unicode surrogate pair characters (e.g. 4 bytes in UTF-8
+// but 2 UTF-16 code units).
+- (void)testDecodeChunkWithUnicode {
+  NSString *response = @"4\n😀ok";
+  OCMExpect([_mockHTTPInternalHandler didReceivedFirstByteOfRequest:_request
+                                                       responseText:response]);
+  OCMExpect([_mockHTTPInternalHandler didReceiveInput:@"😀ok" withRequest:_request]);
+
+  [_request decodeNextChunks:response state:WCRequestReadyStateComplete];
+  OCMVerifyAll((id)_mockHTTPInternalHandler);
+}
 @end
