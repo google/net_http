@@ -61,6 +61,9 @@ typedef NS_ENUM(NSInteger, WCRequestStat) {
  */
 - (NSString *)responseHeaderForName:(NSString *)name;
 
+/** Get all HTTP response headers. */
+- (NSDictionary<NSString *, NSString *> *)allResponseHeaders;
+
 /** Get HTTP status code. */
 - (int)status;
 

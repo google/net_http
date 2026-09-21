@@ -31,6 +31,7 @@ static const double kRunLoopDelay = 0.1;
   id<WCSupport> _mockSupport;
   id<WCWebChannelClientHandlerDelegate> _mockDelegate;
   GTMSessionFetcherService *_fetcherService;
+  WCFakeHTTPRequest *_fakeRequest;
 }
 
 - (void)setUp {
@@ -39,7 +40,7 @@ static const double kRunLoopDelay = 0.1;
   _mockDelegate = OCMProtocolMock(@protocol(WCWebChannelClientHandlerDelegate));
   _fetcherService = [GTMSessionFetcherService mockFetcherServiceWithFakedData:[NSData data]
                                                                    fakedError:nil];
-  id<WCHTTPRequest> _fakeRequest = [[WCFakeHTTPRequest alloc] init];
+  _fakeRequest = [[WCFakeHTTPRequest alloc] init];
   id<WCJSONDecoder> _decoder = [[WCDefaultJSONDecoder alloc] init];
   OCMStub(_mockSupport.JSONDecoder).andReturn(_decoder);
   OCMStub([_mockSupport HTTPRequest:OCMOCK_ANY]).andReturn(_fakeRequest);
@@ -567,6 +568,21 @@ static const double kRunLoopDelay = 0.1;
 
   // Session ID should NOT be generated (should remain empty)
   XCTAssertEqualObjects(@"", _channel.sessionID);
+}
+- (void)testHandshakeHeadersPropagation {
+  NSDictionary<NSString *, NSString *> *fakeHeaders =
+      @{@"Server-Timing" : @"gfet4t7; dur=50", @"Some-Other-Header" : @"value"};
+
+  _fakeRequest.fakeResponseHeaders = fakeHeaders;
+
+  // Expect support to be notified of handshake response headers.
+  OCMExpect([_mockSupport notifyHandshakeResponseHeaders:fakeHeaders]);
+
+  // Now open the channel (starts handshake with our mock request)
+  [self connectForwardChannel];
+
+  // Verify expect
+  OCMVerifyAll((id)_mockSupport);
 }
 
 @end

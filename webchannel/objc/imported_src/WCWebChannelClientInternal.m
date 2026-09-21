@@ -1058,6 +1058,7 @@ static NSString *const kQueryParamCharacterEncodedComma = @"%2C";
     [_support
         notifyHandshakeTimingEventWithRtt:[[NSDate now]
                                               timeIntervalSinceDate:request.requestStartTime]];
+    [_support notifyHandshakeResponseHeaders:[request.request allResponseHeaders]];
     [self startBackChannelAfterHandshake:request];
     if (_outgoingMaps.count != 0) {
       [self checkForwardChannelAvailabilityThenStart];

@@ -122,6 +122,16 @@ static dispatch_queue_t CreateDefaultQueue() {
                   userInfo:@{kWCEventNotificationHandshakeRttKey : @(rtt)}];
 }
 
+- (void)notifyHandshakeResponseHeaders:(NSDictionary<NSString *, NSString *> *)headers {
+  if (headers.count == 0) {
+    return;
+  }
+  [[NSNotificationCenter defaultCenter]
+      postNotificationName:kWCEventNotificationName
+                    object:self
+                  userInfo:@{kWCEventNotificationHandshakeHeadersKey : headers}];
+}
+
 - (id<WCTimer>)setTimeout:(NSTimeInterval)timeout block:(void (^)(void))block {
   WCDefaultTimer *timerToken = [[WCDefaultTimer alloc] init];
   [timerToken startWithQueue:_dispatchQueue timeout:timeout block:block];

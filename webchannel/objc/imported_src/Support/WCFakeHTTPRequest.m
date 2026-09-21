@@ -9,7 +9,11 @@
 @synthesize requestErrorCode = _requestErrorCode;
 
 - (NSString *)responseHeaderForName:(NSString *)name {
-  return @"";
+  return self.fakeResponseHeaders[name] ?: @"";
+}
+
+- (NSDictionary<NSString *, NSString *> *)allResponseHeaders {
+  return self.fakeResponseHeaders ?: @{};
 }
 
 - (int)status {
