@@ -121,9 +121,9 @@ typedef NS_ENUM(NSInteger, WCChannelRequestError) {
 /**
  * Decode chunks of responses. Exposed for testing.
  *
- * @param responseText The responses sent back from server.
+ * @param responseData The responses sent back from server.
  * @param readyState The enum indicate if the request is complete.
  */
-- (void)decodeNextChunks:(NSString *)responseText state:(WCRequestReadyState)readyState;
+- (void)decodeNextChunks:(NSData *)responseData state:(WCRequestReadyState)readyState;
 
 @end

@@ -2,16 +2,20 @@
 
 @implementation WCDefaultJSONDecoder
 
-- (NSArray *)decodeData:(NSString *)data maxDepth:(int)maxDepth {
-  // TODO(eryu): Refactor to avoid inefficient NSData->NSString->NSData conversion.
-  // WCChannelRequest converts network response from NSData to NSString before
-  // calling its delegate's -didReceiveInput:withRequest: method. The input
-  // eventually reaches this method as NSString, which is converted back to
-  // NSData because the underlying JSON parser (NSJSONSerialization) requires
-  // NSData. This data path should be optimized to pass NSData directly to
-  // eliminate the redundant conversions.
-  NSData *encodingData = [data dataUsingEncoding:NSUTF8StringEncoding];
-  NSArray<id> *JSONArray = [NSJSONSerialization JSONObjectWithData:encodingData options:0 error:nil];
+- (nullable NSArray<id> *)decodeData:(NSData *)data maxDepth:(int)maxDepth {
+  if (!data) {
+    return nil;
+  }
+  NSData *jsonData = nil;
+  if ([data isKindOfClass:[NSData class]]) {
+    jsonData = data;
+  } else if ([data isKindOfClass:[NSString class]]) {
+    jsonData = [(NSString *)data dataUsingEncoding:NSUTF8StringEncoding];
+  }
+  if (!jsonData) {
+    return nil;
+  }
+  NSArray<id> *JSONArray = [NSJSONSerialization JSONObjectWithData:jsonData options:0 error:nil];
   return JSONArray;
 }
 

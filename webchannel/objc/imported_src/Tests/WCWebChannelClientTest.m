@@ -214,7 +214,9 @@ static const double kRunLoopDelay = 0.1;
   NSString *responseString =
       @"[[5,{\"__headers__\":{\"test_header\":\"test_vlaue\",\"x-webchannel-metadata\":"
       @"\"echo the headers/status\"},\"__status__\":404}],[6,{\"message\":\"abc\"}]]";
-  [_channel didReceiveInput:responseString withRequest:_channel.backChannelRequest];
+  [_channel didReceiveInput:[responseString dataUsingEncoding:NSUTF8StringEncoding]
+                   isBinary:NO
+                withRequest:_channel.backChannelRequest];
   [_channel handleCompleteRequest:_channel.backChannelRequest];
   XCTAssertNil(_channel.backChannelRequest);
 }
@@ -256,7 +258,9 @@ static const double kRunLoopDelay = 0.1;
       @"  ],"
       @"  [3,[\"close\"]]"
       @"]";
-  [_channel didReceiveInput:response withRequest:_channel.backChannelRequest];
+  [_channel didReceiveInput:[response dataUsingEncoding:NSUTF8StringEncoding]
+                   isBinary:NO
+                withRequest:_channel.backChannelRequest];
   [_channel handleCompleteRequest:_channel.backChannelRequest];
   XCTAssertNil(_channel.backChannelRequest);
 }
@@ -342,7 +346,9 @@ static const double kRunLoopDelay = 0.1;
   WCChannelRequest *mockForwardRequest = OCMPartialMock(forwardRequest);
   OCMStub([mockForwardRequest isSuccessful]).andReturn(YES);
   [_channel handleCompleteRequest:mockForwardRequest];
-  [_channel didReceiveInput:responseData withRequest:forwardRequest];
+  [_channel didReceiveInput:[responseData dataUsingEncoding:NSUTF8StringEncoding]
+                   isBinary:NO
+                withRequest:forwardRequest];
 }
 
 - (WCChannelRequest *)getSingleForwardRequest {
@@ -351,7 +357,9 @@ static const double kRunLoopDelay = 0.1;
 
 - (void)completeBackChannel {
   [[NSRunLoop mainRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:kRunLoopDelay]];
-  [_channel didReceiveInput:@"[[1,[\"foo\"]]]" withRequest:_channel.backChannelRequest];
+  [_channel didReceiveInput:[@"[[1,[\"foo\"]]]" dataUsingEncoding:NSUTF8StringEncoding]
+                   isBinary:NO
+                withRequest:_channel.backChannelRequest];
   [_channel handleCompleteRequest:_channel.backChannelRequest];
 }
 
@@ -360,14 +368,18 @@ static const double kRunLoopDelay = 0.1;
 }
 
 - (void)receive:(NSString *)data {
-  [_channel didReceiveInput:[NSString stringWithFormat:@"[[1,%@]]", data]
+  NSString *inputStr = [NSString stringWithFormat:@"[[1,%@]]", data];
+  [_channel didReceiveInput:[inputStr dataUsingEncoding:NSUTF8StringEncoding]
+                   isBinary:NO
                 withRequest:_channel.backChannelRequest];
   [_channel handleCompleteRequest:_channel.backChannelRequest];
 }
 
 - (void)receivedResponse {
   WCChannelRequest *forwardRequest = [self getSingleForwardRequest];
-  [_channel didReceiveInput:@"[1,0,0]" withRequest:forwardRequest];
+  [_channel didReceiveInput:[@"[1,0,0]" dataUsingEncoding:NSUTF8StringEncoding]
+                   isBinary:NO
+                withRequest:forwardRequest];
   [_channel handleCompleteRequest:forwardRequest];
 }
 
@@ -377,7 +389,9 @@ static const double kRunLoopDelay = 0.1;
                                                        error:nil];
   NSString *jsonString = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
   WCChannelRequest *request = [self getSingleForwardRequest];
-  [_channel didReceiveInput:jsonString withRequest:request];
+  [_channel didReceiveInput:[jsonString dataUsingEncoding:NSUTF8StringEncoding]
+                   isBinary:NO
+                withRequest:request];
   [_channel handleCompleteRequest:request];
 }
 
@@ -426,7 +440,9 @@ static const double kRunLoopDelay = 0.1;
   id mockHandshakeRequest = OCMPartialMock(handshakeRequest);
   OCMStub([mockHandshakeRequest isSuccessful]).andReturn(YES);
 
-  [_channel didReceiveInput:responseData withRequest:handshakeRequest];
+  [_channel didReceiveInput:[responseData dataUsingEncoding:NSUTF8StringEncoding]
+                   isBinary:NO
+                withRequest:handshakeRequest];
   [_channel handleCompleteRequest:handshakeRequest];
 
   XCTAssertEqual(WCWebChannelClientStateOpened, _channel.state);
@@ -485,7 +501,9 @@ static const double kRunLoopDelay = 0.1;
   id mockHandshakeRequest = OCMPartialMock(handshakeRequest);
   OCMStub([mockHandshakeRequest isSuccessful]).andReturn(YES);
 
-  [_channel didReceiveInput:responseData withRequest:handshakeRequest];
+  [_channel didReceiveInput:[responseData dataUsingEncoding:NSUTF8StringEncoding]
+                   isBinary:NO
+                withRequest:handshakeRequest];
   [_channel handleCompleteRequest:handshakeRequest];
 
   XCTAssertEqual(WCWebChannelClientStateOpened, _channel.state);
@@ -532,7 +550,9 @@ static const double kRunLoopDelay = 0.1;
   id mockHandshakeRequest = OCMPartialMock(handshakeRequest);
   OCMStub([mockHandshakeRequest isSuccessful]).andReturn(YES);
 
-  [_channel didReceiveInput:responseData withRequest:handshakeRequest];
+  [_channel didReceiveInput:[responseData dataUsingEncoding:NSUTF8StringEncoding]
+                   isBinary:NO
+                withRequest:handshakeRequest];
   [_channel handleCompleteRequest:handshakeRequest];
   [[NSRunLoop mainRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:kRunLoopDelay]];
 
@@ -606,7 +626,9 @@ static const double kRunLoopDelay = 0.1;
   id mockHandshakeRequest = OCMPartialMock(handshakeRequest);
   OCMStub([mockHandshakeRequest isSuccessful]).andReturn(YES);
 
-  [_channel didReceiveInput:responseData withRequest:handshakeRequest];
+  [_channel didReceiveInput:[responseData dataUsingEncoding:NSUTF8StringEncoding]
+                   isBinary:NO
+                withRequest:handshakeRequest];
   [_channel handleCompleteRequest:handshakeRequest];
 
   XCTAssertEqual(WCWebChannelClientStateOpened, _channel.state);
@@ -650,6 +672,56 @@ static const double kRunLoopDelay = 0.1;
 
   // Verify expect
   OCMVerifyAll((id)_mockSupport);
+}
+
+- (void)testReceiveBinaryBackChannelMessage {
+  [self connectForwardChannel];
+  [[NSRunLoop mainRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:kRunLoopDelay]];
+  XCTAssertNotNil(_channel.backChannelRequest);
+  XCTAssertFalse(_channel.isBackChannelBinaryEncodingEnabled);
+  XCTAssertFalse(_channel.runtimeProperties.isBackChannelBinaryEncodingEnabled);
+
+  const char rawBytes[] = {'f', 'o', 'o', 0x00, 'b', 'a', 'r', (char)0xFF};
+  NSData *payloadBytes = [NSData dataWithBytes:rawBytes length:8];
+
+  NSMutableData *binaryPayload = [NSMutableData data];
+  [binaryPayload appendData:[@"id=1&size=8\r\n" dataUsingEncoding:NSUTF8StringEncoding]];
+  [binaryPayload appendData:payloadBytes];
+
+  OCMExpect([_mockDelegate webChannel:[OCMArg any] didReceiveMessage:payloadBytes]);
+
+  [_channel didReceiveInput:binaryPayload isBinary:YES withRequest:_channel.backChannelRequest];
+  [_channel handleCompleteRequest:_channel.backChannelRequest];
+
+  OCMVerifyAll((id)_mockDelegate);
+  XCTAssertTrue(_channel.isBackChannelBinaryEncodingEnabled);
+  XCTAssertTrue(_channel.runtimeProperties.isBackChannelBinaryEncodingEnabled);
+
+  [_channel close];
+  XCTAssertFalse(_channel.isBackChannelBinaryEncodingEnabled);
+  XCTAssertFalse(_channel.runtimeProperties.isBackChannelBinaryEncodingEnabled);
+}
+
+- (void)testReceiveInvalidBinaryBackChannelMessage {
+  [self connectForwardChannel];
+  [[NSRunLoop mainRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:kRunLoopDelay]];
+  XCTAssertNotNil(_channel.backChannelRequest);
+  XCTAssertFalse(_channel.isBackChannelBinaryEncodingEnabled);
+
+  OCMExpect([_mockDelegate webChannel:[OCMArg any]
+                     encounteredError:WCWebChannelClientErrorBadResponse]);
+
+  NSData *badPayload = [@"invalid_binary_data" dataUsingEncoding:NSUTF8StringEncoding];
+
+  [_channel didReceiveInput:badPayload isBinary:YES withRequest:_channel.backChannelRequest];
+
+  OCMVerifyAll((id)_mockDelegate);
+  XCTAssertEqual(_channel.state, WCWebChannelClientStateClosed);
+  XCTAssertFalse(_channel.isBackChannelBinaryEncodingEnabled);
+}
+
+- (void)testDefaultClientVersion {
+  XCTAssertEqual(kWCClientVersion, 25);
 }
 
 @end

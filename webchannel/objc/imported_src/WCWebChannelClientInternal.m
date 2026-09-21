@@ -85,6 +85,7 @@ static NSString *const kQueryParamCharacterEncodedComma = @"%2C";
   BOOL _forwardChannelRequestInProgress;
   BOOL _backChannelRequestInProgress;
 
+  WCWireV8 *_wireCodec;
   id<WCSupport> _support;
 
   NSMutableArray<WCQueuedMap *> *_nonAckedMapsWithClosedChannel;
@@ -116,7 +117,6 @@ static NSString *const kQueryParamCharacterEncodedComma = @"%2C";
 
     _outgoingMaps = [@[] mutableCopy];
     _wireCodec = [[WCWireV8 alloc] initWithSupport:_support];
-    _wireCodecBinary = [[WCWireV8Binary alloc] initWithSupport:_support];
     _failFast = internalChannelParams.failFast;
     if (options.fastHandshake && options.enableBinaryEncoding) {
       [_support.logger logWarning:@"Ignore fastHandshake because binary encoding is set."];
@@ -197,7 +197,9 @@ static NSString *const kQueryParamCharacterEncodedComma = @"%2C";
 
 #pragma mark - WCWebChannelInternalHTTPHandler
 
-- (void)didReceiveInput:(NSData *)response withRequest:(WCChannelRequest *)request {
+- (void)didReceiveInput:(NSData *)response
+               isBinary:(BOOL)isBinary
+            withRequest:(WCChannelRequest *)request {
   WCWebChannelClientState currentState = self.state;
   if (currentState == WCWebChannelClientStateClosed ||
       !([_backChannelRequest isEqual:request] || [_forwardChannelRequestPool hasRequest:request])) {
@@ -227,8 +229,23 @@ static NSString *const kQueryParamCharacterEncodedComma = @"%2C";
     if (request.initialResponseDecoded || [_backChannelRequest isEqual:request]) {
       [self clearDeadBackchannelTimer];
     }
-    NSArray<id> *decodedResponse = [_wireCodec decodeMessage:response level:kDecodeLevelThree];
-    [self processInput:decodedResponse request:request];
+
+    if (isBinary) {
+      NSArray<NSArray<id> *> *decodedResponse = [WCWireV8Binary decodeBinaryChunk:response];
+      if (decodedResponse == nil) {
+        [_support.logger logDebug:@"Bad binary response returned."];
+        [self signalError:WCWebChannelClientErrorBadResponse];
+        return;
+      }
+      _backChannelBinaryEncodingEnabled = YES;
+      [self processInput:decodedResponse request:request];
+    } else {
+      NSArray<NSArray<id> *> *decodedResponse = [_wireCodec decodeMessage:response
+                                                                    level:kDecodeLevelThree];
+      if (decodedResponse != nil) {
+        [self processInput:decodedResponse request:request];
+      }
+    }
   }
 }
 
@@ -432,6 +449,7 @@ static NSString *const kQueryParamCharacterEncodedComma = @"%2C";
   self.extraParams = [localMessageUrlParams copy];
   if (currentState == WCWebChannelClientStateInit ||
       currentState == WCWebChannelClientStateClosed) {
+    _backChannelBinaryEncodingEnabled = NO;
     _forwardChannelURL = [self createDataURL:_path];
     [self checkForwardChannelAvailabilityThenStart];
   }
@@ -719,7 +737,7 @@ static NSString *const kQueryParamCharacterEncodedComma = @"%2C";
 - (NSMutableArray<WCQueuedMap *> *)pendingMessagesWithMaxBinary:(int)maxNum
                                                     requestData:(NSMutableData *)result {
   int count = MIN(_outgoingMaps.count, maxNum);
-  [result appendData:[_wireCodecBinary encodeMessageQueue:_outgoingMaps numOfMessages:count]];
+  [result appendData:[WCWireV8Binary encodeMessageQueue:_outgoingMaps numOfMessages:count]];
   NSMutableArray<WCQueuedMap *> *pendingMessages =
       [[_outgoingMaps subarrayWithRange:NSMakeRange(0, count)] mutableCopy];
   [_outgoingMaps removeObjectsInRange:NSMakeRange(0, count)];
@@ -995,6 +1013,7 @@ static NSString *const kQueryParamCharacterEncodedComma = @"%2C";
   _state = WCWebChannelClientStateClosed;
   _handshakeRequestID = nil;
   _nonBlockingSendFailed = NO;
+  _backChannelBinaryEncodingEnabled = NO;
   _nonAckedMapsWithClosedChannel = [@[] mutableCopy];
   NSArray<WCQueuedMap *> *copyOfpendingMessages = [_forwardChannelRequestPool.pendingMessages copy];
   NSArray<WCQueuedMap *> *copyOfUndeliveredMaps = [_outgoingMaps copy];

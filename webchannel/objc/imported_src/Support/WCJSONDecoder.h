@@ -8,6 +8,6 @@
  * @param data Data input.
  * @param maxDepth The level to flatten the nested data.
  */
-- (NSArray *)decodeData:(NSData *)data maxDepth:(int)maxDepth;
+- (nullable NSArray<id> *)decodeData:(NSData *)data maxDepth:(int)maxDepth;
 
 @end
