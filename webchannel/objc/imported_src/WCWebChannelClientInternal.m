@@ -699,9 +699,11 @@ static NSString *const kQueryParamCharacterEncodedComma = @"%2C";
 }
 
 - (void)requeuePendingMaps:(WCChannelRequest *)retryRequest {
-  NSIndexSet *indexes =
-      [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, retryRequest.pendingMessages.count)];
-  [_outgoingMaps insertObjects:retryRequest.pendingMessages atIndexes:indexes];
+  if (retryRequest && retryRequest.pendingMessages.count > 0) {
+    NSIndexSet *indexes =
+        [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, retryRequest.pendingMessages.count)];
+    [_outgoingMaps insertObjects:retryRequest.pendingMessages atIndexes:indexes];
+  }
 }
 
 - (NSMutableArray<WCQueuedMap *> *)pendingMessagesWithMax:(int)maxNum
@@ -838,18 +840,11 @@ static NSString *const kQueryParamCharacterEncodedComma = @"%2C";
   _forwardRetryPendingMessagesScheduled = NO;
   BOOL isFatal = request.lastErrorFatal;
   BOOL isHandshake = _handshakeRequestID && [request.requestID isEqualToString:_handshakeRequestID];
-  if (_nonBlockingSendEnabled && self.state == WCWebChannelClientStateOpening &&
-      type == WCChannelTypeForwardChannel && !isHandshake) {
-    if (request.lastError == WCChannelRequestErrorUnknownSessionId || !request.lastErrorFatal) {
-      _nonBlockingSendFailed = YES;
-      if (pendingMessages.count > 0) {
-        [_outgoingMaps
-            insertObjects:pendingMessages
-                atIndexes:[NSIndexSet
-                              indexSetWithIndexesInRange:NSMakeRange(0, pendingMessages.count)]];
-      }
-      return;
-    }
+  if (_nonBlockingSendEnabled && !isHandshake &&
+      (self.state == WCWebChannelClientStateOpening ||
+       self.state == WCWebChannelClientStateOpened) &&
+      type == WCChannelTypeForwardChannel && lastError == WCChannelRequestErrorUnknownSessionId) {
+    isFatal = NO;
   }
   if (!isFatal) {
     [_support.logger logDebug:[NSString stringWithFormat:@"Maybe retrying, last error: %@",
@@ -859,6 +854,9 @@ static NSString *const kQueryParamCharacterEncodedComma = @"%2C";
         if (!_forwardRetryPendingMessagesScheduled) {
           [self retryForwardChannel:request];
         }
+        return;
+      }
+      if (_forwardRetryPendingMessagesScheduled) {
         return;
       }
     } else {
@@ -899,17 +897,19 @@ static NSString *const kQueryParamCharacterEncodedComma = @"%2C";
 
 - (BOOL)shouldRetryForwardChannel:(WCChannelRequest *)request {
   WCWebChannelClientState currentState = self.state;
+  if (_nonBlockingSendEnabled && currentState == WCWebChannelClientStateOpening) {
+    _nonBlockingSendFailed = YES;
+    [self requeuePendingMaps:request];
+    _forwardRetryPendingMessagesScheduled = YES;
+    return NO;
+  }
   if (_forwardChannelRequestPool.requestCount >=
       _forwardChannelRequestPool.maxSize - (_forwardChannelRequestInProgress ? 1 : 0)) {
     [_support.logger logError:@"Unexpected retry request is scheduled."];
     return NO;
   }
   if (_forwardChannelDelayTimer != nil) {
-    [_outgoingMaps
-        insertObjects:request.pendingMessages
-            atIndexes:[NSIndexSet
-                          indexSetWithIndexesInRange:NSMakeRange(0,
-                                                                 request.pendingMessages.count)]];
+    [self requeuePendingMaps:request];
     [_support.logger logDebug:@"Use the retry request that is already scheduled."];
     _forwardRetryPendingMessagesScheduled = YES;
     return NO;
