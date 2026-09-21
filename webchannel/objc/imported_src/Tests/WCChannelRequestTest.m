@@ -30,17 +30,15 @@ static NSString *const kFakeGETResponse = @"14\n[[1,[\"noop\"]]]14\n[[2,[\"noop\
   _mockHttpRequest = OCMProtocolMock(@protocol(WCHTTPRequest));
   OCMStub([_mockSupport HTTPRequest:[OCMArg any]]).andReturn(_mockHttpRequest);
   OCMStub(_mockSupport.dispatchQueue).andReturn(dispatch_get_main_queue());
+
   id<WCTimer> dummyTimer = OCMProtocolMock(@protocol(WCTimer));
   OCMStub([_mockSupport setTimeout:0 block:[OCMArg any]])
       .ignoringNonObjectArgs()
       .andReturn(dummyTimer)
-      .andDo(^(NSInvocation *invocation) {
-        NSTimeInterval timeout;
-        [invocation getArgument:&timeout atIndex:2];
-        __unsafe_unretained void (^block)(void);
-        [invocation getArgument:&block atIndex:3];
+      .andDo(^id<WCTimer>(id<WCSupport> localSelf, NSTimeInterval timeout, void (^block)()) {
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(timeout * NSEC_PER_SEC)),
                        dispatch_get_main_queue(), block);
+        return dummyTimer;
       });
   OCMStub([_mockSupport clearTimeout:[OCMArg any]]);
 
@@ -131,5 +129,21 @@ static NSString *const kFakeGETResponse = @"14\n[[1,[\"noop\"]]]14\n[[2,[\"noop\
   NSString *negativeSizeResponse = @"-5\n";
   [_request decodeNextChunks:negativeSizeResponse state:WCRequestReadyStateInteractive];
   XCTAssertFalse(_request.isSuccessful);
+}
+
+- (void)testDecodeIncompleteChunkWithMissingNewlineDoesNotCrash {
+  // Regression test: a streamed response where a valid chunk is
+  // followed by a trailing size-prefix line that has no terminating '\n' yet.
+  // rangeOfString: returns NSNotFound (NSUIntegerMax) for the missing newline;
+  // truncating that value into an `int` used to defeat the `== NSNotFound` guard,
+  // producing an out-of-bounds substringWithRange: and an NSRangeException.
+  // With NSUInteger indices the guard holds and the parser reports Incomplete.
+  OCMExpect([_mockHTTPInternalHandler didReceiveInput:@"[0,0,7]" withRequest:_request]);
+  NSString *incompleteResponse = @"7\n[0,0,7]5";
+  XCTAssertNoThrow([_request decodeNextChunks:incompleteResponse
+                                        state:WCRequestReadyStateInteractive]);
+  // The complete leading chunk is still delivered; the dangling size prefix is
+  // treated as incomplete data and simply skipped (no NSRangeException).
+  OCMVerifyAll((id)_mockHTTPInternalHandler);
 }
 @end

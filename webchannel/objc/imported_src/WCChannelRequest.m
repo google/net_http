@@ -42,7 +42,7 @@ static NSString *const kPageIDKey = @"X-Goog-PageId";
   BOOL _cleanedUp;
 
   id<WCTimer> _readyStateTimer;
-  int _chunkStart;
+  NSUInteger _chunkStart;
   WCChannelRequestType _type;
   NSURLComponents *_baseURLComponent;
 }
@@ -443,8 +443,8 @@ static NSString *const kPageIDKey = @"X-Goog-PageId";
 
 - (NSString *)nextChunkFromResponseText:(NSString *)responseText
                                  result:(WCChannelRequestDecodeResult *)result {
-  int sizeStartIndex = _chunkStart;
-  int sizeEndIndex =
+  NSUInteger sizeStartIndex = _chunkStart;
+  NSUInteger sizeEndIndex =
       [responseText rangeOfString:@"\n"
                           options:0
                             range:NSMakeRange(sizeStartIndex, responseText.length - sizeStartIndex)]
@@ -474,8 +474,8 @@ static NSString *const kPageIDKey = @"X-Goog-PageId";
     return nil;
   }
 
-  int chunkStartIndex = sizeEndIndex + 1;
-  if (chunkStartIndex + size > responseText.length) {
+  NSUInteger chunkStartIndex = sizeEndIndex + 1;
+  if (chunkStartIndex + (NSUInteger)size > responseText.length) {
     if (result) {
       *result = WCChannelRequestDecodeResultIncomplete;
     }
