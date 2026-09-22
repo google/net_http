@@ -7,22 +7,25 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		167C867B84AA7061CF7D47AD /* WebChannelService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03D53FE8A943ED22AF07D667 /* WebChannelService.swift */; };
 		350F1034A24EB925ED6BC9C5 /* WebChanneliOSDemoApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EE251467C72995B654A474E /* WebChanneliOSDemoApp.swift */; };
 		4D13900A0C3CFB034605E37C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 152BAEFBEDE86A570BB66C15 /* Assets.xcassets */; };
 		54AF74B2FA82056F09F0C184 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BEC0C1A2DACAAC1EC337F51F /* Foundation.framework */; };
 		6BE6FC6ED6078BAEEF76CE53 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA8BA83BFCA5B09671ED4615 /* ContentView.swift */; };
-		CAE8F0BC62E7345DFDFFD10C /* WebChannelManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCF6BFE38B706AA871BDAFBD /* WebChannelManager.swift */; };
+		E0EA756B6E07F67CC6417D68 /* TestAppSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24417D84F1A188631A33CB45 /* TestAppSupport.swift */; };
 		F7D524E09A6A99260F2BBE90 /* Pods_WebChanneliOSDemo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0F5C62F6A743A23D4146F43D /* Pods_WebChanneliOSDemo.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		03D53FE8A943ED22AF07D667 /* WebChannelService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WebChannelService.swift; sourceTree = "<group>"; };
 		0F5C62F6A743A23D4146F43D /* Pods_WebChanneliOSDemo.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_WebChanneliOSDemo.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		152BAEFBEDE86A570BB66C15 /* Assets.xcassets */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		24417D84F1A188631A33CB45 /* TestAppSupport.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TestAppSupport.swift; sourceTree = "<group>"; };
 		3C1B2B6B8C0C35ABC74DCC1D /* Pods-WebChanneliOSDemo.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-WebChanneliOSDemo.debug.xcconfig"; path = "Target Support Files/Pods-WebChanneliOSDemo/Pods-WebChanneliOSDemo.debug.xcconfig"; sourceTree = "<group>"; };
 		3EE251467C72995B654A474E /* WebChanneliOSDemoApp.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WebChanneliOSDemoApp.swift; sourceTree = "<group>"; };
+		A6A2BA3B42DA77BBE97BBEFC /* DESIGN.md */ = {isa = PBXFileReference; includeInIndex = 1; name = DESIGN.md; path = ../DESIGN.md; sourceTree = "<group>"; };
 		BEC0C1A2DACAAC1EC337F51F /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		CA8BA83BFCA5B09671ED4615 /* ContentView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
-		CCF6BFE38B706AA871BDAFBD /* WebChannelManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WebChannelManager.swift; sourceTree = "<group>"; };
 		E39C53259617AC0BF5841CFF /* WebChanneliOSDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WebChanneliOSDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		EE7F815AF2CE2AE34F5606B0 /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		FA296C5D758F687FB578D0C2 /* Pods-WebChanneliOSDemo.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-WebChanneliOSDemo.release.xcconfig"; path = "Target Support Files/Pods-WebChanneliOSDemo/Pods-WebChanneliOSDemo.release.xcconfig"; sourceTree = "<group>"; };
@@ -46,9 +49,11 @@
 			children = (
 				3EE251467C72995B654A474E /* WebChanneliOSDemoApp.swift */,
 				CA8BA83BFCA5B09671ED4615 /* ContentView.swift */,
-				CCF6BFE38B706AA871BDAFBD /* WebChannelManager.swift */,
 				EE7F815AF2CE2AE34F5606B0 /* Info.plist */,
 				152BAEFBEDE86A570BB66C15 /* Assets.xcassets */,
+				03D53FE8A943ED22AF07D667 /* WebChannelService.swift */,
+				24417D84F1A188631A33CB45 /* TestAppSupport.swift */,
+				A6A2BA3B42DA77BBE97BBEFC /* DESIGN.md */,
 			);
 			path = WebChanneliOSDemo;
 			sourceTree = "<group>";
@@ -215,7 +220,8 @@
 			files = (
 				350F1034A24EB925ED6BC9C5 /* WebChanneliOSDemoApp.swift in Sources */,
 				6BE6FC6ED6078BAEEF76CE53 /* ContentView.swift in Sources */,
-				CAE8F0BC62E7345DFDFFD10C /* WebChannelManager.swift in Sources */,
+				167C867B84AA7061CF7D47AD /* WebChannelService.swift in Sources */,
+				E0EA756B6E07F67CC6417D68 /* TestAppSupport.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -273,6 +279,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -296,7 +303,7 @@
 				DEVELOPMENT_TEAM = 2F5DCJ87UC;
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = WebChanneliOSDemo/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.pmodular.webchannel.demo;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -352,6 +359,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -373,7 +381,7 @@
 				DEVELOPMENT_TEAM = 2F5DCJ87UC;
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = WebChanneliOSDemo/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.pmodular.webchannel.demo;
 				PRODUCT_NAME = "$(TARGET_NAME)";
