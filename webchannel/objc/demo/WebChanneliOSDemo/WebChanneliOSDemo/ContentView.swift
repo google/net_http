@@ -636,7 +636,7 @@ struct LensBenchmarkTabView: View {
   }
 
   private var metricsTable: some View {
-    VStack(spacing: 7) {
+    VStack(spacing: 8) {
       Divider()
 
       metricRow(
