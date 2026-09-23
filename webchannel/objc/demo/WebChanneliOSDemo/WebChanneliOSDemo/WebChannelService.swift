@@ -18,9 +18,9 @@ struct LogEntry: Identifiable, Equatable {
 /// Core metrics captured during a Lens simulation run.
 struct LensBenchmarkMetrics: Equatable {
   var handshakeDurationMs: Double? = nil
-  var m3RttToAckMs: Double? = nil               // Time to First ACK (TTFA)
-  var m3TimeToFirstDetectionMs: Double? = nil   // Time to First Detection (TTFD)
-  var m4RttMs: Double? = nil                    // M4 Final Capture RTT
+  var m3RttToAckMs: Double? = nil  // Time to First ACK (TTFA)
+  var m3TimeToFirstDetectionMs: Double? = nil  // Time to First Detection (TTFD)
+  var m4RttMs: Double? = nil  // M4 Final Capture RTT
   var isRunning: Bool = false
   var isCompleted: Bool = false
 }
