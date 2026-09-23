@@ -167,8 +167,12 @@ Client                                                  Server (Sandbox / Stagin
     -   Time-to-First-Detection (TTFD)
     -   M4 Final Capture Forward & BackChannel Latencies
 3.  **Payload Sizing Contract**:
-    -   **Metadata Simulation**: M3 simulates prefetch latency via metadata parameters (`image_size_kb`, `detection_delay_ms`) rather than transmitting raw bytes, keeping handshake benchmarking lightweight.
-    -   **Binary Mode for Raw Payloads**: Large image payload transmission is strictly scoped for Binary Mode (`WCWireV8Binary`), mirroring production Google Lens camera streaming.
+    -   **Metadata Simulation**: M3 simulates prefetch latency via metadata
+        parameters (`image_size_kb`, `detection_delay_ms`) rather than
+        transmitting raw bytes, keeping handshake benchmarking lightweight.
+    -   **Binary Mode for Raw Payloads**: Large image payload transmission is
+        strictly scoped for Binary Mode (`WCWireV8Binary`), mirroring production
+        Google Lens camera streaming.
 
 --------------------------------------------------------------------------------
 
