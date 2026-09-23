@@ -1,0 +1,44 @@
+name: iOS WebChannel Demo CI
+
+on:
+  push:
+    branches:
+      - main
+      - webchannel-ios-demo
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build iOS Demo App
+    runs-on: macos-14
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Show Xcode & Environment Version
+        run: |
+          xcodebuild -version
+          pod --version
+
+      - name: Install CocoaPods dependencies
+        working-directory: webchannel/objc/demo/WebChanneliOSDemo
+        run: |
+          pod install
+
+      - name: Build Demo App for iOS Simulator
+        working-directory: webchannel/objc/demo/WebChanneliOSDemo
+        run: |
+          xcodebuild -workspace WebChanneliOSDemo.xcworkspace \
+                     -scheme WebChanneliOSDemo \
+                     -configuration Debug \
+                     -destination 'generic/platform=iOS Simulator' \
+                     CODE_SIGNING_ALLOWED=NO \
+                     CODE_SIGNING_REQUIRED=NO \
+                     CODE_SIGN_IDENTITY="" \
+                     build

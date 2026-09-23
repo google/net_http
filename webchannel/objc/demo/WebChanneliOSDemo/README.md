@@ -1,69 +1,106 @@
 # WebChannel iOS Demo App
 
-An iOS demo app (built with SwiftUI) to test and verify bidirectional communication with `webchannel.sandbox.google.com` using the Objective-C WebChannel client implementation (`WCWebChannelClient`).
+A modern, full-featured iOS demo and benchmarking application for Google WebChannel built with **Swift** and **SwiftUI** (iOS 17.0+).
 
-The UI is optimized for devices ranging from compact screens like iPhone SE to iPads, providing real-time visibility into connection status, received messages, HTTP headers, and error details.
+It directly integrates with the Objective-C WebChannel client (`WCWebChannelClient`) via CocoaPods to demonstrate interactive messaging, high-precision latency measurement, binary wire encoding, concurrent non-blocking handshakes, and a simulated Google Lens camera benchmark.
+
+For detailed architecture, protocol flow, and iOS-specific design choices, see [DESIGN.md](DESIGN.md).
 
 ---
 
 ## 📱 Key Features
 
-- **One-Tap Connect & Test**:
-  - Connects to `https://webchannel.sandbox.google.com/staging/channel/generator`
-  - Automatically sends the generator test payload (requesting 3 echoed messages) upon connection establishment
-- **Real-Time Console Log**:
-  - Color-coded log entries for OPEN, SEND, RECV, HEADER, ERROR, and CLOSE events
-  - Auto-scroll / manual scroll toggle, clear logs, and log sharing (iOS 16+ ShareLink)
-- **Custom Payload Transmission**:
-  - Send custom JSON / text messages interactively during an active session
-- **Connection Configuration Sheet**:
-  - Configurable Base Endpoint URL
-  - Configurable `HTTPSessionIDParam` (default: `gsessionid`)
-  - Configurable `fastHandshake` toggle (default: OFF)
+### 1. Dual-Tab Interface
+- **Tab 1: WebChannel Generator & Latency**:
+  - **Direct Client Integration**: Exercises `WCWebChannelClient` and `WCOptions` directly with clean Swift interop.
+  - **Parallel Connection Modes**:
+    - `Connect` (Green): Standard connection establishment.
+    - `Connect & Send` (Purple): Schedules an early forward send while Handshake Request 1 is in-flight, demonstrating concurrent non-blocking dispatch.
+  - **Round-Trip Echo & Latency Testing**: Measures end-to-end RTT with millisecond precision using timestamped echo tokens.
+  - **Streaming Message Generator**: Configurable server push streaming (`num_messages`, `message_interval`).
+  - **Binary Wire Encoding & Streaming**: Validates V8 binary wire protocol (`WCWireV8Binary`, `sendData:`), automated Binary JSON Echo / Streaming, and live backchannel binary decoding status indicators.
+  - **Categorized Transport Options (`WCOptions`)**:
+    - *Wire Format & Encoding*: `enableBinaryEncoding`, `sendRawJson`
+    - *Handshake & Concurrency*: `fastHandshake2` (0-RTT GET + concurrent forward POST), `fastHandshake` (1-RTT), `nonBlockingSend`, `blockingHandshake`, early send delay stepper
+    - *Transport & Resilience*: `forceLongPolling`, `detectBufferingProxy`
+- **Tab 2: Lens Latency Benchmark**:
+  - **Camera Lifecycle Simulation**: Simulates the full multi-stage Google Lens camera sequence:
+    1. **M1 Sticky Cluster**: Routing affinity metadata (~50 B JSON).
+    2. **M2 Heartbeat**: Periodic keepalive during viewfinder mode (~30 B JSON).
+    3. **M3 Prefetch**: Simulated query image payload (configurable 50–500 KB, default 150 KB) with immediate stream ACK (TTFA) and preliminary detections (TTFD).
+    4. **M4 Final Capture**: Shutter tap completion.
+  - **fastHandshake2 Comparison**: Toggle `fastHandshake2` on or off to evaluate the latency reduction delivered by 0-RTT GET handshake + concurrent forward POSTs vs legacy 1-RTT handshakes.
+  - **Focused 4-Row Performance Scorecard**:
+    - **Handshake Duration**
+    - **Time to First ACK (TTFA)**
+    - **Time to First Detection (TTFD)**
+    - **M4 Final Capture Latency**
+  - **Embedded Activity Logs**: Live monospace log feed directly below the benchmark controls with Copy and Clear buttons.
 
 ---
 
-## 🚀 Running on iPhone SE (Physical Device)
+## 🚀 Getting Started
 
-### 1. Open the Workspace
-Make sure to open **`WebChanneliOSDemo.xcworkspace`** in Xcode (not the `.xcodeproj` file).
+### Prerequisites
+- macOS with Xcode 15.0+ (iOS 17.0+ SDK)
+- CocoaPods (`gem install cocoapods`)
+
+### 1. Install CocoaPods Dependencies
+From the demo directory:
 
 ```bash
-cd objc/demo/WebChanneliOSDemo
+cd webchannel/objc/demo/WebChanneliOSDemo
+pod install
+```
+
+### 2. Open the Xcode Workspace
+Always open **`WebChanneliOSDemo.xcworkspace`** in Xcode (not the `.xcodeproj` file):
+
+```bash
 open WebChanneliOSDemo.xcworkspace
 ```
 
-### 2. Configure Code Signing (First time only)
-1. Select the top-level **`WebChanneliOSDemo`** project in Xcode's left navigator
-2. Navigate to the **`Signing & Capabilities`** tab
-3. Ensure **`Automatically manage signing`** is checked
-4. In the **`Team`** dropdown, select your Apple ID (Personal Team)
-5. If the Bundle Identifier conflicts, append a unique suffix (e.g. `com.yourname.webchannel.demo`)
+### 3. Run in iOS Simulator
+1. In Xcode's toolbar scheme selector, choose **WebChanneliOSDemo** and select an iOS 17+ or iOS 18+ simulator (e.g. **iPhone 15 Pro**).
+2. Press `Cmd + R` to build and run.
 
-### 3. Setup iPhone SE
-1. Connect your iPhone SE to your Mac using a Lightning or USB-C cable
-2. Unlock your iPhone; when prompted with "**Trust This Computer?**", tap **Trust** and enter your passcode
-3. **Enable Developer Mode** (iOS 16+):
-   - On your iPhone, go to **Settings** > **Privacy & Security** > **Developer Mode**
-   - Turn it **ON** and restart the device as instructed
-
-### 4. Build and Run on Device
-1. In Xcode's top toolbar, click the run destination selector and choose your connected **iPhone SE**
-2. Press `Cmd + R` (or click the ▶️ Run button) to build and install the app onto your device
-
-### 5. Trust Developer Certificate (First time on free Apple ID)
-If a "Untrusted Developer" prompt appears on your iPhone when launching:
-1. Open **Settings** > **General** > **VPN & Device Management** on your iPhone
-2. Under "Developer App", tap your Apple ID account
-3. Tap **Trust "[Your Account Name]"**
+### 4. Run on a Physical Device (iPhone / iPad)
+1. Connect your iOS device via USB.
+2. In Xcode, select the top-level **WebChanneliOSDemo** project > **Signing & Capabilities** tab.
+3. Check **Automatically manage signing** and choose your Apple Team.
+4. Select your connected device and press `Cmd + R`.
 
 ---
 
-## 🏗️ Architecture
+## 🌐 Testing Endpoints
 
-- **UI Layer**: SwiftUI ([`ContentView.swift`](WebChanneliOSDemo/ContentView.swift))
-- **State Management & Bridge**: [`WebChannelManager.swift`](WebChanneliOSDemo/WebChannelManager.swift)
-  - Implements the `WCWebChannelClientHandlerDelegate` protocol
-  - Dispatches background callback events to the `@MainActor` for UI updates
-- **Core Library**: Objective-C WebChannel ([`objc/imported_src`](../../imported_src))
-  - Integrated via CocoaPods local path reference (`pod 'WebChannel', :path => '../../'`)
+### 1. Hosted Sandbox Staging Endpoints (Default)
+- **Generator Endpoint**: `https://webchannel.sandbox.google.com/staging/channel/generator`
+- **Lens Mimic Endpoint**: `https://webchannel.sandbox.google.com/staging/channel/lens`
+
+### 2. Local WebChannel Development Server
+To run against a local WebChannel server on `http://localhost:8080`:
+- Generator tab: tap **Localhost (8080)** to set `http://localhost:8080/staging/channel/generator`
+- Lens tab: tap **Localhost (8080)** to set `http://localhost:8080/staging/channel/lens`
+*(App Transport Security in `Info.plist` is pre-configured with `NSAllowsArbitraryLoads` to permit local HTTP traffic).*
+
+---
+
+## 🏗️ Architecture & File Structure
+
+```
+WebChanneliOSDemo/
+├── Podfile                        # CocoaPods configuration (iOS 17.0+, local :path => '../../')
+├── Podfile.lock                   # Pinned dependency versions
+├── README.md                      # Overview and setup guide
+├── DESIGN.md                      # Architecture and protocol design specification
+├── WebChanneliOSDemo.xcworkspace  # Workspace combining the App and Pods projects
+├── WebChanneliOSDemo.xcodeproj    # Xcode project file
+└── WebChanneliOSDemo/
+    ├── WebChanneliOSDemoApp.swift # @main SwiftUI application entry point
+    ├── ContentView.swift          # Main UI (GeneratorTabView, LensBenchmarkTabView, Scorecard, Logs)
+    ├── WebChannelService.swift    # WCWebChannelClient manager, options, and delegate callbacks
+    ├── TestAppSupport.swift       # Custom WCSupport & WCLogger implementation
+    ├── Info.plist                 # App bundle metadata and ATS configuration
+    └── Assets.xcassets/           # App icons and color catalog
+```
