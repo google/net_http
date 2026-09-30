@@ -6,6 +6,7 @@ This directory is the multi-language home for WebChannel client implementations.
 
 ## Directory Structure
 
+- [java/](java/) - Java client implementation.
 - [js/](js/) - JavaScript client implementation (based on Closure Library).
   - [imported_src/](js/imported_src/) - Imported source files from Closure Library.
   - [demo/](js/demo/) - WebChannel demo web application.
@@ -13,6 +14,10 @@ This directory is the multi-language home for WebChannel client implementations.
   - [imported_src/](objc/imported_src/) - Objective-C source files.
   - [demo/WebChanneliOSDemo/](objc/demo/WebChanneliOSDemo/) - SwiftUI iOS demo app for physical devices and simulators.
 - [swift/](swift/) - Swift client implementation and CLI demo.
+
+## Java Client (`webchannel/java`)
+
+The Java implementation provides `WebChannelBase` and pluggable transport support via `BasicWebChannelSupport`.
 
 ## JavaScript Client (`webchannel/js`)
 
