@@ -14,6 +14,7 @@
 		6BE6FC6ED6078BAEEF76CE53 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA8BA83BFCA5B09671ED4615 /* ContentView.swift */; };
 		E0EA756B6E07F67CC6417D68 /* TestAppSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24417D84F1A188631A33CB45 /* TestAppSupport.swift */; };
 		F7D524E09A6A99260F2BBE90 /* Pods_WebChanneliOSDemo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0F5C62F6A743A23D4146F43D /* Pods_WebChanneliOSDemo.framework */; };
+		A11111111111111111111111 /* LensBenchmarkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11111111111111111111112 /* LensBenchmarkTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -29,6 +30,8 @@
 		E39C53259617AC0BF5841CFF /* WebChanneliOSDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WebChanneliOSDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		EE7F815AF2CE2AE34F5606B0 /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		FA296C5D758F687FB578D0C2 /* Pods-WebChanneliOSDemo.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-WebChanneliOSDemo.release.xcconfig"; path = "Target Support Files/Pods-WebChanneliOSDemo/Pods-WebChanneliOSDemo.release.xcconfig"; sourceTree = "<group>"; };
+		A11111111111111111111112 /* LensBenchmarkTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LensBenchmarkTests.swift; sourceTree = "<group>"; };
+		A11111111111111111111113 /* WebChanneliOSDemoTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; path = WebChanneliOSDemoTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -56,6 +59,14 @@
 				A6A2BA3B42DA77BBE97BBEFC /* DESIGN.md */,
 			);
 			path = WebChanneliOSDemo;
+			sourceTree = "<group>";
+		};
+		A11111111111111111111114 /* WebChanneliOSDemoTests */ = {
+			isa = PBXGroup;
+			children = (
+				A11111111111111111111112 /* LensBenchmarkTests.swift */,
+			);
+			path = WebChanneliOSDemoTests;
 			sourceTree = "<group>";
 		};
 		13044A65B4FA152ADDD94B44 /* Pods */ = {
@@ -90,6 +101,7 @@
 				D3FE72E36CEB483EF0FFE2FA /* Products */,
 				96F8E0C6D8E232D38E21D335 /* Frameworks */,
 				068E20DCC5AD7477709B3425 /* WebChanneliOSDemo */,
+				A11111111111111111111114 /* WebChanneliOSDemoTests */,
 				13044A65B4FA152ADDD94B44 /* Pods */,
 			);
 			sourceTree = "<group>";
@@ -98,6 +110,7 @@
 			isa = PBXGroup;
 			children = (
 				E39C53259617AC0BF5841CFF /* WebChanneliOSDemo.app */,
+				A11111111111111111111113 /* WebChanneliOSDemoTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -124,6 +137,22 @@
 			productReference = E39C53259617AC0BF5841CFF /* WebChanneliOSDemo.app */;
 			productType = "com.apple.product-type.application";
 		};
+		A11111111111111111111115 /* WebChanneliOSDemoTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A11111111111111111111116 /* Build configuration list for PBXNativeTarget "WebChanneliOSDemoTests" */;
+			buildPhases = (
+				A11111111111111111111117 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				A11111111111111111111118 /* PBXTargetDependency */,
+			);
+			name = WebChanneliOSDemoTests;
+			productName = WebChanneliOSDemoTests;
+			productReference = A11111111111111111111113 /* WebChanneliOSDemoTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -136,6 +165,9 @@
 					90F4F05C594D045BE7F4A230 = {
 						DevelopmentTeam = 2F5DCJ87UC;
 						ProvisioningStyle = Automatic;
+					};
+					A11111111111111111111115 = {
+						TestTargetID = 90F4F05C594D045BE7F4A230;
 					};
 				};
 			};
@@ -153,6 +185,7 @@
 			projectRoot = "";
 			targets = (
 				90F4F05C594D045BE7F4A230 /* WebChanneliOSDemo */,
+				A11111111111111111111115 /* WebChanneliOSDemoTests */,
 			);
 		};
 /* End PBXProject section */
@@ -167,6 +200,24 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXContainerItemProxy section */
+		A11111111111111111111119 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 05D2FFD8713AD153A1F7689D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 90F4F05C594D045BE7F4A230;
+			remoteInfo = WebChanneliOSDemo;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXTargetDependency section */
+		A11111111111111111111118 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 90F4F05C594D045BE7F4A230 /* WebChanneliOSDemo */;
+			targetProxy = A11111111111111111111119 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin PBXShellScriptBuildPhase section */
 		06551C15A481F19CD12C6052 /* [CP] Check Pods Manifest.lock */ = {
@@ -214,6 +265,14 @@
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		A11111111111111111111117 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A11111111111111111111111 /* LensBenchmarkTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		0076477C40DA5531C1880F61 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -228,6 +287,40 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
+		A1111111111111111111111A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 2F5DCJ87UC;
+				FRAMEWORK_SEARCH_PATHS = "$(inherited) $(BUILT_PRODUCTS_DIR)/WebChannel $(BUILT_PRODUCTS_DIR)/GTMSessionFetcher";
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @loader_path/Frameworks @executable_path/Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = com.pmodular.webchannel.demo.tests;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/WebChanneliOSDemo.app/WebChanneliOSDemo";
+			};
+			name = Debug;
+		};
+		A1111111111111111111111B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 2F5DCJ87UC;
+				FRAMEWORK_SEARCH_PATHS = "$(inherited) $(BUILT_PRODUCTS_DIR)/WebChannel $(BUILT_PRODUCTS_DIR)/GTMSessionFetcher";
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @loader_path/Frameworks @executable_path/Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = com.pmodular.webchannel.demo.tests;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/WebChanneliOSDemo.app/WebChanneliOSDemo";
+			};
+			name = Release;
+		};
 		3AB8742EAC2ED90E42D7A5AC /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -394,6 +487,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		A11111111111111111111116 /* Build configuration list for PBXNativeTarget "WebChanneliOSDemoTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A1111111111111111111111A /* Debug */,
+				A1111111111111111111111B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
 		7E64EE3EEA24BE3EA6E0FCCE /* Build configuration list for PBXNativeTarget "WebChanneliOSDemo" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

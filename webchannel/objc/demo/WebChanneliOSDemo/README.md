@@ -70,6 +70,45 @@ open WebChanneliOSDemo.xcworkspace
 3. Check **Automatically manage signing** and choose your Apple Team.
 4. Select your connected device and press `Cmd + R`.
 
+### Automated Lens Benchmark
+
+The `WebChanneliOSDemoTests` target runs the existing Lens lifecycle against the
+configured endpoint. `testOmnient` and `testViewfinder` each run five OFF/ON pairs
+in alternating order by default (20 runs total). Each run waits up to 60 seconds
+for M4 completion; incomplete runs fail the test but remain in the exported data.
+
+In Xcode, select an iOS Simulator or a signed physical device and press `Cmd + U`.
+The tests use the real network. Simulator numbers are useful for a smoke test;
+use the physical device for latency comparisons.
+
+To run from a terminal, use the workspace and a specific device ID:
+
+```bash
+xcodebuild -workspace WebChanneliOSDemo.xcworkspace \
+  -scheme WebChanneliOSDemo -configuration Debug \
+  -destination 'platform=iOS,id=YOUR_DEVICE_ID' \
+  -parallel-testing-enabled NO \
+  -resultBundlePath ./LensBenchmark.xcresult test
+```
+
+Use `platform=iOS Simulator,id=YOUR_SIMULATOR_ID` for a simulator. The result
+bundle contains XCTest status plus two retained attachments per scenario:
+`lens-omnient-results.json` / `.csv` and `lens-viewfinder-results.json` / `.csv`.
+The JSON includes each run's options, status, four metrics, and full app log.
+Export the attachments with:
+
+```bash
+xcrun xcresulttool export attachments \
+  --path ./LensBenchmark.xcresult --output-path ./LensBenchmarkAttachments
+```
+
+The export also writes `manifest.json`, which maps the attachments to their
+tests. In Xcode, the same attachments are available from the Test Report. A
+result bundle path must be new for each invocation. The Test action's scheme
+environment variables may set `LENS_BENCHMARK_REPETITIONS` (default `5`, maximum
+`50`) and `LENS_BENCHMARK_ENDPOINT` (default staging Lens URL). The image size
+parameter is metadata; this does not transmit 150 KB of image bytes.
+
 ---
 
 ## 🌐 Testing Endpoints
