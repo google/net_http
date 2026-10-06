@@ -73,8 +73,8 @@ open WebChanneliOSDemo.xcworkspace
 ### Automated Lens Benchmark
 
 The `WebChanneliOSDemoTests` target runs the existing Lens lifecycle against the
-configured endpoint. `testOmnient` and `testViewfinder` each run five OFF/ON pairs
-in alternating order by default (20 Lens runs total). Each run waits up to 60 seconds
+configured endpoint. `testOmnient` and `testViewfinder` each run ten OFF/ON pairs
+in alternating order by default (40 Lens runs total). Each run waits up to 60 seconds
 for M4 completion; incomplete runs fail the test but remain in the exported data.
 `testHTTPSBaseline` separately sends 10 pairs of HEAD requests to the Lens URL
 without WebChannel. It records TCP, TLS, connection setup, and time to the first
@@ -114,7 +114,7 @@ xcrun xcresulttool export attachments \
 The export also writes `manifest.json`, which maps the attachments to their
 tests. In Xcode, the same attachments are available from the Test Report. A
 result bundle path must be new for each invocation. The Test action's scheme
-environment variables may set `LENS_BENCHMARK_REPETITIONS` (default `5`, maximum
+environment variables may set `LENS_BENCHMARK_REPETITIONS` (default `10`, maximum
 `50`) and `LENS_BENCHMARK_ENDPOINT` (default staging Lens URL). The image size
 parameter is metadata; this does not transmit 150 KB of image bytes.
 
