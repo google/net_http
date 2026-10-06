@@ -137,7 +137,7 @@ python3 webchannel/benchmark/lens/summarize-cold-benchmark.py OUTPUT_DIR 10
 The runner starts one cold-trial test method per invocation of
 `xcodebuild test-without-building`. It alternates OFF/ON trials for Omnient and
 Viewfinder, retains each `.xcresult` under `OUTPUT_DIR/xcresults/` and exported
-JSON/CSV under `OUTPUT_DIR/attachments/`, and writes `report.md`, `audit.md`,
+JSON/CSV under `OUTPUT_DIR/attachments/`, and writes `report.md`, `connection-reuse-audit.md`,
 and `artifacts.md` in the output directory. The
 [Lens benchmark report guide](../../../benchmark/lens/README.md) describes
 the document layout. Per-trial Xcode and attachment-export logs are placed in
@@ -149,6 +149,10 @@ address and local port. App-process restart alone is not used as evidence of a
 fresh connection; DNS, radio, and server state can remain warm.
 Set `LENS_BINARY_ENCODING=1` for a run with `enableBinaryEncoding=true`;
 the default remains `false`.
+Set `LENS_INITIAL_MESSAGE_DELAY_MS=50` to schedule Lens M1 50 ms after
+`connect()` returns, as in the Generator early-send experiment. Omnient M3
+follows M1 immediately; Viewfinder M2 and M3 remain scheduled at +200 ms and
++500 ms after `connect()` returns.
 
 ---
 

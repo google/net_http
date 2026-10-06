@@ -33,6 +33,12 @@ final class LensBenchmarkTests: XCTestCase {
       ? min(max(Int(environment["LENS_BENCHMARK_REPETITIONS"] ?? "10") ?? 10, 1), 50) : 1
     let settings = coldSetting.map { [$0] } ?? [false, true]
     let endpoint = environment["LENS_BENCHMARK_ENDPOINT"] ?? defaultEndpoint
+    guard let initialMessageDelayMs = Int(environment["LENS_INITIAL_MESSAGE_DELAY_MS"] ?? "0"),
+      initialMessageDelayMs >= 0
+    else {
+      XCTFail("LENS_INITIAL_MESSAGE_DELAY_MS must be a nonnegative integer")
+      return
+    }
     var rows: [[String: Any]] = []
     var failures: [String] = []
 
@@ -46,7 +52,8 @@ final class LensBenchmarkTests: XCTestCase {
             endpointUrl: endpoint,
             isOmnient: isOmnient,
             imageSizeKb: 150,
-            detectionDelayMs: 50
+            detectionDelayMs: 50,
+            initialMessageDelayMs: initialMessageDelayMs
           )
         }
 
@@ -77,11 +84,13 @@ final class LensBenchmarkTests: XCTestCase {
             "endpoint": endpoint,
             "imageSizeKb": 150,
             "detectionDelayMs": 50,
+            "initialMessageDelayMs": initialMessageDelayMs,
             "deviceModel": UIDevice.current.model,
             "systemVersion": UIDevice.current.systemVersion,
             "log": service.combinedLogsText,
           ]
           if let value = metrics.handshakeDurationMs { result["handshakeMs"] = value }
+          if let value = metrics.m1DelayFromConnectMs { result["m1DelayFromConnectMs"] = value }
           if let value = metrics.m3RttToAckMs { result["ttfaMs"] = value }
           if let value = metrics.m3TimeToFirstDetectionMs { result["ttfdMs"] = value }
           if let value = metrics.m4RttMs { result["m4RttMs"] = value }
@@ -142,7 +151,7 @@ final class LensBenchmarkTests: XCTestCase {
     jsonAttachment.lifetime = .keepAlways
     add(jsonAttachment)
 
-    let columns = ["scenario", "repetition", "fastHandshake2", "status", "coldConnection", "handshakeMs", "ttfaMs", "ttfdMs", "m4RttMs"]
+    let columns = ["scenario", "repetition", "fastHandshake2", "initialMessageDelayMs", "m1DelayFromConnectMs", "status", "coldConnection", "handshakeMs", "ttfaMs", "ttfdMs", "m4RttMs"]
     let csv = ([columns.joined(separator: ",")] + rows.map { row in
       columns.map { key in String(describing: row[key] ?? "") }.joined(separator: ",")
     }).joined(separator: "\n") + "\n"

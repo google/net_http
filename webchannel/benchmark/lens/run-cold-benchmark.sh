@@ -12,6 +12,10 @@ pairs=${3:-10}
 demo_dir=$(cd "$(dirname "$0")/../../objc/demo/WebChanneliOSDemo" && pwd)
 derived_data=${LENS_DERIVED_DATA:-/tmp/net-http-cold-build}
 binary_encoding=${LENS_BINARY_ENCODING:-0}
+initial_message_delay_ms=${LENS_INITIAL_MESSAGE_DELAY_MS:-0}
+case "$initial_message_delay_ms" in
+  ''|*[!0-9]*) echo "LENS_INITIAL_MESSAGE_DELAY_MS must be a nonnegative integer" >&2; exit 2 ;;
+esac
 case "$binary_encoding" in
   0) test_prefix=testCold ;;
   1) test_prefix=testColdBinary ;;
@@ -35,7 +39,7 @@ for scenario in Omnient Viewfinder; do
       log="$output_dir/logs/$trial.log"
       export_dir="$output_dir/attachments/$trial-attachments"
       echo "Running $trial"
-      if xcodebuild test-without-building \
+      if TEST_RUNNER_LENS_INITIAL_MESSAGE_DELAY_MS="$initial_message_delay_ms" xcodebuild test-without-building \
         -workspace "$demo_dir/WebChanneliOSDemo.xcworkspace" \
         -scheme WebChanneliOSDemo -configuration Debug \
         -destination "id=$device_id" -derivedDataPath "$derived_data" \
