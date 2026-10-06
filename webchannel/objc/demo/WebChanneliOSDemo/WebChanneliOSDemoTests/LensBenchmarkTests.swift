@@ -18,7 +18,7 @@ final class LensBenchmarkTests: XCTestCase {
 
   private func runScenario(name: String, isOmnient: Bool) {
     let environment = ProcessInfo.processInfo.environment
-    let repetitions = min(max(Int(environment["LENS_BENCHMARK_REPETITIONS"] ?? "5") ?? 5, 1), 50)
+    let repetitions = min(max(Int(environment["LENS_BENCHMARK_REPETITIONS"] ?? "10") ?? 10, 1), 50)
     let endpoint = environment["LENS_BENCHMARK_ENDPOINT"] ?? defaultEndpoint
     var rows: [[String: Any]] = []
     var failures: [String] = []
