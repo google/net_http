@@ -8,18 +8,20 @@ For a cold-connection run, build the demo XCTest bundle once, run one cold-trial
 
 Set `LENS_BINARY_ENCODING=1` when invoking `run-cold-benchmark.sh` to run the dedicated binary-encoding cold trials. Leave it unset for the original text-encoding trials. The exported JSON records the setting, and the summarizer includes it in the report parameters.
 
+Set `LENS_INITIAL_MESSAGE_DELAY_MS=N` to schedule Lens M1 `N` milliseconds after `connect()` returns, following the Generator benchmark's early-send timing. Omnient sends M3 immediately after M1; Viewfinder retains M2 at +200 ms and M3 at +500 ms after `connect()` returns. The runner passes this setting to the XCTest process through `TEST_RUNNER_`, and the JSON records both the requested delay and the observed time from the connect timestamp to M1 `send()`. The default is 0 ms.
+
 For new runs, the runner stores each trial's Xcode log and attachment-export log under `OUTPUT_DIR/logs/`, result bundles under `OUTPUT_DIR/xcresults/`, and exported attachments under `OUTPUT_DIR/attachments/`. The 2026-10-08 13:40 JST rerun uses this layout after migration. Earlier runs retain their original layout; the summarizer reads both layouts.
 
-Each run directory has `report.md` and `artifacts.md`. Cold runs with recorded transport evidence also have `audit.md`:
+Each run directory has `report.md` and `artifacts.md`. New cold runs and the two most recent runs with recorded transport evidence have `connection-reuse-audit.md`; older runs retain `audit.md`:
 
 | File | Contents |
 |---|---|
 | `report.md` | Specification link, environment, procedure and parameters, and filtered raw measurement tables. No aggregate statistics, comparison, interpretation, excluded-pair list, or artifact links. |
-| `audit.md` | When transport evidence is available: every trial's handshake transport record, initial early POST HTTP status, and transport-specific observations and limits. |
+| `connection-reuse-audit.md` | When transport evidence is available: every trial's handshake transport record, initial early POST HTTP status, and transport-specific observations and limits. |
 | `artifacts.md` | Descriptions and direct links to raw CSV, JSON, logs, and available `.xcresult` bundles. |
 
 The raw attachments and, where applicable, the audit retain every trial. HTTP 400 on an early POST confirms rejection; client logs alone cannot assign the rejection to soft stickiness, request arrival order, or another server-side condition. A new HTTP/2 TCP/TLS connection to the reached edge does not imply cold DNS, radio, or backend state. Retaining a full `.xcresult` bundle is useful for later Xcode inspection but is not required for the report once its raw attachments and test evidence have been exported.
 
 Instructions for agents editing the runner, summarizer, or reports are in [AGENTS.md](AGENTS.md).
 
-Recorded runs: [single-invocation run at 00:37 JST](2026-10-07_00-37-42_JST/report.md), [text-encoding cold-connection run at 15:21 JST](2026-10-07_15-21-10_JST/report.md), [binary-encoding cold-connection run at 17:27 JST](2026-10-07_17-27-44_binary-cold_JST/report.md), [binary-encoding rerun on 2026-10-08](2026-10-08_13-08_binary-cold-rerun_JST/report.md), [binary-encoding run with a 20 ms handshake threshold](2026-10-08_13-21_binary-cold-20ms_JST/report.md), and [its separate rerun at 13:40 JST](2026-10-08_13-39_binary-cold-20ms-rerun_JST/report.md).
+Recorded runs: [single-invocation run at 00:37 JST](2026-10-07_00-37-42_JST/report.md), [text-encoding cold-connection run at 15:21 JST](2026-10-07_15-21-10_JST/report.md), [binary-encoding cold-connection run at 17:27 JST](2026-10-07_17-27-44_binary-cold_JST/report.md), [binary-encoding rerun on 2026-10-08](2026-10-08_13-08_binary-cold-rerun_JST/report.md), [binary-encoding run with a 20 ms handshake threshold](2026-10-08_13-21_binary-cold-20ms_JST/report.md), [its separate rerun at 13:40 JST](2026-10-08_13-39_binary-cold-20ms-rerun_JST/report.md), and [the 50 ms initial-message-delay run](2026-10-08_15-04_binary-cold-50ms_JST/report.md).

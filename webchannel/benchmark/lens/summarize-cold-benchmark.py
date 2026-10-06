@@ -139,9 +139,13 @@ def main():
 
     first = next((row for row in trials.values() if row), {})
     binary_encoding = first.get("enableBinaryEncoding", False)
+    initial_message_delay_ms = first.get("initialMessageDelayMs", 0)
     if any(row is not None and row.get("enableBinaryEncoding", False) != binary_encoding
            for row in trials.values()):
         raise ValueError("Run contains mixed binary-encoding settings")
+    if any(row is not None and row.get("initialMessageDelayMs", 0) != initial_message_delay_ms
+           for row in trials.values()):
+        raise ValueError("Run contains mixed initial-message delay settings")
     logs = [trial_log(root, *key) for key in trials]
     logs = [path for path in logs if path.exists()]
     if logs:
@@ -164,6 +168,7 @@ def main():
     if args.handshake_threshold_ms is not None:
         metadata["handshakeThresholdMs"] = args.handshake_threshold_ms
     metadata.setdefault("handshakeThresholdMs", 10)
+    metadata.setdefault("initialMessageDelayMs", initial_message_delay_ms)
     threshold_ms = float(metadata["handshakeThresholdMs"])
     if not math.isfinite(threshold_ms) or threshold_ms < 0:
         parser.error("handshake threshold must be a finite nonnegative number")
@@ -207,8 +212,8 @@ def main():
         "",
         "1. Build the XCTest bundle once, then launch exactly one cold-trial test method per `xcodebuild test-without-building` invocation. Keep parallel testing disabled and retain each `.xcresult` bundle.",
         "2. Run Omnient first, then Camera Viewfinder. Each pair runs `fastHandshake2=false` (OFF), then `fastHandshake2=true` (ON). The XCTest creates a new `WebChannelService` and WebChannel client per trial.",
-        f"3. Use `imageSizeKb=150`, `detectionDelayMs=50`, `enableBinaryEncoding={'true' if binary_encoding else 'false'}`, `sendRawJson=true`, `fastHandshake=false`, `nonBlockingSend=false`, `blockingHandshake=false`, `forceLongPolling=false`, and `detectBufferingProxy=false`. The 150 KB value is metadata; no 150 KB image is uploaded.",
-        "4. Omnient sends M1 Sticky Cluster Info and M3 Prefetch during connection establishment. Camera Viewfinder sends M1 at connection start, schedules M2 Heartbeat at +200 ms, and schedules M3 Prefetch at +500 ms. M4 Final Capture follows preliminary detections. Each trial has a 60-second completion deadline.",
+        f"3. Use `imageSizeKb=150`, `detectionDelayMs=50`, `initialMessageDelayMs={initial_message_delay_ms}`, `enableBinaryEncoding={'true' if binary_encoding else 'false'}`, `sendRawJson=true`, `fastHandshake=false`, `nonBlockingSend=false`, `blockingHandshake=false`, `forceLongPolling=false`, and `detectBufferingProxy=false`. The 150 KB value is metadata; no 150 KB image is uploaded.",
+        f"4. Schedule M1 Sticky Cluster Info {initial_message_delay_ms} ms after `connect()` returns. Omnient sends M3 Prefetch immediately after M1; Camera Viewfinder schedules M2 Heartbeat at +200 ms and M3 Prefetch at +500 ms after `connect()` returns. M4 Final Capture follows preliminary detections. Each trial has a 60-second completion deadline.",
         "5. Record Handshake (`webChannelOpened` minus connect), TTFA (M3 send to stream ACK), TTFD (M3 send to preliminary detections), and M4 RTT (M4 send to interaction response).",
         f"6. Include a pair in the raw measurement tables only if both runs completed, both trials meet the transport requirement, and the absolute ON/OFF handshake-duration difference is ≤{threshold_ms:g} ms. Calculate that difference from full-precision values. Keep every trial in the raw attachments and audit.",
         "",
@@ -280,12 +285,14 @@ def main():
     audit_lines.extend(["", "## M1 and M3 dispatch", "",
         "The handshake payload column is the request's encoded `count`. `count=0` means neither M1 nor M3 was in the handshake request itself. `early POST` means the first request containing that message was an `AID=-1` POST logged before WebChannel opened, concurrent with the handshake; it does not prove server arrival order or acceptance. `post-open POST` means its first request was logged after the channel opened.", "",
         "M1 is message offset 0. The demo sends M3 at offset 1 in Omnient and offset 2 in Viewfinder (after M2 Heartbeat). Request body prefixes expose `count` and `ofs`, which identify the first HTTP request containing each queued message. A rejected early POST may be retried after opening; the table records the first dispatch.", "",
-        "| Scenario | Pair | Setting | Handshake payload | M1 first request | M3 first request |",
-        "|---|---:|:---:|:---:|---|---|",
+        "The observed M1 delay is measured from the client connect timestamp to the M1 `send()` call; scheduling can vary slightly from the requested delay.", "",
+        "| Scenario | Pair | Setting | M1 after connect (ms) | Handshake payload | M1 first request | M3 first request |",
+        "|---|---:|:---:|---:|:---:|---|---|",
     ])
     for (scenario, pair, setting), row in trials.items():
         payload, m1, m3 = message_dispatch(root, scenario, pair, setting, handshake_transport(row))
-        audit_lines.append(f"| {scenario} | {pair} | {setting.upper()} | {payload} | {m1} | {m3} |")
+        m1_delay = fmt(row["m1DelayFromConnectMs"]) if row and row.get("m1DelayFromConnectMs") is not None else "—"
+        audit_lines.append(f"| {scenario} | {pair} | {setting.upper()} | {m1_delay} | {payload} | {m1} | {m3} |")
     viewfinder_open_before_prefetch = all(
         row is not None and row.get("handshakeMs", float("inf")) < 500
         for (scenario, _, _), row in trials.items() if scenario == "viewfinder"
@@ -320,11 +327,11 @@ def main():
     if failed_trials:
         audit_lines.extend([f"Incomplete trials: {'; '.join(failed_trials)}.", ""])
     (root / "report.md").write_text("\n".join(lines))
-    (root / "audit.md").write_text("\n".join(audit_lines) + "\n")
+    (root / "connection-reuse-audit.md").write_text("\n".join(audit_lines) + "\n")
     artifact_lines = [
         f"# Lens benchmark artifacts — {metadata['runDate']} physical-device cold-connection run",
         "",
-        "[Report](report.md) · [Transport audit](audit.md) · [Run metadata](run-metadata.json)",
+        "[Report](report.md) · [Transport audit](connection-reuse-audit.md) · [Run metadata](run-metadata.json)",
         "",
         "Each trial has an Xcode log and exported attachments. Current runs keep logs in `logs/`, result bundles in `xcresults/`, and exported attachments in `attachments/`; older runs may keep these at the run root. The exported JSON and CSV preserve every attempted trial, including pairs omitted from the report tables. CSV values retain their recorded precision.",
         "",
