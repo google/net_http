@@ -118,6 +118,38 @@ environment variables may set `LENS_BENCHMARK_REPETITIONS` (default `10`, maximu
 `50`) and `LENS_BENCHMARK_ENDPOINT` (default staging Lens URL). The image size
 parameter is metadata; this does not transmit 150 KB of image bytes.
 
+For transport-cold measurements, build for testing once with the demo workspace,
+scheme, physical-device destination, and a dedicated derived-data path. From the
+repository root, run:
+
+```bash
+cd webchannel/objc/demo/WebChanneliOSDemo
+xcodebuild build-for-testing -workspace WebChanneliOSDemo.xcworkspace \
+  -scheme WebChanneliOSDemo -configuration Debug \
+  -destination 'id=DEVICE_ID' -derivedDataPath /path/to/derived-data \
+  -allowProvisioningUpdates
+cd ../../../..
+LENS_DERIVED_DATA=/path/to/derived-data bash \
+  webchannel/benchmark/lens/run-cold-benchmark.sh DEVICE_ID OUTPUT_DIR 10
+python3 webchannel/benchmark/lens/summarize-cold-benchmark.py OUTPUT_DIR 10
+```
+
+The runner starts one cold-trial test method per invocation of
+`xcodebuild test-without-building`. It alternates OFF/ON trials for Omnient and
+Viewfinder, retains each `.xcresult` under `OUTPUT_DIR/xcresults/` and exported
+JSON/CSV under `OUTPUT_DIR/attachments/`, and writes `report.md`, `audit.md`,
+and `artifacts.md` in the output directory. The
+[Lens benchmark report guide](../../../benchmark/lens/README.md) describes
+the document layout. Per-trial Xcode and attachment-export logs are placed in
+`OUTPUT_DIR/logs/`. The JSON records `URLSessionTaskMetrics` for the actual WebChannel
+requests. A trial is accepted as transport-cold only if its first handshake
+GET/POST or concurrent early POST established a new HTTP/2 TCP/TLS connection.
+When the early POST connects first, the handshake GET must reuse that same
+address and local port. App-process restart alone is not used as evidence of a
+fresh connection; DNS, radio, and server state can remain warm.
+Set `LENS_BINARY_ENCODING=1` for a run with `enableBinaryEncoding=true`;
+the default remains `false`.
+
 ---
 
 ## 🌐 Testing Endpoints

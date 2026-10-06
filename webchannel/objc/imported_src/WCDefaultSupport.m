@@ -103,6 +103,11 @@ static dispatch_queue_t CreateDefaultQueue() {
                                                    fetcherService:_fetcherService];
 }
 
+- (void)setTaskMetricsHandler:(void (^)(NSURLSessionTaskMetrics *))taskMetricsHandler {
+  _taskMetricsHandler = [taskMetricsHandler copy];
+  _fetcherService.metricsCollectionBlock = taskMetricsHandler;
+}
+
 - (void)notifyStatEvent:(WCRequestStat)event {
   // optional
 }

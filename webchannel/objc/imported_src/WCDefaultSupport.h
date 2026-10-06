@@ -6,6 +6,9 @@
 
 @interface WCDefaultSupport : NSObject <WCSupport>
 
+/** Transport metrics for requests created by this support instance. */
+@property(nonatomic, copy, nullable) void (^taskMetricsHandler)(NSURLSessionTaskMetrics *metrics);
+
 - (instancetype)init;
 
 /**
