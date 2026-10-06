@@ -7,7 +7,7 @@ if [ "$#" -lt 2 ]; then
 fi
 device_id=$1
 output_dir=$2
-pairs=${3:-50}
+pairs=${3:-100}
 runner_dir=$(cd "$(dirname "$0")" && pwd)
 runner_pid=
 stop_sweep() {

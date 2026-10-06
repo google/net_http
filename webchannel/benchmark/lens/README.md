@@ -28,20 +28,22 @@ The [2026-10-12 Omnient delay-sweep report](2026-10-12_14-09_omnient-delay-sweep
 
 An [additional report including early POST HTTP 400 pairs](2026-10-12_14-09_omnient-delay-sweep_JST/including-early-post-400/report.md) reuses those measurements and preserves the original report.
 
+The [2026-10-13 Omnient delay-sweep report](2026-10-13_06-08_omnient-delay-sweep-100pairs_JST/report.md) contains 100 pairs at each delay and includes eligible early POST HTTP 400 pairs in its main histograms. Its [connection reuse audit](2026-10-13_06-08_omnient-delay-sweep-100pairs_JST/connection-reuse-audit.md) and [artifacts](2026-10-13_06-08_omnient-delay-sweep-100pairs_JST/artifacts.md) retain all measurements and startup-interruption evidence.
+
 ## Omnient initial-message delay sweep
 
-The Omnient sweep runs 50 OFF/ON pairs at each of 0, 50, 100, and 200 ms, in that order, with binary encoding enabled and a new process per trial. Build for testing once as above, then run:
+New Omnient sweeps run 100 OFF/ON pairs at each of 0, 50, 100, and 200 ms, in that order, with binary encoding enabled and a new process per trial. Build for testing once as above, then run:
 
 ```bash
-LENS_DERIVED_DATA=/path/to/derived-data bash webchannel/benchmark/lens/run-omnient-delay-sweep.sh DEVICE_ID OUTPUT_DIR 50
-MPLCONFIGDIR=/tmp/lens-matplotlib python3 -B webchannel/benchmark/lens/summarize-delay-sweep.py OUTPUT_DIR --pairs 50 --handshake-threshold-ms 20
+LENS_DERIVED_DATA=/path/to/derived-data bash webchannel/benchmark/lens/run-omnient-delay-sweep.sh DEVICE_ID OUTPUT_DIR 100
+MPLCONFIGDIR=/tmp/lens-matplotlib python3 -B webchannel/benchmark/lens/summarize-delay-sweep.py OUTPUT_DIR --pairs 100 --handshake-threshold-ms 20 --early-post-400-policy include
 ```
 
-The summarizer requires matplotlib. For a single-delay Omnient histogram report, use `summarize-cold-benchmark.py OUTPUT_DIR 50 --scenarios omnient --report-format histogram --handshake-threshold-ms 20`. The normal raw-table mode remains available. Set `LENS_SCENARIOS=Omnient` to select only Omnient in the cold-trial runner; its default runs both scenarios.
+The summarizer requires matplotlib. For a single-delay Omnient histogram report, use `summarize-cold-benchmark.py OUTPUT_DIR 100 --scenarios omnient --report-format histogram --handshake-threshold-ms 20 --early-post-400-policy include`. The normal raw-table mode remains available. Set `LENS_SCENARIOS=Omnient` to select only Omnient in the cold-trial runner; its default runs both scenarios.
 
-To add an inclusive report from the same sweep, run `summarize-delay-sweep.py OUTPUT_DIR --pairs 50 --handshake-threshold-ms 20 --include-early-post-400`. This writes `including-early-post-400/report.md`, chart PNG/SVG files, paired differences, selection decisions, and bin counts without regenerating the original report. Only the HTTP 400 exclusion is disabled; the other inclusion rules remain in force. The report separately records how many HTTP 400 pairs satisfy those rules and enter the histograms.
+For a historical 50-pair sweep with a 400-excluded report, run `summarize-delay-sweep.py OUTPUT_DIR --pairs 50 --handshake-threshold-ms 20 --include-early-post-400` to add an inclusive view. This writes `including-early-post-400/report.md`, chart PNG/SVG files, paired differences, selection decisions, and bin counts without regenerating the original report. Only the HTTP 400 exclusion is disabled; the other inclusion rules remain in force. New sweeps already have the inclusive report at the run root and do not need this supplemental mode.
 
-The sweep's `report.md` embeds TTFA and TTFD histograms of paired ON-minus-OFF differences, so negative values mean ON is faster. Both trials must complete, have verified fresh HTTP/2 transport, and differ in handshake duration by at most 20 ms. Pairs with an ON initial early POST HTTP 400 or an unresolved status are excluded. A verified absence of an early POST is eligible. Exclusions are not replaced. The report records the 400-pair fraction over all 50 attempted pairs at each delay, unresolved/unsent early POST counts, and histogram sample counts. Each metric uses common 10 ms bin edges across the four delays and retains every eligible value.
+The sweep's top-level `report.md` embeds TTFA and TTFD histograms of paired ON-minus-OFF differences, so negative values mean ON is faster. Both trials must complete, have verified fresh HTTP/2 transport, and differ in handshake duration by at most 20 ms. HTTP 400 pairs are included when those conditions are met. Unresolved status remains excluded, and a verified absence of an early POST is eligible. Exclusions are not replaced. The report records the 400-pair fraction over all 100 attempted pairs at each delay, unresolved/unsent early POST counts, histogram sample counts, and the number of included HTTP 400 pairs. Each metric uses common 10 ms bin edges across the four delays and retains every eligible value. New sweeps produce only the inclusive report; no excluded variant is generated. Historical metadata retains the original count and HTTP 400 policy during regeneration.
 
 Each `delay-Nms/` subdirectory retains `logs/`, `xcresults/`, `attachments/`, `connection-reuse-audit.md`, and `artifacts.md`. `histograms/` contains PNG/SVG charts, full-precision paired differences, per-pair selection decisions, and exact bin counts. The top-level artifact and audit documents link the per-delay evidence. Trust/preflight checks and interrupted earlier attempts are excluded from the sweep data. The runner refuses to overwrite trial files and stops on test-launch or attachment-export failures.
 

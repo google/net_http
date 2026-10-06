@@ -155,10 +155,11 @@ follows M1 immediately; Viewfinder M2 and M3 remain scheduled at +200 ms and
 +500 ms after `connect()` returns.
 
 Set `LENS_SCENARIOS=Omnient` to run only Omnient. The
-`webchannel/benchmark/lens/run-omnient-delay-sweep.sh` wrapper runs 50 OFF/ON
+`webchannel/benchmark/lens/run-omnient-delay-sweep.sh` wrapper runs 100 OFF/ON
 pairs at each of 0, 50, 100, and 200 ms with binary encoding. Its companion
-`summarize-delay-sweep.py` produces TTFA/TTFD ON-minus-OFF histograms, excluding
-early POST HTTP 400 pairs, and reports the 400-pair rate. See the
+`summarize-delay-sweep.py` produces a top-level report with TTFA/TTFD ON-minus-OFF
+histograms including early POST HTTP 400 pairs that satisfy the other inclusion
+rules, and reports the 400-pair rate. See the
 [Lens benchmark report guide](../../../benchmark/lens/README.md#omnient-initial-message-delay-sweep)
 for commands and the full inclusion rule.
 
