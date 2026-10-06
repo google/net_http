@@ -101,6 +101,15 @@ def pair_reasons(off, on, threshold_ms):
     return reasons
 
 
+def histogram_pair_reasons(off, on, threshold_ms, post_status, include_early_post_400=False):
+    reasons = pair_reasons(off, on, threshold_ms)
+    if has_early_post_400(post_status) and not include_early_post_400:
+        reasons.append("ON initial early POST HTTP 400")
+    elif post_status == "unknown":
+        reasons.append("ON initial early POST status unresolved")
+    return reasons
+
+
 def plot_histogram(values, path, metric, delay_ms, bin_width=10, bounds=None):
     import matplotlib
     matplotlib.use("Agg")
@@ -321,10 +330,7 @@ def main():
             reasons = pair_reasons(off, on, threshold_ms)
             if report_format == "histogram":
                 post_status = early_post_statuses[scenario, pair, "on"]
-                if has_early_post_400(post_status):
-                    reasons.append("ON initial early POST HTTP 400")
-                elif post_status == "unknown":
-                    reasons.append("ON initial early POST status unresolved")
+                reasons = histogram_pair_reasons(off, on, threshold_ms, post_status)
                 record = {"pair": pair, "accepted": not reasons, "exclusionReasons": reasons,
                           "earlyPostHTTP": post_status, "ttfaDifferenceMs": None, "ttfdDifferenceMs": None}
                 if off and on:

@@ -1,5 +1,9 @@
 # Omnient delay-sweep artifacts
 
+## Additional report views
+
+[Report including early POST HTTP 400 pairs](including-early-post-400/report.md) · [Inclusive histogram evidence](including-early-post-400/artifacts.md). This view uses the same measurements and keeps the completion, fresh-transport, and 20 ms handshake-difference requirements.
+
 [Report](report.md) · [Connection reuse audit](connection-reuse-audit.md)
 
 Each delay retains every attempted OFF/ON trial. Raw CSV/JSON, logs, result bundles, histogram bins, paired differences, and selection decisions are linked below.
