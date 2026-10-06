@@ -74,6 +74,11 @@
 
 - (void)beginFetchWithRequest:(NSURLRequest *)request {
   _fetcher = [_fetcherService fetcherWithRequest:request];
+  // Keep the metrics callback alive when an open streaming GET is cancelled.
+  // GTMSessionFetcher otherwise releases callbacks in stopFetching.
+  if (_fetcherService.metricsCollectionBlock != nil) {
+    _fetcher.stopFetchingTriggersCompletionHandler = YES;
+  }
   _fetcher.callbackQueue = _dispatchQueue;
 #if DEBUG
   _fetcher.allowLocalhostRequest = YES;

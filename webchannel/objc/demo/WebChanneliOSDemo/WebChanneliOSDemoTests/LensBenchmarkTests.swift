@@ -16,18 +16,32 @@ final class LensBenchmarkTests: XCTestCase {
     runScenario(name: "viewfinder", isOmnient: false)
   }
 
-  private func runScenario(name: String, isOmnient: Bool) {
+  // Run exactly one of these methods per xcodebuild invocation so the app process
+  // and its URL sessions are new for each transport-cold trial.
+  func testColdOmnientOff() { runScenario(name: "omnient", isOmnient: true, coldSetting: false) }
+  func testColdOmnientOn() { runScenario(name: "omnient", isOmnient: true, coldSetting: true) }
+  func testColdViewfinderOff() { runScenario(name: "viewfinder", isOmnient: false, coldSetting: false) }
+  func testColdViewfinderOn() { runScenario(name: "viewfinder", isOmnient: false, coldSetting: true) }
+  func testColdBinaryOmnientOff() { runScenario(name: "omnient", isOmnient: true, coldSetting: false, binaryEncoding: true) }
+  func testColdBinaryOmnientOn() { runScenario(name: "omnient", isOmnient: true, coldSetting: true, binaryEncoding: true) }
+  func testColdBinaryViewfinderOff() { runScenario(name: "viewfinder", isOmnient: false, coldSetting: false, binaryEncoding: true) }
+  func testColdBinaryViewfinderOn() { runScenario(name: "viewfinder", isOmnient: false, coldSetting: true, binaryEncoding: true) }
+
+  private func runScenario(name: String, isOmnient: Bool, coldSetting: Bool? = nil, binaryEncoding: Bool = false) {
     let environment = ProcessInfo.processInfo.environment
-    let repetitions = min(max(Int(environment["LENS_BENCHMARK_REPETITIONS"] ?? "10") ?? 10, 1), 50)
+    let repetitions = coldSetting == nil
+      ? min(max(Int(environment["LENS_BENCHMARK_REPETITIONS"] ?? "10") ?? 10, 1), 50) : 1
+    let settings = coldSetting.map { [$0] } ?? [false, true]
     let endpoint = environment["LENS_BENCHMARK_ENDPOINT"] ?? defaultEndpoint
     var rows: [[String: Any]] = []
     var failures: [String] = []
 
     for repetition in 1...repetitions {
-      for enabled in [false, true] {
+      for enabled in settings {
         let service = WebChannelService()
         onMain {
           service.fastHandshake2 = enabled
+          service.enableBinaryEncoding = binaryEncoding
           service.startLensBenchmark(
             endpointUrl: endpoint,
             isOmnient: isOmnient,
@@ -48,7 +62,7 @@ final class LensBenchmarkTests: XCTestCase {
         DispatchQueue.main.async(execute: check)
         wait(for: [finished], timeout: 65)
 
-        let row: [String: Any] = onMain {
+        var row: [String: Any] = onMain {
           let metrics = service.lensMetrics
           let complete = metrics.isCompleted && metrics.handshakeDurationMs != nil
             && metrics.m3RttToAckMs != nil && metrics.m3TimeToFirstDetectionMs != nil
@@ -58,6 +72,7 @@ final class LensBenchmarkTests: XCTestCase {
             "scenario": name,
             "repetition": repetition,
             "fastHandshake2": enabled,
+            "enableBinaryEncoding": binaryEncoding,
             "status": status,
             "endpoint": endpoint,
             "imageSizeKb": 150,
@@ -73,6 +88,47 @@ final class LensBenchmarkTests: XCTestCase {
           service.disconnect()
           return result
         }
+        if coldSetting != nil {
+          let support = service.testSupport
+          // The fast-handshake GET remains open as the backchannel until disconnect.
+          // URLSession publishes task metrics only when that task ends.
+          let metricsDeadline = Date().addingTimeInterval(5)
+          var transport = support?.taskMetricsSnapshot ?? []
+          while !transport.contains(where: { $0["rid"] as? String != "rpc" &&
+            $0["method"] as? String == (enabled ? "GET" : "POST") })
+            && Date() < metricsDeadline
+          {
+            Thread.sleep(forTimeInterval: 0.1)
+            transport = support?.taskMetricsSnapshot ?? []
+          }
+          let handshake = transport
+            .filter { $0["rid"] as? String != "rpc" &&
+              $0["method"] as? String == (enabled ? "GET" : "POST") }
+            .min { (Int($0["rid"] as? String ?? "") ?? Int.max) <
+              (Int($1["rid"] as? String ?? "") ?? Int.max) }
+          let earlyPOST = enabled ? transport
+            .filter { $0["method"] as? String == "POST" &&
+              (Int($0["rid"] as? String ?? "") ?? Int.max) ==
+              (Int(handshake?["rid"] as? String ?? "") ?? -2) + 1 }
+            .first : nil
+          func fresh(_ record: [String: Any]?) -> Bool {
+            record?["protocol"] as? String == "h2"
+              && record?["reusedConnection"] as? Bool == false
+              && record?["tcpConnectMs"] != nil && record?["tlsMs"] != nil
+          }
+          let sharedConnection = handshake?["localPort"] as? Int == earlyPOST?["localPort"] as? Int
+            && handshake?["remoteAddress"] as? String == earlyPOST?["remoteAddress"] as? String
+            && handshake?["localPort"] != nil
+          let coldConnection = fresh(handshake) ||
+            (enabled && fresh(earlyPOST) && sharedConnection &&
+              handshake?["protocol"] as? String == "h2" &&
+              handshake?["reusedConnection"] as? Bool == true)
+          row["transportMetrics"] = transport
+          row["coldConnection"] = coldConnection
+          row["coldConnectionSource"] = fresh(handshake) ? "handshake" :
+            (coldConnection ? "earlyPOST" : "unverified")
+          if !coldConnection { failures.append("\(name) #\(repetition) cold connection unverified") }
+        }
         rows.append(row)
         let identifier = "\(name) #\(repetition) fastHandshake2=\(enabled)"
         if row["status"] as? String != "completed" { failures.append(identifier) }
@@ -86,7 +142,7 @@ final class LensBenchmarkTests: XCTestCase {
     jsonAttachment.lifetime = .keepAlways
     add(jsonAttachment)
 
-    let columns = ["scenario", "repetition", "fastHandshake2", "status", "handshakeMs", "ttfaMs", "ttfdMs", "m4RttMs"]
+    let columns = ["scenario", "repetition", "fastHandshake2", "status", "coldConnection", "handshakeMs", "ttfaMs", "ttfdMs", "m4RttMs"]
     let csv = ([columns.joined(separator: ",")] + rows.map { row in
       columns.map { key in String(describing: row[key] ?? "") }.joined(separator: ",")
     }).joined(separator: "\n") + "\n"

@@ -61,6 +61,7 @@ final class WebChannelService: NSObject, @unchecked Sendable {
   var lastLatencyMs: Double? = nil
   var isBackChannelBinaryEncodingEnabled: Bool = false
   var lensMetrics = LensBenchmarkMetrics()
+  private(set) var testSupport: TestAppSupport?
 
   // Channel Options
   var enableBinaryEncoding: Bool = false
@@ -158,6 +159,7 @@ final class WebChannelService: NSObject, @unchecked Sendable {
     state = .connecting
 
     let support = TestAppSupport(service: self)
+    testSupport = support
     guard
       let newClient = WCWebChannelClient(
         url: url, options: options, delegate: self, support: support)
