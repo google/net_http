@@ -1,0 +1,105 @@
+{
+  "status": "complete",
+  "startedUTC": "2026-10-14T06:18:10.889612+00:00",
+  "finishedUTC": "2026-10-14T06:31:05.583687+00:00",
+  "batches": [
+    {
+      "phase": "smoke",
+      "requestedIterations": 20,
+      "recordedMarkers": 20,
+      "distinctApplicationPIDs": 20,
+      "passed": true,
+      "knownStartupFailure": false,
+      "exitCode": 0,
+      "startedUTC": "2026-10-14T06:18:12.232914+00:00",
+      "finishedUTC": "2026-10-14T06:18:32.439347+00:00",
+      "elapsedSeconds": 20.20644211769104,
+      "usbAfter": [
+        {
+          "IORegistryEntryID": 4295038643,
+          "IORegistryEntryName": "iPhone",
+          "locationID": 17825792,
+          "idVendor": 1452,
+          "idProduct": 4776
+        }
+      ],
+      "log": "logs/smoke.log",
+      "command": [
+        "xcodebuild",
+        "test-without-building",
+        "-workspace",
+        "/Users/riesz/net_http/webchannel/objc/demo/WebChanneliOSDemo/WebChanneliOSDemo.xcworkspace",
+        "-scheme",
+        "WebChanneliOSDemo",
+        "-configuration",
+        "Debug",
+        "-destination",
+        "id=00008110-001C34513686201E",
+        "-derivedDataPath",
+        "/private/tmp/net-http-device-startup-probe-build",
+        "-parallel-testing-enabled",
+        "NO",
+        "-only-testing:WebChanneliOSDemoTests/DeviceStartupProbeTests/testNoNetworking",
+        "-test-iterations",
+        "20",
+        "-test-repetition-relaunch-enabled",
+        "YES",
+        "-run-tests-until-failure",
+        "-resultBundlePath",
+        "/Users/riesz/net_http/webchannel/benchmark/lens/device-connection-investigation/2026-10-14_application-relaunch/xcresults/smoke.xcresult"
+      ]
+    },
+    {
+      "phase": "validation",
+      "requestedIterations": 1000,
+      "recordedMarkers": 1000,
+      "distinctApplicationPIDs": 1000,
+      "passed": true,
+      "knownStartupFailure": false,
+      "exitCode": 0,
+      "startedUTC": "2026-10-14T06:18:32.625427+00:00",
+      "finishedUTC": "2026-10-14T06:31:05.564425+00:00",
+      "elapsedSeconds": 752.9390079975128,
+      "usbAfter": [
+        {
+          "IORegistryEntryID": 4295038643,
+          "IORegistryEntryName": "iPhone",
+          "locationID": 17825792,
+          "idVendor": 1452,
+          "idProduct": 4776
+        }
+      ],
+      "log": "logs/validation.log",
+      "command": [
+        "xcodebuild",
+        "test-without-building",
+        "-workspace",
+        "/Users/riesz/net_http/webchannel/objc/demo/WebChanneliOSDemo/WebChanneliOSDemo.xcworkspace",
+        "-scheme",
+        "WebChanneliOSDemo",
+        "-configuration",
+        "Debug",
+        "-destination",
+        "id=00008110-001C34513686201E",
+        "-derivedDataPath",
+        "/private/tmp/net-http-device-startup-probe-build",
+        "-parallel-testing-enabled",
+        "NO",
+        "-only-testing:WebChanneliOSDemoTests/DeviceStartupProbeTests/testNoNetworking",
+        "-test-iterations",
+        "1000",
+        "-test-repetition-relaunch-enabled",
+        "YES",
+        "-run-tests-until-failure",
+        "-resultBundlePath",
+        "/Users/riesz/net_http/webchannel/benchmark/lens/device-connection-investigation/2026-10-14_application-relaunch/xcresults/validation.xcresult"
+      ]
+    }
+  ],
+  "recoveryActions": [],
+  "usbSnapshotsCovered": true,
+  "distinctUSBRegistryIDs": [
+    4295038643
+  ],
+  "limitation": "USB continuity is sampled, not continuous hardware tracing; demo is the host but the test requests no networking."
+}

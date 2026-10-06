@@ -224,6 +224,8 @@ def main():
         artifacts.extend(["[Benchmark timing](timing.json) retains full-precision wall-clock timestamps and elapsed intervals; excludes build and report generation.", ""])
     if (root / "logs/device-baseline").exists():
         artifacts.extend(["[Device baseline](logs/device-baseline/) records USB recognition, CoreDevice availability, and Mac power assertions before measurement. Failure snapshots are retained under each delay’s logs/device-diagnostics/ directory.", ""])
+    if (root / "report-render-settings.json").exists():
+        artifacts.extend(["[Report rendering settings](report-render-settings.json) record the rendering fix and generator hashes separately from frozen measurement settings. [Rendering verification](report-render-verification.json) confirms unchanged data, selection and bins, raw preservation, and deterministic plot regeneration.", ""])
     (root / "artifacts.md").write_text("\n".join(artifacts))
     (root / "connection-reuse-audit.md").write_text("\n".join(audit) + "\n")
     sweep_metadata = {"delaysMs": list(delays), "pairsPerDelay": args.pairs,

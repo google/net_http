@@ -26,6 +26,8 @@ def main():
     scripts = Path(__file__).parent
     for name, expected in settings["scriptsSHA256"].items():
         assert digest(scripts / name) == expected, name
+    for path, expected in settings.get("sourcesSHA256", {}).items():
+        assert digest(Path(path)) == expected, path
     environment = dict(os.environ, MPLCONFIGDIR="/tmp/net-http-lens-matplotlib")
     command = [sys.executable, "-B", str(scripts / "summarize-delay-sweep.py"), str(root),
                "--pairs", str(pairs), "--delays-ms", *map(str, delays),
@@ -35,6 +37,7 @@ def main():
     edges_by_metric = {}
     completed = fresh = 0
     counts = {}
+    process_instances = set()
     for delay in delays:
         run = root / f"delay-{delay}ms"
         data = json.loads((run / "histograms/histogram-data.json").read_text())
@@ -50,6 +53,11 @@ def main():
                 rows.append(row)
                 assert row["scenario"] == "omnient" and row["initialMessageDelayMs"] == delay
                 assert row["enableBinaryEncoding"] is True and row["fastHandshake2"] == (setting == "on")
+                if settings.get("executionProtocol") == "xcode-relaunch-batch":
+                    ordinal = 2 * record["pair"] - (1 if setting == "off" else 0)
+                    assert row["batchTrialOrdinal"] == ordinal and row["batchPair"] == record["pair"]
+                    assert row["batchSetting"] == setting and row["processInstanceId"] not in process_instances
+                    process_instances.add(row["processInstanceId"])
                 completed += row.get("status") == "completed"
                 fresh += row.get("coldConnection") is True
                 if row.get("coldConnection") is True:
@@ -101,6 +109,29 @@ def main():
             assert bins == histogram["pairCounts"] and sum(bins) == len(selected)
         for item in json.loads((run / "histograms/input-manifest.json").read_text()):
             assert digest(run / item["path"]) == item["sha256"]
+        if settings.get("executionProtocol") == "xcode-relaunch-batch":
+            mapping = json.loads((run / "batch-trial-map.json").read_text())
+            previous_pid = None
+            for ordinal in range(1, 2 * pairs + 1):
+                setting = "on" if ordinal % 2 == 0 else "off"
+                stem = f"omnient-{(ordinal + 1) // 2}-{setting}"
+                item = mapping[stem]
+                assert item["ordinal"] == ordinal
+                original_manifest = json.loads((run / item["originalJSON"]).parent.joinpath("manifest.json").read_text())
+                matching = [a for entry in original_manifest for a in entry["attachments"]
+                            if a["exportedFileName"] in (Path(item["originalJSON"]).name, Path(item["originalCSV"]).name)]
+                assert len(matching) == 2 and all(a.get("repetitionNumber", 1) == item["repetitionNumber"] for a in matching)
+                assert item["processId"] != previous_pid
+                previous_pid = item["processId"]
+                source_json, source_csv = run / item["originalJSON"], run / item["originalCSV"]
+                assert digest(source_json) == item["jsonSHA256"] and digest(source_csv) == item["csvSHA256"]
+                export = run / "attachments" / f"{stem}-attachments"
+                assert digest(export / source_json.name) == item["jsonSHA256"]
+                assert digest(export / source_csv.name) == item["csvSHA256"]
+                start, end = item["stdoutByteRange"]
+                chunk = (run / item["batchLog"]).read_bytes()[start:end]
+                assert (run / "logs" / f"{stem}.log").read_bytes() == chunk
+                assert hashlib.sha256(chunk).hexdigest() == item["trialLogSHA256"]
         counts[str(delay)] = {k: data[k] for k in ("acceptedPairs", "earlyPost400Pairs", "includedEarlyPost400Pairs")}
         print(f"{delay} ms: {pairs} pairs, histogram {len(selected)}, HTTP 400 {data['earlyPost400Pairs']}", flush=True)
     for path in root.rglob("*.md"):

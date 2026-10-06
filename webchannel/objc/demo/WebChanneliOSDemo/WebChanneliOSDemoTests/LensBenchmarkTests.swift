@@ -7,6 +7,62 @@ import XCTest
 /// iPhone for measurements; neither XCTest nor the app mocks the HTTP endpoint.
 final class LensBenchmarkTests: XCTestCase {
   private let defaultEndpoint = "https://webchannel.sandbox.google.com/staging/channel/lens"
+  private static let processInstanceId = UUID().uuidString
+
+  func testColdBinaryOmnientBatch() throws {
+    let trial = try nextBatchTrial()
+    printBatchMarker("STARTED", trial)
+    runScenario(name: "omnient", isOmnient: true,
+                coldSetting: trial["batchSetting"] as? String == "on",
+                binaryEncoding: true, batchMetadata: trial)
+    printBatchMarker("FINISHED", trial)
+  }
+
+  /// Verifies persistent ordering and continuation after a failed test iteration.
+  /// This probe makes no WebChannel request and is excluded from measurements.
+  func testBatchSequenceProbe() throws {
+    let trial = try nextBatchTrial()
+    printBatchMarker("STARTED", trial)
+    printBatchMarker("FINISHED", trial)
+    if let forced = Int(ProcessInfo.processInfo.environment["LENS_BATCH_PROBE_FAIL_ORDINAL"] ?? "") {
+      XCTAssertNotEqual(trial["batchTrialOrdinal"] as? Int, forced, "Intentional sequencing probe failure")
+    }
+  }
+
+  private func nextBatchTrial() throws -> [String: Any] {
+    let environment = ProcessInfo.processInfo.environment
+    guard let batchId = environment["LENS_BATCH_ID"], UUID(uuidString: batchId) != nil,
+      let count = Int(environment["LENS_BATCH_TRIAL_COUNT"] ?? ""), count > 0, count <= 100_000,
+      let start = Int(environment["LENS_BATCH_START_ORDINAL"] ?? "1"), start > 0, start <= count
+    else { throw NSError(domain: "LensBatch", code: 1, userInfo: [NSLocalizedDescriptionKey: "Invalid batch identity/count/start ordinal"]) }
+    let directory = try FileManager.default.url(for: .applicationSupportDirectory,
+      in: .userDomainMask, appropriateFor: nil, create: true).appendingPathComponent("LensBatchSequence", isDirectory: true)
+    try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+    let counter = directory.appendingPathComponent(batchId + ".json")
+    var ordinal = start
+    if FileManager.default.fileExists(atPath: counter.path) {
+      guard let state = try JSONSerialization.jsonObject(with: Data(contentsOf: counter)) as? [String: Int],
+        state["start"] == start, state["count"] == count, let next = state["next"]
+      else { throw NSError(domain: "LensBatch", code: 2, userInfo: [NSLocalizedDescriptionKey: "Batch counter does not match invocation"]) }
+      ordinal = next
+    }
+    guard ordinal >= start && ordinal <= count else {
+      throw NSError(domain: "LensBatch", code: 3, userInfo: [NSLocalizedDescriptionKey: "No unattempted trial remains in batch"])
+    }
+    // Commit before measurement so an entered test is never silently repeated.
+    try JSONSerialization.data(withJSONObject: ["start": start, "count": count, "next": ordinal + 1])
+      .write(to: counter, options: .atomic)
+    return ["batchId": batchId, "batchTrialOrdinal": ordinal, "batchPair": (ordinal + 1) / 2,
+      "batchSetting": ordinal.isMultiple(of: 2) ? "on" : "off",
+      "processId": ProcessInfo.processInfo.processIdentifier,
+      "processInstanceId": Self.processInstanceId,
+      "trialStartedEpochSeconds": Date().timeIntervalSince1970]
+  }
+
+  private func printBatchMarker(_ event: String, _ trial: [String: Any]) {
+    let data = try! JSONSerialization.data(withJSONObject: trial, options: [.sortedKeys])
+    print("LENS_BATCH_TRIAL_\(event) " + String(decoding: data, as: UTF8.self))
+  }
 
   func testOmnient() {
     runScenario(name: "omnient", isOmnient: true)
@@ -27,7 +83,7 @@ final class LensBenchmarkTests: XCTestCase {
   func testColdBinaryViewfinderOff() { runScenario(name: "viewfinder", isOmnient: false, coldSetting: false, binaryEncoding: true) }
   func testColdBinaryViewfinderOn() { runScenario(name: "viewfinder", isOmnient: false, coldSetting: true, binaryEncoding: true) }
 
-  private func runScenario(name: String, isOmnient: Bool, coldSetting: Bool? = nil, binaryEncoding: Bool = false) {
+  private func runScenario(name: String, isOmnient: Bool, coldSetting: Bool? = nil, binaryEncoding: Bool = false, batchMetadata: [String: Any]? = nil) {
     let environment = ProcessInfo.processInfo.environment
     let repetitions = coldSetting == nil
       ? min(max(Int(environment["LENS_BENCHMARK_REPETITIONS"] ?? "10") ?? 10, 1), 50) : 1
@@ -89,6 +145,9 @@ final class LensBenchmarkTests: XCTestCase {
             "systemVersion": UIDevice.current.systemVersion,
             "log": service.combinedLogsText,
           ]
+          if let batchMetadata {
+            for (key, value) in batchMetadata { result[key] = value }
+          }
           if let value = metrics.handshakeDurationMs { result["handshakeMs"] = value }
           if let value = metrics.m1DelayFromConnectMs { result["m1DelayFromConnectMs"] = value }
           if let value = metrics.m3RttToAckMs { result["ttfaMs"] = value }
@@ -138,6 +197,7 @@ final class LensBenchmarkTests: XCTestCase {
             (coldConnection ? "earlyPOST" : "unverified")
           if !coldConnection { failures.append("\(name) #\(repetition) cold connection unverified") }
         }
+        if batchMetadata != nil { row["trialRecordedEpochSeconds"] = Date().timeIntervalSince1970 }
         rows.append(row)
         let identifier = "\(name) #\(repetition) fastHandshake2=\(enabled)"
         if row["status"] as? String != "completed" { failures.append(identifier) }
@@ -151,7 +211,8 @@ final class LensBenchmarkTests: XCTestCase {
     jsonAttachment.lifetime = .keepAlways
     add(jsonAttachment)
 
-    let columns = ["scenario", "repetition", "fastHandshake2", "initialMessageDelayMs", "m1DelayFromConnectMs", "status", "coldConnection", "handshakeMs", "ttfaMs", "ttfdMs", "m4RttMs"]
+    var columns = ["scenario", "repetition", "fastHandshake2", "initialMessageDelayMs", "m1DelayFromConnectMs", "status", "coldConnection", "handshakeMs", "ttfaMs", "ttfdMs", "m4RttMs"]
+    if batchMetadata != nil { columns += ["batchTrialOrdinal", "batchPair", "batchSetting", "batchId", "processId", "processInstanceId"] }
     let csv = ([columns.joined(separator: ",")] + rows.map { row in
       columns.map { key in String(describing: row[key] ?? "") }.joined(separator: ",")
     }).joined(separator: "\n") + "\n"

@@ -34,12 +34,13 @@ The [1000-pair sweep interruption report](2026-10-13_14-59_omnient-delay-sweep-1
 
 ## Omnient initial-message delay sweep
 
-New Omnient sweeps run 1000 OFF/ON pairs at each of 0, 50, 100, 150, and 200 ms, in that order, with binary encoding enabled and a new process per trial. Build for testing once as above, then run:
+New Omnient sweeps run 50 OFF/ON pairs at each of 0, 50, 100, 150, and 200 ms, in that order, with binary encoding enabled and a new process per trial. Build for testing once as above, then run:
 
 ```bash
-LENS_DERIVED_DATA=/path/to/derived-data bash webchannel/benchmark/lens/run-omnient-delay-sweep.sh DEVICE_ID OUTPUT_DIR 1000
-MPLCONFIGDIR=/tmp/lens-matplotlib python3 -B webchannel/benchmark/lens/summarize-delay-sweep.py OUTPUT_DIR --pairs 1000 --handshake-threshold-ms 20 --early-post-400-policy include
+python3 -B webchannel/benchmark/lens/run-relaunch-delay-sweep.py OUTPUT_DIR
 ```
+
+Create `execution-settings.json` before launch with `pairsPerDelay`, `delaysMs`, `handshakeThresholdMs: 20`, `includeEarlyPost400: true`, `enableBinaryEncoding: true`, `executionProtocol: "xcode-relaunch-batch"`, `deviceID`, `derivedData`, `workspace`, `reportPython`, and frozen `scriptsSHA256` and `sourcesSHA256`. Build for testing once. The runner uses one Xcode invocation per delay and restarts the app for each of the `2 * pairsPerDelay` repetitions. One selected test alternates OFF/ON using an atomically persisted batch ordinal. It does not retry failed measurements or stop subsequent repetitions for a measured failure. Original attachments are associated by XCTest repetition number, trial ordinal, and process identity; per-trial logs are exact byte ranges of shared stdout. Incomplete batches stop for review and preserve evidence. The legacy shell/resumable commands below describe historical runs.
 
 The summarizer requires matplotlib. For a single-delay Omnient histogram report, use `summarize-cold-benchmark.py OUTPUT_DIR 1000 --scenarios omnient --report-format histogram --handshake-threshold-ms 20 --early-post-400-policy include`. The normal raw-table mode remains available. Set `LENS_SCENARIOS=Omnient` to select only Omnient in the cold-trial runner; its default runs both scenarios.
 
@@ -60,3 +61,7 @@ For a long sweep with `execution-settings.json` containing the device ID, derive
 After all requested trials are recorded, the workflow runs `finalize-delay-sweep.py`. This generates the main inclusive report, independently verifies trial settings, transport evidence, selection rules, paired differences, bin counts, source hashes, and local links, and regenerates the report to verify identical output and unchanged raw evidence. `completion.json` is written only after those checks pass. Human-readable workflow progress remains in its invocation log; the absence of `completion.json` means the workflow has not confirmed completion.
 
 New sweep invocations record `timing.json` using `record-sweep-timing.py`. Reports include total and per-delay wall-clock elapsed seconds when available, including process launch, measurement, attachment export, and recovery gaps. Build and report generation are excluded. Historical reports without timing records retain their original format. A user-cancelled experiment retains `interruption.json`; the resumable runner refuses to restart it.
+
+The [2026-10-14 batched relaunch sweep](2026-10-14_16-41_omnient-delay-sweep-50pairs-relaunch_JST/report.md) records 50 pairs at each of 0, 50, 100, 150, and 200 ms. All 500 trials used distinct app process instances and verified fresh HTTP/2 TCP/TLS transport; 499 completed and one reached the measurement deadline. No startup connection error was observed. Total benchmark wall time was 703.073 seconds. [Audit](2026-10-14_16-41_omnient-delay-sweep-50pairs-relaunch_JST/connection-reuse-audit.md) and [artifacts](2026-10-14_16-41_omnient-delay-sweep-50pairs-relaunch_JST/artifacts.md) retain the evidence.
+
+The [250-pair-per-delay sweep](2026-10-14_21-13_omnient-delay-sweep-250pairs-relaunch_JST/report.md) retains 1,250 pairs across all five delays. All 2,500 measurements used distinct application process instances and verified fresh HTTP/2 TCP/TLS transport; 2,496 completed. Its [infrastructure audit](2026-10-14_21-13_omnient-delay-sweep-250pairs-relaunch_JST/infrastructure-audit.md) records two startup failures, original evidence, and reviewed resumption of only unentered measurement ordinals.

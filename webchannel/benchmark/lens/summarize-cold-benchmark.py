@@ -121,8 +121,12 @@ def plot_histogram(values, path, metric, delay_ms, bin_width=10, bounds=None):
     lower = math.floor(low / bin_width) * bin_width
     upper = max(lower + bin_width, (math.floor(high / bin_width) + 1) * bin_width)
     bins = [lower + i * bin_width for i in range(round((upper - lower) / bin_width) + 1)]
-    fig, ax = plt.subplots(figsize=(9, 4.8), layout="constrained")
-    counts, edges, _ = ax.hist(values, bins=bins, color="#2c6eaa", edgecolor="white")
+    show_detail = bins[-1] - bins[0] > 600 and any(-300 <= value <= 300 for value in values)
+    if show_detail:
+        fig, (ax, detail) = plt.subplots(2, 1, figsize=(9, 7.5), layout="constrained")
+    else:
+        fig, ax = plt.subplots(figsize=(9, 4.8), layout="constrained")
+    counts, edges, _ = ax.hist(values, bins=bins, color="#2c6eaa", edgecolor="none", linewidth=0)
     ax.axvline(0, color="#333333", linestyle="--", linewidth=1)
     ax.set(title=f"Omnient: {metric} ON - OFF | M1 delay {delay_ms} ms | n={len(values)}",
            xlabel=f"{metric} difference (ms): negative = ON faster", ylabel="Pair count")
@@ -130,17 +134,17 @@ def plot_histogram(values, path, metric, delay_ms, bin_width=10, bounds=None):
     ax.grid(axis="y", alpha=0.2)
     ax.set_axisbelow(True)
     ax.set_xlim(bins[0], bins[-1])
-    if bins[-1] - bins[0] > 600 and any(-300 <= value <= 300 for value in values):
-        detail = ax.inset_axes([0.40, 0.49, 0.57, 0.43])
-        detail.hist(values, bins=bins, color="#2c6eaa", edgecolor="white")
+    if show_detail:
+        detail.hist(values, bins=bins, color="#2c6eaa", edgecolor="none", linewidth=0)
         detail.axvline(0, color="#333333", linestyle="--", linewidth=1)
         detail.set_xlim(-300, 300)
         detail.yaxis.set_major_locator(MaxNLocator(integer=True))
         detail.grid(axis="y", alpha=0.2)
         detail.set_axisbelow(True)
         visible = sum(-300 <= value <= 300 for value in values)
-        detail.set_title(f"Detail: -300 to 300 ms ({visible}/{len(values)} pairs)", fontsize=9)
-        detail.tick_params(labelsize=8)
+        detail.set_title(f"Zoom: -300 to 300 ms ({visible}/{len(values)} pairs)")
+        detail.set_xlabel(f"{metric} difference (ms): negative = ON faster")
+        detail.set_ylabel("Pair count")
     if not values:
         ax.text(0.5, 0.5, "No eligible pairs", transform=ax.transAxes, ha="center")
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -230,6 +234,10 @@ def main():
                 trials[scenario, pair, setting] = load_trial(root, scenario, pair, setting)
 
     first = next((row for row in trials.values() if row), {})
+    protocol = metadata.get("executionProtocol", "xcode-relaunch-batch" if "batchTrialOrdinal" in first else "separate-xcodebuild")
+    batched = protocol == "xcode-relaunch-batch"
+    if batched:
+        metadata["executionProtocol"] = protocol
     binary_encoding = first.get("enableBinaryEncoding", False)
     initial_message_delay_ms = first.get("initialMessageDelayMs", 0)
     if any(row is not None and row.get("enableBinaryEncoding", False) != binary_encoding
@@ -298,13 +306,13 @@ def main():
         f"| Mac | macOS {metadata['macOS']}; {metadata['xcode']} |",
         f"| Source | Git HEAD `{metadata['sourceGitHead']}` plus uncommitted benchmark instrumentation |",
         f"| Test period | {metadata['testPeriod']} |",
-        f"| Test execution | {pair_count} alternating OFF/ON pairs per scenario; a separate `xcodebuild test-without-building` invocation for each trial |",
+        f"| Test execution | {pair_count} alternating OFF/ON pairs per scenario; " + ("one selected test repeated within retained xcodebuild batches, with the application relaunched for every trial |" if batched else "a separate `xcodebuild test-without-building` invocation for each trial |"),
         f"| Test result | {'All trials completed and passed fresh-transport verification' if succeeded == cold == 2 * len(scenarios) * pair_count else f'{succeeded} completed trials; {cold} passed fresh-transport verification'} |",
         "| Transport requirement | First transport: `h2`, a new TCP/TLS connection on the handshake GET/POST or early POST; if the GET reused the early POST connection, matching address and local port |",
         "",
         "## Procedure and parameters",
         "",
-        "1. Build the XCTest bundle once, then launch exactly one cold-trial test method per `xcodebuild test-without-building` invocation. Keep parallel testing disabled and retain each `.xcresult` bundle.",
+        ("1. Build the XCTest bundle once, then repeat one alternating cold-trial test with `-test-iterations` and `-test-repetition-relaunch-enabled YES`. Each repetition enters a fresh application process and runs only OFF or ON. A batch-specific atomic counter preserves OFF→ON ordering across application restarts. Keep parallel testing disabled; retain every test result, including failed measurement iterations, without retries or replacements." if batched else "1. Build the XCTest bundle once, then launch exactly one cold-trial test method per `xcodebuild test-without-building` invocation. Keep parallel testing disabled and retain each `.xcresult` bundle."),
         f"2. Run {', then '.join('Omnient' if scenario == 'omnient' else 'Camera Viewfinder' for scenario in scenarios)}. Each pair runs `fastHandshake2=false` (OFF), then `fastHandshake2=true` (ON). The XCTest creates a new `WebChannelService` and WebChannel client per trial.",
         f"3. Use `imageSizeKb=150`, `detectionDelayMs=50`, `initialMessageDelayMs={initial_message_delay_ms}`, `enableBinaryEncoding={'true' if binary_encoding else 'false'}`, `sendRawJson=true`, `fastHandshake=false`, `nonBlockingSend=false`, `blockingHandshake=false`, `forceLongPolling=false`, and `detectBufferingProxy=false`. The 150 KB value is metadata; no 150 KB image is uploaded.",
         f"4. Schedule M1 Sticky Cluster Info {initial_message_delay_ms} ms after `connect()` returns. "
@@ -321,7 +329,7 @@ def main():
             ("7. Include pairs whose ON initial early POST returned HTTP 400, including trials completed after retry. The ordinary completion, fresh-transport, and handshake-difference requirements still apply. "
              if include_early_post_400 else "7. Exclude a pair if the ON trial's initial early POST returned HTTP 400, even if a retry completed the trial. ")
             + "An unresolved early POST status is excluded; a verified absence of an early POST is eligible. Do not replace excluded pairs with additional trials.",
-            "8. Plot paired differences as ON minus OFF, using full-precision measurements. Negative values mean ON was faster. Histograms use 10 ms bins aligned to multiples of 10 ms, pair counts on the vertical axis, and all eligible values without clipping in the main plot. When the full range exceeds 600 ms, an inset magnifies -300 to 300 ms and labels the number of pairs in that range; no additional pairs are excluded. TTFA and TTFD are measured from M3 send, so the configured M1 delay is not added to either metric.",
+            "8. Plot paired differences as ON minus OFF, using full-precision measurements. Negative values mean ON was faster. Histograms use 10 ms bins aligned to multiples of 10 ms, pair counts on the vertical axis, and all eligible values without clipping in the main plot. When the full range exceeds 600 ms, a separate lower panel magnifies -300 to 300 ms and labels the number of pairs in that range; no additional pairs are excluded. TTFA and TTFD are measured from M3 send, so the configured M1 delay is not added to either metric.",
             "",
         ])
 
@@ -471,6 +479,14 @@ def main():
     ])
     if failed_trials:
         audit_lines.extend([f"Incomplete trials: {'; '.join(failed_trials)}.", ""])
+    if batched:
+        audit_lines.extend(["", "## Application-process and batch identity", "",
+            "Each stdout marker and original XCTest JSON/CSV is associated using the explicit batch ordinal and XCTest export repetition number. A distinct process-instance UUID and changing adjacent application PIDs verify application relaunch. Separate applications still require actual fresh-transport metrics; relaunch flags alone are not used as transport evidence.", "",
+            "| Pair | Setting | Batch ordinal | Application PID | Process instance |", "|---:|---|---:|---:|---|"])
+        for scenario, pair, setting in trials:
+            row = trials[scenario, pair, setting]
+            if row:
+                audit_lines.append(f"| {pair} | {setting.upper()} | {row.get('batchTrialOrdinal', 'unknown')} | {row.get('processId', 'unknown')} | {row.get('processInstanceId', 'unknown')} |")
     (root / "report.md").write_text("\n".join(lines))
     (root / "connection-reuse-audit.md").write_text("\n".join(audit_lines) + "\n")
     artifact_lines = [
@@ -527,6 +543,19 @@ def main():
             "| TTFA | [PNG](histograms/ttfa-on-minus-off.png) | [SVG](histograms/ttfa-on-minus-off.svg) |",
             "| TTFD | [PNG](histograms/ttfd-on-minus-off.png) | [SVG](histograms/ttfd-on-minus-off.svg) |", ""])
     artifact_lines.extend(["", "JSON includes app logs and task-level `URLSessionTaskMetrics`. Xcode logs include HTTP response metadata used to classify early POST status. Manifests map exported attachments to XCTest tests.", ""])
+    if batched:
+        artifact_lines.extend(["## Batch provenance", "",
+            "The per-trial JSON and CSV are byte-identical copies of original exported attachments. Per-trial logs are exact byte ranges of the shared Xcode stdout; they are not separate Xcode invocations. The result-bundle aliases point to the same retained batch bundle. CSV repetition remains the test's local repetition (1); batchTrialOrdinal and batchPair identify the experiment trial.", "",
+            "[Trial-to-batch mapping](batch-trial-map.json) records original attachment paths, SHA-256 hashes, XCTest repetition numbers, process identities, and stdout byte ranges. [Batch settings](batch-settings.json) retain the actual command. [Batch outcome](batch-outcome.json) links retained exit codes, including recorded measurement and startup failures. [Original batch stdout](logs/batch-0001.log) · [Attachment export log](logs/batch-0001-export.log) · [Original exported attachments](attachments/batch-0001-export/) · [Shared result bundle](xcresults/batch-0001.xcresult)", ""])
+    if batched:
+        for bundle in sorted((root / "xcresults").glob("batch-*.xcresult")):
+            name = bundle.stem
+            artifact_lines.append(f"- {name}: [stdout](logs/{name}.log), [export log](logs/{name}-export.log), [original exports](attachments/{name}-export/), [result bundle](xcresults/{name}.xcresult)")
+            for kind in ("settings", "outcome"):
+                if (root / f"logs/{name}-{kind}.json").exists():
+                    artifact_lines.append(f"  - [{kind}](logs/{name}-{kind}.json)")
+        if (root / "resume-review.json").exists():
+            artifact_lines.extend(["", "[Resume review](resume-review.json) preserves the startup failure and validates the recorded prefix before resuming only unentered measurement ordinals. XCTest repetition numbers may differ from measurement ordinals after a startup failure; both original identities are retained."])
     (root / "artifacts.md").write_text("\n".join(artifact_lines))
 
 

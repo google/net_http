@@ -197,3 +197,5 @@ WebChanneliOSDemo/
     ├── Info.plist                 # App bundle metadata and ATS configuration
     └── Assets.xcassets/           # App icons and color catalog
 ```
+
+For new Omnient delay sweeps, use [the batched relaunch runner instructions](../../../benchmark/lens/README.md#omnient-initial-message-delay-sweep). `testColdBinaryOmnientBatch` alternates OFF/ON across persisted ordinals while Xcode restarts the app for every repetition. Original result attachments and process identities are verified before report generation.
