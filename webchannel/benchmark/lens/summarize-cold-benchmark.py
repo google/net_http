@@ -209,6 +209,7 @@ def main():
     parser.add_argument("--handshake-threshold-ms", type=float)
     parser.add_argument("--scenarios", nargs="+", choices=("omnient", "viewfinder"))
     parser.add_argument("--report-format", choices=("raw", "histogram"))
+    parser.add_argument("--early-post-400-policy", choices=("include", "exclude"))
     args = parser.parse_args()
     root = args.output_dir
     metadata_path = root / "run-metadata.json"
@@ -218,6 +219,8 @@ def main():
         parser.error("pairs must be positive")
     scenarios = tuple(args.scenarios or metadata.get("scenarios", ("omnient", "viewfinder")))
     report_format = args.report_format or metadata.get("reportFormat", "raw")
+    include_early_post_400 = (args.early_post_400_policy == "include" if args.early_post_400_policy
+                              else metadata.get("includeEarlyPost400", False))
     if report_format == "histogram" and scenarios != ("omnient",):
         parser.error("histogram reports currently require --scenarios omnient")
     trials = {}
@@ -247,6 +250,8 @@ def main():
     metadata["pairCount"] = pair_count
     metadata["scenarios"] = list(scenarios)
     metadata["reportFormat"] = report_format
+    if report_format == "histogram":
+        metadata["includeEarlyPost400"] = include_early_post_400
     metadata.setdefault("runDate", f"{start:%Y-%m-%d}")
     metadata.setdefault("testPeriod", detected_period)
     metadata.setdefault("macOS", command_output("sw_vers", "-productVersion"))
@@ -313,12 +318,15 @@ def main():
 
     if report_format == "histogram":
         lines.extend([
-            "7. Exclude a pair if the ON trial's initial early POST returned HTTP 400, even if a retry completed the trial. An unresolved early POST status is also excluded; a verified absence of an early POST is eligible. Do not replace excluded pairs with additional trials.",
+            ("7. Include pairs whose ON initial early POST returned HTTP 400, including trials completed after retry. The ordinary completion, fresh-transport, and handshake-difference requirements still apply. "
+             if include_early_post_400 else "7. Exclude a pair if the ON trial's initial early POST returned HTTP 400, even if a retry completed the trial. ")
+            + "An unresolved early POST status is excluded; a verified absence of an early POST is eligible. Do not replace excluded pairs with additional trials.",
             "8. Plot paired differences as ON minus OFF, using full-precision measurements. Negative values mean ON was faster. Histograms use 10 ms bins aligned to multiples of 10 ms, pair counts on the vertical axis, and all eligible values without clipping in the main plot. When the full range exceeds 600 ms, an inset magnifies -300 to 300 ms and labels the number of pairs in that range; no additional pairs are excluded. TTFA and TTFD are measured from M3 send, so the configured M1 delay is not added to either metric.",
             "",
         ])
 
     histogram_data = {"initialMessageDelayMs": initial_message_delay_ms, "pairCount": pair_count,
+                      "includeEarlyPost400": include_early_post_400,
                       "handshakeThresholdMs": threshold_ms, "difference": "ON minus OFF", "binWidthMs": 10,
                       "pairs": [], "histograms": {}}
     for scenario in scenarios:
@@ -330,7 +338,7 @@ def main():
             reasons = pair_reasons(off, on, threshold_ms)
             if report_format == "histogram":
                 post_status = early_post_statuses[scenario, pair, "on"]
-                reasons = histogram_pair_reasons(off, on, threshold_ms, post_status)
+                reasons = histogram_pair_reasons(off, on, threshold_ms, post_status, include_early_post_400)
                 record = {"pair": pair, "accepted": not reasons, "exclusionReasons": reasons,
                           "earlyPostHTTP": post_status, "ttfaDifferenceMs": None, "ttfdDifferenceMs": None}
                 if off and on:
@@ -347,6 +355,9 @@ def main():
             histogram_data.update(earlyPost400Pairs=rejected, earlyPost400Rate=rejected / pair_count,
                                   unknownEarlyPostPairs=statuses.count("unknown"), noEarlyPostPairs=statuses.count("not sent"),
                                   acceptedPairs=len(selected) // 2)
+            histogram_data["includedEarlyPost400Pairs"] = sum(
+                record["accepted"] and has_early_post_400(record["earlyPostHTTP"])
+                for record in histogram_data["pairs"])
             lines.extend([
                 f"## {heading}: paired difference histograms",
                 "",
@@ -357,6 +368,7 @@ def main():
                 f"| ON early POST not sent | {statuses.count('not sent')} |",
                 f"| ON early POST status unresolved | {statuses.count('unknown')} |",
                 f"| Pairs included in both histograms | {len(selected) // 2}/{pair_count} |",
+                f"| HTTP 400 pairs included in histograms | {histogram_data['includedEarlyPost400Pairs']} |",
                 "",
             ])
             for metric, key in (("TTFA", "ttfaDifferenceMs"), ("TTFD", "ttfdDifferenceMs")):

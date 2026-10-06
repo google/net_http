@@ -95,18 +95,27 @@ def generate_including_400(root, args, summary):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("output_dir", type=Path)
-    parser.add_argument("--pairs", type=int, default=50)
-    parser.add_argument("--handshake-threshold-ms", type=float, default=20)
+    parser.add_argument("--pairs", type=int)
+    parser.add_argument("--handshake-threshold-ms", type=float)
     parser.add_argument("--network-switches")
     parser.add_argument("--include-early-post-400", action="store_true", help="Add an inclusive report under including-early-post-400/ without regenerating the original")
+    parser.add_argument("--early-post-400-policy", choices=("include", "exclude"), help="Policy for the main report; new sweeps default to include")
     args = parser.parse_args()
     root = args.output_dir
+    previous_metadata_path = root / "run-metadata.json"
+    previous_metadata = json.loads(previous_metadata_path.read_text()) if previous_metadata_path.exists() else {}
+    args.pairs = args.pairs if args.pairs is not None else previous_metadata.get("pairsPerDelay", 100)
+    args.handshake_threshold_ms = (args.handshake_threshold_ms if args.handshake_threshold_ms is not None
+                                   else previous_metadata.get("handshakeThresholdMs", 20))
+    policy = args.early_post_400_policy or ("include" if previous_metadata.get("includeEarlyPost400", not previous_metadata) else "exclude")
     delays = (0, 50, 100, 200)
     summarizer_path = Path(__file__).with_name("summarize-cold-benchmark.py")
     spec = importlib.util.spec_from_file_location("cold_summary", summarizer_path)
     summary = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(summary)
     if args.include_early_post_400:
+        if previous_metadata.get("includeEarlyPost400") is True:
+            parser.error("The main report already includes HTTP 400 pairs; use report.md")
         generate_including_400(root, args, summary)
         return
     datasets = {}
@@ -120,7 +129,8 @@ def main():
                     parser.error(f"Missing attempted trial: delay {delay}, pair {pair}, {setting}")
         command = [sys.executable, "-B", str(summarizer_path), str(run), str(args.pairs),
                    "--scenarios", "omnient", "--report-format", "histogram",
-                   "--handshake-threshold-ms", str(args.handshake_threshold_ms)]
+                   "--handshake-threshold-ms", str(args.handshake_threshold_ms),
+                   "--early-post-400-policy", policy]
         if args.network_switches is not None:
             command.insert(5, args.network_switches)
         subprocess.run(command, check=True)
@@ -159,10 +169,10 @@ def main():
     prefix = prefix.replace("Histograms use 10 ms bins", "All four delay settings use the same horizontal range and bin edges for each metric. Histograms use 10 ms bins")
     lines = [prefix.rstrip(), "", "## Pair inclusion and early POST rejection", "",
              "The HTTP 400 rate uses all 50 attempted pairs at each delay as the denominator, including pairs that fail other histogram inclusion conditions.".replace("all 50", f"all {args.pairs}"), "",
-             "| M1 delay (ms) | Measured pairs | ON early POST HTTP 400 | 400 pair rate | No early POST | Unresolved status | Histogram pairs |",
-             "|---:|---:|---:|---:|---:|---:|---:|"]
+             "| M1 delay (ms) | Measured pairs | ON early POST HTTP 400 | 400 pair rate | No early POST | Unresolved status | Histogram pairs | Included HTTP 400 pairs |",
+             "|---:|---:|---:|---:|---:|---:|---:|---:|"]
     for delay, data in datasets.items():
-        lines.append(f"| {delay} | {args.pairs} | {data['earlyPost400Pairs']} | {data['earlyPost400Rate'] * 100:.1f}% | {data['noEarlyPostPairs']} | {data['unknownEarlyPostPairs']} | {data['acceptedPairs']} |")
+        lines.append(f"| {delay} | {args.pairs} | {data['earlyPost400Pairs']} | {data['earlyPost400Rate'] * 100:.1f}% | {data['noEarlyPostPairs']} | {data['unknownEarlyPostPairs']} | {data['acceptedPairs']} | {data['includedEarlyPost400Pairs']} |")
     for delay in delays:
         lines.extend(["", f"## M1 delay: {delay} ms", ""])
         for metric in ("TTFA", "TTFD"):
@@ -195,6 +205,7 @@ def main():
     (root / "artifacts.md").write_text("\n".join(artifacts))
     (root / "connection-reuse-audit.md").write_text("\n".join(audit) + "\n")
     sweep_metadata = {"delaysMs": list(delays), "pairsPerDelay": args.pairs,
+                      "includeEarlyPost400": policy == "include",
                       "handshakeThresholdMs": args.handshake_threshold_ms, "difference": "ON minus OFF",
                       "binWidthMs": 10, "generatorSHA256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
                       "infrastructureAttempts": [path.relative_to(root).as_posix() for path in infrastructure],
