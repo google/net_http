@@ -2,11 +2,14 @@
 """Summarize one-process-per-trial Lens results exported by xcresulttool."""
 
 import argparse
+import csv
+import hashlib
 import json
 import math
 import re
 import subprocess
 from datetime import datetime
+from zoneinfo import ZoneInfo
 from pathlib import Path
 from urllib.parse import parse_qs, urlsplit
 
@@ -23,7 +26,7 @@ def trial_result(root: Path, stem: str):
 
 def load_trial(root: Path, scenario: str, pair: int, setting: str):
     export = trial_attachments(root, f"{scenario}-{pair}-{setting}")
-    for path in export.glob("*.json"):
+    for path in sorted(export.glob("*.json")):
         if path.name != "manifest.json":
             rows = json.loads(path.read_text())
             if rows:
@@ -58,8 +61,12 @@ def early_post_status(root: Path, scenario: str, pair: int, setting: str):
     log = trial_log(root, scenario, pair, setting)
     if not log.exists():
         return "unknown"
+    text = log.read_text(errors="replace")
+    early_requests = [parse_qs(urlsplit(url).query) for url in re.findall(r"\[HTTP Req\].*? POST (\S+)", text)]
+    early_rids = [int(query["RID"][0]) for query in early_requests
+                  if query.get("AID") == ["-1"] and query.get("RID", [""])[0].isdigit()]
     statuses_by_rid = {}
-    for line in log.read_text(errors="replace").splitlines():
+    for line in text.splitlines():
         match = re.search(r"\[HTTP Resp Meta\].*?\] POST (\S+) status: (\d+)", line)
         if match:
             query = parse_qs(urlsplit(match.group(1)).query)
@@ -67,8 +74,71 @@ def early_post_status(root: Path, scenario: str, pair: int, setting: str):
             if query.get("AID") == ["-1"] and rid.isdigit():
                 statuses_by_rid.setdefault(int(rid), set()).add(match.group(2))
     if not statuses_by_rid:
-        return "unknown"
-    return ", ".join(sorted(statuses_by_rid[min(statuses_by_rid)]))
+        return "not sent" if not early_rids and "[SDK Info] WebChannel opened on " in text else "unknown"
+    first_rid = min(early_rids) if early_rids else min(statuses_by_rid)
+    return ", ".join(sorted(statuses_by_rid[first_rid])) if first_rid in statuses_by_rid else "unknown"
+
+
+def has_early_post_400(status):
+    return "400" in status.split(", ")
+
+
+def pair_reasons(off, on, threshold_ms):
+    reasons = []
+    required = ("handshakeMs", "ttfaMs", "ttfdMs", "m4RttMs")
+    for setting, row in (("OFF", off), ("ON", on)):
+        if row is None:
+            reasons.append(f"{setting} attachment missing")
+        elif row.get("status") != "completed" or any(
+            not isinstance(row.get(key), (int, float)) or not math.isfinite(row[key])
+            for key in required
+        ):
+            reasons.append(f"{setting} incomplete")
+        elif row.get("coldConnection") is not True:
+            reasons.append(f"{setting} handshake connection unverified")
+    if not reasons and abs(on["handshakeMs"] - off["handshakeMs"]) > threshold_ms:
+        reasons.append(f"handshake difference >{threshold_ms:g} ms")
+    return reasons
+
+
+def plot_histogram(values, path, metric, delay_ms, bin_width=10, bounds=None):
+    import matplotlib
+    matplotlib.use("Agg")
+    matplotlib.rcParams["svg.hashsalt"] = "lens-histogram-v1"
+    import matplotlib.pyplot as plt
+    from matplotlib.ticker import MaxNLocator
+
+    low, high = bounds or (min(values + [0]), max(values + [0]))
+    lower = math.floor(low / bin_width) * bin_width
+    upper = max(lower + bin_width, (math.floor(high / bin_width) + 1) * bin_width)
+    bins = [lower + i * bin_width for i in range(round((upper - lower) / bin_width) + 1)]
+    fig, ax = plt.subplots(figsize=(9, 4.8), layout="constrained")
+    counts, edges, _ = ax.hist(values, bins=bins, color="#2c6eaa", edgecolor="white")
+    ax.axvline(0, color="#333333", linestyle="--", linewidth=1)
+    ax.set(title=f"Omnient: {metric} ON - OFF | M1 delay {delay_ms} ms | n={len(values)}",
+           xlabel=f"{metric} difference (ms): negative = ON faster", ylabel="Pair count")
+    ax.yaxis.set_major_locator(MaxNLocator(integer=True))
+    ax.grid(axis="y", alpha=0.2)
+    ax.set_axisbelow(True)
+    ax.set_xlim(bins[0], bins[-1])
+    if bins[-1] - bins[0] > 600 and any(-300 <= value <= 300 for value in values):
+        detail = ax.inset_axes([0.40, 0.49, 0.57, 0.43])
+        detail.hist(values, bins=bins, color="#2c6eaa", edgecolor="white")
+        detail.axvline(0, color="#333333", linestyle="--", linewidth=1)
+        detail.set_xlim(-300, 300)
+        detail.yaxis.set_major_locator(MaxNLocator(integer=True))
+        detail.grid(axis="y", alpha=0.2)
+        detail.set_axisbelow(True)
+        visible = sum(-300 <= value <= 300 for value in values)
+        detail.set_title(f"Detail: -300 to 300 ms ({visible}/{len(values)} pairs)", fontsize=9)
+        detail.tick_params(labelsize=8)
+    if not values:
+        ax.text(0.5, 0.5, "No eligible pairs", transform=ax.transAxes, ha="center")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(path, dpi=160)
+    fig.savefig(path.with_suffix(".svg"), metadata={"Date": None})
+    plt.close(fig)
+    return {"binEdgesMs": edges.tolist(), "pairCounts": counts.astype(int).tolist()}
 
 
 def message_dispatch(root: Path, scenario: str, pair: int, setting: str, handshake):
@@ -125,14 +195,24 @@ def command_output(*args):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("output_dir", type=Path)
-    parser.add_argument("pairs", nargs="?", type=int, default=10)
+    parser.add_argument("pairs", nargs="?", type=int)
     parser.add_argument("network_switches", nargs="?")
     parser.add_argument("--handshake-threshold-ms", type=float)
+    parser.add_argument("--scenarios", nargs="+", choices=("omnient", "viewfinder"))
+    parser.add_argument("--report-format", choices=("raw", "histogram"))
     args = parser.parse_args()
     root = args.output_dir
-    pair_count = args.pairs
+    metadata_path = root / "run-metadata.json"
+    metadata = json.loads(metadata_path.read_text()) if metadata_path.exists() else {}
+    pair_count = args.pairs if args.pairs is not None else metadata.get("pairCount", 10)
+    if pair_count < 1:
+        parser.error("pairs must be positive")
+    scenarios = tuple(args.scenarios or metadata.get("scenarios", ("omnient", "viewfinder")))
+    report_format = args.report_format or metadata.get("reportFormat", "raw")
+    if report_format == "histogram" and scenarios != ("omnient",):
+        parser.error("histogram reports currently require --scenarios omnient")
     trials = {}
-    for scenario in ("omnient", "viewfinder"):
+    for scenario in scenarios:
         for pair in range(1, pair_count + 1):
             for setting in ("off", "on"):
                 trials[scenario, pair, setting] = load_trial(root, scenario, pair, setting)
@@ -149,14 +229,15 @@ def main():
     logs = [trial_log(root, *key) for key in trials]
     logs = [path for path in logs if path.exists()]
     if logs:
-        start = datetime.fromtimestamp(min(path.stat().st_ctime for path in logs))
-        end = datetime.fromtimestamp(max(path.stat().st_mtime for path in logs))
-        detected_period = f"{start:%Y-%m-%d %H:%M}–{end:%H:%M} local time, from artifact timestamps"
+        start = datetime.fromtimestamp(min(path.stat().st_ctime for path in logs), ZoneInfo("Asia/Tokyo"))
+        end = datetime.fromtimestamp(max(path.stat().st_mtime for path in logs), ZoneInfo("Asia/Tokyo"))
+        detected_period = f"{start:%Y-%m-%d %H:%M}–{end:%H:%M} JST, from artifact timestamps"
     else:
         detected_period = "unavailable"
-        start = datetime.now()
-    metadata_path = root / "run-metadata.json"
-    metadata = json.loads(metadata_path.read_text()) if metadata_path.exists() else {}
+        start = datetime.now(ZoneInfo("Asia/Tokyo"))
+    metadata["pairCount"] = pair_count
+    metadata["scenarios"] = list(scenarios)
+    metadata["reportFormat"] = report_format
     metadata.setdefault("runDate", f"{start:%Y-%m-%d}")
     metadata.setdefault("testPeriod", detected_period)
     metadata.setdefault("macOS", command_output("sw_vers", "-productVersion"))
@@ -184,7 +265,6 @@ def main():
         ("TTFD", "ttfdMs"),
         ("M4 RTT", "m4RttMs"),
     )
-    required = [key for _, key in metrics]
     lines = [
         f"# Lens benchmark — {metadata['runDate']} physical-device cold-connection run"
         f"{' (binary encoding)' if binary_encoding else ''}",
@@ -205,37 +285,80 @@ def main():
         f"| Source | Git HEAD `{metadata['sourceGitHead']}` plus uncommitted benchmark instrumentation |",
         f"| Test period | {metadata['testPeriod']} |",
         f"| Test execution | {pair_count} alternating OFF/ON pairs per scenario; a separate `xcodebuild test-without-building` invocation for each trial |",
-        f"| Test result | {'All trials completed and passed fresh-transport verification' if succeeded == cold == 4 * pair_count else f'{succeeded} completed trials; {cold} passed fresh-transport verification'} |",
+        f"| Test result | {'All trials completed and passed fresh-transport verification' if succeeded == cold == 2 * len(scenarios) * pair_count else f'{succeeded} completed trials; {cold} passed fresh-transport verification'} |",
         "| Transport requirement | First transport: `h2`, a new TCP/TLS connection on the handshake GET/POST or early POST; if the GET reused the early POST connection, matching address and local port |",
         "",
         "## Procedure and parameters",
         "",
         "1. Build the XCTest bundle once, then launch exactly one cold-trial test method per `xcodebuild test-without-building` invocation. Keep parallel testing disabled and retain each `.xcresult` bundle.",
-        "2. Run Omnient first, then Camera Viewfinder. Each pair runs `fastHandshake2=false` (OFF), then `fastHandshake2=true` (ON). The XCTest creates a new `WebChannelService` and WebChannel client per trial.",
+        f"2. Run {', then '.join('Omnient' if scenario == 'omnient' else 'Camera Viewfinder' for scenario in scenarios)}. Each pair runs `fastHandshake2=false` (OFF), then `fastHandshake2=true` (ON). The XCTest creates a new `WebChannelService` and WebChannel client per trial.",
         f"3. Use `imageSizeKb=150`, `detectionDelayMs=50`, `initialMessageDelayMs={initial_message_delay_ms}`, `enableBinaryEncoding={'true' if binary_encoding else 'false'}`, `sendRawJson=true`, `fastHandshake=false`, `nonBlockingSend=false`, `blockingHandshake=false`, `forceLongPolling=false`, and `detectBufferingProxy=false`. The 150 KB value is metadata; no 150 KB image is uploaded.",
-        f"4. Schedule M1 Sticky Cluster Info {initial_message_delay_ms} ms after `connect()` returns. Omnient sends M3 Prefetch immediately after M1; Camera Viewfinder schedules M2 Heartbeat at +200 ms and M3 Prefetch at +500 ms after `connect()` returns. M4 Final Capture follows preliminary detections. Each trial has a 60-second completion deadline.",
+        f"4. Schedule M1 Sticky Cluster Info {initial_message_delay_ms} ms after `connect()` returns. "
+        + ("Omnient sends M3 Prefetch immediately after M1. " if "omnient" in scenarios else "")
+        + ("Camera Viewfinder schedules M2 Heartbeat at +200 ms and M3 Prefetch at +500 ms after `connect()` returns. " if "viewfinder" in scenarios else "")
+        + "M4 Final Capture follows preliminary detections. Each trial has a 60-second completion deadline.",
         "5. Record Handshake (`webChannelOpened` minus connect), TTFA (M3 send to stream ACK), TTFD (M3 send to preliminary detections), and M4 RTT (M4 send to interaction response).",
-        f"6. Include a pair in the raw measurement tables only if both runs completed, both trials meet the transport requirement, and the absolute ON/OFF handshake-duration difference is ≤{threshold_ms:g} ms. Calculate that difference from full-precision values. Keep every trial in the raw attachments and audit.",
+        f"6. Include a pair in the {'histograms' if report_format == 'histogram' else 'raw measurement tables'} only if both runs completed, both trials meet the transport requirement, and the absolute ON/OFF handshake-duration difference is ≤{threshold_ms:g} ms. Calculate that difference from full-precision values. Keep every trial in the raw attachments and audit.",
         "",
     ]
 
-    for scenario, heading in (("omnient", "Omnient"), ("viewfinder", "Camera Viewfinder")):
+    if report_format == "histogram":
+        lines.extend([
+            "7. Exclude a pair if the ON trial's initial early POST returned HTTP 400, even if a retry completed the trial. An unresolved early POST status is also excluded; a verified absence of an early POST is eligible. Do not replace excluded pairs with additional trials.",
+            "8. Plot paired differences as ON minus OFF, using full-precision measurements. Negative values mean ON was faster. Histograms use 10 ms bins aligned to multiples of 10 ms, pair counts on the vertical axis, and all eligible values without clipping in the main plot. When the full range exceeds 600 ms, an inset magnifies -300 to 300 ms and labels the number of pairs in that range; no additional pairs are excluded. TTFA and TTFD are measured from M3 send, so the configured M1 delay is not added to either metric.",
+            "",
+        ])
+
+    histogram_data = {"initialMessageDelayMs": initial_message_delay_ms, "pairCount": pair_count,
+                      "handshakeThresholdMs": threshold_ms, "difference": "ON minus OFF", "binWidthMs": 10,
+                      "pairs": [], "histograms": {}}
+    for scenario in scenarios:
+        heading = "Omnient" if scenario == "omnient" else "Camera Viewfinder"
         selected = []
         for pair in range(1, pair_count + 1):
             off = trials[scenario, pair, "off"]
             on = trials[scenario, pair, "on"]
-            reasons = []
-            for setting, row in (("OFF", off), ("ON", on)):
-                if row is None:
-                    reasons.append(f"{setting} attachment missing")
-                elif row.get("status") != "completed" or any(row.get(key) is None for key in required):
-                    reasons.append(f"{setting} incomplete")
-                elif not row.get("coldConnection"):
-                    reasons.append(f"{setting} handshake connection unverified")
-            if not reasons and abs(on["handshakeMs"] - off["handshakeMs"]) > threshold_ms:
-                reasons.append(f"handshake difference >{threshold_ms:g} ms")
+            reasons = pair_reasons(off, on, threshold_ms)
+            if report_format == "histogram":
+                post_status = early_post_statuses[scenario, pair, "on"]
+                if has_early_post_400(post_status):
+                    reasons.append("ON initial early POST HTTP 400")
+                elif post_status == "unknown":
+                    reasons.append("ON initial early POST status unresolved")
+                record = {"pair": pair, "accepted": not reasons, "exclusionReasons": reasons,
+                          "earlyPostHTTP": post_status, "ttfaDifferenceMs": None, "ttfdDifferenceMs": None}
+                if off and on:
+                    for key, metric in (("ttfaDifferenceMs", "ttfaMs"), ("ttfdDifferenceMs", "ttfdMs")):
+                        if off.get(metric) is not None and on.get(metric) is not None:
+                            record[key] = on[metric] - off[metric]
+                histogram_data["pairs"].append(record)
             if not reasons:
                 selected.extend(((pair, "OFF", off), (pair, "ON", on)))
+
+        if report_format == "histogram":
+            statuses = [early_post_statuses[scenario, pair, "on"] for pair in range(1, pair_count + 1)]
+            rejected = sum(has_early_post_400(status) for status in statuses)
+            histogram_data.update(earlyPost400Pairs=rejected, earlyPost400Rate=rejected / pair_count,
+                                  unknownEarlyPostPairs=statuses.count("unknown"), noEarlyPostPairs=statuses.count("not sent"),
+                                  acceptedPairs=len(selected) // 2)
+            lines.extend([
+                f"## {heading}: paired difference histograms",
+                "",
+                "| Item | Count / rate |",
+                "|---|---:|",
+                f"| Measured OFF/ON pairs | {pair_count} |",
+                f"| ON initial early POST HTTP 400 pairs | {rejected}/{pair_count} ({100 * rejected / pair_count:.1f}%) |",
+                f"| ON early POST not sent | {statuses.count('not sent')} |",
+                f"| ON early POST status unresolved | {statuses.count('unknown')} |",
+                f"| Pairs included in both histograms | {len(selected) // 2}/{pair_count} |",
+                "",
+            ])
+            for metric, key in (("TTFA", "ttfaDifferenceMs"), ("TTFD", "ttfdDifferenceMs")):
+                values = [record[key] for record in histogram_data["pairs"] if record["accepted"]]
+                path = root / "histograms" / f"{metric.lower()}-on-minus-off.png"
+                histogram_data["histograms"][metric] = plot_histogram(values, path, metric, initial_message_delay_ms)
+                lines.extend([f"### {metric}: ON minus OFF", "", f"![{metric} paired difference histogram]({path.relative_to(root).as_posix()})", ""])
+            continue
 
         lines.extend([
             f"## {heading}: valid pair raw measurements",
@@ -300,7 +423,7 @@ def main():
     viewfinder_timing = ("after the channel opened in every completed Viewfinder trial"
                          if viewfinder_open_before_prefetch else "near the channel opening")
     retries = {}
-    for scenario in ("omnient", "viewfinder"):
+    for scenario in scenarios:
         retries[scenario] = [
             pair for pair in range(1, pair_count + 1)
             if trial_log(root, scenario, pair, "on").exists()
@@ -316,12 +439,16 @@ def main():
         reason = " (Xcode log includes network connection lost, -1005)" if "Code=-1005" in log_text else ""
         failed_trials.append(f"{scenario} pair {pair} {setting.upper()}{reason}")
     audit_lines.extend(["", "## Observations and limits", "",
-        f"Omnient sends M3 during connection establishment; Viewfinder schedules M3 about 500 ms later, {viewfinder_timing}. Fresh connection verification is to the reached edge, not a cold DNS lookup or cold backend application state.",
+        f"Omnient sends M3 immediately after M1, scheduled {initial_message_delay_ms} ms after connect() returns. "
+        + (f"Viewfinder schedules M3 about 500 ms later, {viewfinder_timing}. " if "viewfinder" in scenarios else "")
+        + "Fresh connection verification is to the reached edge, not a cold DNS lookup or cold backend application state.",
         "",
-        f"The initial early POST returned HTTP 400 in {sum(status == '400' for status in early_post_statuses.values())}/{2 * pair_count} ON trials. "
-        f"Of those trials, {sum(status == '400' and trials[key] is not None and trials[key].get('status') == 'completed' for key, status in early_post_statuses.items())} completed; inspect the logs to distinguish successful retries from incomplete runs.",
+        f"The initial early POST returned HTTP 400 in {sum(has_early_post_400(status) for status in early_post_statuses.values())}/{len(scenarios) * pair_count} ON trials. "
+        f"Of those trials, {sum(has_early_post_400(status) and trials[key] is not None and trials[key].get('status') == 'completed' for key, status in early_post_statuses.items())} completed; inspect the logs to distinguish successful retries from incomplete runs.",
         "",
-        f"The Xcode logs contain retry diagnostics in ON trials for Omnient pairs {', '.join(map(str, retries['omnient'])) or 'none'} and Viewfinder pairs {', '.join(map(str, retries['viewfinder'])) or 'none'}. Those retries can affect TTFA and TTFD; the raw logs should be consulted before attributing a timing difference solely to the handshake option.",
+        "The Xcode logs contain retry diagnostics in ON trials for " + "; ".join(
+            f"{scenario} pairs {', '.join(map(str, retries[scenario])) or 'none'}" for scenario in scenarios
+        ) + ". Those retries can affect TTFA and TTFD; the raw logs should be consulted before attributing a timing difference solely to the handshake option.",
         "",
     ])
     if failed_trials:
@@ -341,7 +468,7 @@ def main():
     def artifact_link(path, label):
         return f"[{label}]({path.relative_to(root).as_posix()})" if path.exists() else "—"
 
-    for scenario in ("omnient", "viewfinder"):
+    for scenario in scenarios:
         for pair in range(1, pair_count + 1):
             for setting in ("off", "on"):
                 stem = f"{scenario}-{pair}-{setting}"
@@ -357,6 +484,30 @@ def main():
                     f"{artifact_link(trial_result(root, stem), 'xcresult')} | "
                     f"{artifact_link(export / 'manifest.json', 'Manifest')} |"
                 )
+    if report_format == "histogram":
+        import matplotlib
+        histogram_data["matplotlibVersion"] = matplotlib.__version__
+        histogram_data["generatorSHA256"] = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
+        data_path = root / "histograms" / "histogram-data.json"
+        data_path.write_text(json.dumps(histogram_data, indent=2, ensure_ascii=False) + "\n")
+        csv_path = root / "histograms" / "pair-differences.csv"
+        with csv_path.open("w", newline="") as stream:
+            writer = csv.DictWriter(stream, fieldnames=list(histogram_data["pairs"][0]))
+            writer.writeheader()
+            writer.writerows(histogram_data["pairs"])
+        evidence = set(logs)
+        for scenario, pair, setting in trials:
+            export = trial_attachments(root, f"{scenario}-{pair}-{setting}")
+            evidence.update(path for path in export.glob("*") if path.suffix in (".json", ".csv"))
+        manifest = [{"path": path.relative_to(root).as_posix(), "sha256": hashlib.sha256(path.read_bytes()).hexdigest()}
+                    for path in sorted(evidence)]
+        (root / "histograms" / "input-manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
+        artifact_lines.extend(["", "## Histogram evidence", "",
+            "[Histogram data and selection decisions](histograms/histogram-data.json) · [Full-precision paired differences](histograms/pair-differences.csv). Each record retains its pair number and exclusion reasons; no raw measurement is changed.", "",
+            "[Input SHA-256 manifest](histograms/input-manifest.json) records the raw files used for aggregation. The histogram JSON records the renderer version and generator SHA-256.", "",
+            "| Metric | PNG | SVG |", "|---|---|---|",
+            "| TTFA | [PNG](histograms/ttfa-on-minus-off.png) | [SVG](histograms/ttfa-on-minus-off.svg) |",
+            "| TTFD | [PNG](histograms/ttfd-on-minus-off.png) | [SVG](histograms/ttfd-on-minus-off.svg) |", ""])
     artifact_lines.extend(["", "JSON includes app logs and task-level `URLSessionTaskMetrics`. Xcode logs include HTTP response metadata used to classify early POST status. Manifests map exported attachments to XCTest tests.", ""])
     (root / "artifacts.md").write_text("\n".join(artifact_lines))
 
