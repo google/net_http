@@ -26,6 +26,8 @@ Instructions for agents editing the runner, summarizer, or reports are in [AGENT
 
 The [2026-10-12 Omnient delay-sweep report](2026-10-12_14-09_omnient-delay-sweep_JST/report.md) contains 50 pairs at each of 0, 50, 100, and 200 ms. Its [connection reuse audit](2026-10-12_14-09_omnient-delay-sweep_JST/connection-reuse-audit.md) and [artifacts](2026-10-12_14-09_omnient-delay-sweep_JST/artifacts.md) retain the measurement and infrastructure-interruption evidence.
 
+An [additional report including early POST HTTP 400 pairs](2026-10-12_14-09_omnient-delay-sweep_JST/including-early-post-400/report.md) reuses those measurements and preserves the original report.
+
 ## Omnient initial-message delay sweep
 
 The Omnient sweep runs 50 OFF/ON pairs at each of 0, 50, 100, and 200 ms, in that order, with binary encoding enabled and a new process per trial. Build for testing once as above, then run:
@@ -36,6 +38,8 @@ MPLCONFIGDIR=/tmp/lens-matplotlib python3 -B webchannel/benchmark/lens/summarize
 ```
 
 The summarizer requires matplotlib. For a single-delay Omnient histogram report, use `summarize-cold-benchmark.py OUTPUT_DIR 50 --scenarios omnient --report-format histogram --handshake-threshold-ms 20`. The normal raw-table mode remains available. Set `LENS_SCENARIOS=Omnient` to select only Omnient in the cold-trial runner; its default runs both scenarios.
+
+To add an inclusive report from the same sweep, run `summarize-delay-sweep.py OUTPUT_DIR --pairs 50 --handshake-threshold-ms 20 --include-early-post-400`. This writes `including-early-post-400/report.md`, chart PNG/SVG files, paired differences, selection decisions, and bin counts without regenerating the original report. Only the HTTP 400 exclusion is disabled; the other inclusion rules remain in force. The report separately records how many HTTP 400 pairs satisfy those rules and enter the histograms.
 
 The sweep's `report.md` embeds TTFA and TTFD histograms of paired ON-minus-OFF differences, so negative values mean ON is faster. Both trials must complete, have verified fresh HTTP/2 transport, and differ in handshake duration by at most 20 ms. Pairs with an ON initial early POST HTTP 400 or an unresolved status are excluded. A verified absence of an early POST is eligible. Exclusions are not replaced. The report records the 400-pair fraction over all 50 attempted pairs at each delay, unresolved/unsent early POST counts, and histogram sample counts. Each metric uses common 10 ms bin edges across the four delays and retains every eligible value.
 

@@ -2,6 +2,7 @@
 """Generate an Omnient delay-sweep report from retained cold-trial evidence."""
 
 import argparse
+import csv
 import hashlib
 import importlib.util
 import json
@@ -11,12 +12,93 @@ import sys
 from pathlib import Path
 
 
+def generate_including_400(root, args, summary):
+    """Add a report variant while preserving the original report and evidence."""
+    destination = root / "including-early-post-400"
+    original_metadata = json.loads((root / "run-metadata.json").read_text())
+    if original_metadata["pairsPerDelay"] != args.pairs or original_metadata["handshakeThresholdMs"] != args.handshake_threshold_ms:
+        raise ValueError("Inclusive report must use the original pair count and handshake threshold")
+    datasets = {}
+    for delay in (0, 50, 100, 200):
+        run = root / f"delay-{delay}ms"
+        data = {"initialMessageDelayMs": delay, "pairCount": args.pairs,
+                "handshakeThresholdMs": args.handshake_threshold_ms, "includeEarlyPost400": True,
+                "difference": "ON minus OFF", "binWidthMs": 10, "pairs": [], "histograms": {}}
+        for pair in range(1, args.pairs + 1):
+            off = summary.load_trial(run, "omnient", pair, "off")
+            on = summary.load_trial(run, "omnient", pair, "on")
+            for setting, row in (("off", off), ("on", on)):
+                if row is None:
+                    raise ValueError(f"Missing source trial: {delay} ms, pair {pair}, {setting}")
+                if row.get("initialMessageDelayMs") != delay or row.get("fastHandshake2") != (setting == "on"):
+                    raise ValueError("Source trial settings do not match the sweep")
+            status = summary.early_post_status(run, "omnient", pair, "on")
+            reasons = summary.histogram_pair_reasons(off, on, args.handshake_threshold_ms, status, include_early_post_400=True)
+            record = {"pair": pair, "accepted": not reasons, "exclusionReasons": reasons,
+                      "earlyPostHTTP": status, "ttfaDifferenceMs": None, "ttfdDifferenceMs": None}
+            for key, metric in (("ttfaDifferenceMs", "ttfaMs"), ("ttfdDifferenceMs", "ttfdMs")):
+                if off.get(metric) is not None and on.get(metric) is not None:
+                    record[key] = on[metric] - off[metric]
+            data["pairs"].append(record)
+        data["acceptedPairs"] = sum(record["accepted"] for record in data["pairs"])
+        data["includedEarlyPost400Pairs"] = sum(record["accepted"] and summary.has_early_post_400(record["earlyPostHTTP"]) for record in data["pairs"])
+        data["earlyPost400Pairs"] = sum(summary.has_early_post_400(record["earlyPostHTTP"]) for record in data["pairs"])
+        datasets[delay] = data
+
+    for metric, key in (("TTFA", "ttfaDifferenceMs"), ("TTFD", "ttfdDifferenceMs")):
+        pooled = [record[key] for data in datasets.values() for record in data["pairs"] if record["accepted"]]
+        bounds = (min(pooled + [0]), max(pooled + [0]))
+        for delay, data in datasets.items():
+            values = [record[key] for record in data["pairs"] if record["accepted"]]
+            path = destination / f"delay-{delay}ms/histograms/{metric.lower()}-on-minus-off.png"
+            data["histograms"][metric] = summary.plot_histogram(values, path, metric, delay, bounds=bounds)
+
+    import matplotlib
+    artifacts = ["# Inclusive histogram artifacts", "", "[Report](report.md) · [Original measurement artifacts](../artifacts.md) · [Connection reuse audit](../connection-reuse-audit.md)", "",
+                 "This report reuses the original measurements and HTTP logs. Only the early POST HTTP 400 exclusion is disabled. The original report and its plots are preserved.", "",
+                 "| M1 delay (ms) | Raw evidence | Selection decisions and bins | Paired differences |", "|---:|---|---|---|"]
+    for delay, data in datasets.items():
+        folder = destination / f"delay-{delay}ms/histograms"
+        data.update(sharedHistogramAxes=True, matplotlibVersion=matplotlib.__version__,
+                    generatorSHA256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+                    selectionGeneratorSHA256=hashlib.sha256(Path(summary.__file__).read_bytes()).hexdigest())
+        (folder / "histogram-data.json").write_text(json.dumps(data, indent=2) + "\n")
+        with (folder / "pair-differences.csv").open("w", newline="") as stream:
+            writer = csv.DictWriter(stream, fieldnames=list(data["pairs"][0]))
+            writer.writeheader()
+            writer.writerows(data["pairs"])
+        manifest_path = root / f"delay-{delay}ms/histograms/input-manifest.json"
+        manifest = json.loads(manifest_path.read_text())
+        for item in manifest:
+            source = root / f"delay-{delay}ms" / item["path"]
+            if hashlib.sha256(source.read_bytes()).hexdigest() != item["sha256"]:
+                raise ValueError(f"Source evidence changed: {source}")
+        artifacts.append(f"| {delay} | [Artifacts](../delay-{delay}ms/artifacts.md) · [Input hashes](../delay-{delay}ms/histograms/input-manifest.json) | [JSON](delay-{delay}ms/histograms/histogram-data.json) | [CSV](delay-{delay}ms/histograms/pair-differences.csv) |")
+    report = (root / "report.md").read_text()
+    report = report.replace("# Lens benchmark — Omnient initial-message delay sweep", "# Lens benchmark — Omnient delay sweep including early POST HTTP 400 pairs", 1)
+    report = re.sub(r"^7\. .*", f"7. Include pairs whose ON initial early POST returned HTTP 400, including trials completed after retry. The completion, fresh-transport, and {args.handshake_threshold_ms:g} ms handshake-difference conditions still apply. An unresolved early POST status remains excluded; a verified absence of an early POST is eligible. No additional measurements were run.", report, count=1, flags=re.M)
+    for delay, data in datasets.items():
+        report = re.sub(rf"^(\| {delay} \| .*\| )\d+( \|)$", rf"\g<1>{data['acceptedPairs']}\g<2>", report, count=1, flags=re.M)
+    marker = "\n## M1 delay: 0 ms"
+    inclusion = ["", "| M1 delay (ms) | HTTP 400 pairs included in histograms |", "|---:|---:|"]
+    inclusion.extend(f"| {delay} | {data['includedEarlyPost400Pairs']} |" for delay, data in datasets.items())
+    report = report.replace(marker, "\n".join(inclusion) + "\n" + marker, 1)
+    (destination / "report.md").write_text(report)
+    (destination / "artifacts.md").write_text("\n".join(artifacts) + "\n")
+    metadata = {"sourceMeasurementDirectory": "..", "includeEarlyPost400": True, "originalMeasurementMetadata": original_metadata,
+                "generatorSHA256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest()}
+    (destination / "run-metadata.json").write_text(json.dumps(metadata, indent=2) + "\n")
+    for delay, data in datasets.items():
+        print(f"{delay} ms: histogram n={data['acceptedPairs']}, including {data['includedEarlyPost400Pairs']} HTTP 400 pairs")
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("output_dir", type=Path)
     parser.add_argument("--pairs", type=int, default=50)
     parser.add_argument("--handshake-threshold-ms", type=float, default=20)
     parser.add_argument("--network-switches")
+    parser.add_argument("--include-early-post-400", action="store_true", help="Add an inclusive report under including-early-post-400/ without regenerating the original")
     args = parser.parse_args()
     root = args.output_dir
     delays = (0, 50, 100, 200)
@@ -24,6 +106,9 @@ def main():
     spec = importlib.util.spec_from_file_location("cold_summary", summarizer_path)
     summary = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(summary)
+    if args.include_early_post_400:
+        generate_including_400(root, args, summary)
+        return
     datasets = {}
     metadata = {}
     for delay in delays:
