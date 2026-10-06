@@ -8,7 +8,9 @@ The early POST HTTP status comes from the saved Xcode response metadata for `AID
 
 A fresh HTTP/2 connection was verified for each trial's first transport request, not inferred from creating a new service or process. In ON trials, the early POST could create the connection first and the handshake GET could reuse it. DNS, radio, and server state may remain warm. Repeated response-metadata callbacks for one request are counted once.
 
-| Scenario | Pair | Setting | Test status | Early POST HTTP | Cold source | Handshake protocol | Handshake reused | Fresh TCP (ms) | Fresh TLS (ms) | Remote address |
+Connection setup is `connectEndDate - connectStartDate` and includes the TLS handshake. TLS handshake is `secureConnectionEndDate - secureConnectionStartDate`, a portion of connection setup; do not add the two values.
+
+| Scenario | Pair | Setting | Test status | Early POST HTTP | Cold source | Handshake protocol | Handshake reused | Connection setup (incl. TLS, ms) | TLS handshake (ms) | Remote address |
 |---|---:|:---:|---|:---:|---|---|:---:|---:|---:|---|
 | omnient | 1 | OFF | completed | — | handshake | h2 | false | 24.000 | 15.000 | 2404:6800:400b:c015::451 |
 | omnient | 1 | ON | completed | 400 | handshake | h2 | false | 25.000 | 16.000 | 2404:6800:400b:c015::451 |
