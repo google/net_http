@@ -74,8 +74,11 @@ open WebChanneliOSDemo.xcworkspace
 
 The `WebChanneliOSDemoTests` target runs the existing Lens lifecycle against the
 configured endpoint. `testOmnient` and `testViewfinder` each run five OFF/ON pairs
-in alternating order by default (20 runs total). Each run waits up to 60 seconds
+in alternating order by default (20 Lens runs total). Each run waits up to 60 seconds
 for M4 completion; incomplete runs fail the test but remain in the exported data.
+`testHTTPSBaseline` separately sends 10 pairs of HEAD requests to the Lens URL
+without WebChannel. It records TCP, TLS, connection setup, and time to the first
+HTTP response byte. The second request in each pair checks connection reuse.
 
 In Xcode, select an iOS Simulator or a signed physical device and press `Cmd + U`.
 The tests use the real network. Simulator numbers are useful for a smoke test;
@@ -92,9 +95,15 @@ xcodebuild -workspace WebChanneliOSDemo.xcworkspace \
 ```
 
 Use `platform=iOS Simulator,id=YOUR_SIMULATOR_ID` for a simulator. The result
-bundle contains XCTest status plus two retained attachments per scenario:
+bundle contains XCTest status plus retained attachments for each test:
 `lens-omnient-results.json` / `.csv` and `lens-viewfinder-results.json` / `.csv`.
-The JSON includes each run's options, status, four metrics, and full app log.
+The Lens JSON includes each run's options, status, four metrics, and full app log.
+The HTTPS test adds `https-baseline-results.json` / `.csv`. Its TCP connect
+interval approximates one RTT to the reached server or edge. HTTP time to first
+byte also includes server processing and is not a pure network RTT.
+To run only the HTTPS probe from `xcodebuild`, add
+`-only-testing:WebChanneliOSDemoTests/HTTPSBaselineTests/testHTTPSBaseline`
+to the command above.
 Export the attachments with:
 
 ```bash

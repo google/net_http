@@ -1,5 +1,36 @@
 # Google Lens WebChannel benchmark results
 
+## Direct HTTPS baseline on iPhone SE (3rd generation), 2026-10-06
+
+To estimate transport latency independently of WebChannel, an XCTest used `URLSession` to send `HEAD` to `https://webchannel.sandbox.google.com/staging/channel/lens`. Each of 10 pairs used a new ephemeral session for the first request and the same session for the second request. Cellular access was disabled in the test configuration; task metrics reported `isCellular=false` for all 20 requests. All initial requests used a new HTTP/2 connection, and all second requests reused it. All 20 returned HTTP 400, which is a valid server response to this non-WebChannel request. The transaction metrics reported no proxy connection and the same remote address, `192.178.226.81`, throughout this run.
+
+|Pair|Initial TCP connect|Initial TLS|Initial request to first byte|Reused request to first byte|
+|---:|---:|---:|---:|---:|
+|1|9.0|19.0|155.0|134.8|
+|2|9.0|34.0|133.7|146.0|
+|3|10.0|35.0|145.6|130.2|
+|4|43.0|30.0|136.3|165.7|
+|5|10.0|26.0|196.9|139.3|
+|6|8.0|26.0|130.5|129.8|
+|7|9.0|26.0|130.6|148.6|
+|8|9.0|28.0|142.4|136.2|
+|9|9.0|37.0|141.3|144.4|
+|10|8.0|27.0|144.4|146.4|
+
+|Metric|Median|Minimum|Maximum|
+|---|---:|---:|---:|
+|TCP connect, initial|9.0 ms|8.0 ms|43.0 ms|
+|TLS, initial|27.5 ms|19.0 ms|37.0 ms|
+|Connection setup including TLS, initial|36.5 ms|28.0 ms|73.0 ms|
+|Request to first byte, initial|141.8 ms|130.5 ms|196.9 ms|
+|Request to first byte, reused|141.9 ms|129.8 ms|165.7 ms|
+
+The **9.0 ms median TCP connect interval** is a rough one-RTT estimate to the reached TCP endpoint. It is measured between URLSession's connection start and TLS start and can include client scheduling overhead. It does not identify the latency to any backend behind the host's front end. The **roughly 142 ms request-to-first-byte median** includes network transit, routing, and the server's generation of an HTTP 400 response, so it is not a pure RTT. TLS adds a separate median 27.5 ms during a new connection. ICMP was not used.
+
+The `.xcresult`, JSON, and CSV remain in this task's local Codex artifacts and are not checked into this repository. Repeating the test may reach a different front end or network path, and the earlier 2026-10-05 Wi-Fi/Cellular switch state was not rechecked for this run. The test itself forbade cellular use and recorded noncellular transport.
+
+---
+
 ## Automated Xcode run on iPhone SE (3rd generation), 2026-10-05
 
 The `WebChanneliOSDemoTests` XCTest target ran on a paired iPhone SE (3rd generation), iOS 26.3.1, against `https://webchannel.sandbox.google.com/staging/channel/lens`. Cellular data was OFF and Wi-Fi was ON during this device run, as reported by the tester. Each scenario used five alternating OFF/ON pairs, for 20 completed runs out of 20. The test used a 150 KB image-size metadata parameter, a 50 ms simulated detection delay, and text/JSON mode. Values below are milliseconds reported by the app. TTFA and TTFD start at the M3 send call; M4 RTT starts at the M4 send call. The 150 KB parameter did not transmit 150 KB of image bytes.
