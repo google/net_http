@@ -19,7 +19,7 @@ def generate_including_400(root, args, summary):
     if original_metadata["pairsPerDelay"] != args.pairs or original_metadata["handshakeThresholdMs"] != args.handshake_threshold_ms:
         raise ValueError("Inclusive report must use the original pair count and handshake threshold")
     datasets = {}
-    for delay in (0, 50, 100, 200):
+    for delay in original_metadata.get("delaysMs", (0, 50, 100, 200)):
         run = root / f"delay-{delay}ms"
         data = {"initialMessageDelayMs": delay, "pairCount": args.pairs,
                 "handshakeThresholdMs": args.handshake_threshold_ms, "includeEarlyPost400": True,
@@ -96,6 +96,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("output_dir", type=Path)
     parser.add_argument("--pairs", type=int)
+    parser.add_argument("--delays-ms", type=int, nargs="+", help="Ordered delay settings; defaults to saved metadata or 0 50 100 150 200")
     parser.add_argument("--handshake-threshold-ms", type=float)
     parser.add_argument("--network-switches")
     parser.add_argument("--include-early-post-400", action="store_true", help="Add an inclusive report under including-early-post-400/ without regenerating the original")
@@ -104,11 +105,15 @@ def main():
     root = args.output_dir
     previous_metadata_path = root / "run-metadata.json"
     previous_metadata = json.loads(previous_metadata_path.read_text()) if previous_metadata_path.exists() else {}
-    args.pairs = args.pairs if args.pairs is not None else previous_metadata.get("pairsPerDelay", 100)
+    args.pairs = args.pairs if args.pairs is not None else previous_metadata.get("pairsPerDelay", 1000)
     args.handshake_threshold_ms = (args.handshake_threshold_ms if args.handshake_threshold_ms is not None
                                    else previous_metadata.get("handshakeThresholdMs", 20))
     policy = args.early_post_400_policy or ("include" if previous_metadata.get("includeEarlyPost400", not previous_metadata) else "exclude")
-    delays = (0, 50, 100, 200)
+    delays = tuple(args.delays_ms or previous_metadata.get("delaysMs", (0, 50, 100, 150, 200)))
+    if args.pairs <= 0 or any(delay < 0 for delay in delays) or len(set(delays)) != len(delays) or 0 not in delays:
+        parser.error("Use positive pairs and distinct nonnegative delays including 0")
+    delay_text = ", ".join(map(str, delays))
+    total_trials = 2 * len(delays) * args.pairs
     summarizer_path = Path(__file__).with_name("summarize-cold-benchmark.py")
     spec = importlib.util.spec_from_file_location("cold_summary", summarizer_path)
     summary = importlib.util.module_from_spec(spec)
@@ -139,7 +144,7 @@ def main():
         if datasets[delay]["initialMessageDelayMs"] != delay:
             parser.error(f"Measured delay setting does not match directory: {run}")
 
-    # All four charts for a metric have exactly the same bin edges and range.
+    # All charts for a metric have exactly the same bin edges and range.
     for metric, key in (("TTFA", "ttfaDifferenceMs"), ("TTFD", "ttfdDifferenceMs")):
         pooled = [record[key] for data in datasets.values() for record in data["pairs"] if record["accepted"]]
         bounds = (min(pooled + [0]), max(pooled + [0]))
@@ -153,7 +158,7 @@ def main():
     first_report = (root / "delay-0ms/report.md").read_text()
     prefix = first_report.split("## Omnient: paired difference histograms")[0]
     prefix = re.sub(r"^# .*", "# Lens benchmark — Omnient initial-message delay sweep", prefix, count=1)
-    prefix = prefix.replace(f"{args.pairs} alternating OFF/ON pairs per scenario", f"{args.pairs} alternating OFF/ON pairs per delay; 0, 50, 100, 200 ms in that order")
+    prefix = prefix.replace(f"{args.pairs} alternating OFF/ON pairs per scenario", f"{args.pairs} alternating OFF/ON pairs per delay; {delay_text} ms in that order")
     total_completed = total_fresh = 0
     for delay in delays:
         for pair in range(1, args.pairs + 1):
@@ -161,18 +166,29 @@ def main():
                 row = summary.load_trial(root / f"delay-{delay}ms", "omnient", pair, setting)
                 total_completed += bool(row and row.get("status") == "completed")
                 total_fresh += bool(row and row.get("coldConnection") is True)
-    prefix = re.sub(r"\| Test result \| .*? \|", f"| Test result | {total_completed}/{8 * args.pairs} completed trials; {total_fresh}/{8 * args.pairs} passed fresh-transport verification |", prefix)
+    prefix = re.sub(r"\| Test result \| .*? \|", f"| Test result | {total_completed}/{total_trials} completed trials; {total_fresh}/{total_trials} passed fresh-transport verification |", prefix)
     period = "; ".join(f"{delay} ms: {metadata[delay]['testPeriod']}" for delay in delays)
     prefix = re.sub(r"\| Test period \| .*? \|", f"| Test period | {period} |", prefix)
-    prefix = prefix.replace("`initialMessageDelayMs=0`", "`initialMessageDelayMs=0, 50, 100, 200` (separate settings)")
+    timing_path = root / "timing.json"
+    timing = json.loads(timing_path.read_text()) if timing_path.exists() else None
+    if timing and "elapsedSeconds" in timing:
+        duration = timing["elapsedSeconds"]
+        prefix = prefix.replace("| Transport requirement |", f"| Benchmark elapsed time | {duration:.3f} seconds ({duration / 60:.3f} minutes); {timing['startedUTC']} to {timing['finishedUTC']}; includes process launch, measurement, attachment export, and any recovery gaps; excludes build and report generation |\n| Transport requirement |", 1)
+    prefix = prefix.replace("`initialMessageDelayMs=0`", f"`initialMessageDelayMs={delay_text}` (separate settings)")
     prefix = prefix.replace("Schedule M1 Sticky Cluster Info 0 ms after", "Schedule M1 Sticky Cluster Info at the configured delay after")
-    prefix = prefix.replace("Histograms use 10 ms bins", "All four delay settings use the same horizontal range and bin edges for each metric. Histograms use 10 ms bins")
+    prefix = prefix.replace("Histograms use 10 ms bins", "All delay settings use the same horizontal range and bin edges for each metric. Histograms use 10 ms bins")
     lines = [prefix.rstrip(), "", "## Pair inclusion and early POST rejection", "",
              "The HTTP 400 rate uses all 50 attempted pairs at each delay as the denominator, including pairs that fail other histogram inclusion conditions.".replace("all 50", f"all {args.pairs}"), "",
              "| M1 delay (ms) | Measured pairs | ON early POST HTTP 400 | 400 pair rate | No early POST | Unresolved status | Histogram pairs | Included HTTP 400 pairs |",
              "|---:|---:|---:|---:|---:|---:|---:|---:|"]
     for delay, data in datasets.items():
         lines.append(f"| {delay} | {args.pairs} | {data['earlyPost400Pairs']} | {data['earlyPost400Rate'] * 100:.1f}% | {data['noEarlyPostPairs']} | {data['unknownEarlyPostPairs']} | {data['acceptedPairs']} | {data['includedEarlyPost400Pairs']} |")
+    if timing and "elapsedSeconds" in timing:
+        lines.extend(["", "## Benchmark elapsed time by delay", "",
+                      "Each interval runs from the start of that delay's runner to completion of its last attachment export. Recovery gaps, if any, are included.", "",
+                      "| M1 delay (ms) | Elapsed seconds |", "|---:|---:|"])
+        for delay in delays:
+            lines.append(f"| {delay} | {timing['delays'][str(delay)]['elapsedSeconds']:.3f} |")
     for delay in delays:
         lines.extend(["", f"## M1 delay: {delay} ms", ""])
         for metric in ("TTFA", "TTFD"):
@@ -191,7 +207,7 @@ def main():
     infrastructure = sorted((root / "infrastructure-attempts").glob("*/README.md"))
     if infrastructure:
         audit.extend(["", "## Infrastructure interruptions", "",
-                      "Install/launch failures produced no paired benchmark measurement. Their files are retained separately; completed measurement pairs excluded by the histogram rules were not repeated. The interrupted pair was restarted as adjacent OFF/ON trials after reconnecting.", ""])
+                      "Install/launch failures produced no paired benchmark measurement. Their files are retained separately; completed measurement pairs excluded by the histogram rules were not repeated. Trials without a benchmark result were resumed after restoring device availability; recorded measurement trials were retained.", ""])
         artifacts.extend(["", "## Infrastructure interruptions", ""])
         for path in infrastructure:
             link = f"- [{path.parent.name}]({path.relative_to(root).as_posix()})"
@@ -202,6 +218,12 @@ def main():
     links = [f"[{label}](logs/{name})" for name, label in setup_logs if (root / "logs" / name).exists()]
     if links:
         artifacts.extend([" · ".join(links) + ". Setup and preflight trials are not included in the measurement pairs.", ""])
+    if (root / "execution-settings.json").exists():
+        artifacts.extend(["[Execution settings](execution-settings.json) record the requested parameters, user-reported connection conditions, and frozen script hashes.", ""])
+    if timing is not None:
+        artifacts.extend(["[Benchmark timing](timing.json) retains full-precision wall-clock timestamps and elapsed intervals; excludes build and report generation.", ""])
+    if (root / "logs/device-baseline").exists():
+        artifacts.extend(["[Device baseline](logs/device-baseline/) records USB recognition, CoreDevice availability, and Mac power assertions before measurement. Failure snapshots are retained under each delay’s logs/device-diagnostics/ directory.", ""])
     (root / "artifacts.md").write_text("\n".join(artifacts))
     (root / "connection-reuse-audit.md").write_text("\n".join(audit) + "\n")
     sweep_metadata = {"delaysMs": list(delays), "pairsPerDelay": args.pairs,
@@ -210,6 +232,8 @@ def main():
                       "binWidthMs": 10, "generatorSHA256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
                       "infrastructureAttempts": [path.relative_to(root).as_posix() for path in infrastructure],
                       "runs": {str(delay): item for delay, item in metadata.items()}}
+    if timing is not None:
+        sweep_metadata["timing"] = timing
     (root / "run-metadata.json").write_text(json.dumps(sweep_metadata, indent=2) + "\n")
 
 

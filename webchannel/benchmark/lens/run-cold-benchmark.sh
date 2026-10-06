@@ -95,6 +95,9 @@ for scenario in $scenarios; do
         echo "PASS $trial"
       else
         echo "FAIL $trial (see $log)" >&2
+        python3 "$runner_dir/capture-device-diagnostics.py" "$device_id" \
+          "$output_dir/logs/device-diagnostics/$trial" || \
+          echo "Device diagnostics could not be captured for $trial" >&2
       fi
       trial_pid=
       if rg -q 'Developer App Certificate is not trusted|Failed to install or launch the test runner' "$log"; then
