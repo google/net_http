@@ -59,8 +59,11 @@ final class WebChannelService: NSObject, @unchecked Sendable {
   var state: ConnectionState = .disconnected
   var logs: [LogEntry] = []
   var lastLatencyMs: Double? = nil
+  var handshakeLatencyMs: Double? = nil
+  var lastConnectAndSendLatencyMs: Double? = nil
   var isBackChannelBinaryEncodingEnabled: Bool = false
   var lensMetrics = LensBenchmarkMetrics()
+  private(set) var isConnectAndSendRunning: Bool = false
 
   // Channel Options
   var enableBinaryEncoding: Bool = false
@@ -124,6 +127,9 @@ final class WebChannelService: NSObject, @unchecked Sendable {
       clearLogs()
     }
     lastLatencyMs = nil
+    handshakeLatencyMs = nil
+    lastConnectAndSendLatencyMs = nil
+    isConnectAndSendRunning = false
 
     let options = WCOptions()
     options.enableBinaryEncoding = enableBinaryEncoding
@@ -187,6 +193,7 @@ final class WebChannelService: NSObject, @unchecked Sendable {
   /// to test whether Request 2 is dispatched concurrently (non-blocking) or queued.
   func connectAndSendImmediately(to urlString: String, message: String) {
     connect(to: urlString)
+    isConnectAndSendRunning = true
 
     let delaySeconds = Double(earlySendDelayMs) / 1000.0
     log(
@@ -265,6 +272,9 @@ final class WebChannelService: NSObject, @unchecked Sendable {
     lastSendTime = CFAbsoluteTimeGetCurrent()
     pendingEchoToken = echoToken
     lastLatencyMs = nil
+    if !isConnectAndSendRunning {
+      lastConnectAndSendLatencyMs = nil
+    }
 
     sendPayload(payload, description: "echo latency request [token: \(echoToken)]")
   }
@@ -298,6 +308,9 @@ final class WebChannelService: NSObject, @unchecked Sendable {
     lastSendTime = CFAbsoluteTimeGetCurrent()
     pendingEchoToken = echoToken
     lastLatencyMs = nil
+    if !isConnectAndSendRunning {
+      lastConnectAndSendLatencyMs = nil
+    }
 
     sendBinaryData(
       jsonData, description: "binary JSON echo [token: \(echoToken)]")
@@ -519,14 +532,15 @@ extension WebChannelService: WCWebChannelClientHandlerDelegate {
     DispatchQueue.main.async {
       self.state = .connected
       self.isBackChannelBinaryEncodingEnabled = isBinary
+      self.handshakeLatencyMs = elapsed
       self.lensMetrics.handshakeDurationMs = elapsed
       let binaryStatus = self.isBackChannelBinaryEncodingEnabled ? "Active" : "Inactive"
       self.log(
         String(
           format:
-            "✅ [Event: webChannelOpened] Handshake completed at T+%.1fms -> "
+            "🤝 ✅ [Handshake Latency] Handshake completed in %.1f ms (T+%.1fms) -> "
             + "State: Connected (Opened) [Binary Encoding: %@]",
-          elapsed, binaryStatus))
+          elapsed, elapsed, binaryStatus))
     }
   }
 
@@ -555,16 +569,52 @@ extension WebChannelService: WCWebChannelClientHandlerDelegate {
       }
 
       if let token = self.pendingEchoToken, formattedMessage.contains(token) {
-        let latency = (now - self.lastSendTime) * 1000.0
+        let sendRtt = (now - self.lastSendTime) * 1000.0
         let totalFromConnect = (now - self.connectTime) * 1000.0
-        self.lastLatencyMs = latency
+        self.lastLatencyMs = sendRtt
         self.pendingEchoToken = nil
-        self.log(
-          String(
-            format:
-              "⚡ <<< [E2E Latency] Echo response received in %.1f ms from send "
-              + "(Total T+%.1fms from connect) [State: %@]",
-            latency, totalFromConnect, self.state.statusText))
+
+        let wasConnectAndSend = self.isConnectAndSendRunning
+        self.isConnectAndSendRunning = false
+
+        if wasConnectAndSend {
+          self.lastConnectAndSendLatencyMs = totalFromConnect
+          let handshakeComparison: String
+          if let handshake = self.handshakeLatencyMs {
+            let delta = totalFromConnect - handshake
+            let deltaFormatted = WebChannelService.formatDeltaVsHandshake(
+              delta: delta, handshake: handshake)
+            handshakeComparison = String(
+              format:
+                " | Handshake Latency: %.1f ms | Delta vs Handshake: %@",
+              handshake, deltaFormatted)
+          } else {
+            handshakeComparison =
+              " | Handshake: in-flight (0-RTT response arrived before handshake open)"
+          }
+          self.log(
+            String(
+              format:
+                "⚡ <<< [Connect & Send Latency] Echo response received! "
+                + "Send Delay: %dms | Send RTT: %.1f ms | "
+                + "Connect & Send Total: %.1f ms%@ [State: %@]",
+              self.earlySendDelayMs, sendRtt, totalFromConnect, handshakeComparison,
+              self.state.statusText))
+        } else {
+          let handshakeComparison: String
+          if let handshake = self.handshakeLatencyMs {
+            handshakeComparison = String(
+              format: " | Handshake Latency: %.1f ms", handshake)
+          } else {
+            handshakeComparison = ""
+          }
+          self.log(
+            String(
+              format:
+                "⚡ <<< [E2E Latency] Echo response received! "
+                + "Send RTT: %.1f ms (Total from connect: %.1f ms)%@ [State: %@]",
+              sendRtt, totalFromConnect, handshakeComparison, self.state.statusText))
+        }
       }
 
       // Handle Lens responses
@@ -669,6 +719,17 @@ extension WebChannelService: WCWebChannelClientHandlerDelegate {
   }
 
   // MARK: - Formatting & Parsing Helpers
+
+  /// Formats delta vs handshake latency with sign and percentage (e.g. "+6.4 ms (+1.5%)").
+  static func formatDeltaVsHandshake(delta: Double, handshake: Double) -> String {
+    let sign = delta >= 0 ? "+" : ""
+    guard handshake > 0 else {
+      return String(format: "%@%.1f ms", sign, delta)
+    }
+    let percent = (delta / handshake) * 100.0
+    let percentSign = percent >= 0 ? "+" : ""
+    return String(format: "%@%.1f ms (%@%.1f%%)", sign, delta, percentSign, percent)
+  }
 
   private func extractLatencyMs(
     from dict: [String: Any], key: String = "forward_latency_ms"
