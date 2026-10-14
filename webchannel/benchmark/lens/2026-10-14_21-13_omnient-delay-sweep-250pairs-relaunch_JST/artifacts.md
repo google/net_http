@@ -20,4 +20,16 @@ Histogram PNG and SVG files are generated with matplotlib. Each metric shares 10
 
 [Benchmark timing](timing.json) retains full-precision wall-clock timestamps and elapsed intervals; excludes build and report generation.
 
+## Benchmark elapsed time by delay
+
+Each interval runs from the start of that delay's runner to completion of its last attachment export. Recovery gaps, if any, are included.
+
+| M1 delay (ms) | Elapsed seconds |
+|---:|---:|
+| 0 | 2035.562 |
+| 50 | 649.217 |
+| 100 | 670.682 |
+| 150 | 1127.495 |
+| 200 | 686.210 |
+
 [Report rendering settings](report-render-settings.json) record the rendering fix and generator hashes separately from frozen measurement settings. [Rendering verification](report-render-verification.json) confirms unchanged data, selection and bins, raw preservation, and deterministic plot regeneration.
