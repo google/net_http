@@ -65,3 +65,17 @@ New sweep invocations record `timing.json` using `record-sweep-timing.py`. Repor
 The [2026-10-14 batched relaunch sweep](2026-10-14_16-41_omnient-delay-sweep-50pairs-relaunch_JST/report.md) records 50 pairs at each of 0, 50, 100, 150, and 200 ms. All 500 trials used distinct app process instances and verified fresh HTTP/2 TCP/TLS transport; 499 completed and one reached the measurement deadline. No startup connection error was observed. Total benchmark wall time was 703.073 seconds. [Audit](2026-10-14_16-41_omnient-delay-sweep-50pairs-relaunch_JST/connection-reuse-audit.md) and [artifacts](2026-10-14_16-41_omnient-delay-sweep-50pairs-relaunch_JST/artifacts.md) retain the evidence.
 
 The [250-pair-per-delay sweep](2026-10-14_21-13_omnient-delay-sweep-250pairs-relaunch_JST/report.md) retains 1,250 pairs across all five delays. All 2,500 measurements used distinct application process instances and verified fresh HTTP/2 TCP/TLS transport; 2,496 completed. Its [infrastructure audit](2026-10-14_21-13_omnient-delay-sweep-250pairs-relaunch_JST/infrastructure-audit.md) records two startup failures, original evidence, and reviewed resumption of only unentered measurement ordinals.
+
+The [October 15 noon scheduled sweep](2026-10-15_12-00_omnient-delay-sweep-100pairs-relaunch_JST/report.md) records 100 pairs at each of 0, 50, 100, 150, and 200 ms. All 1,000 measurements used distinct application process instances and verified fresh HTTP/2 TCP/TLS transport; 999 completed and one reached the measurement deadline. No startup connection errors were observed. Total benchmark elapsed time was 1301.450 seconds. [Artifacts](2026-10-15_12-00_omnient-delay-sweep-100pairs-relaunch_JST/artifacts.md) retain the original evidence and per-delay elapsed time.
+
+## Individual-observation reports (October 15 noon onward)
+
+The current format treats all trials independently and applies no handshake-difference or HTTP-status filter. After measurement finalization, run:
+
+```bash
+python3 -B webchannel/benchmark/lens/summarize-delay-sweep.py OUTPUT_DIR --report-format unpaired
+```
+
+Each delay has scatter plots of elapsed time versus measured TTFA/TTFD and ECDFs of the observed latencies, distinguishing OFF/ON by colors and marks/line styles. Only a missing/nonfinite metric cannot be plotted; selection is independent per metric, including finite values from incomplete trials. Reports link combined observations and original JSON/CSV exports. Overall duration remains in report.md; per-delay duration remains in artifacts.md. Rendering verifies raw preservation, explicit source identities, membership, missing counts, ECDFs and deterministic output. Measurement execution settings remain frozen; report generation has separate provenance. The saved format preserves unpaired rendering on ordinary regeneration; earlier runs keep the historical paired format.
+
+The October 15 noon report now uses all independent observed TTFA/TTFD values (OFF 500, ON 499 for each metric), without handshake-difference or HTTP-status selection. Its root report links combined data and original exports; the earlier paired main report is retained as explicitly superseded analysis.

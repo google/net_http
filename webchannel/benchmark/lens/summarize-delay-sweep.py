@@ -101,10 +101,20 @@ def main():
     parser.add_argument("--network-switches")
     parser.add_argument("--include-early-post-400", action="store_true", help="Add an inclusive report under including-early-post-400/ without regenerating the original")
     parser.add_argument("--early-post-400-policy", choices=("include", "exclude"), help="Policy for the main report; new sweeps default to include")
+    parser.add_argument("--report-format", choices=("unpaired", "paired-histogram"), help="Unpaired scatter/ECDF or legacy paired histograms; saved mode is retained")
     args = parser.parse_args()
     root = args.output_dir
     previous_metadata_path = root / "run-metadata.json"
     previous_metadata = json.loads(previous_metadata_path.read_text()) if previous_metadata_path.exists() else {}
+    mode = args.report_format or previous_metadata.get("reportFormat", "paired-histogram")
+    if mode == "unpaired":
+        if args.include_early_post_400:
+            parser.error("Unpaired reports already retain every observed HTTP status")
+        spec = importlib.util.spec_from_file_location("unpaired_summary", Path(__file__).with_name("summarize-unpaired-sweep.py"))
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        module.run_verified(root)
+        return
     args.pairs = args.pairs if args.pairs is not None else previous_metadata.get("pairsPerDelay", 1000)
     args.handshake_threshold_ms = (args.handshake_threshold_ms if args.handshake_threshold_ms is not None
                                    else previous_metadata.get("handshakeThresholdMs", 20))
