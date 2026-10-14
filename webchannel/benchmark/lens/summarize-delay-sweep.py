@@ -183,12 +183,6 @@ def main():
              "|---:|---:|---:|---:|---:|---:|---:|---:|"]
     for delay, data in datasets.items():
         lines.append(f"| {delay} | {args.pairs} | {data['earlyPost400Pairs']} | {data['earlyPost400Rate'] * 100:.1f}% | {data['noEarlyPostPairs']} | {data['unknownEarlyPostPairs']} | {data['acceptedPairs']} | {data['includedEarlyPost400Pairs']} |")
-    if timing and "elapsedSeconds" in timing:
-        lines.extend(["", "## Benchmark elapsed time by delay", "",
-                      "Each interval runs from the start of that delay's runner to completion of its last attachment export. Recovery gaps, if any, are included.", "",
-                      "| M1 delay (ms) | Elapsed seconds |", "|---:|---:|"])
-        for delay in delays:
-            lines.append(f"| {delay} | {timing['delays'][str(delay)]['elapsedSeconds']:.3f} |")
     for delay in delays:
         lines.extend(["", f"## M1 delay: {delay} ms", ""])
         for metric in ("TTFA", "TTFD"):
@@ -222,6 +216,13 @@ def main():
         artifacts.extend(["[Execution settings](execution-settings.json) record the requested parameters, user-reported connection conditions, and frozen script hashes.", ""])
     if timing is not None:
         artifacts.extend(["[Benchmark timing](timing.json) retains full-precision wall-clock timestamps and elapsed intervals; excludes build and report generation.", ""])
+    if timing and "elapsedSeconds" in timing:
+        artifacts.extend(["", "## Benchmark elapsed time by delay", "",
+                      "Each interval runs from the start of that delay's runner to completion of its last attachment export. Recovery gaps, if any, are included.", "",
+                      "| M1 delay (ms) | Elapsed seconds |", "|---:|---:|"])
+        for delay in delays:
+            artifacts.append(f"| {delay} | {timing['delays'][str(delay)]['elapsedSeconds']:.3f} |")
+        artifacts.append("")
     if (root / "logs/device-baseline").exists():
         artifacts.extend(["[Device baseline](logs/device-baseline/) records USB recognition, CoreDevice availability, and Mac power assertions before measurement. Failure snapshots are retained under each delay’s logs/device-diagnostics/ directory.", ""])
     if (root / "report-render-settings.json").exists():

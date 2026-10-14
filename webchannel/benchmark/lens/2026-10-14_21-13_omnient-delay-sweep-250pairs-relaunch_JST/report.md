@@ -44,18 +44,6 @@ The HTTP 400 rate uses all 250 attempted pairs at each delay as the denominator,
 | 150 | 250 | 6 | 2.4% | 0 | 2 | 70 | 0 |
 | 200 | 250 | 6 | 2.4% | 121 | 1 | 66 | 1 |
 
-## Benchmark elapsed time by delay
-
-Each interval runs from the start of that delay's runner to completion of its last attachment export. Recovery gaps, if any, are included.
-
-| M1 delay (ms) | Elapsed seconds |
-|---:|---:|
-| 0 | 2035.562 |
-| 50 | 649.217 |
-| 100 | 670.682 |
-| 150 | 1127.495 |
-| 200 | 686.210 |
-
 ## M1 delay: 0 ms
 
 ### TTFA: ON minus OFF
