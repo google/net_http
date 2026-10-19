@@ -17,7 +17,7 @@ import unittest
 TEST_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.abspath(os.path.join(TEST_DIR, "..", ".."))
 SERVER_PLAIN_BIN = os.path.join(
-    PROJECT_ROOT, "cpp", "build", "examples", "echo_server"
+    PROJECT_ROOT, "cpp", "build", "examples", "plain_echo_server"
 )
 
 
@@ -104,7 +104,7 @@ class TestDanglingPointer(unittest.TestCase):
         client.set_on_open(on_open)
         fired = self._run_and_stop(client, open_event)
 
-        self.assertTrue(fired, "on_open never fired; check echo_server")
+        self.assertTrue(fired, "on_open never fired; check plain_echo_server")
         self.assertEqual(len(captured_handler), 1)
 
         handler = captured_handler[0]
@@ -132,7 +132,7 @@ class TestDanglingPointer(unittest.TestCase):
         client.set_on_open(on_open)
         fired = self._run_and_stop(client, open_event)
 
-        self.assertTrue(fired, "on_open never fired; check echo_server")
+        self.assertTrue(fired, "on_open never fired; check plain_echo_server")
         handler = captured_handler[0]
         with self.assertRaises(RuntimeError):
             handler.send_binary("should fail")

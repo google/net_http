@@ -38,6 +38,22 @@ This sub-project is intended to be used with a Python virtual environment (`venv
    pip install -e .
    ```
 
+## Running Tests
+
+After installing the Python bindings, build the C++ echo servers used by the
+integration and safety tests. Run these commands from `wish/python`:
+
+```bash
+cmake -S ../cpp -B ../cpp/build -DWISH_BUILD_EXAMPLES=ON \
+  -DWISH_BUILD_TESTS=OFF -DWISH_BUILD_BENCHMARKS=OFF
+cmake --build ../cpp/build --target plain_echo_server tls_echo_server --parallel 4
+python -m unittest discover -s tests -v
+```
+
+The callback-exception and dangling-pointer tests use
+`../cpp/build/examples/plain_echo_server`. They are skipped if the extension or
+that executable is unavailable; the E2E tests also use `tls_echo_server`.
+
 ## Usage Example
 
 ```python

@@ -18,7 +18,7 @@ import unittest
 TEST_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.abspath(os.path.join(TEST_DIR, "..", ".."))
 SERVER_PLAIN_BIN = os.path.join(
-    PROJECT_ROOT, "cpp", "build", "examples", "echo_server"
+    PROJECT_ROOT, "cpp", "build", "examples", "plain_echo_server"
 )
 
 
@@ -129,7 +129,7 @@ class TestCallbackExceptions(unittest.TestCase):
         finally:
             restore()
 
-        self.assertTrue(fired, "on_open callback never fired; check echo_server")
+        self.assertTrue(fired, "on_open callback never fired; check plain_echo_server")
         # The process survived reaching this point ─ that is the primary assertion.
         self.assertEqual(len(captured), 1, "Expected exactly one unraisable exception")
         exc = captured[0].exc_value
@@ -161,7 +161,7 @@ class TestCallbackExceptions(unittest.TestCase):
         finally:
             restore()
 
-        self.assertTrue(fired, "on_message callback never fired; check echo_server")
+        self.assertTrue(fired, "on_message callback never fired; check plain_echo_server")
         self.assertEqual(len(captured), 1, "Expected exactly one unraisable exception")
         exc = captured[0].exc_value
         self.assertIsInstance(exc, ValueError)
