@@ -37,6 +37,7 @@ constexpr size_t kDefaultMaxTlsConnections = 10000;
 class TlsServer {
  public:
   using StreamCallback = std::function<void(WebStream*)>;
+  using ErrorCallback = std::function<void(int)>;
 
   TlsServer(event_base* base,
             int port,
@@ -46,7 +47,10 @@ class TlsServer {
   ~TlsServer();
 
   bool Init();
+  // Event-loop-thread-only: stop accepting, retaining established streams.
+  void StopAccepting();
   void SetOnStream(StreamCallback cb);
+  void SetOnError(ErrorCallback cb) { on_error_ = std::move(cb); }
   void SetMaxConnections(size_t max_connections) { max_connections_ = max_connections; }
   size_t active_connections() const { return active_handshakes_.size() + active_streams_.size(); }
   int Run();
@@ -76,6 +80,7 @@ class TlsServer {
   TlsContext tls_ctx_;
 
   StreamCallback on_stream_;
+  ErrorCallback on_error_;
 
   size_t max_connections_ = kDefaultMaxTlsConnections;
 

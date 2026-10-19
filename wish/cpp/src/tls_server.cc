@@ -102,6 +102,14 @@ void TlsServer::SetOnStream(StreamCallback cb) {
   on_stream_ = cb;
 }
 
+void TlsServer::StopAccepting() {
+  if (listener_) {
+    evconnlistener_free(listener_);
+    listener_ = nullptr;
+  }
+  active_handshakes_.clear();
+}
+
 void TlsServer::AcceptConnCb(evconnlistener* listener,
                              evutil_socket_t fd,
                              sockaddr* address,
@@ -194,6 +202,11 @@ void TlsServer::AcceptErrorCb(evconnlistener* listener,
 
   event_base* base = evconnlistener_get_base(listener);
   int err = EVUTIL_SOCKET_ERROR();
+  auto* server = static_cast<TlsServer*>(ctx);
+  if (server->on_error_) {
+    server->on_error_(err);
+    return;
+  }
   VLOG(1) << "Got an error " << err << " ("
           << evutil_socket_error_to_string(err)
           << ") on the listener. Shutting down.";

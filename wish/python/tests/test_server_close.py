@@ -73,26 +73,35 @@ class TestServerClose(unittest.IsolatedAsyncioTestCase):
             with self.subTest(scenario=scenario):
                 await self.check_peer_close(True, scenario)
 
-    async def test_callback_cleanup_failure_still_closes_transport(self):
-        ref = Mock()
-        ref.path.return_value = "/"
-        conn = WebStreamServerConnection(ref, asyncio.get_running_loop())
-        ref.set_on_message.side_effect = TypeError("callback cleanup failed")
-
-        with self.assertRaisesRegex(TypeError, "callback cleanup failed"):
+    async def test_cleanup_failure_still_releases_transport(self):
+        from unittest.mock import AsyncMock, call
+        runtime = Mock()
+        runtime._objects = {}
+        async def request(method, identifier, *args):
+            if method == "operation":
+                raise TypeError("EOF cleanup failed")
+        runtime._request = AsyncMock(side_effect=request)
+        conn = WebStreamServerConnection(runtime, 1)
+        with self.assertRaisesRegex(TypeError, "EOF cleanup failed"):
             await conn.close()
-
-        ref.close.assert_called_once_with()
-        await conn.close()
-        ref.close.assert_called_once_with()
+        self.assertIn(call("release", 1), runtime._request.call_args_list)
+        self.assertTrue(conn._released)
+        # Repeated close consistently reports the original cleanup failure.
+        with self.assertRaisesRegex(TypeError, "EOF cleanup failed"):
+            await conn.close()
         with self.assertRaisesRegex(RuntimeError, "closed"):
             await conn.send_text("after close")
 
     async def test_transport_close_failure_is_reported(self):
-        ref = Mock()
-        ref.path.return_value = "/"
-        conn = WebStreamServerConnection(ref, asyncio.get_running_loop())
-        ref.close.side_effect = RuntimeError("transport close failed")
-
-        with self.assertRaisesRegex(RuntimeError, "transport close failed"):
+        from unittest.mock import AsyncMock, call
+        from web_stream import WebStreamError
+        runtime = Mock()
+        runtime._objects = {}
+        async def request(method, identifier, *args):
+            if method == "operation":
+                raise WebStreamError("send", "transport close failed")
+        runtime._request = AsyncMock(side_effect=request)
+        conn = WebStreamServerConnection(runtime, 1)
+        with self.assertRaisesRegex(ConnectionError, "transport close failed"):
             await conn.close()
+        self.assertIn(call("release", 1), runtime._request.call_args_list)

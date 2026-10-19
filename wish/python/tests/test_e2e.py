@@ -174,7 +174,7 @@ class TestWebStreamClientPlainE2E(unittest.TestCase):
             
             async with web_stream.connect(uri) as ws:
                 # We can manually put a metadata message into ws._recv_queue
-                await ws._recv_queue.put((web_stream.WEB_STREAM_OPCODE_METADATA, b"meta-data-val"))
+                await ws.send_metadata(b"meta-data-val")
                 
                 # Default decode=None: should return bytes
                 msg = await ws.recv(decode=None)
@@ -182,7 +182,7 @@ class TestWebStreamClientPlainE2E(unittest.TestCase):
                 self.assertIsInstance(msg, bytes)
                 
                 # Put another one and test decode=True: should return str
-                await ws._recv_queue.put((web_stream.WEB_STREAM_OPCODE_METADATA, b"meta-data-val2"))
+                await ws.send_metadata(b"meta-data-val2")
                 msg_str = await ws.recv(decode=True)
                 self.assertEqual(msg_str, "meta-data-val2")
                 self.assertIsInstance(msg_str, str)

@@ -34,7 +34,7 @@ set(WISH_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 add_subdirectory(../cpp web_stream_cpp_build)
 
 
-nanobind_add_module(web_stream_ext src/web_stream_ext.cc)
+nanobind_add_module(web_stream_ext src/web_stream_ext.cc src/runtime.cc)
 
 # Provide the include directory so web_stream_ext.cc can find tls_client.h etc.
 target_include_directories(web_stream_ext PRIVATE ../cpp/src)

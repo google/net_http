@@ -35,13 +35,17 @@ constexpr size_t kDefaultMaxConnections = 10000;
 class PlainServer {
  public:
   using StreamCallback = std::function<void(WebStream*)>;
+  using ErrorCallback = std::function<void(int)>;
 
   PlainServer(event_base* base,
               int port);
   ~PlainServer();
 
   bool Init();
+  // Event-loop-thread-only: stop accepting, retaining established streams.
+  void StopAccepting();
   void SetOnStream(StreamCallback cb);
+  void SetOnError(ErrorCallback cb) { on_error_ = std::move(cb); }
   void SetMaxConnections(size_t max_connections) { max_connections_ = max_connections; }
   size_t active_connections() const { return active_handshakes_.size() + active_streams_.size(); }
   int Run();
@@ -65,6 +69,7 @@ class PlainServer {
   evconnlistener* listener_;
 
   StreamCallback on_stream_;
+  ErrorCallback on_error_;
 
   size_t max_connections_ = kDefaultMaxConnections;
 

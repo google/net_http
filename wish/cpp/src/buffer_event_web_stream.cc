@@ -58,6 +58,7 @@ bool BufferEventWebStream::Init() {
 }
 
 BufferEventWebStream::~BufferEventWebStream() {
+  if (on_destroy_) on_destroy_();
   wslay_event_context_free(ctx_);
 
   if (bev_) {
@@ -77,7 +78,7 @@ void BufferEventWebStream::SetCleanupCallback(CleanupCallback cb) {
 void BufferEventWebStream::Start() {
   bufferevent_setcb(bev_,
                     ReadCallback,
-                    nullptr,
+                    WriteCallback,
                     EventCallback,
                     this);
 
@@ -98,6 +99,39 @@ void BufferEventWebStream::SetOnMessage(MessageCallback cb) { on_message_ = cb; 
 void BufferEventWebStream::SetOnClose(CloseCallback cb) { on_close_ = cb; }
 
 void BufferEventWebStream::SetOnError(ErrorCallback cb) { on_error_ = cb; }
+
+void BufferEventWebStream::SetReadEnabled(bool enabled) {
+  read_enabled_ = enabled;
+  if (enabled) {
+    bufferevent_enable(bev_, EV_READ);
+    bufferevent_trigger(bev_, EV_READ, BEV_TRIG_DEFER_CALLBACKS);
+  } else {
+    bufferevent_disable(bev_, EV_READ);
+  }
+}
+
+void BufferEventWebStream::SetMaxMessageSize(size_t bytes) {
+  wslay_event_config_set_max_recv_msg_length(ctx_, bytes);
+  bufferevent_setwatermark(bev_, EV_READ, 0, 64 * 1024);
+}
+
+size_t BufferEventWebStream::PendingWriteBytes() const {
+  return evbuffer_get_length(bufferevent_get_output(bev_));
+}
+
+void BufferEventWebStream::Abort() { Fail(); }
+
+void BufferEventWebStream::SetOnDestroy(std::function<void()> callback) {
+  on_destroy_ = std::move(callback);
+}
+
+void BufferEventWebStream::SetOnWritable(std::function<void()> callback) {
+  on_writable_ = std::move(callback);
+}
+
+void BufferEventWebStream::SetWriteLowWatermark(size_t bytes) {
+  bufferevent_setwatermark(bev_, EV_WRITE, bytes, 0);
+}
 
 // ---- Public send methods ----
 
@@ -128,6 +162,12 @@ int BufferEventWebStream::Close() {
     return -1;
   }
 
+  if (receive_closed_) {
+    state_ = DRAINING;
+    bufferevent_setcb(bev_, ReadCallback, DrainCallback, EventCallback, this);
+    // Never destroy the stream synchronously inside a public send/close call.
+    bufferevent_trigger(bev_, EV_WRITE, BEV_TRIG_DEFER_CALLBACKS);
+  }
   return 0;
 }
 
@@ -143,6 +183,14 @@ void BufferEventWebStream::ReadCallback(bufferevent* bev, void* ctx) {
 
         if (rv != 0) {
           VLOG(2) << "wslay_event_recv() failed: " << rv;
+          stream->Fail();
+          return;
+        }
+
+        // Wslay disables reads and queues a WebSocket close frame on protocol
+        // and size violations, sometimes returning 0. Web-stream uses HTTP EOF
+        // instead of WebSocket close frames, so surface this as a failure now.
+        if (!wslay_event_get_read_enabled(stream->ctx_)) {
           stream->Fail();
           return;
         }
@@ -166,14 +214,13 @@ void BufferEventWebStream::ReadCallback(bufferevent* bev, void* ctx) {
           // to drain before freeing the stream.
           bufferevent_setcb(stream->bev_,
                             ReadCallback,
-                            nullptr,
+                            WriteCallback,
                             EventCallback,
                             stream);
 
           if (stream->in_message_) {
-            if (stream->on_error_) {
-              stream->on_error_();
-            }
+            stream->Fail();
+            return;
           } else {
             if (stream->on_close_) {
               stream->on_close_();
@@ -190,11 +237,10 @@ void BufferEventWebStream::ReadCallback(bufferevent* bev, void* ctx) {
 
             stream->TryDrain();
           } else {
-            stream->state_ = CLOSED;
-            auto cleanup = std::move(stream->cleanup_cb_);
-            if (cleanup) {
-              cleanup(stream);
-            }
+            // EOF closes only the inbound direction. The application may still
+            // send a final response before closing its outbound direction.
+            stream->state_ = READ_CLOSED;
+            bufferevent_disable(stream->bev_, EV_READ);
           }
           return;
         }
@@ -213,6 +259,7 @@ void BufferEventWebStream::ReadCallback(bufferevent* bev, void* ctx) {
         }
         return;
       }
+      case READ_CLOSED:
       case CLOSED:
         return;
       default:
@@ -225,7 +272,13 @@ void BufferEventWebStream::DrainCallback(bufferevent* /*bev*/,
                                          void* ctx) {
   BufferEventWebStream* stream = static_cast<BufferEventWebStream*>(ctx);
 
+  if (stream->on_writable_) stream->on_writable_();
   stream->TryDrain();
+}
+
+void BufferEventWebStream::WriteCallback(bufferevent*, void* ctx) {
+  auto* stream = static_cast<BufferEventWebStream*>(ctx);
+  if (stream->on_writable_) stream->on_writable_();
 }
 
 void BufferEventWebStream::EventCallback(bufferevent* bev,
@@ -260,13 +313,17 @@ void BufferEventWebStream::EventCallback(bufferevent* bev,
 
 // ---- wslay callbacks ----
 
-ssize_t BufferEventWebStream::WslayRecvCallback(wslay_event_context* /*ctx*/,
+ssize_t BufferEventWebStream::WslayRecvCallback(wslay_event_context* ctx,
                                                 uint8_t* buf,
                                                 size_t len,
                                                 int /*flags*/,
                                                 void* user_data) {
   BufferEventWebStream* stream = static_cast<BufferEventWebStream*>(user_data);
 
+  if (!stream->read_enabled_) {
+    wslay_event_set_error(ctx, WSLAY_ERR_WOULDBLOCK);
+    return -1;
+  }
   return stream->ReadChunkedBytes(buf, len);
 }
 
@@ -485,7 +542,7 @@ ssize_t BufferEventWebStream::ReadChunkedBytes(uint8_t* buf, size_t len) {
 }
 
 int BufferEventWebStream::SendMessage(uint8_t opcode, const std::string& msg) {
-  if (state_ != OPEN || close_pending_) {
+  if ((state_ != OPEN && state_ != READ_CLOSED) || close_pending_) {
     return -1;
   }
 

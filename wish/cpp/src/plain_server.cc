@@ -75,6 +75,14 @@ void PlainServer::SetOnStream(StreamCallback cb) {
   on_stream_ = cb;
 }
 
+void PlainServer::StopAccepting() {
+  if (listener_) {
+    evconnlistener_free(listener_);
+    listener_ = nullptr;
+  }
+  active_handshakes_.clear();
+}
+
 int PlainServer::Run() {
   return event_base_dispatch(base_);
 }
@@ -167,6 +175,11 @@ void PlainServer::AcceptErrorCb(evconnlistener* listener, void* ctx) {
 
   event_base* base = evconnlistener_get_base(listener);
   int err = EVUTIL_SOCKET_ERROR();
+  auto* server = static_cast<PlainServer*>(ctx);
+  if (server->on_error_) {
+    server->on_error_(err);
+    return;
+  }
   VLOG(1) << "Got an error " << err << " ("
           << evutil_socket_error_to_string(err)
           << ") on the listener. Shutting down.";

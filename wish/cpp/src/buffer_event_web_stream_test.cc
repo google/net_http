@@ -38,6 +38,75 @@ class BufferEventWebStreamTest : public ::testing::Test {
   event_base* base_ = nullptr;
 };
 
+TEST_F(BufferEventWebStreamTest, InboundEofPreservesOutboundResponse) {
+  bufferevent* pair[2];
+  ASSERT_EQ(bufferevent_pair_new(base_, BEV_OPT_CLOSE_ON_FREE | BEV_OPT_DEFER_CALLBACKS, pair), 0);
+  BufferEventWebStream server(pair[0], true);
+  BufferEventWebStream client(pair[1], false);
+  ASSERT_TRUE(server.Init());
+  ASSERT_TRUE(client.Init());
+  bool inbound_eof = false;
+  std::string response;
+  server.SetOnClose([&] {
+    inbound_eof = true;
+    EXPECT_EQ(server.SendText("final response"), 0);
+    EXPECT_EQ(server.Close(), 0);
+  });
+  client.SetOnMessage([&](uint8_t opcode, const std::string& data) { response = data; });
+  client.SetOnClose([&] { event_base_loopbreak(base_); });
+  server.Start();
+  client.Start();
+  ASSERT_EQ(client.Close(), 0);
+  timeval deadline{1, 0};
+  event_base_loopexit(base_, &deadline);
+  event_base_dispatch(base_);
+  EXPECT_TRUE(inbound_eof);
+  EXPECT_EQ(response, "final response");
+}
+
+TEST_F(BufferEventWebStreamTest, PausedReadsResumeBufferedMessages) {
+  bufferevent* pair[2];
+  ASSERT_EQ(bufferevent_pair_new(base_, BEV_OPT_CLOSE_ON_FREE | BEV_OPT_DEFER_CALLBACKS, pair), 0);
+  BufferEventWebStream server(pair[0], true);
+  BufferEventWebStream client(pair[1], false);
+  ASSERT_TRUE(server.Init());
+  ASSERT_TRUE(client.Init());
+  server.SetMaxMessageSize(2048);
+  int received = 0;
+  server.SetOnMessage([&](uint8_t, const std::string&) {
+    if (++received == 1) server.SetReadEnabled(false);
+  });
+  server.Start();
+  client.Start();
+  for (int i = 0; i < 100; ++i) ASSERT_EQ(client.SendBinary(std::string(1024, 'x')), 0);
+  for (int i = 0; i < 20; ++i) event_base_loop(base_, EVLOOP_NONBLOCK);
+  EXPECT_GT(received, 0);
+  EXPECT_LT(received, 100);
+  server.SetReadEnabled(true);
+  for (int i = 0; i < 100; ++i) event_base_loop(base_, EVLOOP_NONBLOCK);
+  EXPECT_EQ(received, 100);
+}
+
+TEST_F(BufferEventWebStreamTest, OversizedMessageFailsBeforeDelivery) {
+  bufferevent* pair[2];
+  ASSERT_EQ(bufferevent_pair_new(base_, BEV_OPT_CLOSE_ON_FREE | BEV_OPT_DEFER_CALLBACKS, pair), 0);
+  BufferEventWebStream server(pair[0], true);
+  BufferEventWebStream client(pair[1], false);
+  ASSERT_TRUE(server.Init());
+  ASSERT_TRUE(client.Init());
+  server.SetMaxMessageSize(512);
+  bool failed = false;
+  bool delivered = false;
+  server.SetOnError([&] { failed = true; });
+  server.SetOnMessage([&](uint8_t, const std::string&) { delivered = true; });
+  server.Start();
+  client.Start();
+  ASSERT_EQ(client.SendBinary(std::string(2048, 'x')), 0);
+  for (int i = 0; i < 20; ++i) event_base_loop(base_, EVLOOP_NONBLOCK);
+  EXPECT_TRUE(failed);
+  EXPECT_FALSE(delivered);
+}
+
 TEST_F(BufferEventWebStreamTest, HandshakeAndSimpleExchange) {
   bufferevent* pair[2];
   int rv = bufferevent_pair_new(base_,

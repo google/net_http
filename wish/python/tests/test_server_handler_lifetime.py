@@ -38,8 +38,14 @@ def probe(extension_dir, transport, lifecycle):
 
     refs = []
     accepted = threading.Event()
+    finalized = []
+
+    class Marker:
+        def __del__(self):
+            finalized.append(True)
 
     def on_stream(ref):
+        ref.set_on_message(lambda *args, handle=ref, marker=Marker(): None)
         refs.append(ref)
         if len(refs) == 2:
             accepted.set()
@@ -74,12 +80,15 @@ def probe(extension_dir, transport, lifecycle):
 
         assert accepted.wait(3), "server did not accept both streams"
         assert {ref.path() for ref in refs} == {"/retained/0", "/retained/1"}
+        gc.collect()
+        assert not finalized, "GC cleared an active native callback"
         for ref in refs:
             assert ref.send_text("before shutdown") == 0
 
         server.stop()
         server_thread.join(3)
         assert not server_thread.is_alive(), "server event loop did not stop"
+        assert len(finalized) == 2, "stop() retained callback closure objects"
         # stop() should also be idempotent with retained handles.
         server.stop()
         if lifecycle != "stop":
@@ -101,6 +110,15 @@ def probe(extension_dir, transport, lifecycle):
                     raise AssertionError("send on stopped handle succeeded")
             assert ref.close() == 0
             assert ref.close() == 0
+        # Isolated Python callback cycles on retained stopped handles are also
+        # collectable, even when nobody calls a callback-detachment method.
+        del send  # The previous loop's bound method retains its Python handle.
+        for ref in refs:
+            ref.set_on_message(lambda *args, handle=ref, marker=Marker(): None)
+        del ref
+        refs.clear()
+        gc.collect()
+        assert len(finalized) == 4, "handler callback cycle was not collected"
     finally:
         if "server" in locals():
             server.stop()

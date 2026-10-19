@@ -2,6 +2,9 @@
 
 This document provides a detailed breakdown of the file structure and component architecture for the `web-stream` C++ implementation.
 
+For the Python runtime, asyncio bridge, and binding lifetime rules, see the
+[Python code map](../python/CODE_MAP.md).
+
 ## Architecture Overview
 
 `web-stream` is a lightweight streaming protocol layered on top of HTTP/1.1 (via `Transfer-Encoding: chunked`) and HTTP/2 (via DATA frames). This C++ implementation provides a transport-agnostic interface (`WebStream`) with full support for cleartext and TLS/mTLS connections.
@@ -21,6 +24,65 @@ This document provides a detailed breakdown of the file structure and component 
 
 ---
 
+## Event Loops, Ownership, and HTTP/1.1 Lifecycle
+
+HTTP/1.1 clients and servers receive an externally owned `event_base*`.
+Their `Run()` methods dispatch that base; the base can instead be driven by a
+shared owner such as the Python binding's `NativeRuntime`. `PlainClient` and
+`TlsClient` own their handshake and stream; `PlainServer` and `TlsServer` own
+collections of handshakes and streams. Open/stream callbacks expose borrowed
+`WebStream*` pointers, not ownership transfers.
+
+`BufferEventWebStream` owns its `bufferevent` and wslay context. Operations and
+callback configuration belong on its owning event loop. Cross-thread command
+submission belongs to the binding's [native runtime](../python/src/runtime.cc);
+Python Futures and application task shutdown belong to its
+[asyncio layer](../python/CODE_MAP.md), not to the core stream.
+
+### Directional EOF and Destruction
+
+On the normal clean-close path:
+
+| Event | State and ownership effect |
+| --- | --- |
+| Local `Close()` | Queues the outbound HTTP terminal chunk and prevents further sends; inbound messages can still arrive. |
+| Inbound terminal chunk at a message boundary | Invokes `SetOnClose`. If outbound EOF has not been sent, enters `READ_CLOSED` and keeps outbound sends available. |
+| Both directions have reached EOF | Enters `DRAINING`; once output is empty, enters `CLOSED` and invokes the owner's cleanup callback. |
+| `SetOnDestroy` callback | Runs immediately before native destruction, separately from inbound EOF. Observers must not call back into the stream. |
+| Framing/transport failure or `Abort()` | Uses the failure/cleanup path. Cleanup may delete the stream; callers must not use it afterwards. |
+
+`ReadCallback`, `DrainCallback`, `WriteCallback`, `TryDrain`, and `Fail` in
+[`buffer_event_web_stream.cc`](src/buffer_event_web_stream.cc) implement these
+transitions. An inbound EOF in the middle of a message is an error. Wslay read
+shutdown caused by framing or size violations is also surfaced as an error,
+including cases where `wslay_event_recv()` returns zero.
+
+### Flow Control and Listener Shutdown
+
+The following hooks are specific to `BufferEventWebStream`; they are not methods
+of the common `WebStream` interface or guarantees of the HTTP/2 implementation.
+
+| API | Responsibility |
+| --- | --- |
+| `SetReadEnabled` | Pauses/resumes native reads and the wslay receive callback; resume schedules processing of buffered input. |
+| `SetMaxMessageSize` | Sets the wslay receive-message limit and a separate 64 KiB libevent input watermark. |
+| `PendingWriteBytes` | Reports bytes buffered in native output, not peer acknowledgement. |
+| `SetWriteLowWatermark`, `SetOnWritable` | Notify the runtime when output drains enough to resume pending operations, without polling. The callback must not destroy the stream. |
+
+The Python runtime uses these hooks to implement receive credit and send/drain
+completion. Buffer budgets and cancellation policy belong to that runtime and
+its asyncio connection layer.
+
+`PlainServer::StopAccepting()` and `TlsServer::StopAccepting()` free the listener
+and pending handshakes while retaining established streams. `SetOnError` installs
+a callback receiving the listener's socket error code, separately from stream
+errors. Without that
+callback, the legacy behavior exits the event base. The shared Python runtime
+installs a callback to stop the affected listener and report its failure without
+exiting the entire shared base.
+
+---
+
 ## Directory & File Structure
 
 ### 1. `src/` - Core Library Implementation
@@ -30,17 +92,17 @@ This document provides a detailed breakdown of the file structure and component 
 * [`src/wish_opcodes.h`](src/wish_opcodes.h): Framing opcode definitions (`WEB_STREAM_OPCODE_TEXT`, `WEB_STREAM_OPCODE_BINARY`, `WEB_STREAM_OPCODE_METADATA`).
 
 #### Stream Framers
-* [`src/buffer_event_web_stream.h`](src/buffer_event_web_stream.h), [`src/buffer_event_web_stream.cc`](src/buffer_event_web_stream.cc): `BufferEventWebStream` class implementation handling HTTP/1.1 chunked encoding and wslay framing over libevent `bufferevent`.
+* [`src/buffer_event_web_stream.h`](src/buffer_event_web_stream.h), [`src/buffer_event_web_stream.cc`](src/buffer_event_web_stream.cc): Established HTTP/1.1 stream framing over libevent `bufferevent`, including chunked-body parsing, directional EOF, receive limits, read suspension, write-watermark notifications, and native destruction notification. HTTP handshake processing is separate.
 * [`src/nghttp2_web_stream.h`](src/nghttp2_web_stream.h), [`src/nghttp2_web_stream.cc`](src/nghttp2_web_stream.cc): `NGHTTP2WebStream` class implementation handling HTTP/2 DATA frame streaming using nghttp2 and wslay.
-* [`src/buffer_event_web_stream_test.cc`](src/buffer_event_web_stream_test.cc): Unit tests for HTTP/1.1 framing and lifecycle management.
+* [`src/buffer_event_web_stream_test.cc`](src/buffer_event_web_stream_test.cc): HTTP/1.1 framing and lifecycle tests, including a final response after inbound EOF, paused-read resumption, and oversized-message rejection before delivery.
 * [`src/nghttp2_web_stream_test.cc`](src/nghttp2_web_stream_test.cc): Unit tests for HTTP/2 streaming framing.
 
 #### Handshake Engine
-* [`src/handshake.h`](src/handshake.h), [`src/handshake.cc`](src/handshake.cc): `ClientHandshake` and `ServerHandshake` classes implementing HTTP/1.1 `web-stream` upgrade handshakes over libevent.
+* [`src/handshake.h`](src/handshake.h), [`src/handshake.cc`](src/handshake.cc): `ClientHandshake` and `ServerHandshake` process the HTTP/1.1 POST/200 exchange with `application/web-stream` and chunked bodies, then hand the transport to the stream framer. Handshake deadlines are cleared when the stream opens so they do not become idle-stream timeouts.
 * [`src/handshake_test.cc`](src/handshake_test.cc): Handshake unit tests.
 
 #### Security & TLS Utilities
-* [`src/tls_context.h`](src/tls_context.h), [`src/tls_context.cc`](src/tls_context.cc): OpenSSL `SSL_CTX` configuration wrapper for TLS and mTLS setup.
+* [`src/tls_context.h`](src/tls_context.h), [`src/tls_context.cc`](src/tls_context.cc): BoringSSL/OpenSSL-compatible `SSL_CTX` setup for TLS/mTLS. `NewClientSsl(host)` configures DNS SAN verification and SNI for DNS hosts, or IP SAN verification for IP literals; Common Name fallback is disabled. Plain TLS and HTTP/2 TLS clients use this helper.
 
 #### Transport Servers & Clients
 * **HTTP/1.1 Plain (Cleartext)**:
