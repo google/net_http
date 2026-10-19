@@ -7,8 +7,11 @@
 
 #include <atomic>
 #include <condition_variable>
+#include <exception>
+#include <functional>
 #include <memory>
 #include <mutex>
+#include <thread>
 #include <unordered_map>
 
 #include "buffer_event_web_stream.h"
@@ -20,6 +23,158 @@
 
 namespace nb = nanobind;
 
+// All operations run on the owning libevent thread. Cross-thread callers wait
+// for their command, but stop() wakes them even if the loop is inside a callback.
+// Scheduled events stay owned until their callback completes or Run() exits.
+struct EventLoopDispatcher {
+  struct Command {
+    EventLoopDispatcher* owner;
+    std::function<int()> execute;
+    event* scheduled = nullptr;
+    std::mutex mu;
+    std::condition_variable done_cv;
+    bool done = false;
+    int result = -1;
+    std::exception_ptr error;
+
+    Command(EventLoopDispatcher* owner, std::function<int()> execute)
+        : owner(owner), execute(std::move(execute)) {}
+
+    ~Command() { ReleaseEvent(); }
+
+    void ReleaseEvent() {
+      if (scheduled) {
+        event_free(scheduled);
+        scheduled = nullptr;
+      }
+    }
+
+    void Complete(int value, std::exception_ptr failure = {}) {
+      {
+        std::lock_guard<std::mutex> lock(mu);
+        if (done) {
+          return;
+        }
+        result = value;
+        error = failure;
+        done = true;
+      }
+      done_cv.notify_one();
+    }
+  };
+
+  explicit EventLoopDispatcher(event_base* base) : base(base) {}
+
+  bool Start() {
+    std::lock_guard<std::mutex> lock(mu);
+    if (stopped) {
+      return false;
+    }
+    if (running) {
+      throw std::runtime_error("Connection event loop is already running");
+    }
+    running = true;
+    thread = std::this_thread::get_id();
+    return true;
+  }
+
+  void Stop() {
+    std::lock_guard<std::mutex> lock(mu);
+    stopped = true;
+    CancelPending();
+  }
+
+  void Finish() {
+    // libevent has returned, so no callback can still use a queued raw argument.
+    // Release captured handles outside the lock: their destruction may need GIL.
+    decltype(pending) commands;
+    {
+      std::lock_guard<std::mutex> lock(mu);
+      stopped = true;
+      running = false;
+      base = nullptr;
+      CancelPending();
+      // Waiting callers may retain the command after the native wrapper dies.
+      // Detach every event now, while its event_base is still alive.
+      for (auto& entry : pending) {
+        entry.second->ReleaseEvent();
+      }
+      commands.swap(pending);
+    }
+  }
+
+  int Dispatch(std::function<int()> execute) {
+    std::shared_ptr<Command> command;
+    {
+      std::lock_guard<std::mutex> lock(mu);
+      if (stopped || !running) {
+        throw std::runtime_error("Connection event loop is stopped");
+      }
+      if (thread == std::this_thread::get_id()) {
+        return execute();
+      }
+
+      command = std::make_shared<Command>(this, std::move(execute));
+      command->scheduled = event_new(base, -1, 0, RunCommand, command.get());
+      if (!command->scheduled) {
+        throw std::runtime_error("Failed to create connection operation");
+      }
+      pending.emplace(command.get(), command);
+      timeval immediately = {0, 0};
+      if (event_add(command->scheduled, &immediately) != 0) {
+        pending.erase(command.get());
+        throw std::runtime_error("Failed to schedule connection operation");
+      }
+    }
+
+    std::unique_lock<std::mutex> lock(command->mu);
+    command->done_cv.wait(lock, [&command] { return command->done; });
+    if (command->error) {
+      std::rethrow_exception(command->error);
+    }
+    return command->result;
+  }
+
+ private:
+  std::mutex mu;
+  event_base* base;
+  std::thread::id thread;
+  bool running = false;
+  bool stopped = false;
+  std::unordered_map<Command*, std::shared_ptr<Command>> pending;
+
+  void CancelPending() {
+    if (pending.empty()) {
+      return;
+    }
+    auto error = std::make_exception_ptr(
+        std::runtime_error("Connection event loop is stopped"));
+    for (auto& entry : pending) {
+      entry.second->Complete(-1, error);
+    }
+  }
+
+  static void RunCommand(evutil_socket_t, short, void* arg) {
+    auto* raw = static_cast<Command*>(arg);
+    auto* owner = raw->owner;
+    std::shared_ptr<Command> command;
+    {
+      std::lock_guard<std::mutex> lock(owner->mu);
+      command = owner->pending.at(raw);
+      owner->pending.erase(raw);
+      command->ReleaseEvent();
+      if (!owner->stopped) {
+        try {
+          command->Complete(command->execute());
+        } catch (...) {
+          command->Complete(-1, std::current_exception());
+        }
+      }
+      // A stopped command was already completed by Stop().
+    }
+  }
+};
+
 // ---------------------------------------------------------------------------
 // WebStreamHandlerRef: a shared, nullable handle to WebStream.
 // ---------------------------------------------------------------------------
@@ -27,27 +182,9 @@ namespace nb = nanobind;
 struct WebStreamHandlerRef : std::enable_shared_from_this<WebStreamHandlerRef> {
   enum class CommandType { kSendText, kSendBinary, kSendMetadata, kClose };
 
-  struct Command {
-    Command(CommandType type, std::string message,
-            std::shared_ptr<WebStreamHandlerRef> ref)
-        : type(type), message(std::move(message)), ref(std::move(ref)) {}
-
-    CommandType type;
-    std::string message;
-    std::shared_ptr<WebStreamHandlerRef> ref;
-    std::mutex mu;
-    std::condition_variable done_cv;
-    bool done = false;
-    int result = -1;
-  };
-
-  struct ScheduledCommand {
-    std::shared_ptr<Command> command;
-  };
-
   std::mutex mu;
   WebStream* ptr = nullptr;
-  event_base* base = nullptr;
+  std::shared_ptr<EventLoopDispatcher> dispatcher;
 
   nb::object on_message_cb;
   nb::object on_close_cb;
@@ -66,9 +203,9 @@ struct WebStreamHandlerRef : std::enable_shared_from_this<WebStreamHandlerRef> {
     }
   }
 
-  void bind(event_base* event_base) {
+  void bind(std::shared_ptr<EventLoopDispatcher> owner) {
     std::lock_guard<std::mutex> lock(mu);
-    base = event_base;
+    dispatcher = std::move(owner);
   }
 
   int send_text(const std::string& msg) {
@@ -97,70 +234,42 @@ struct WebStreamHandlerRef : std::enable_shared_from_this<WebStreamHandlerRef> {
   }
 
  private:
-  static void RunCommand(evutil_socket_t, short, void* arg) {
-  std::unique_ptr<ScheduledCommand> scheduled_command(
-    static_cast<ScheduledCommand*>(arg));
-  std::shared_ptr<Command> command = std::move(scheduled_command->command);
-
-    {
-      std::lock_guard<std::mutex> ref_lock(command->ref->mu);
-      if (command->ref->ptr) {
-        switch (command->type) {
-          case CommandType::kSendText:
-            command->result = command->ref->ptr->SendText(command->message);
-            break;
-          case CommandType::kSendBinary:
-            command->result = command->ref->ptr->SendBinary(command->message);
-            break;
-          case CommandType::kSendMetadata:
-            command->result = command->ref->ptr->SendMetadata(command->message);
-            break;
-          case CommandType::kClose:
-            command->result = command->ref->ptr->Close();
-            break;
-        }
-      } else if (command->type == CommandType::kClose) {
-        command->result = 0;
-      }
-    }
-
-    {
-      std::lock_guard<std::mutex> command_lock(command->mu);
-      command->done = true;
-    }
-    command->done_cv.notify_one();
-  }
-
   int Dispatch(CommandType type, const std::string& message) {
-    std::shared_ptr<WebStreamHandlerRef> self = shared_from_this();
-    event_base* event_base = nullptr;
-    // Keep the base protected until scheduling finishes. Server shutdown takes
-    // this same lock to invalidate the handle before freeing the event_base.
-    std::unique_lock<std::mutex> ref_lock(mu);
-    if (!ptr) {
-      if (type == CommandType::kClose) {
-        return 0;
+    auto self = shared_from_this();
+    std::shared_ptr<EventLoopDispatcher> owner;
+    {
+      std::lock_guard<std::mutex> lock(mu);
+      if (!ptr) {
+        if (type == CommandType::kClose) {
+          return 0;
+        }
+        throw std::runtime_error("Connection is closed");
       }
-      throw std::runtime_error("Connection is closed");
+      owner = dispatcher;
     }
-    event_base = base;
-    if (!event_base) {
+    if (!owner) {
       throw std::runtime_error("Connection event loop is unavailable");
     }
-
-    auto command = std::make_shared<Command>(type, message, std::move(self));
-    auto* scheduled_command = new ScheduledCommand{command};
-    timeval immediately = {0, 0};
-    if (event_base_once(event_base, -1, EV_TIMEOUT, RunCommand, scheduled_command,
-                        &immediately) != 0) {
-      delete scheduled_command;
-      throw std::runtime_error("Failed to schedule connection operation");
-    }
-    ref_lock.unlock();
-
-    std::unique_lock<std::mutex> command_lock(command->mu);
-    command->done_cv.wait(command_lock, [&command] { return command->done; });
-    return command->result;
+    return owner->Dispatch([self, type, message]() {
+      std::lock_guard<std::mutex> lock(self->mu);
+      if (!self->ptr) {
+        if (type == CommandType::kClose) {
+          return 0;
+        }
+        throw std::runtime_error("Connection is closed");
+      }
+      switch (type) {
+        case CommandType::kSendText:
+          return self->ptr->SendText(message);
+        case CommandType::kSendBinary:
+          return self->ptr->SendBinary(message);
+        case CommandType::kSendMetadata:
+          return self->ptr->SendMetadata(message);
+        case CommandType::kClose:
+          return self->ptr->Close();
+      }
+      throw std::runtime_error("Unknown connection operation");
+    });
   }
 };
 
@@ -172,14 +281,14 @@ struct ServerHandlerRegistry {
   std::unordered_map<WebStreamHandlerRef*, std::weak_ptr<WebStreamHandlerRef>> refs;
 
   bool Add(const std::shared_ptr<WebStreamHandlerRef>& ref, WebStream* stream,
-           event_base* base) {
+           const std::shared_ptr<EventLoopDispatcher>& dispatcher) {
     std::lock_guard<std::mutex> lock(mu);
     if (stopped) {
       return false;
     }
     std::lock_guard<std::mutex> ref_lock(ref->mu);
     ref->ptr = stream;
-    ref->base = base;
+    ref->dispatcher = dispatcher;
     refs.emplace(ref.get(), ref);
     return true;
   }
@@ -196,7 +305,6 @@ struct ServerHandlerRegistry {
       if (auto ref = entry.second.lock()) {
         std::lock_guard<std::mutex> ref_lock(ref->mu);
         ref->ptr = nullptr;
-        ref->base = nullptr;
       }
     }
     refs.clear();
@@ -220,6 +328,8 @@ struct TlsClientPy {
   std::unique_ptr<event_base, EventBaseDeleter> base;
 
   TlsClient client;
+  std::shared_ptr<EventLoopDispatcher> dispatcher =
+      std::make_shared<EventLoopDispatcher>(base.get());
 
   nb::object on_open_cb;
   nb::object on_message_cb;
@@ -254,6 +364,7 @@ struct TlsClientPy {
     }
     client.SetOnError([this]() {
       nb::gil_scoped_acquire acquire;
+      dispatcher->Stop();
       client.Stop();
 
       if (handler_ref) {
@@ -278,6 +389,8 @@ struct PlainClientPy {
   std::unique_ptr<event_base, EventBaseDeleter> base;
 
   PlainClient client;
+  std::shared_ptr<EventLoopDispatcher> dispatcher =
+      std::make_shared<EventLoopDispatcher>(base.get());
 
   nb::object on_open_cb;
   nb::object on_message_cb;
@@ -305,6 +418,7 @@ struct PlainClientPy {
     }
     client.SetOnError([this]() {
       nb::gil_scoped_acquire acquire;
+      dispatcher->Stop();
       client.Stop();
 
       if (handler_ref) {
@@ -334,6 +448,7 @@ static void tls_do_cleanup(TlsClientPy* w) {
     return;
   }
 
+  w->dispatcher->Stop();
   w->client.Stop();
 
   {
@@ -392,6 +507,7 @@ static void plain_do_cleanup(PlainClientPy* w) {
     return;
   }
 
+  w->dispatcher->Stop();
   w->client.Stop();
 
   {
@@ -448,6 +564,8 @@ static int plain_clear(PyObject* self) {
 struct PlainServerPy {
   std::unique_ptr<event_base, EventBaseDeleter> base;
   PlainServer server;
+  std::shared_ptr<EventLoopDispatcher> dispatcher =
+      std::make_shared<EventLoopDispatcher>(base.get());
   std::shared_ptr<ServerHandlerRegistry> handlers =
       std::make_shared<ServerHandlerRegistry>();
 
@@ -470,6 +588,7 @@ struct PlainServerPy {
   ~PlainServerPy() { handlers->Invalidate(); }
 
   void stop() {
+    dispatcher->Stop();
     handlers->Invalidate();
     if (base) {
       event_base_loopexit(base.get(), nullptr);
@@ -514,6 +633,8 @@ static int plain_server_clear(PyObject* self) {
 struct TlsServerPy {
   std::unique_ptr<event_base, EventBaseDeleter> base;
   TlsServer server;
+  std::shared_ptr<EventLoopDispatcher> dispatcher =
+      std::make_shared<EventLoopDispatcher>(base.get());
   std::shared_ptr<ServerHandlerRegistry> handlers =
       std::make_shared<ServerHandlerRegistry>();
 
@@ -539,6 +660,7 @@ struct TlsServerPy {
   ~TlsServerPy() { handlers->Invalidate(); }
 
   void stop() {
+    dispatcher->Stop();
     handlers->Invalidate();
     if (base) {
       event_base_loopexit(base.get(), nullptr);
@@ -656,7 +778,7 @@ NB_MODULE(web_stream_ext, m) {
         self.server.SetOnStream([&self](WebStream* stream) {
           auto ref = std::make_shared<WebStreamHandlerRef>();
           auto handlers = self.handlers;
-          if (!handlers->Add(ref, stream, self.base.get())) {
+          if (!handlers->Add(ref, stream, self.dispatcher)) {
             return;
           }
 
@@ -684,7 +806,6 @@ NB_MODULE(web_stream_ext, m) {
               std::lock_guard<std::mutex> lock(ref->mu);
               cb = ref->on_close_cb;
               ref->ptr = nullptr;
-              ref->base = nullptr;
               ref->on_message_cb = nb::object();
               ref->on_close_cb = nb::object();
               ref->on_error_cb = nb::object();
@@ -707,7 +828,6 @@ NB_MODULE(web_stream_ext, m) {
               std::lock_guard<std::mutex> lock(ref->mu);
               cb = ref->on_error_cb;
               ref->ptr = nullptr;
-              ref->base = nullptr;
               ref->on_message_cb = nb::object();
               ref->on_close_cb = nb::object();
               ref->on_error_cb = nb::object();
@@ -743,10 +863,14 @@ NB_MODULE(web_stream_ext, m) {
         self.on_stream_cb = cb;
       })
       .def("run", [](PlainServerPy& self) {
+        if (!self.dispatcher->Start()) {
+          return;
+        }
         self.running.store(true, std::memory_order_release);
         struct RunGuard {
           PlainServerPy& s;
           ~RunGuard() noexcept {
+            s.dispatcher->Finish();
             s.handlers->Invalidate();
             {
               std::lock_guard<std::mutex> lk(s.stopped_mu);
@@ -776,7 +900,7 @@ NB_MODULE(web_stream_ext, m) {
         self.server.SetOnStream([&self](WebStream* stream) {
           auto ref = std::make_shared<WebStreamHandlerRef>();
           auto handlers = self.handlers;
-          if (!handlers->Add(ref, stream, self.base.get())) {
+          if (!handlers->Add(ref, stream, self.dispatcher)) {
             return;
           }
 
@@ -787,7 +911,6 @@ NB_MODULE(web_stream_ext, m) {
               std::lock_guard<std::mutex> lock(ref->mu);
               cb = ref->on_close_cb;
               ref->ptr = nullptr;
-              ref->base = nullptr;
               ref->on_message_cb = nb::object();
               ref->on_close_cb = nb::object();
               ref->on_error_cb = nb::object();
@@ -810,7 +933,6 @@ NB_MODULE(web_stream_ext, m) {
               std::lock_guard<std::mutex> lock(ref->mu);
               cb = ref->on_error_cb;
               ref->ptr = nullptr;
-              ref->base = nullptr;
               ref->on_message_cb = nb::object();
               ref->on_close_cb = nb::object();
               ref->on_error_cb = nb::object();
@@ -863,10 +985,14 @@ NB_MODULE(web_stream_ext, m) {
         self.on_stream_cb = cb;
       })
       .def("run", [](TlsServerPy& self) {
+        if (!self.dispatcher->Start()) {
+          return;
+        }
         self.running.store(true, std::memory_order_release);
         struct RunGuard {
           TlsServerPy& s;
           ~RunGuard() noexcept {
+            s.dispatcher->Finish();
             s.handlers->Invalidate();
             {
               std::lock_guard<std::mutex> lk(s.stopped_mu);
@@ -920,7 +1046,7 @@ NB_MODULE(web_stream_ext, m) {
         self.on_open_cb = cb;
 
         auto ref = std::make_shared<WebStreamHandlerRef>();
-  ref->bind(self.base.get());
+        ref->bind(self.dispatcher);
         self.handler_ref = ref;
 
         self.client.SetOnOpen([&self, ref](WebStream* handler) {
@@ -937,6 +1063,7 @@ NB_MODULE(web_stream_ext, m) {
               ref->ptr = nullptr;
             }
 
+            self.dispatcher->Stop();
             self.client.Stop();
 
             nb::gil_scoped_acquire acquire;
@@ -956,6 +1083,7 @@ NB_MODULE(web_stream_ext, m) {
               ref->ptr = nullptr;
             }
 
+            self.dispatcher->Stop();
             self.client.Stop();
 
             nb::gil_scoped_acquire acquire;
@@ -1002,10 +1130,14 @@ NB_MODULE(web_stream_ext, m) {
         self.on_close_cb = cb;
       })
       .def("run", [](TlsClientPy& self) {
+        if (!self.dispatcher->Start()) {
+          return;
+        }
         self.running.store(true, std::memory_order_release);
         struct RunGuard {
           TlsClientPy& s;
           ~RunGuard() noexcept {
+            s.dispatcher->Finish();
             {
               std::lock_guard<std::mutex> lk(s.stopped_mu);
               s.running.store(false, std::memory_order_release);
@@ -1017,6 +1149,7 @@ NB_MODULE(web_stream_ext, m) {
       .def("stop", [](TlsClientPy& self) {
         auto handler_ref = self.handler_ref;
         nb::gil_scoped_release release;
+        self.dispatcher->Stop();
         self.client.Stop();
         if (handler_ref) {
           std::lock_guard<std::mutex> lock(handler_ref->mu);
@@ -1026,6 +1159,7 @@ NB_MODULE(web_stream_ext, m) {
       .def("__exit__", [](TlsClientPy& self, nb::object, nb::object, nb::object) {
         auto handler_ref = self.handler_ref;
         nb::gil_scoped_release release;
+        self.dispatcher->Stop();
         self.client.Stop();
         if (handler_ref) {
           std::lock_guard<std::mutex> lock(handler_ref->mu);
@@ -1062,7 +1196,7 @@ NB_MODULE(web_stream_ext, m) {
         self.on_open_cb = cb;
 
         auto ref = std::make_shared<WebStreamHandlerRef>();
-  ref->bind(self.base.get());
+        ref->bind(self.dispatcher);
         self.handler_ref = ref;
 
         self.client.SetOnOpen([&self, ref](WebStream* handler) {
@@ -1079,6 +1213,7 @@ NB_MODULE(web_stream_ext, m) {
               ref->ptr = nullptr;
             }
 
+            self.dispatcher->Stop();
             self.client.Stop();
 
             nb::gil_scoped_acquire acquire;
@@ -1098,6 +1233,7 @@ NB_MODULE(web_stream_ext, m) {
               ref->ptr = nullptr;
             }
 
+            self.dispatcher->Stop();
             self.client.Stop();
 
             nb::gil_scoped_acquire acquire;
@@ -1144,10 +1280,14 @@ NB_MODULE(web_stream_ext, m) {
         self.on_close_cb = cb;
       })
       .def("run", [](PlainClientPy& self) {
+        if (!self.dispatcher->Start()) {
+          return;
+        }
         self.running.store(true, std::memory_order_release);
         struct RunGuard {
           PlainClientPy& s;
           ~RunGuard() noexcept {
+            s.dispatcher->Finish();
             {
               std::lock_guard<std::mutex> lk(s.stopped_mu);
               s.running.store(false, std::memory_order_release);
@@ -1159,6 +1299,7 @@ NB_MODULE(web_stream_ext, m) {
       .def("stop", [](PlainClientPy& self) {
         auto handler_ref = self.handler_ref;
         nb::gil_scoped_release release;
+        self.dispatcher->Stop();
         self.client.Stop();
         if (handler_ref) {
           std::lock_guard<std::mutex> lock(handler_ref->mu);
@@ -1168,6 +1309,7 @@ NB_MODULE(web_stream_ext, m) {
       .def("__exit__", [](PlainClientPy& self, nb::object, nb::object, nb::object) {
         auto handler_ref = self.handler_ref;
         nb::gil_scoped_release release;
+        self.dispatcher->Stop();
         self.client.Stop();
         if (handler_ref) {
           std::lock_guard<std::mutex> lock(handler_ref->mu);
