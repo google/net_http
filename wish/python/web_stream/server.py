@@ -90,9 +90,10 @@ class WebStreamServerConnection:
                 ref.set_on_message(None)
                 ref.set_on_close(None)
                 ref.set_on_error(None)
+            finally:
+                # Always attempt the protocol EOF, even if detaching a callback
+                # fails. Let cleanup/transport failures reach the caller.
                 ref.close()
-            except Exception:
-                pass
 
     async def __aiter__(self):
         try:
@@ -133,8 +134,10 @@ class WebStreamServer:
                     if self._stream_handler:
                         await self._stream_handler(conn)
                 finally:
-                    await conn.close()
-                    self._connections.discard(conn)
+                    try:
+                        await conn.close()
+                    finally:
+                        self._connections.discard(conn)
 
             asyncio.run_coroutine_threadsafe(handle(), self._loop)
 
