@@ -39,6 +39,8 @@ class WebStreamConnection:
 
         def on_open(handler):
             def set_handler():
+                if self._closed or self._open_future.done():
+                    return
                 self._handler = handler
                 self._open_future.set_result(True)
             safe_call(set_handler)
@@ -70,14 +72,23 @@ class WebStreamConnection:
         self._client.set_on_close(on_close)
 
     async def connect(self):
-        # Run the C++ event loop in a background daemon thread.
-        self._thread = threading.Thread(target=self._client.run, daemon=True)
-        self._thread.start()
-        # Wait until the on_open callback fires
         try:
+            # Run the C++ event loop in a background daemon thread.
+            self._thread = threading.Thread(target=self._client.run, daemon=True)
+            self._thread.start()
+            # Wait until the on_open callback fires.
             await self._open_future
-        except Exception:
-            await self.close()
+        except BaseException:
+            # CancelledError is a BaseException. __aexit__ will not run if
+            # __aenter__ fails, so finish cleanup before propagating the failure.
+            # A second cancel must not interrupt stop/join or leave it orphaned.
+            cleanup = self._loop.create_task(self.close())
+            while not cleanup.done():
+                try:
+                    await asyncio.shield(cleanup)
+                except asyncio.CancelledError:
+                    continue
+            cleanup.result()
             raise
         return self
 
