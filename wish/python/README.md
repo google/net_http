@@ -66,6 +66,13 @@ if __name__ == "__main__":
     asyncio.run(test_web_stream_client())
 ```
 
+Messages queued before termination remain available through `recv()`. After those
+messages, every `recv()` raises the first terminal error, including calls after
+`close()` cleanup. Concurrent receivers are all notified. The first terminal event
+determines the exception: `ConnectionAbortedError` for a local or clean remote
+close, or `ConnectionError` for a transport failure. This applies to both client
+and server connections.
+
 ## Design Philosophy & Performance
 
 To provide maximum throughput without blocking the Python event loop, these bindings rely on several specific architectural choices:
