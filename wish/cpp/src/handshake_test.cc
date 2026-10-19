@@ -38,7 +38,141 @@ class HandshakeTest : public ::testing::Test {
   }
 
   event_base* base_ = nullptr;
+
+  void CheckIdleAfterHandshake(bool is_server) {
+    bufferevent* pair[2];
+    ASSERT_EQ(bufferevent_pair_new(base_, BEV_OPT_DEFER_CALLBACKS, pair), 0);
+    bufferevent_enable(pair[1], EV_READ | EV_WRITE);
+
+    struct State {
+      event_base* base;
+      bufferevent* peer;
+      bufferevent* stream = nullptr;
+      bool timed_out = false;
+      bool handshake_failed = false;
+      std::string received;
+    } state{base_, pair[1]};
+
+    auto on_open = [&](bufferevent* bev) {
+      state.stream = bev;
+      bufferevent_setcb(
+          bev,
+          [](bufferevent* bev, void* arg) {
+            auto* state = static_cast<State*>(arg);
+            evbuffer* input = bufferevent_get_input(bev);
+            size_t len = evbuffer_get_length(input);
+            state->received.resize(len);
+            evbuffer_remove(input, state->received.data(), len);
+            event_base_loopbreak(state->base);
+          },
+          nullptr,
+          [](bufferevent*, short what, void* arg) {
+            auto* state = static_cast<State*>(arg);
+            if (what & BEV_EVENT_TIMEOUT) {
+              state->timed_out = true;
+              event_base_loopbreak(state->base);
+            }
+          },
+          &state);
+
+      // Use a short handshake deadline and send only after it has expired.
+      timeval idle = {1, 200000};
+      ASSERT_EQ(event_base_once(
+          base_, -1, EV_TIMEOUT,
+          [](evutil_socket_t, short, void* arg) {
+            auto* state = static_cast<State*>(arg);
+            bufferevent_write(state->peer, "after idle", 10);
+          }, &state, &idle), 0);
+    };
+    auto on_error = [&]() {
+      state.handshake_failed = true;
+      event_base_loopbreak(base_);
+    };
+
+    std::unique_ptr<ClientHandshake> client;
+    std::unique_ptr<ServerHandshake> server;
+    if (is_server) {
+      server = std::make_unique<ServerHandshake>(
+          pair[0], on_open, on_error, nullptr, kDefaultMaxHeaderSize, 1);
+      server->Start();
+      const char* request = "POST / HTTP/1.1\r\nHost: localhost\r\n"
+                            "Content-Type: application/web-stream\r\n"
+                            "Transfer-Encoding: chunked\r\n\r\n";
+      bufferevent_write(pair[1], request, strlen(request));
+    } else {
+      client = std::make_unique<ClientHandshake>(
+          pair[0], on_open, on_error, kDefaultMaxHeaderSize, 1);
+      client->Start();
+      const char* response = "HTTP/1.1 200 OK\r\n"
+                             "Content-Type: application/web-stream\r\n"
+                             "Transfer-Encoding: chunked\r\n\r\n";
+      bufferevent_write(pair[1], response, strlen(response));
+    }
+
+    timeval deadline = {3, 0};
+    event_base_loopexit(base_, &deadline);
+    event_base_dispatch(base_);
+
+    EXPECT_NE(state.stream, nullptr);
+    EXPECT_FALSE(state.handshake_failed);
+    EXPECT_FALSE(state.timed_out);
+    EXPECT_EQ(state.received, "after idle");
+    if (state.stream) {
+      bufferevent_free(state.stream);
+    }
+    bufferevent_free(pair[1]);
+  }
+
+  void CheckIncompleteHandshakeTimeout(bool is_server) {
+    bufferevent* pair[2];
+    ASSERT_EQ(bufferevent_pair_new(base_, BEV_OPT_DEFER_CALLBACKS, pair), 0);
+    bufferevent_enable(pair[1], EV_READ | EV_WRITE);
+    bool timed_out = false;
+    bool opened = false;
+    auto on_open = [&](bufferevent* bev) {
+      opened = true;
+      bufferevent_free(bev);
+      event_base_loopbreak(base_);
+    };
+    auto on_error = [&]() {
+      timed_out = true;
+      event_base_loopbreak(base_);
+    };
+    std::unique_ptr<ClientHandshake> client;
+    std::unique_ptr<ServerHandshake> server;
+    if (is_server) {
+      server = std::make_unique<ServerHandshake>(
+          pair[0], on_open, on_error, nullptr, kDefaultMaxHeaderSize, 1);
+      server->Start();
+    } else {
+      client = std::make_unique<ClientHandshake>(
+          pair[0], on_open, on_error, kDefaultMaxHeaderSize, 1);
+      client->Start();
+    }
+    timeval deadline = {3, 0};
+    event_base_loopexit(base_, &deadline);
+    event_base_dispatch(base_);
+    EXPECT_TRUE(timed_out);
+    EXPECT_FALSE(opened);
+    bufferevent_free(pair[1]);
+  }
 };
+
+TEST_F(HandshakeTest, ClientRemainsReadableAfterHandshakeTimeout) {
+  CheckIdleAfterHandshake(false);
+}
+
+TEST_F(HandshakeTest, ServerRemainsReadableAfterHandshakeTimeout) {
+  CheckIdleAfterHandshake(true);
+}
+
+TEST_F(HandshakeTest, IncompleteClientHandshakeStillTimesOut) {
+  CheckIncompleteHandshakeTimeout(false);
+}
+
+TEST_F(HandshakeTest, IncompleteServerHandshakeStillTimesOut) {
+  CheckIncompleteHandshakeTimeout(true);
+}
 
 // Helper to read all available data from a bufferevent.
 static std::string ReadAllData(bufferevent* bev) {
