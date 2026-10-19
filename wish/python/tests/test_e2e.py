@@ -230,13 +230,14 @@ class TestWebStreamClientPlainE2E(unittest.TestCase):
                     await asyncio.sleep(0.5)
                     await ws.close()
                     
-                asyncio.create_task(close_later())
+                close_task = asyncio.create_task(close_later())
                 
                 messages = []
                 async for msg in ws:
                     messages.append(msg)
                 
                 self.assertEqual(messages, [])
+                await close_task
                 
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
@@ -267,12 +268,11 @@ class TestWebStreamClientPlainE2E(unittest.TestCase):
                 server_proc.terminate()
                 server_proc.wait()
                 
-                # The client should detect this disconnect and raise ConnectionError or ConnectionAbortedError on recv()
-                try:
-                    await asyncio.wait_for(ws.recv(), timeout=5.0)
-                    self.fail("Expected ConnectionError or ConnectionAbortedError, but no exception was raised")
-                except (ConnectionError, ConnectionAbortedError):
-                    pass
+                # Every recv must report the disconnect, including after the
+                # original notification has already been consumed.
+                for _ in range(3):
+                    with self.assertRaises(ConnectionError):
+                        await asyncio.wait_for(ws.recv(), timeout=5.0)
                 
         try:
             loop = asyncio.new_event_loop()

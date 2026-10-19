@@ -57,8 +57,9 @@ class TestServerClose(unittest.IsolatedAsyncioTestCase):
                     await asyncio.wait_for(handler_done.wait(), 3)
                 # Premature TCP EOF is ConnectionError; only a terminal chunk
                 # produces ConnectionAbortedError on the native client.
-                with self.assertRaises(ConnectionAbortedError):
-                    await asyncio.wait_for(client.recv(), 3)
+                for _ in range(3):
+                    with self.assertRaises(ConnectionAbortedError):
+                        await asyncio.wait_for(client.recv(), 3)
         finally:
             await server.stop()
 
