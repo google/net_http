@@ -56,6 +56,11 @@ that executable is unavailable; the E2E tests also use `tls_echo_server`.
 
 ## Usage Example
 
+TLS connections (`webstreams://` and `https://`) verify the certificate chain
+against `ca_file` and the URI host against the certificate's Subject Alternative
+Names (SAN). DNS hosts require a matching DNS SAN and are sent via SNI; IP
+literals require a matching IP SAN. A Common Name (CN) alone is not accepted.
+
 ```python
 import asyncio
 from web_stream.client import connect

@@ -99,7 +99,11 @@ bool H2TlsClient::Init() {
     return false;
   }
 
-  SSL* ssl = SSL_new(tls_ctx_.ssl_ctx());
+  SSL* ssl = tls_ctx_.NewClientSsl(host_);
+  if (!ssl) {
+    VLOG(1) << "Failed to configure TLS peer verification";
+    return false;
+  }
   bufferevent* bev = bufferevent_openssl_socket_new(base_,
                                                     -1,
                                                     ssl,

@@ -42,6 +42,10 @@ class TlsContext {
 
   SSL_CTX* ssl_ctx() const;
 
+  // Create a client SSL with SAN verification for host and SNI for DNS names.
+  // The caller owns the returned SSL; nullptr indicates configuration failure.
+  SSL* NewClientSsl(const std::string& host) const;
+
  private:
   std::string certificate_file_;
   std::string private_key_file_;
