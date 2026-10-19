@@ -113,6 +113,14 @@ typedef NS_ENUM(NSInteger, WCChannelRequestError) {
 - (void)cancel;
 
 /**
+ * Sets the timeout to @c timeout if it is positive, and keeps the current timeout otherwise.
+ * Restarts the timeout timer if it is running.
+ *
+ * @param timeout The new timeout, in seconds.
+ */
+- (void)resetTimeout:(NSTimeInterval)timeout;
+
+/**
  * Format @WCChannelRequestError enum to string for log convenience.
  *
  * @param error The @WCChannelRequestError to be formatted.

@@ -1,10 +1,11 @@
 #import "WCDefaultURLEncoder.h"
 
+#import "WCURIBuilder.h"
+
 @implementation WCDefaultURLEncoder
 
 - (NSString *)encode:(NSString *)data {
-  return [data
-      stringByAddingPercentEncodingWithAllowedCharacters:[NSCharacterSet alphanumericCharacterSet]];
+  return WCEncodeURIComponent(data);
 }
 
 @end

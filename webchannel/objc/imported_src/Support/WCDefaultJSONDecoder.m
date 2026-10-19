@@ -15,8 +15,8 @@
   if (!jsonData) {
     return nil;
   }
-  NSArray<id> *JSONArray = [NSJSONSerialization JSONObjectWithData:jsonData options:0 error:nil];
-  return JSONArray;
+  id JSONObject = [NSJSONSerialization JSONObjectWithData:jsonData options:0 error:nil];
+  return [JSONObject isKindOfClass:[NSArray class]] ? JSONObject : nil;
 }
 
 @end

@@ -22,6 +22,7 @@
 @property(nonatomic) BOOL enableBinaryEncoding;
 @property(nonatomic, readonly, getter=isRedactDisabled) BOOL redactDisabled;
 @property(nonatomic, copy) NSString *clientProfile;
+@property(nonatomic, copy) NSString *networkTestURL;
 @property(nonatomic) WCInternalChannelParams *internalChannelParams;
 
 @end

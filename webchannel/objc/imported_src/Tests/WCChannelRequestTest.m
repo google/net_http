@@ -54,7 +54,7 @@ static NSString *const kFakeGETResponse = @"14\n[[1,[\"noop\"]]]14\n[[2,[\"noop\
 - (void)testSendPOSTSuccess {
   NSURLComponents *URLComponent = [NSURLComponents componentsWithString:@"url"];
   NSData *data = [@"data" dataUsingEncoding:NSUTF8StringEncoding];
-  OCMExpect([_mockHttpRequest sendPOST:URLComponent.URL
+  OCMExpect([_mockHttpRequest sendPOST:[NSURL URLWithString:@"url?t=1"]
                               withData:data
                            withHeaders:@{@"Content-Type" : @"application/x-www-form-urlencoded"}
                                timeout:kChannelRequestDefaultTimeout])
@@ -71,7 +71,7 @@ static NSString *const kFakeGETResponse = @"14\n[[1,[\"noop\"]]]14\n[[2,[\"noop\
   NSData *data = [@"binaryData" dataUsingEncoding:NSUTF8StringEncoding];
   _request.isBinaryMessage = YES;
 
-  OCMExpect([_mockHttpRequest sendPOST:URLComponent.URL
+  OCMExpect([_mockHttpRequest sendPOST:[NSURL URLWithString:@"url?t=1"]
                               withData:data
                            withHeaders:@{@"Content-Type" : @"application/octet-stream"}
                                timeout:kChannelRequestDefaultTimeout])
@@ -87,7 +87,7 @@ static NSString *const kFakeGETResponse = @"14\n[[1,[\"noop\"]]]14\n[[2,[\"noop\
 
 - (void)testSendGETSuccess {
   NSURLComponents *URLComponent = [NSURLComponents componentsWithString:@"url"];
-  OCMExpect([_mockHttpRequest sendGET:URLComponent.URL
+  OCMExpect([_mockHttpRequest sendGET:[NSURL URLWithString:@"url?t=1"]
                           withHeaders:@{}
                               timeout:kChannelRequestDefaultTimeout])
       .ignoringNonObjectArgs;
@@ -100,7 +100,7 @@ static NSString *const kFakeGETResponse = @"14\n[[1,[\"noop\"]]]14\n[[2,[\"noop\
   NSURLComponents *URLComponent = [NSURLComponents componentsWithString:@"url"];
   _request.isBinaryMessage = YES;
 
-  OCMExpect([_mockHttpRequest sendGET:URLComponent.URL
+  OCMExpect([_mockHttpRequest sendGET:[NSURL URLWithString:@"url?t=1"]
                           withHeaders:@{@"Accept" : @"application/octet-stream"}
                               timeout:kChannelRequestDefaultTimeout])
       .ignoringNonObjectArgs;
@@ -109,6 +109,39 @@ static NSString *const kFakeGETResponse = @"14\n[[1,[\"noop\"]]]14\n[[2,[\"noop\
 
   XCTAssertFalse(_request.POST);
   XCTAssertTrue(_request.isBinaryMessage);
+  OCMVerifyAll((id)_mockHttpRequest);
+}
+
+/**
+ * The HTTP layer gets a timeout of a year, so that only the watchdog times out a request, as in
+ * C++, where the HTTP layer gets no timeout. Objective-C only.
+ */
+- (void)testHTTPLayerTimeoutOutlastsWatchdog {
+  NSTimeInterval year = 365 * 24 * 60 * 60;
+  OCMExpect([_mockHttpRequest sendPOST:[OCMArg any]
+                              withData:[OCMArg any]
+                           withHeaders:[OCMArg any]
+                               timeout:year]);
+  OCMExpect([_mockHttpRequest sendGET:[OCMArg any] withHeaders:[OCMArg any] timeout:year]);
+  OCMExpect([_mockHttpRequest sendGET:[OCMArg any] withHeaders:[OCMArg any] timeout:year]);
+
+  _request.timeout = 15;
+  [_request sendPOST:[NSURLComponents componentsWithString:@"url"]
+            withData:@"data"
+        chunkDecoded:YES];
+  WCChannelRequest *getRequest =
+      [[WCChannelRequest alloc] initWithSessionID:@"sessionID"
+                                        requestID:@"rpc"
+                                          support:_mockSupport
+                                         delegate:_mockHTTPInternalHandler];
+  [getRequest sendGET:[NSURLComponents componentsWithString:@"url"] chunkDecoded:YES];
+  WCChannelRequest *closeRequest =
+      [[WCChannelRequest alloc] initWithSessionID:@"sessionID"
+                                        requestID:@"requestID"
+                                          support:_mockSupport
+                                         delegate:_mockHTTPInternalHandler];
+  [closeRequest closeWithURLComponents:[NSURLComponents componentsWithString:@"url"]];
+
   OCMVerifyAll((id)_mockHttpRequest);
 }
 
@@ -207,6 +240,41 @@ static NSString *const kFakeGETResponse = @"14\n[[1,[\"noop\"]]]14\n[[2,[\"noop\
   [_request decodeNextChunks:incompleteData state:WCRequestReadyStateInteractive];
   // Since chunk is incomplete, didReceiveInput should not be called yet.
   OCMVerifyAll((id)_mockHTTPInternalHandler);
+}
+
+/** An invalid UTF-8 lead byte counts as one UTF-16 code unit, as the server counts it. */
+- (void)testDecodeChunkWithInvalidLeadByteCountsOneUnit {
+  [_request sendGET:[NSURLComponents componentsWithString:@"url"] chunkDecoded:YES];
+  OCMStub([_mockHttpRequest requestReadyState]).andReturn(WCRequestReadyStateInteractive);
+  OCMStub([_mockHttpRequest status]).andReturn(200);
+  // 3 UTF-16 code units, 3 bytes. 0x80 is not a valid UTF-8 lead byte.
+  const uint8_t chunkBytes[] = {0x80, 'a', 'b'};
+  NSData *chunk = [NSData dataWithBytes:chunkBytes length:sizeof(chunkBytes)];
+  NSMutableData *response = [[@"3\n" dataUsingEncoding:NSUTF8StringEncoding] mutableCopy];
+  [response appendData:chunk];
+  OCMExpect([_mockHTTPInternalHandler didReceiveInput:chunk isBinary:NO withRequest:_request]);
+
+  [_request stateChangedForRequest:_mockHttpRequest responseData:response];
+
+  OCMVerifyAll((id)_mockHTTPInternalHandler);
+}
+
+/**
+ * A chunk size that does not fit in 32 bits is invalid at once; the request does not wait for more
+ * data.
+ */
+- (void)testDecodeOutOfRangeChunkSize {
+  [_request sendGET:[NSURLComponents componentsWithString:@"url"] chunkDecoded:YES];
+  OCMStub([_mockHttpRequest requestReadyState]).andReturn(WCRequestReadyStateInteractive);
+  OCMStub([_mockHttpRequest status]).andReturn(200);
+  OCMExpect([_mockSupport notifyStatEvent:WCRequestStatRequestBadData]);
+
+  [_request stateChangedForRequest:_mockHttpRequest
+                      responseData:[@"2147483648\nx" dataUsingEncoding:NSUTF8StringEncoding]];
+
+  OCMVerifyAll((id)_mockSupport);
+  XCTAssertEqual(_request.lastError, WCChannelRequestErrorBadData);
+  XCTAssertFalse([_request isSuccessful]);
 }
 
 - (void)testDecodeBinaryChunk {
@@ -349,6 +417,27 @@ static NSString *const kFakeGETResponse = @"14\n[[1,[\"noop\"]]]14\n[[2,[\"noop\
   XCTAssertFalse([_request isSuccessful]);
   XCTAssertEqual(WCChannelRequestErrorUnknownSessionId, _request.lastError);
   XCTAssertEqual(400, _request.lastStatusCode);
+}
+
+/**
+ * The body of a 400 is searched as bytes, so a body that is not valid UTF-8 is a bad status, not
+ * an unknown session ID.
+ */
+- (void)testBadRequestWithNonUtf8BodyIsBadStatus {
+  [_request sendPOST:[NSURLComponents componentsWithString:@"url"]
+            withData:@"some_postdata"
+        chunkDecoded:YES];
+  OCMStub([_mockHttpRequest requestReadyState]).andReturn(WCRequestReadyStateComplete);
+  OCMStub([_mockHttpRequest status]).andReturn(400);
+  OCMExpect([_mockSupport notifyStatEvent:WCRequestStatRequestBadStatus]);
+
+  const uint8_t body[] = {0xFF};
+  [_request stateChangedForRequest:_mockHttpRequest
+                      responseData:[NSData dataWithBytes:body length:sizeof(body)]];
+
+  OCMVerifyAll((id)_mockSupport);
+  XCTAssertEqual(_request.lastError, WCChannelRequestErrorStatus);
+  XCTAssertFalse([_request isSuccessful]);
 }
 
 @end

@@ -75,10 +75,11 @@ static const int kWCMaxPoolSize = 10;
 }
 
 - (void)cancel {
-    for (WCChannelRequest *request in _requestPool) {
-      [request cancel];
-    }
-    [_requestPool removeAllObjects];
+  _pendingMessages = [self pendingMessages];
+  for (WCChannelRequest *request in _requestPool) {
+    [request cancel];
+  }
+  [_requestPool removeAllObjects];
 }
 
 @end
