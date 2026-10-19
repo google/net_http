@@ -9,6 +9,7 @@
 #include <condition_variable>
 #include <memory>
 #include <mutex>
+#include <unordered_map>
 
 #include "buffer_event_web_stream.h"
 #include "plain_client.h"
@@ -133,16 +134,16 @@ struct WebStreamHandlerRef : std::enable_shared_from_this<WebStreamHandlerRef> {
   int Dispatch(CommandType type, const std::string& message) {
     std::shared_ptr<WebStreamHandlerRef> self = shared_from_this();
     event_base* event_base = nullptr;
-    {
-      std::lock_guard<std::mutex> lock(mu);
-      if (!ptr) {
-        if (type == CommandType::kClose) {
-          return 0;
-        }
-        throw std::runtime_error("Connection is closed");
+    // Keep the base protected until scheduling finishes. Server shutdown takes
+    // this same lock to invalidate the handle before freeing the event_base.
+    std::unique_lock<std::mutex> ref_lock(mu);
+    if (!ptr) {
+      if (type == CommandType::kClose) {
+        return 0;
       }
-      event_base = base;
+      throw std::runtime_error("Connection is closed");
     }
+    event_base = base;
     if (!event_base) {
       throw std::runtime_error("Connection event loop is unavailable");
     }
@@ -155,10 +156,50 @@ struct WebStreamHandlerRef : std::enable_shared_from_this<WebStreamHandlerRef> {
       delete scheduled_command;
       throw std::runtime_error("Failed to schedule connection operation");
     }
+    ref_lock.unlock();
 
     std::unique_lock<std::mutex> command_lock(command->mu);
     command->done_cv.wait(command_lock, [&command] { return command->done; });
     return command->result;
+  }
+};
+
+// Weak entries avoid retaining closed streams. Terminal callbacks remove their
+// entries; shutdown invalidates all remaining handles before native teardown.
+struct ServerHandlerRegistry {
+  std::mutex mu;
+  bool stopped = false;
+  std::unordered_map<WebStreamHandlerRef*, std::weak_ptr<WebStreamHandlerRef>> refs;
+
+  bool Add(const std::shared_ptr<WebStreamHandlerRef>& ref, WebStream* stream,
+           event_base* base) {
+    std::lock_guard<std::mutex> lock(mu);
+    if (stopped) {
+      return false;
+    }
+    std::lock_guard<std::mutex> ref_lock(ref->mu);
+    ref->ptr = stream;
+    ref->base = base;
+    refs.emplace(ref.get(), ref);
+    return true;
+  }
+
+  void Remove(WebStreamHandlerRef* ref) {
+    std::lock_guard<std::mutex> lock(mu);
+    refs.erase(ref);
+  }
+
+  void Invalidate() {
+    std::lock_guard<std::mutex> lock(mu);
+    stopped = true;
+    for (auto& entry : refs) {
+      if (auto ref = entry.second.lock()) {
+        std::lock_guard<std::mutex> ref_lock(ref->mu);
+        ref->ptr = nullptr;
+        ref->base = nullptr;
+      }
+    }
+    refs.clear();
   }
 };
 
@@ -407,6 +448,8 @@ static int plain_clear(PyObject* self) {
 struct PlainServerPy {
   std::unique_ptr<event_base, EventBaseDeleter> base;
   PlainServer server;
+  std::shared_ptr<ServerHandlerRegistry> handlers =
+      std::make_shared<ServerHandlerRegistry>();
 
   nb::object on_stream_cb;
 
@@ -424,7 +467,10 @@ struct PlainServerPy {
     evthread_make_base_notifiable(base.get());
   }
 
+  ~PlainServerPy() { handlers->Invalidate(); }
+
   void stop() {
+    handlers->Invalidate();
     if (base) {
       event_base_loopexit(base.get(), nullptr);
       event_base_loopbreak(base.get());
@@ -468,6 +514,8 @@ static int plain_server_clear(PyObject* self) {
 struct TlsServerPy {
   std::unique_ptr<event_base, EventBaseDeleter> base;
   TlsServer server;
+  std::shared_ptr<ServerHandlerRegistry> handlers =
+      std::make_shared<ServerHandlerRegistry>();
 
   nb::object on_stream_cb;
 
@@ -488,7 +536,10 @@ struct TlsServerPy {
     evthread_make_base_notifiable(base.get());
   }
 
+  ~TlsServerPy() { handlers->Invalidate(); }
+
   void stop() {
+    handlers->Invalidate();
     if (base) {
       event_base_loopexit(base.get(), nullptr);
       event_base_loopbreak(base.get());
@@ -604,10 +655,9 @@ NB_MODULE(web_stream_ext, m) {
       .def("init", [](PlainServerPy& self) -> bool {
         self.server.SetOnStream([&self](WebStream* stream) {
           auto ref = std::make_shared<WebStreamHandlerRef>();
-          ref->bind(self.base.get());
-          {
-            std::lock_guard<std::mutex> lock(ref->mu);
-            ref->ptr = stream;
+          auto handlers = self.handlers;
+          if (!handlers->Add(ref, stream, self.base.get())) {
+            return;
           }
 
           stream->SetOnMessage([ref](uint8_t opcode, const std::string& msg) {
@@ -627,17 +677,19 @@ NB_MODULE(web_stream_ext, m) {
             }
           });
 
-          stream->SetOnClose([ref]() {
+          stream->SetOnClose([ref, handlers]() {
             nb::gil_scoped_acquire acquire;
             nb::object cb;
             {
               std::lock_guard<std::mutex> lock(ref->mu);
               cb = ref->on_close_cb;
               ref->ptr = nullptr;
+              ref->base = nullptr;
               ref->on_message_cb = nb::object();
               ref->on_close_cb = nb::object();
               ref->on_error_cb = nb::object();
             }
+            handlers->Remove(ref.get());
             if (cb.ptr() && !cb.is_none()) {
               try {
                 cb();
@@ -648,17 +700,19 @@ NB_MODULE(web_stream_ext, m) {
             }
           });
 
-          stream->SetOnError([ref]() {
+          stream->SetOnError([ref, handlers]() {
             nb::gil_scoped_acquire acquire;
             nb::object cb;
             {
               std::lock_guard<std::mutex> lock(ref->mu);
               cb = ref->on_error_cb;
               ref->ptr = nullptr;
+              ref->base = nullptr;
               ref->on_message_cb = nb::object();
               ref->on_close_cb = nb::object();
               ref->on_error_cb = nb::object();
             }
+            handlers->Remove(ref.get());
             if (cb.ptr() && !cb.is_none()) {
               try {
                 cb();
@@ -693,6 +747,7 @@ NB_MODULE(web_stream_ext, m) {
         struct RunGuard {
           PlainServerPy& s;
           ~RunGuard() noexcept {
+            s.handlers->Invalidate();
             {
               std::lock_guard<std::mutex> lk(s.stopped_mu);
               s.running.store(false, std::memory_order_release);
@@ -720,23 +775,24 @@ NB_MODULE(web_stream_ext, m) {
       .def("init", [](TlsServerPy& self) -> bool {
         self.server.SetOnStream([&self](WebStream* stream) {
           auto ref = std::make_shared<WebStreamHandlerRef>();
-          ref->bind(self.base.get());
-          {
-            std::lock_guard<std::mutex> lock(ref->mu);
-            ref->ptr = stream;
+          auto handlers = self.handlers;
+          if (!handlers->Add(ref, stream, self.base.get())) {
+            return;
           }
 
-          stream->SetOnClose([ref]() {
+          stream->SetOnClose([ref, handlers]() {
             nb::gil_scoped_acquire acquire;
             nb::object cb;
             {
               std::lock_guard<std::mutex> lock(ref->mu);
               cb = ref->on_close_cb;
               ref->ptr = nullptr;
+              ref->base = nullptr;
               ref->on_message_cb = nb::object();
               ref->on_close_cb = nb::object();
               ref->on_error_cb = nb::object();
             }
+            handlers->Remove(ref.get());
             if (cb.ptr() && !cb.is_none()) {
               try {
                 cb();
@@ -747,17 +803,19 @@ NB_MODULE(web_stream_ext, m) {
             }
           });
 
-          stream->SetOnError([ref]() {
+          stream->SetOnError([ref, handlers]() {
             nb::gil_scoped_acquire acquire;
             nb::object cb;
             {
               std::lock_guard<std::mutex> lock(ref->mu);
               cb = ref->on_error_cb;
               ref->ptr = nullptr;
+              ref->base = nullptr;
               ref->on_message_cb = nb::object();
               ref->on_close_cb = nb::object();
               ref->on_error_cb = nb::object();
             }
+            handlers->Remove(ref.get());
             if (cb.ptr() && !cb.is_none()) {
               try {
                 cb();
@@ -809,6 +867,7 @@ NB_MODULE(web_stream_ext, m) {
         struct RunGuard {
           TlsServerPy& s;
           ~RunGuard() noexcept {
+            s.handlers->Invalidate();
             {
               std::lock_guard<std::mutex> lk(s.stopped_mu);
               s.running.store(false, std::memory_order_release);
