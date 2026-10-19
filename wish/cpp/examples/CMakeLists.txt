@@ -17,6 +17,7 @@ add_executable(plain_echo_server
 )
 target_link_libraries(plain_echo_server
     web_stream
+    event_pthreads
     absl::flags
     absl::flags_parse
     absl::log

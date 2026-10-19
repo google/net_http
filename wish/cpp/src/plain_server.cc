@@ -25,6 +25,7 @@
 
 #include "buffer_event_web_stream.h"
 #include "handshake.h"
+#include "server_address.h"
 
 PlainServer::PlainServer(event_base* base,
                          int port)
@@ -48,19 +49,7 @@ bool PlainServer::Init() {
     return false;
   }
 
-  sockaddr_in sin;
-  memset(&sin, 0, sizeof(sin));
-  sin.sin_family = AF_INET;
-  sin.sin_addr.s_addr = htonl(INADDR_ANY);
-  sin.sin_port = htons(port_);
-
-  listener_ = evconnlistener_new_bind(base_,
-                                      AcceptConnCb,
-                                      this,
-                                      LEV_OPT_CLOSE_ON_FREE | LEV_OPT_REUSEABLE,
-                                      -1,
-                                      reinterpret_cast<sockaddr*>(&sin),
-                                      sizeof(sin));
+  listener_ = BindStreamListener(base_, AcceptConnCb, this, host_, port_);
   if (!listener_) {
     VLOG(1) << "Could not create a listener!";
 
@@ -74,6 +63,8 @@ bool PlainServer::Init() {
 void PlainServer::SetOnStream(StreamCallback cb) {
   on_stream_ = cb;
 }
+
+int PlainServer::bound_port() const { return StreamListenerPort(listener_); }
 
 void PlainServer::StopAccepting() {
   if (listener_) {

@@ -16,6 +16,7 @@
 #include <absl/flags/parse.h>
 #include <absl/log/initialize.h>
 #include <absl/log/log.h>
+#include <event2/thread.h>
 
 #include <string>
 
@@ -29,6 +30,11 @@ int main(int argc, char** argv) {
   absl::InitializeLog();
 
   const int port = absl::GetFlag(FLAGS_port);
+
+  if (evthread_use_pthreads() != 0) {
+    LOG(ERROR) << "Failed to initialize libevent threading";
+    return 1;
+  }
 
   event_base* base = event_base_new();
   if (!base) {

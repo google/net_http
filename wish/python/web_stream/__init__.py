@@ -6,6 +6,7 @@ from .client import (
     WEB_STREAM_OPCODE_METADATA,
 )
 from .server import (
+    serve,
     WebStreamServer,
     WebStreamServerConnection,
 )
@@ -17,8 +18,14 @@ from .fastapi import (
 
 from .connection import Message
 from .runtime import Runtime, Limits, WebStreamError
+from .exceptions import ConnectionClosed, ConnectionClosedOK, ConnectionClosedError, ConcurrencyError
 
 __all__ = [
+    "serve",
+    "ConnectionClosed",
+    "ConnectionClosedOK",
+    "ConnectionClosedError",
+    "ConcurrencyError",
     "Runtime",
     "Limits",
     "Message",

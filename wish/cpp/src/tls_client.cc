@@ -93,7 +93,7 @@ bool TlsClient::Init() {
 
   int connect_rv = bufferevent_socket_connect_hostname(bev,
                                                        dns_base_,
-                                                       AF_INET,
+                                                       host_.find(':') == std::string::npos ? AF_INET : AF_INET6,
                                                        host_.c_str(),
                                                        port_);
   if (connect_rv < 0) {
@@ -145,7 +145,7 @@ bool TlsClient::Init() {
         }
       },
       kDefaultMaxHeaderSize,
-      kDefaultHandshakeTimeoutSeconds,
+      handshake_timeout_,
       path_);
 
   handshake_->Start();
