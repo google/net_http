@@ -336,6 +336,13 @@ void ClientHandshake::HandleRead() {
     return;
   }
 
+  // The handshake deadline must not become an idle timeout for the stream.
+  if (bufferevent_set_timeouts(bev_, nullptr, nullptr) != 0) {
+    VLOG(1) << "Failed to clear client handshake timeout";
+    InvokeError();
+    return;
+  }
+
   // Handshake successful. Hand over bufferevent and trigger success callback.
   bufferevent* bev = bev_;
   bev_ = nullptr;  // Release ownership
@@ -525,6 +532,13 @@ void ServerHandshake::HandleRead() {
 
     InvokeError();
 
+    return;
+  }
+
+  // The handshake deadline must not become an idle timeout for the stream.
+  if (bufferevent_set_timeouts(bev_, nullptr, nullptr) != 0) {
+    VLOG(1) << "Failed to clear server handshake timeout";
+    InvokeError();
     return;
   }
 
