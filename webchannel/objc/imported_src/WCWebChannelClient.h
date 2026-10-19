@@ -110,8 +110,7 @@ typedef NS_ENUM(NSInteger, WCWebChannelClientError) {
  * Invoke when @c WCWebChannelClient receives metadata.
  *
  * @param metadata Metadata value, as an object parsed by NSJSONSerialization (NSArray or
- * NSDictionary). Typically, ESF server would return metadata as NSArray, as per
- * go/webchannel-oneplatform#message-formats.
+ * NSDictionary). Typically, the server returns metadata as an NSArray.
  * @param key Metadata key.
  */
 - (void)webChannel:(id<WCWebChannelClientProtocol>)client
