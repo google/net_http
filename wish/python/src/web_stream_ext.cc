@@ -749,15 +749,15 @@ NB_MODULE(web_stream_ext, m) {
       .def("set_on_message", [](WebStreamHandlerRef& self, nb::object cb) {
         std::lock_guard<std::mutex> lock(self.mu);
         self.on_message_cb = cb;
-      })
+      }, nb::arg("cb").none())
       .def("set_on_close", [](WebStreamHandlerRef& self, nb::object cb) {
         std::lock_guard<std::mutex> lock(self.mu);
         self.on_close_cb = cb;
-      })
+      }, nb::arg("cb").none())
       .def("set_on_error", [](WebStreamHandlerRef& self, nb::object cb) {
         std::lock_guard<std::mutex> lock(self.mu);
         self.on_error_cb = cb;
-      })
+      }, nb::arg("cb").none())
       .def("close", [](WebStreamHandlerRef& self) {
         nb::gil_scoped_release release;
         return self.close();
