@@ -72,11 +72,52 @@ final class TestAppLogger: NSObject, WCLogger, @unchecked Sendable {
 /// Custom WCSupport implementation providing the custom TestAppLogger and forwarding to WCDefaultSupport.
 final class TestAppSupport: NSObject, WCSupport, @unchecked Sendable {
   private let defaultSupport = WCDefaultSupport()!
+  private let metricsLock = NSLock()
+  private var collectedTaskMetrics: [[String: Any]] = []
   let customLogger: TestAppLogger
+
+  var taskMetricsSnapshot: [[String: Any]] {
+    metricsLock.lock()
+    defer { metricsLock.unlock() }
+    return collectedTaskMetrics
+  }
 
   init(service: WebChannelService?) {
     self.customLogger = TestAppLogger(service: service)
     super.init()
+    defaultSupport.taskMetricsHandler = { [weak self] metrics in
+      if let metrics { self?.recordTaskMetrics(metrics) }
+    }
+  }
+
+  private func recordTaskMetrics(_ metrics: URLSessionTaskMetrics) {
+    let records: [[String: Any]] = metrics.transactionMetrics.map { transaction in
+      let url = transaction.request.url
+      let query = URLComponents(url: url ?? URL(fileURLWithPath: "/"), resolvingAgainstBaseURL: false)
+      let rid = query?.queryItems?.first(where: { $0.name == "RID" })?.value ?? ""
+      var record: [String: Any] = [
+        "rid": rid,
+        "method": transaction.request.httpMethod ?? "",
+        "url": url?.absoluteString ?? "",
+        "protocol": transaction.networkProtocolName ?? "unknown",
+        "reusedConnection": transaction.isReusedConnection,
+      ]
+      if let start = transaction.connectStartDate, let end = transaction.connectEndDate {
+        record["tcpConnectMs"] = end.timeIntervalSince(start) * 1000
+      }
+      if let start = transaction.secureConnectionStartDate,
+        let end = transaction.secureConnectionEndDate
+      {
+        record["tlsMs"] = end.timeIntervalSince(start) * 1000
+      }
+      if let address = transaction.remoteAddress { record["remoteAddress"] = address }
+      if let port = transaction.localPort { record["localPort"] = port }
+      if let port = transaction.remotePort { record["remotePort"] = port }
+      return record
+    }
+    metricsLock.lock()
+    collectedTaskMetrics.append(contentsOf: records)
+    metricsLock.unlock()
   }
 
   var urlEncoder: any WCURLEncoder {

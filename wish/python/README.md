@@ -38,7 +38,28 @@ This sub-project is intended to be used with a Python virtual environment (`venv
    pip install -e .
    ```
 
+## Running Tests
+
+After installing the Python bindings, build the C++ echo servers used by the
+integration and safety tests. Run these commands from `wish/python`:
+
+```bash
+cmake -S ../cpp -B ../cpp/build -DWISH_BUILD_EXAMPLES=ON \
+  -DWISH_BUILD_TESTS=OFF -DWISH_BUILD_BENCHMARKS=OFF
+cmake --build ../cpp/build --target plain_echo_server tls_echo_server --parallel 4
+python -m unittest discover -s tests -v
+```
+
+The callback-exception and dangling-pointer tests use
+`../cpp/build/examples/plain_echo_server`. They are skipped if the extension or
+that executable is unavailable; the E2E tests also use `tls_echo_server`.
+
 ## Usage Example
+
+TLS connections (`webstreams://` and `https://`) verify the certificate chain
+against `ca_file` and the URI host against the certificate's Subject Alternative
+Names (SAN). DNS hosts require a matching DNS SAN and are sent via SNI; IP
+literals require a matching IP SAN. A Common Name (CN) alone is not accepted.
 
 ```python
 import asyncio
@@ -66,6 +87,13 @@ if __name__ == "__main__":
     asyncio.run(test_web_stream_client())
 ```
 
+Messages queued before termination remain available through `recv()`. After those
+messages, every `recv()` raises the first terminal error, including calls after
+`close()` cleanup. Concurrent receivers are all notified. The first terminal event
+determines the exception: `ConnectionAbortedError` for a local or clean remote
+close, or `ConnectionError` for a transport failure. This applies to both client
+and server connections.
+
 ## Design Philosophy & Performance
 
 To provide maximum throughput without blocking the Python event loop, these bindings rely on several specific architectural choices:
@@ -74,3 +102,4 @@ To provide maximum throughput without blocking the Python event loop, these bind
 - **GIL Management:** The C++ extension releases the Python GIL while running its `libevent` dispatch loop and when performing heavy network I/O. The Python interpreter only re-acquires the GIL for split seconds to process incoming messages or to initiate send operations.
 - **Micro-Bindings:** `nanobind` is deliberately chosen for its modern, zero-overhead approach to creating C++ bindings. It has a small binary footprint and fast execution speed when crossing the C++/Python boundary.
 - **Thread-safe Asyncio Bridging:** When the C++ connection layer has an event (like a successful connection or a received message), it safely bridges back to the Python thread by triggering `loop.call_soon_threadsafe()`. Data is seamlessly funneled into an `asyncio.Queue` so that the Python user processes it using standard, non-blocking asynchronous loops.
+- **Native Callback Operations:** Low-level `web_stream_ext` callbacks run on the libevent thread. Sends and `close()` invoked from those callbacks execute directly on that thread. Calls from other threads are queued and wait for completion; stopping the loop rejects pending operations with `RuntimeError` and releases their scheduled events before the event loop's resources are destroyed.

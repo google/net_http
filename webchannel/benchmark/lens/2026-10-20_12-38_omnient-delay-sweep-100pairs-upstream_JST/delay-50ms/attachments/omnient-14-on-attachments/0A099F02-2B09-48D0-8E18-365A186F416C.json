@@ -1,0 +1,61 @@
+[
+  {
+    "batchId" : "6eb74fb2-ab1f-4304-a29f-8dc56fd4b259",
+    "batchPair" : 14,
+    "batchSetting" : "on",
+    "batchTrialOrdinal" : 28,
+    "coldConnection" : true,
+    "coldConnectionSource" : "handshake",
+    "detectionDelayMs" : 50,
+    "deviceModel" : "iPhone",
+    "enableBinaryEncoding" : true,
+    "endpoint" : "https:\/\/webchannel.sandbox.google.com\/staging\/channel\/lens",
+    "fastHandshake2" : true,
+    "imageSizeKb" : 150,
+    "initialMessageDelayMs" : 50,
+    "log" : "[12:43:27.495] ==================================================================\n[12:43:27.495] 🚀 [Lens Benchmark] Starting Lens Latency Run (Omnient 0-RTT)\n[12:43:27.495] ⚙️ Options: fastHandshake2=true, fastHandshake=false, nonBlockingSend=false, binary=true, imageSize=150KB, initialMessageDelayMs=50\n[12:43:27.495] ==================================================================\n[12:43:27.495] >>> [1. Handshake Request] Opening WebChannel connection to: https:\/\/webchannel.sandbox.google.com\/staging\/channel\/lens\n[12:43:27.495] >>> Options: enableBinaryEncoding=true, nonBlockingSend=false, blockingHandshake=false, sendRawJson=true, fastHandshake=false, fastHandshake2=true\n[12:43:27.495] ⏱ [Lens] Scheduled M1 and M3 for T+50ms...\n[12:43:27.497] 🌐 [HTTP Req] (44353) [attempt 1] GET https:\/\/webchannel.sandbox.google.com\/staging\/channel\/lens?VER=8&RID=44353&CVER=25&X-HTTP-Session-Id=gsessionid&%24req=count%3D0%26%0D%0A&SID=c-abc19BPnGAB34Wnpp6nMSI&t=1\n[12:43:27.547] ⏱ [Lens M1] send() at T+52.9ms from connect start\n[12:43:27.547] 📸 [Message 1] Sending StickyClusterInfo (~50 B)...\n[12:43:27.547] >>> Sending M1 StickyClusterInfo (117 bytes): [7b 22 73 65 72 76 65 72 5f 73 65 6e 64 5f 72 61 77 22 3a 74 72 75 65 2c 22 63 6c 69 65 6e 74 5f...] [State: Connecting (Opening)...]\n[12:43:27.547] 📸 [Message 3 - Prefetch] Sending 150 KB image payload [State: Connecting (Opening)...]...\n[12:43:27.547] >>> Sending M3 Prefetch (150 KB) (158 bytes): [7b 22 61 63 6b 5f 72 65 71 75 65 73 74 65 64 22 3a 74 72 75 65 2c 22 69 6d 61 67 65 5f 73 69 7a...] [State: Connecting (Opening)...]\n[12:43:27.548] 🌐 [HTTP Req] (44354) [attempt 1] POST https:\/\/webchannel.sandbox.google.com\/staging\/channel\/lens?VER=8&SID=c-abc19BPnGAB34Wnpp6nMSI&RID=44354&AID=-1&t=1 | PostData: {length = 147, bytes = 0x636f756e 743d3126 6f66733d 300d0a69 ... 535f3138 5f30227d }\n[12:43:27.548] 🌐 [HTTP Req] (44355) [attempt 1] POST https:\/\/webchannel.sandbox.google.com\/staging\/channel\/lens?VER=8&SID=c-abc19BPnGAB34Wnpp6nMSI&RID=44355&AID=-1&t=1 | PostData: {length = 188, bytes = 0x636f756e 743d3126 6f66733d 310d0a69 ... 77223a74 7275657d }\n[12:43:27.681] ❌ <<< [Event: encounteredError] Error: RequestFailed (code 1)",
+    "m1DelayFromConnectMs" : 52.906036376953125,
+    "processId" : 1356,
+    "processInstanceId" : "147413A7-7CD4-4141-AA26-812A2EF3BD14",
+    "repetition" : 1,
+    "scenario" : "omnient",
+    "status" : "failed",
+    "systemVersion" : "26.3.1",
+    "transportMetrics" : [
+      {
+        "localPort" : 51741,
+        "method" : "POST",
+        "protocol" : "h2",
+        "remoteAddress" : "2404:6800:400b:c019::451",
+        "remotePort" : 443,
+        "reusedConnection" : true,
+        "rid" : "44355",
+        "url" : "https:\/\/webchannel.sandbox.google.com\/staging\/channel\/lens?VER=8&SID=c-abc19BPnGAB34Wnpp6nMSI&RID=44355&AID=-1&t=1"
+      },
+      {
+        "localPort" : 51741,
+        "method" : "GET",
+        "protocol" : "h2",
+        "remoteAddress" : "2404:6800:400b:c019::451",
+        "remotePort" : 443,
+        "reusedConnection" : false,
+        "rid" : "44353",
+        "tcpConnectMs" : 42.000055313110352,
+        "tlsMs" : 31.000018119812012,
+        "url" : "https:\/\/webchannel.sandbox.google.com\/staging\/channel\/lens?VER=8&RID=44353&CVER=25&X-HTTP-Session-Id=gsessionid&%24req=count%3D0%26%0D%0A&SID=c-abc19BPnGAB34Wnpp6nMSI&t=1"
+      },
+      {
+        "localPort" : 51741,
+        "method" : "POST",
+        "protocol" : "h2",
+        "remoteAddress" : "2404:6800:400b:c019::451",
+        "remotePort" : 443,
+        "reusedConnection" : true,
+        "rid" : "44354",
+        "url" : "https:\/\/webchannel.sandbox.google.com\/staging\/channel\/lens?VER=8&SID=c-abc19BPnGAB34Wnpp6nMSI&RID=44354&AID=-1&t=1"
+      }
+    ],
+    "trialRecordedEpochSeconds" : 1792467807.703685,
+    "trialStartedEpochSeconds" : 1792467807.493978
+  }
+]

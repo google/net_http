@@ -29,6 +29,9 @@ The raw imported source files are located in `js/imported_src/`.
 
 The Objective-C implementation provides `WCWebChannelClient` for macOS and iOS.
 An interactive SwiftUI iOS demo app is located in `objc/demo/WebChanneliOSDemo/`.
+See the [2026-10-07 Lens benchmark run](benchmark/lens/2026-10-07_00-37-42_JST/report.md)
+for the latest physical-device measurements and raw CSV files. [Earlier results](LENS_BENCHMARK_RESULTS.md)
+remain available separately.
 
 ## Swift Client (`webchannel/swift`)
 

@@ -1,0 +1,110 @@
+# Lens benchmark reports
+
+The experiment follows the [Lens Latency Mimic & Shutter Benchmark Mode specification](https://github.com/google/net_http/blob/main/webchannel/objc/demo/WebChanneliOSDemo/DESIGN.md#d-lens-latency-mimic--shutter-benchmark-mode). The [local design document](../../objc/demo/WebChanneliOSDemo/DESIGN.md) describes the demo implementation.
+
+Run both Omnient and Camera Viewfinder on a physical device, with 10 OFF/ON pairs per scenario unless the run specifies another count. Record the device model and OS, Wi-Fi and Cellular settings when known, endpoint, host and Xcode versions, procedure, and parameter values such as `detectionDelayMs`. Preserve all raw measurements even when a pair is omitted from a report table. The default report filter uses completed pairs whose full-precision handshake durations differ by at most 10 ms; use `--handshake-threshold-ms N` when a run explicitly requests another threshold. Run-specific outlier omissions must be stated in the procedure.
+
+For a cold-connection run, build the demo XCTest bundle once, run one cold-trial test method per `xcodebuild test-without-building` invocation, and export each result bundle's attachments. See the [demo README](../../objc/demo/WebChanneliOSDemo/README.md#automated-lens-benchmark) for build and runner commands. Then generate the report files with `python3 webchannel/benchmark/lens/summarize-cold-benchmark.py OUTPUT_DIR PAIRS 'NETWORK_SWITCHES'` from the repository root. The network-switch argument is optional; omit it when the states were not recorded. Add `--handshake-threshold-ms N` for a requested threshold other than 10 ms. The generator saves host, source, test-period, network, and threshold metadata in `run-metadata.json` so later regenerations preserve the original run settings. Such runs additionally require verified fresh HTTP/2 transport in both trials of a reported pair. The earlier [single-invocation run](2026-10-07_00-37-42_JST/report.md) did not record transport-level connection freshness, so do not apply the cold-connection requirement to it.
+
+Set `LENS_BINARY_ENCODING=1` when invoking `run-cold-benchmark.sh` to run the dedicated binary-encoding cold trials. Leave it unset for the original text-encoding trials. The exported JSON records the setting, and the summarizer includes it in the report parameters.
+
+Set `LENS_INITIAL_MESSAGE_DELAY_MS=N` to schedule Lens M1 `N` milliseconds after `connect()` returns, following the Generator benchmark's early-send timing. Omnient sends M3 immediately after M1; Viewfinder retains M2 at +200 ms and M3 at +500 ms after `connect()` returns. The runner passes this setting to the XCTest process through `TEST_RUNNER_`, and the JSON records both the requested delay and the observed time from the connect timestamp to M1 `send()`. The default is 0 ms.
+
+For new runs, the runner stores each trial's Xcode log and attachment-export log under `OUTPUT_DIR/logs/`, result bundles under `OUTPUT_DIR/xcresults/`, and exported attachments under `OUTPUT_DIR/attachments/`. The 2026-10-08 13:40 JST rerun uses this layout after migration. Earlier runs retain their original layout; the summarizer reads both layouts.
+
+Each run directory has `report.md` and `artifacts.md`. New cold runs and the two most recent runs with recorded transport evidence have `connection-reuse-audit.md`; older runs retain `audit.md`:
+
+| File | Contents |
+|---|---|
+| `report.md` | Specification link, environment, procedure and parameters, and filtered raw measurement tables. No aggregate statistics, comparison, interpretation, excluded-pair list, or artifact links. |
+| `connection-reuse-audit.md` | When transport evidence is available: every trial's handshake transport record, initial early POST HTTP status, and transport-specific observations and limits. |
+| `artifacts.md` | Descriptions and direct links to raw CSV, JSON, logs, and available `.xcresult` bundles. |
+
+The raw attachments and, where applicable, the audit retain every trial. HTTP 400 on an early POST confirms rejection; client logs alone cannot assign the rejection to soft stickiness, request arrival order, or another server-side condition. A new HTTP/2 TCP/TLS connection to the reached edge does not imply cold DNS, radio, or backend state. Retaining a full `.xcresult` bundle is useful for later Xcode inspection but is not required for the report once its raw attachments and test evidence have been exported.
+
+Instructions for agents editing the runner, summarizer, or reports are in [AGENTS.md](AGENTS.md).
+
+The [2026-10-12 Omnient delay-sweep report](2026-10-12_14-09_omnient-delay-sweep_JST/report.md) contains 50 pairs at each of 0, 50, 100, and 200 ms. Its [connection reuse audit](2026-10-12_14-09_omnient-delay-sweep_JST/connection-reuse-audit.md) and [artifacts](2026-10-12_14-09_omnient-delay-sweep_JST/artifacts.md) retain the measurement and infrastructure-interruption evidence.
+
+An [additional report including early POST HTTP 400 pairs](2026-10-12_14-09_omnient-delay-sweep_JST/including-early-post-400/report.md) reuses those measurements and preserves the original report.
+
+The [2026-10-13 Omnient delay-sweep report](2026-10-13_06-08_omnient-delay-sweep-100pairs_JST/report.md) contains 100 pairs at each delay and includes eligible early POST HTTP 400 pairs in its main histograms. Its [connection reuse audit](2026-10-13_06-08_omnient-delay-sweep-100pairs_JST/connection-reuse-audit.md) and [artifacts](2026-10-13_06-08_omnient-delay-sweep-100pairs_JST/artifacts.md) retain all measurements and startup-interruption evidence.
+
+The [1000-pair sweep interruption report](2026-10-13_14-59_omnient-delay-sweep-1000pairs_JST/report.md) records cancellation at the user’s request after 625 pairs at 0 ms. It will not resume. The [new 10-pair-per-delay report](2026-10-14_09-30_omnient-delay-sweep-10pairs_JST/report.md) covers 0, 50, 100, 150, and 200 ms and records total and per-delay elapsed benchmark time.
+
+## Omnient initial-message delay sweep
+
+New Omnient sweeps run 50 OFF/ON pairs at each of 0, 50, 100, 150, and 200 ms, in that order, with binary encoding enabled and a new process per trial. Build for testing once as above, then run:
+
+```bash
+python3 -B webchannel/benchmark/lens/run-relaunch-delay-sweep.py OUTPUT_DIR
+```
+
+Create `execution-settings.json` before launch with `pairsPerDelay`, `delaysMs`, `handshakeThresholdMs: 20`, `includeEarlyPost400: true`, `enableBinaryEncoding: true`, `executionProtocol: "xcode-relaunch-batch"`, `deviceID`, `derivedData`, `workspace`, `reportPython`, and frozen `scriptsSHA256` and `sourcesSHA256`. Build for testing once. The runner uses one Xcode invocation per delay and restarts the app for each of the `2 * pairsPerDelay` repetitions. One selected test alternates OFF/ON using an atomically persisted batch ordinal. It does not retry failed measurements or stop subsequent repetitions for a measured failure. Original attachments are associated by XCTest repetition number, trial ordinal, and process identity; per-trial logs are exact byte ranges of shared stdout. Incomplete batches stop for review and preserve evidence. The legacy shell/resumable commands below describe historical runs.
+
+The summarizer requires matplotlib. For a single-delay Omnient histogram report, use `summarize-cold-benchmark.py OUTPUT_DIR 1000 --scenarios omnient --report-format histogram --handshake-threshold-ms 20 --early-post-400-policy include`. The normal raw-table mode remains available. Set `LENS_SCENARIOS=Omnient` to select only Omnient in the cold-trial runner; its default runs both scenarios.
+
+For a historical 50-pair sweep with a 400-excluded report, run `summarize-delay-sweep.py OUTPUT_DIR --pairs 50 --handshake-threshold-ms 20 --include-early-post-400` to add an inclusive view. This writes `including-early-post-400/report.md`, chart PNG/SVG files, paired differences, selection decisions, and bin counts without regenerating the original report. Only the HTTP 400 exclusion is disabled; the other inclusion rules remain in force. New sweeps already have the inclusive report at the run root and do not need this supplemental mode.
+
+The sweep's top-level `report.md` embeds TTFA and TTFD histograms of paired ON-minus-OFF differences, so negative values mean ON is faster. Both trials must complete, have verified fresh HTTP/2 transport, and differ in handshake duration by at most 20 ms. HTTP 400 pairs are included when those conditions are met. Unresolved status remains excluded, and a verified absence of an early POST is eligible. Exclusions are not replaced. The report records the 400-pair fraction over all requested pairs at each delay, unresolved/unsent early POST counts, histogram sample counts, and the number of included HTTP 400 pairs. Each metric uses common 10 ms bin edges across all configured delays and retains every eligible value. New sweeps produce only the inclusive report; no excluded variant is generated. Historical metadata retains the original count and HTTP 400 policy during regeneration.
+
+Each `delay-Nms/` subdirectory retains `logs/`, `xcresults/`, `attachments/`, `connection-reuse-audit.md`, and `artifacts.md`. `histograms/` contains PNG/SVG charts, full-precision paired differences, per-pair selection decisions, and exact bin counts. The top-level artifact and audit documents link the per-delay evidence. Trust/preflight checks and interrupted earlier attempts are excluded from the sweep data. The runner refuses to overwrite trial files and stops on test-launch or attachment-export failures.
+
+After resolving an infrastructure interruption, archive the incomplete pair's files under `infrastructure-attempts/` before restarting that pair. Set `LENS_RESUME=1` when rerunning the sweep to preserve all already-recorded trials, including failed measurement trials that exported their benchmark result. Never retry a pair merely because it fails histogram inclusion. The runner bounds each install/launch/test command to 180 seconds by default (`LENS_TRIAL_TIMEOUT_SECONDS`); the Lens measurement's completion deadline remains 60 seconds. Cancellation is forwarded to the active Xcode process group.
+
+Recorded runs: [single-invocation run at 00:37 JST](2026-10-07_00-37-42_JST/report.md), [text-encoding cold-connection run at 15:21 JST](2026-10-07_15-21-10_JST/report.md), [binary-encoding cold-connection run at 17:27 JST](2026-10-07_17-27-44_binary-cold_JST/report.md), [binary-encoding rerun on 2026-10-08](2026-10-08_13-08_binary-cold-rerun_JST/report.md), [binary-encoding run with a 20 ms handshake threshold](2026-10-08_13-21_binary-cold-20ms_JST/report.md), [its separate rerun at 13:40 JST](2026-10-08_13-39_binary-cold-20ms-rerun_JST/report.md), and [the 50 ms initial-message-delay run](2026-10-08_15-04_binary-cold-50ms_JST/report.md).
+
+Use `LENS_DELAYS_MS="0 50 100 200"` to resume an older four-delay sweep. The summarizer accepts `--delays-ms 0 50 100 150 200`; saved `delaysMs` metadata takes precedence over new defaults when regenerating older runs. On trial failure, the runner captures bounded USB/CoreDevice/power diagnostics under `logs/device-diagnostics/` before deciding whether a benchmark result was recorded. A device-unlocked error is not evidence that the phone was actually locked.
+
+For a long sweep with `execution-settings.json` containing the device ID, derived-data path, delay list, pair count, threshold, `reportPython`, and frozen script hashes, `python3 -B webchannel/benchmark/lens/run-resumable-delay-sweep.py OUTPUT_DIR` resumes recorded trials and automatically handles the verified development-service startup error. An optional existing runner PID makes it wait for that runner to exit before proceeding. It retains each startup failure under `infrastructure-attempts/`, queries lock state and DDI services, and resumes only after those queries succeed. The DDI query enables developer disk image services. Unknown failures and failed measurement trials are not automatically retried; three unsuccessful recoveries for the same unstarted trial stop the workflow. Each invocation and recovery is recorded in `logs/`.
+
+After all requested trials are recorded, the workflow runs `finalize-delay-sweep.py`. This generates the main inclusive report, independently verifies trial settings, transport evidence, selection rules, paired differences, bin counts, source hashes, and local links, and regenerates the report to verify identical output and unchanged raw evidence. `completion.json` is written only after those checks pass. Human-readable workflow progress remains in its invocation log; the absence of `completion.json` means the workflow has not confirmed completion.
+
+New sweep invocations record `timing.json` using `record-sweep-timing.py`. Reports include total wall-clock elapsed seconds when available; per-delay elapsed seconds belong in `artifacts.md`, including process launch, measurement, attachment export, and recovery gaps. Build and report generation are excluded. Historical reports without timing records retain their original format. A user-cancelled experiment retains `interruption.json`; the resumable runner refuses to restart it.
+
+The [2026-10-14 batched relaunch sweep](2026-10-14_16-41_omnient-delay-sweep-50pairs-relaunch_JST/report.md) records 50 pairs at each of 0, 50, 100, 150, and 200 ms. All 500 trials used distinct app process instances and verified fresh HTTP/2 TCP/TLS transport; 499 completed and one reached the measurement deadline. No startup connection error was observed. Total benchmark wall time was 703.073 seconds. [Audit](2026-10-14_16-41_omnient-delay-sweep-50pairs-relaunch_JST/connection-reuse-audit.md) and [artifacts](2026-10-14_16-41_omnient-delay-sweep-50pairs-relaunch_JST/artifacts.md) retain the evidence.
+
+The [250-pair-per-delay sweep](2026-10-14_21-13_omnient-delay-sweep-250pairs-relaunch_JST/report.md) retains 1,250 pairs across all five delays. All 2,500 measurements used distinct application process instances and verified fresh HTTP/2 TCP/TLS transport; 2,496 completed. Its [infrastructure audit](2026-10-14_21-13_omnient-delay-sweep-250pairs-relaunch_JST/infrastructure-audit.md) records two startup failures, original evidence, and reviewed resumption of only unentered measurement ordinals.
+
+The [October 15 noon scheduled sweep](2026-10-15_12-00_omnient-delay-sweep-100pairs-relaunch_JST/report.md) records 100 pairs at each of 0, 50, 100, 150, and 200 ms. All 1,000 measurements used distinct application process instances and verified fresh HTTP/2 TCP/TLS transport; 999 completed and one reached the measurement deadline. No startup connection errors were observed. Total benchmark elapsed time was 1301.450 seconds. [Artifacts](2026-10-15_12-00_omnient-delay-sweep-100pairs-relaunch_JST/artifacts.md) retain the original evidence and per-delay elapsed time.
+
+## Individual-observation reports (October 15 noon onward)
+
+The current format treats all trials independently and applies no handshake-difference or HTTP-status filter. After measurement finalization, run:
+
+```bash
+python3 -B webchannel/benchmark/lens/summarize-delay-sweep.py OUTPUT_DIR --report-format unpaired
+```
+
+Each delay has scatter plots of elapsed time versus measured TTFA/TTFD and ECDFs of the observed latencies, distinguishing OFF/ON by colors and marks/line styles. Only a missing/nonfinite metric cannot be plotted; selection is independent per metric, including finite values from incomplete trials. Reports link combined observations and original JSON/CSV exports. Overall duration remains in report.md; per-delay duration remains in artifacts.md. Rendering verifies raw preservation, explicit source identities, membership, missing counts, ECDFs and deterministic output. Measurement execution settings remain frozen; report generation has separate provenance. The saved format preserves unpaired rendering on ordinary regeneration; earlier runs keep the historical paired format.
+
+The October 15 noon report now uses all independent observed TTFA/TTFD values (OFF 500, ON 499 for each metric), without handshake-difference or HTTP-status selection. Its root report links combined data and original exports; the earlier paired main report is retained as explicitly superseded analysis.
+
+The [October 20 upstream-sync sweep](2026-10-20_12-38_omnient-delay-sweep-100pairs-upstream_JST/report.md) uses upstream commit `236d7a20e92df95806471e7ac0fe2c840b855a79` and records 100 OFF/ON pairs at each of the five delays. All 1,000 trials used distinct application processes and verified fresh HTTP/2 TCP/TLS transport; 947 completed and 53 ON trials failed with `RequestFailed (code 1)`. The report plots all available independent observations and links raw data. Total benchmark elapsed time was 1252.976 seconds; no startup connection error occurred. [Outcome and connection audit](2026-10-20_12-38_omnient-delay-sweep-100pairs-upstream_JST/connection-reuse-audit.md) retains the failure evidence.
+
+## Version control of benchmark evidence
+
+Starting with the October 20 upstream-sync sweep, include `logs/`, `attachments/`, and `xcresults/` (including `.xcresult` bundle contents) in version control. Keep these subdirectories in future runs; do not add ignore rules for their evidence. Historical run directories and the earlier device-connection investigation retain local `.gitignore` files with the previous exclusion policy. The current upstream-sync preflight evidence is included too. Shared ignore rules cover only Python bytecode. Ignore rules do not remove files already tracked.
+
+Jujutsu also limits automatic tracking by file size. This checkout uses repository-local `snapshot.max-new-file-size = "10MiB"`; that setting is not shared through Git. In another checkout, configure it with `jj config set --repo snapshot.max-new-file-size 10MiB` when needed, and review any remaining oversized-file warning rather than omitting evidence.
+
+## Compact publication: October 20 rerun onward
+
+For the October 20 14:14 rerun and future results, publish each trial's original JSON/CSV and exact WebChannel/HTTP log segment, with direct links from artifacts.md. Keep one shared export manifest per batch. Batch export directories, shared batch stdout, xcresults and aliases, repeated per-trial batch manifests, archives and source-code snapshots remain local and are excluded by each run's `.gitignore`. This supersedes the preceding full-evidence upload policy for these runs; do not change earlier published runs or delete local originals. Source/build hashes and original mapping identities remain published.
+
+After the measurement workflow and full-evidence checks finish, use:
+
+```bash
+python3 -B webchannel/benchmark/lens/publish-trial-evidence.py RUN_DIR
+python3 -B webchannel/benchmark/lens/summarize-delay-sweep.py RUN_DIR --report-format unpaired
+```
+
+The first command verifies byte-identical per-trial exports and shared stdout ranges, preserves the original rendering provenance locally, writes per-trial evidence indexes, and freezes publication hashes in `publication-settings.json`. The renderer verifies the published original JSON/CSV and log hashes/identities, all metric observations and deterministic output. In a checkout without local batch files, those original exports and log segments are sufficient to regenerate the report. Original completion checks describe the full local measurement verification; published regeneration does not claim to re-inspect an absent xcresult or shared stdout. A publication-only copy must pass regeneration before upload.
+
+The [October 20 14:14 rerun](2026-10-20_14-14-48_omnient-delay-sweep-100pairs-upstream-rerun_JST/report.md) records 100 OFF/ON pairs for each of the five delays using the same validated upstream build. All 1,000 trials have verified fresh HTTP/2 TCP/TLS transport; 986 completed and 14 ON trials failed with RequestFailed (code 1). Elapsed measurement time was 1294.197 seconds. Every finite TTFA/TTFD value is included independently, including available values from failed trials.
+
+The [October 20 16:00 scheduled sweep](2026-10-20_16-01-22_omnient-delay-sweep-100pairs-1600_JST/report.md) records 100 OFF/ON pairs at each of 0, 50, 100, 150 and 200 ms. All 1,000 trials completed and verified fresh HTTP/2 TCP/TLS transport with distinct application processes. Benchmark elapsed time was 1251.436 seconds. Its per-trial JSON/CSV and WebChannel/HTTP logs are published under the compact policy above; all local original evidence is preserved.
+
+## Retrospective compact publication of the October 20 12:38 run
+
+At the user's request, the October 20 12:38 upstream-sync run now also uses compact publication: publish per-trial original JSON/CSV and WebChannel/HTTP logs and one shared export manifest per batch; keep duplicate batch exports/stdout, xcresults, repeated trial manifests, archives and source-code snapshots local only. The run's `.gitignore`, `publication-settings.json` and `publication-verification.json` record this policy and verification. Original measured values, measurement settings, mappings and completion evidence are unchanged. Report links use the published per-trial files. `publish-trial-evidence.py RUN_DIR` followed by `summarize-delay-sweep.py RUN_DIR --report-format unpaired` supports both the older list-shaped outcome index and newer trial dictionaries. This is an explicit exception to earlier full-upload/leave-earlier-runs-unchanged instructions, scoped to this run; its separate preflight is unchanged.

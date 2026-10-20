@@ -1,0 +1,5 @@
+# Development-service startup failure
+
+Pair 126 OFF did not start a Lens measurement. Xcode failed while observing system notifications and asked for development services and an unlocked device. This message does not establish an actual device lock or USB disconnection. Post-failure snapshots still showed the iPhone in the USB registry, CoreDevice connected, developer mode enabled, and DDI services available. A later lock-state query reported passcodeRequired=false and unlockedSinceBoot=true. The DDI service query succeeded and enabled developer disk image services. Recorded trials, including pair 61 ON timeout, are retained; only the unstarted trial is resumed.
+
+[Startup log](logs/omnient-126-off.log) · [USB snapshot](logs/device-diagnostics/usb.log) · [CoreDevice state](logs/device-diagnostics/coredevice-details.log) · [Lock state](logs/device-diagnostics/lock-state.json) · [DDI services](logs/device-diagnostics/ddi-services.json) · [Result bundle](xcresults/omnient-126-off.xcresult)

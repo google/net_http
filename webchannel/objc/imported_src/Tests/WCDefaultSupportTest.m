@@ -14,16 +14,58 @@
 
 #import <XCTest/XCTest.h>
 
+#import "WCHTTPRequest.h"
 #import "WCDefaultSupport.h"
 #import "WCEventNotification.h"
 #import "WCSupport.h"
 #import "WCTimer.h"
+#import <GTMSessionFetcher/GTMSessionFetcher.h>
 #import <GTMSessionFetcher/GTMSessionFetcherService.h>
+
+/** Ignores the state changes of a request. */
+@interface WCIgnoringRequestHandler : NSObject <WCRequestStateChangedHandler>
+@end
+
+@implementation WCIgnoringRequestHandler
+
+- (void)stateChangedForRequest:(id<WCHTTPRequest>)request responseData:(NSData *)data {
+}
+
+@end
 
 @interface WCDefaultSupportTest : XCTestCase
 @end
 
 @implementation WCDefaultSupportTest
+
+/**
+ * An HTTP request turns off the fetcher's retry, even if the app's fetcher service turns it on:
+ * WebChannel retries failed requests itself. Objective-C only.
+ */
+- (void)testHTTPRequestTurnsOffFetcherRetry {
+  GTMSessionFetcherService *fetcherService = [[GTMSessionFetcherService alloc] init];
+  fetcherService.retryEnabled = YES;
+  XCTestExpectation *fetchStarted = [self expectationWithDescription:@"Fetch started"];
+  __block BOOL retryEnabled = YES;
+  fetcherService.testBlock = ^(GTMSessionFetcher *fetcher, GTMSessionFetcherTestResponse response) {
+    retryEnabled = fetcher.retryEnabled;
+    response([[NSHTTPURLResponse alloc] initWithURL:fetcher.request.URL
+                                         statusCode:200
+                                        HTTPVersion:@"HTTP/1.1"
+                                       headerFields:nil],
+             [NSData data], nil);
+    [fetchStarted fulfill];
+  };
+  WCDefaultSupport *support =
+      [[WCDefaultSupport alloc] initWithDispatchQueue:dispatch_get_main_queue()
+                                       fetcherService:fetcherService];
+  id<WCHTTPRequest> request = [support HTTPRequest:[[WCIgnoringRequestHandler alloc] init]];
+
+  [request sendGET:[NSURL URLWithString:@"https://example.com/channel"] withHeaders:@{} timeout:10];
+
+  [self waitForExpectationsWithTimeout:2.0 handler:nil];
+  XCTAssertFalse(retryEnabled);
+}
 
 - (void)testTimerFiresOnBackgroundGCDQueueWithoutRunLoop {
   dispatch_queue_t backgroundQueue =

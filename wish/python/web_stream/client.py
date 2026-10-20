@@ -29,6 +29,7 @@ class WebStreamConnection:
         self._thread = None
         self._handler = None
         self._closed = False
+        self._recv_error = None
 
         def safe_call(func, *args):
             if not self._loop.is_closed():
@@ -39,29 +40,37 @@ class WebStreamConnection:
 
         def on_open(handler):
             def set_handler():
+                if self._closed or self._open_future.done():
+                    return
                 self._handler = handler
                 self._open_future.set_result(True)
             safe_call(set_handler)
 
+        def enqueue_message(opcode, msg):
+            if not self._closed:
+                self._recv_queue.put_nowait((opcode, msg))
+
         def on_message(opcode, msg):
-            safe_call(self._recv_queue.put_nowait, (opcode, msg))
+            safe_call(enqueue_message, opcode, msg)
 
         def on_error():
             def set_error():
-                self._closed = True
+                error = ConnectionError(
+                    "Connection lost" if self._open_future.done()
+                    else "Connection failed or lost")
+                self._terminate(error)
                 if not self._open_future.done():
-                    self._open_future.set_exception(ConnectionError("Connection failed or lost"))
-                else:
-                    safe_call(self._recv_queue.put_nowait, ConnectionError("Connection lost"))
+                    self._open_future.set_exception(error)
             safe_call(set_error)
 
         def on_close():
             def set_close():
-                self._closed = True
+                error = ConnectionAbortedError(
+                    "Connection closed" if self._open_future.done()
+                    else "Connection closed before open")
+                self._terminate(error)
                 if not self._open_future.done():
-                    self._open_future.set_exception(ConnectionAbortedError("Connection closed before open"))
-                else:
-                    self._recv_queue.put_nowait(ConnectionAbortedError("Connection closed"))
+                    self._open_future.set_exception(error)
             safe_call(set_close)
 
         self._client.set_on_open(on_open)
@@ -69,15 +78,33 @@ class WebStreamConnection:
         self._client.set_on_error(on_error)
         self._client.set_on_close(on_close)
 
+    def _terminate(self, error):
+        if self._closed:
+            return
+        self._closed = True
+        # Keep the first failure without retaining exception tracebacks. None is
+        # a terminal marker placed after all previously received messages.
+        self._recv_error = (type(error), error.args)
+        self._recv_queue.put_nowait(None)
+
     async def connect(self):
-        # Run the C++ event loop in a background daemon thread.
-        self._thread = threading.Thread(target=self._client.run, daemon=True)
-        self._thread.start()
-        # Wait until the on_open callback fires
         try:
+            # Run the C++ event loop in a background daemon thread.
+            self._thread = threading.Thread(target=self._client.run, daemon=True)
+            self._thread.start()
+            # Wait until the on_open callback fires.
             await self._open_future
-        except Exception:
-            await self.close()
+        except BaseException:
+            # CancelledError is a BaseException. __aexit__ will not run if
+            # __aenter__ fails, so finish cleanup before propagating the failure.
+            # A second cancel must not interrupt stop/join or leave it orphaned.
+            cleanup = self._loop.create_task(self.close())
+            while not cleanup.done():
+                try:
+                    await asyncio.shield(cleanup)
+                except asyncio.CancelledError:
+                    continue
+            cleanup.result()
             raise
         return self
 
@@ -89,8 +116,7 @@ class WebStreamConnection:
             except Exception:
                 pass
             self._handler = None
-        self._closed = True
-        self._recv_queue.put_nowait(ConnectionAbortedError("Connection closed"))
+        self._terminate(ConnectionAbortedError("Connection closed"))
         if self._client:
             self._client.stop()
         if self._thread and self._thread.is_alive():
@@ -109,14 +135,14 @@ class WebStreamConnection:
             self._handler.send_text(str(data))
 
     async def recv(self, decode=None):
-        """Receives a message from the WebStream connection."""
-        if not self._client:
-            raise RuntimeError("Connection is closed")
-
+        """Receive buffered messages, then keep raising the first terminal error."""
         res = await self._recv_queue.get()
 
-        if isinstance(res, Exception):
-            raise res
+        if res is None:
+            # Pass the marker to concurrent and future receivers, too.
+            self._recv_queue.put_nowait(None)
+            error_type, args = self._recv_error
+            raise error_type(*args)
 
         opcode, msg = res
         

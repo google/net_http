@@ -70,6 +70,99 @@ open WebChanneliOSDemo.xcworkspace
 3. Check **Automatically manage signing** and choose your Apple Team.
 4. Select your connected device and press `Cmd + R`.
 
+### Automated Lens Benchmark
+
+The `WebChanneliOSDemoTests` target runs the existing Lens lifecycle against the
+configured endpoint. `testOmnient` and `testViewfinder` each run ten OFF/ON pairs
+in alternating order by default (40 Lens runs total). Each run waits up to 60 seconds
+for M4 completion; incomplete runs fail the test but remain in the exported data.
+`testHTTPSBaseline` separately sends 10 pairs of HEAD requests to the Lens URL
+without WebChannel. It records TCP, TLS, connection setup, and time to the first
+HTTP response byte. The second request in each pair checks connection reuse.
+
+In Xcode, select an iOS Simulator or a signed physical device and press `Cmd + U`.
+The tests use the real network. Simulator numbers are useful for a smoke test;
+use the physical device for latency comparisons.
+
+To run from a terminal, use the workspace and a specific device ID:
+
+```bash
+xcodebuild -workspace WebChanneliOSDemo.xcworkspace \
+  -scheme WebChanneliOSDemo -configuration Debug \
+  -destination 'platform=iOS,id=YOUR_DEVICE_ID' \
+  -parallel-testing-enabled NO \
+  -resultBundlePath ./LensBenchmark.xcresult test
+```
+
+Use `platform=iOS Simulator,id=YOUR_SIMULATOR_ID` for a simulator. The result
+bundle contains XCTest status plus retained attachments for each test:
+`lens-omnient-results.json` / `.csv` and `lens-viewfinder-results.json` / `.csv`.
+The Lens JSON includes each run's options, status, four metrics, and full app log.
+The HTTPS test adds `https-baseline-results.json` / `.csv`. Its TCP connect
+interval approximates one RTT to the reached server or edge. HTTP time to first
+byte also includes server processing and is not a pure network RTT.
+To run only the HTTPS probe from `xcodebuild`, add
+`-only-testing:WebChanneliOSDemoTests/HTTPSBaselineTests/testHTTPSBaseline`
+to the command above.
+Export the attachments with:
+
+```bash
+xcrun xcresulttool export attachments \
+  --path ./LensBenchmark.xcresult --output-path ./LensBenchmarkAttachments
+```
+
+The export also writes `manifest.json`, which maps the attachments to their
+tests. In Xcode, the same attachments are available from the Test Report. A
+result bundle path must be new for each invocation. The Test action's scheme
+environment variables may set `LENS_BENCHMARK_REPETITIONS` (default `10`, maximum
+`50`) and `LENS_BENCHMARK_ENDPOINT` (default staging Lens URL). The image size
+parameter is metadata; this does not transmit 150 KB of image bytes.
+
+For transport-cold measurements, build for testing once with the demo workspace,
+scheme, physical-device destination, and a dedicated derived-data path. From the
+repository root, run:
+
+```bash
+cd webchannel/objc/demo/WebChanneliOSDemo
+xcodebuild build-for-testing -workspace WebChanneliOSDemo.xcworkspace \
+  -scheme WebChanneliOSDemo -configuration Debug \
+  -destination 'id=DEVICE_ID' -derivedDataPath /path/to/derived-data \
+  -allowProvisioningUpdates
+cd ../../../..
+LENS_DERIVED_DATA=/path/to/derived-data bash \
+  webchannel/benchmark/lens/run-cold-benchmark.sh DEVICE_ID OUTPUT_DIR 10
+python3 webchannel/benchmark/lens/summarize-cold-benchmark.py OUTPUT_DIR 10
+```
+
+The runner starts one cold-trial test method per invocation of
+`xcodebuild test-without-building`. It alternates OFF/ON trials for Omnient and
+Viewfinder, retains each `.xcresult` under `OUTPUT_DIR/xcresults/` and exported
+JSON/CSV under `OUTPUT_DIR/attachments/`, and writes `report.md`, `connection-reuse-audit.md`,
+and `artifacts.md` in the output directory. The
+[Lens benchmark report guide](../../../benchmark/lens/README.md) describes
+the document layout. Per-trial Xcode and attachment-export logs are placed in
+`OUTPUT_DIR/logs/`. The JSON records `URLSessionTaskMetrics` for the actual WebChannel
+requests. A trial is accepted as transport-cold only if its first handshake
+GET/POST or concurrent early POST established a new HTTP/2 TCP/TLS connection.
+When the early POST connects first, the handshake GET must reuse that same
+address and local port. App-process restart alone is not used as evidence of a
+fresh connection; DNS, radio, and server state can remain warm.
+Set `LENS_BINARY_ENCODING=1` for a run with `enableBinaryEncoding=true`;
+the default remains `false`.
+Set `LENS_INITIAL_MESSAGE_DELAY_MS=50` to schedule Lens M1 50 ms after
+`connect()` returns, as in the Generator early-send experiment. Omnient M3
+follows M1 immediately; Viewfinder M2 and M3 remain scheduled at +200 ms and
++500 ms after `connect()` returns.
+
+Set `LENS_SCENARIOS=Omnient` to run only Omnient. The
+`webchannel/benchmark/lens/run-omnient-delay-sweep.sh` wrapper runs 1000 OFF/ON
+pairs at each of 0, 50, 100, 150, and 200 ms with binary encoding. Its companion
+`summarize-delay-sweep.py` produces a top-level report with TTFA/TTFD ON-minus-OFF
+histograms including early POST HTTP 400 pairs that satisfy the other inclusion
+rules, and reports the 400-pair rate. See the
+[Lens benchmark report guide](../../../benchmark/lens/README.md#omnient-initial-message-delay-sweep)
+for commands and the full inclusion rule.
+
 ---
 
 ## 🌐 Testing Endpoints
@@ -104,3 +197,5 @@ WebChanneliOSDemo/
     ├── Info.plist                 # App bundle metadata and ATS configuration
     └── Assets.xcassets/           # App icons and color catalog
 ```
+
+For new Omnient delay sweeps, use [the batched relaunch runner instructions](../../../benchmark/lens/README.md#omnient-initial-message-delay-sweep). `testColdBinaryOmnientBatch` alternates OFF/ON across persisted ordinals while Xcode restarts the app for every repetition. Original result attachments and process identities are verified before report generation.

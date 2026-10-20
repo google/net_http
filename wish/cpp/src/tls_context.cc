@@ -15,6 +15,7 @@
 #include "tls_context.h"
 
 #include <absl/log/log.h>
+#include <event2/util.h>
 
 TlsContext::TlsContext() : ssl_ctx_(nullptr) {}
 
@@ -102,3 +103,38 @@ bool TlsContext::Init(bool is_server) {
 }
 
 SSL_CTX* TlsContext::ssl_ctx() const { return ssl_ctx_; }
+
+SSL* TlsContext::NewClientSsl(const std::string& host) const {
+  // Reject embedded NULs rather than verifying a truncated peer name.
+  if (!ssl_ctx_ || host.empty() || host.find('\0') != std::string::npos) {
+    return nullptr;
+  }
+  SSL* ssl = SSL_new(ssl_ctx_);
+  if (!ssl) {
+    return nullptr;
+  }
+
+  unsigned char address[16];
+  int address_length = 0;
+  if (evutil_inet_pton(AF_INET, host.c_str(), address) == 1) {
+    address_length = 4;
+  } else if (evutil_inet_pton(AF_INET6, host.c_str(), address) == 1) {
+    address_length = 16;
+  }
+
+  SSL_set_hostflags(ssl, X509_CHECK_FLAG_NEVER_CHECK_SUBJECT);
+  bool configured;
+  if (address_length != 0) {
+    // IP literals must match an iPAddress SAN, never a DNS SAN or common name.
+    configured = X509_VERIFY_PARAM_set1_ip(
+        SSL_get0_param(ssl), address, address_length) == 1;
+  } else {
+    configured = SSL_set1_host(ssl, host.c_str()) == 1 &&
+                 SSL_set_tlsext_host_name(ssl, host.c_str()) == 1;
+  }
+  if (!configured) {
+    SSL_free(ssl);
+    return nullptr;
+  }
+  return ssl;
+}

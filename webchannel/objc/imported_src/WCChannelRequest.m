@@ -2,6 +2,8 @@
 
 #import "WCHTTPRequest.h"
 #import "WCLogger.h"
+#import "WCSimpleAtoi.h"
+#import "WCURIBuilder.h"
 #import "WCSupport.h"
 #import "WCTimer.h"
 #import "WCWebChannelClientInternal.h"
@@ -22,6 +24,13 @@ static const long kChannelRequestDefaultTimeout = 45;
 static const int kDefaultRetryID = 1;
 static const int kStatusCodeOK = 200;
 static const int kStatusCodeBadRequest = 400;
+
+/**
+ * The timeout given to the HTTP layer, in seconds: a year, longer than any watchdog. Only the
+ * watchdog times out a request, as in C++, where the HTTP layer gets no timeout. A platform timeout
+ * that fired first would complete a stalled response as a success.
+ */
+static const NSTimeInterval kHTTPLayerTimeout = 365 * 24 * 60 * 60;
 
 static NSString *const kQueryItemNameT = @"t";
 static NSString *const kHeaderContentTypeValue = @"application/x-www-form-urlencoded";
@@ -115,7 +124,7 @@ static NSString *const kPageIDKey = @"X-Goog-PageId";
   _POST = NO;
 
   _request = [_support HTTPRequest:self];
-  [_request sendGET:_baseURLComponent.URL withHeaders:nil timeout:_timeout];
+  [_request sendGET:_baseURLComponent.URL withHeaders:nil timeout:kHTTPLayerTimeout];
   _requestStartTime = [NSDate now];
   [self startReadyStateTimer];
 }
@@ -123,6 +132,16 @@ static NSString *const kPageIDKey = @"X-Goog-PageId";
 - (void)cancel {
   _cancelled = YES;
   [self cleanup];
+}
+
+- (void)resetTimeout:(NSTimeInterval)timeout {
+  if (timeout > 0) {
+    _timeout = timeout;
+  }
+  if (_readyStateTimer != nil) {
+    [self cancelReadyStateTimer];
+    [self startReadyStateTimer];
+  }
 }
 
 - (BOOL)isLastErrorFatal {
@@ -181,12 +200,8 @@ static NSString *const kPageIDKey = @"X-Goog-PageId";
   _requestStartTime = [NSDate date];
   [self startReadyStateTimer];
 
-  NSURLQueryItem *queryItem =
-      [NSURLQueryItem queryItemWithName:kQueryItemNameT
-                                  value:[NSString stringWithFormat:@"%d", _retryID]];
-  NSMutableArray<NSURLQueryItem *> *queryItems = [_baseURLComponent.queryItems mutableCopy];
-  [queryItems addObject:queryItem];
-  [_baseURLComponent setQueryItems:queryItems];
+  WCAddQueryParameter(_baseURLComponent, kQueryItemNameT,
+                      [NSString stringWithFormat:@"%d", _retryID]);
   _chunkStart = 0;
 
   _request = [_support HTTPRequest:self];
@@ -204,12 +219,12 @@ static NSString *const kPageIDKey = @"X-Goog-PageId";
     [_request sendPOST:_baseURLComponent.URL
               withData:_POSTData
            withHeaders:headers
-               timeout:_timeout];
+               timeout:kHTTPLayerTimeout];
   } else {
     if (_isBinaryMessage) {
       [headers setObject:kHeaderAcceptBinaryValue forKey:kHeaderAcceptKey];
     }
-    [_request sendGET:_baseURLComponent.URL withHeaders:headers timeout:_timeout];
+    [_request sendGET:_baseURLComponent.URL withHeaders:headers timeout:kHTTPLayerTimeout];
   }
   [_support notifyServerReachabilityEvent:WCServerReachabilityRequestMade];
   [_support.logger logHTTPRequest:_POST ? kHTTPMethodPOST : kHTTPMethodGET
@@ -305,9 +320,7 @@ static NSString *const kPageIDKey = @"X-Goog-PageId";
                                        statusCode:statusCode];
 
   if (!_successful) {
-    NSString *responseText = [[NSString alloc] initWithData:_responseData
-                                                   encoding:NSUTF8StringEncoding];
-    [self handleReadyStateChangedFailureStatusCode:statusCode responseText:responseText];
+    [self handleReadyStateChangedFailureStatusCode:statusCode];
     return;
   }
 
@@ -346,10 +359,14 @@ static NSString *const kPageIDKey = @"X-Goog-PageId";
   }
 }
 
-- (void)handleReadyStateChangedFailureStatusCode:(int)statusCode
-                                    responseText:(NSString *)responseText {
+- (void)handleReadyStateChangedFailureStatusCode:(int)statusCode {
+  // The body is searched as bytes, so a body that is not valid UTF-8 is a bad status.
+  NSData *unknownSessionID = [kUnknownSessionID dataUsingEncoding:NSUTF8StringEncoding];
   if (statusCode == kStatusCodeBadRequest &&
-      [responseText rangeOfString:kUnknownSessionID].location != NSNotFound) {
+      [_responseData rangeOfData:unknownSessionID
+                         options:0
+                           range:NSMakeRange(0, _responseData.length)]
+              .location != NSNotFound) {
     _lastError = WCChannelRequestErrorUnknownSessionId;
     [_support notifyStatEvent:WCRequestStatRequestUnknownSessionId];
   } else {
@@ -379,7 +396,7 @@ static NSString *const kPageIDKey = @"X-Goog-PageId";
 
 - (BOOL)checkInitialResponse {
   NSString *initialResponse = [self getInitialResponse];
-  if (initialResponse == nil) {
+  if (initialResponse.length == 0) {
     _successful = NO;
     _lastError = WCChannelRequestErrorUnknownSessionId;
     [_support notifyStatEvent:WCRequestStatRequestUnknownSessionId];
@@ -423,7 +440,7 @@ static NSString *WCDataToLogString(NSData *data) {
  * @param data The buffer containing UTF-8 encoded bytes.
  * @param offset The starting index in @c data.
  * @param utf16CodeUnitsCount The target number of UTF-16 code units.
- * @return The byte length of the prefix, or 0 if invalid or incomplete UTF-8.
+ * @return The byte length of the prefix, or 0 if the UTF-8 is incomplete.
  */
 static NSUInteger WCUTF16PrefixLengthInBytes(NSData *data, NSUInteger offset,
                                              NSUInteger utf16CodeUnitsCount) {
@@ -448,7 +465,9 @@ static NSUInteger WCUTF16PrefixLengthInBytes(NSData *data, NSUInteger offset,
       utf16Count += 2;
       byteIndex += 4;
     } else {
-      return 0;  // Invalid
+      // Invalid lead byte. The server's GetUTF16Length() counts it as one.
+      utf16Count++;
+      byteIndex++;
     }
   }
 
@@ -547,9 +566,8 @@ static NSUInteger WCUTF16PrefixLengthInBytes(NSData *data, NSUInteger offset,
     *isBinaryChunk = isBinary;
   }
 
-  NSScanner *scanner = [NSScanner scannerWithString:sizePart];
-  int size = 0;
-  if (![scanner scanInt:&size] || ![scanner isAtEnd] || size < 0) {
+  int32_t size = 0;
+  if (!WCSimpleAtoi32(sizePart, &size) || size < 0) {
     if (result) {
       *result = WCChannelRequestDecodeResultInvalid;
     }

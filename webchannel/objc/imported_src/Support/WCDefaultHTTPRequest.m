@@ -74,6 +74,14 @@
 
 - (void)beginFetchWithRequest:(NSURLRequest *)request {
   _fetcher = [_fetcherService fetcherWithRequest:request];
+  // WebChannel retries failed requests itself, with new request parameters; a fetcher service with
+  // retry on would resend the same request.
+  _fetcher.retryEnabled = NO;
+  // Keep the metrics callback alive when an open streaming GET is cancelled.
+  // GTMSessionFetcher otherwise releases callbacks in stopFetching.
+  if (_fetcherService.metricsCollectionBlock != nil) {
+    _fetcher.stopFetchingTriggersCompletionHandler = YES;
+  }
   _fetcher.callbackQueue = _dispatchQueue;
 #if DEBUG
   _fetcher.allowLocalhostRequest = YES;

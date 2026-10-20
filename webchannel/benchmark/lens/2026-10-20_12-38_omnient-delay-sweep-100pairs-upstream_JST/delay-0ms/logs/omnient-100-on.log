@@ -1,0 +1,61 @@
+LENS_BATCH_TRIAL_STARTED {"batchId":"4a271ef5-5e0f-4adf-95fb-3785f7092aea","batchPair":100,"batchSetting":"on","batchTrialOrdinal":200,"processId":1322,"processInstanceId":"E4BA5681-A0C0-459B-9609-EF29446637BA","trialStartedEpochSeconds":1792467757.5286741}
+[SDK Debug] Opening Forward Channel.
+🌐 [HTTP Req] (95003) [attempt 1] GET https://webchannel.sandbox.google.com/staging/channel/lens?VER=8&RID=95003&CVER=25&X-HTTP-Session-Id=gsessionid&%24req=count%3D0%26%0D%0A&SID=c-CdYKn2QpMMfW1prRHewBvG&t=1
+2026-10-20 12:42:37.531486+0900 WebChanneliOSDemo[1322:66889] GTMSessionFetcher 0x1191a5b80 (https://webchannel.sandbox.google.com/staging/channel/lens?VER=8&RID=95003&CVER=25&X-HTTP-Session-Id=gsessionid&%24req=count%3D0%26%0D%0A&SID=c-CdYKn2QpMMfW1prRHewBvG&t=1) was already running
+🌐 [HTTP Req] (95004) [attempt 1] POST https://webchannel.sandbox.google.com/staging/channel/lens?VER=8&SID=c-CdYKn2QpMMfW1prRHewBvG&RID=95004&AID=-1&t=1 | PostData: {length = 320, bytes = 0x636f756e 743d3226 6f66733d 300d0a69 ... 77223a74 7275657d }
+🌐 [HTTP Resp Meta] (95004) [attempt 1] POST https://webchannel.sandbox.google.com/staging/channel/lens?VER=8&SID=c-CdYKn2QpMMfW1prRHewBvG&RID=95004&AID=-1&t=1 status: 400
+[SDK Debug] Request Complete.
+[SDK Debug] Not retrying due to error type.
+[SDK Debug] Error: HTTP request failed.
+[SDK Error] Error code: 1
+[SDK Debug] HttpChannel: error - 1
+[SDK Info] WebChannel aborted on https://webchannel.sandbox.google.com/staging/channel/lens due to channel error 1
+[SDK Debug] Number of undelivered maps pending: 2, outgoing: 0
+[SDK Info] WebChannel closed on https://webchannel.sandbox.google.com/staging/channel/lens with pending data: (
+    "<WCQueuedMap: 0x1191dace0>",
+    "<WCQueuedMap: 0x1191dad40>"
+) and undelivered data: (
+)
+LENS_BENCHMARK_RESULT omnient #1 fastHandshake2=true: failed
+/Users/riesz/net_http/webchannel/objc/demo/WebChanneliOSDemo/WebChanneliOSDemoTests/LensBenchmarkTests.swift:224: error: -[WebChanneliOSDemoTests.LensBenchmarkTests testColdBinaryOmnientBatch] : XCTAssertTrue failed - Incomplete benchmark runs: omnient #1 fastHandshake2=true
+LENS_BATCH_TRIAL_FINISHED {"batchId":"4a271ef5-5e0f-4adf-95fb-3785f7092aea","batchPair":100,"batchSetting":"on","batchTrialOrdinal":200,"processId":1322,"processInstanceId":"E4BA5681-A0C0-459B-9609-EF29446637BA","trialStartedEpochSeconds":1792467757.5286741}
+Test Case '-[WebChanneliOSDemoTests.LensBenchmarkTests testColdBinaryOmnientBatch]' failed (0.271 seconds).
+Test Suite 'LensBenchmarkTests' failed at 2026-10-20 12:42:37.794.
+	 Executed 1 test, with 1 failure (0 unexpected) in 0.271 (0.272) seconds
+Test Suite 'WebChanneliOSDemoTests.xctest' failed at 2026-10-20 12:42:37.794.
+	 Executed 1 test, with 1 failure (0 unexpected) in 0.271 (0.272) seconds
+Test Suite 'Selected tests' failed at 2026-10-20 12:42:37.794.
+	 Executed 1 test, with 1 failure (0 unexpected) in 0.271 (0.273) seconds
+2026-10-20 12:42:36.114 xcodebuild[28998:4483964]  IDETestOperationsObserverDebug: Failure collecting diagnostics from devices: Process exited with error 1:
+ ERROR: The operation couldn?t be completed. (CoreDeviceCLISupport.DiagnoseError error 0.)
+This tool generates files that allow Apple to investigate issues with your
+computer and help improve Apple products. The files might contain personal
+information found on your device or associated with your Apple Account(s),
+including but not limited to your name, serial numbers of your device,
+your device name, your device's location over the last one to two days,
+your attached peripheral devices, your user name, your email address and
+email settings, file paths, file names, Siri suggestions, your computer's
+IP addresses, and network connection information.
+
+This information is used by Apple in accordance with its privacy policy
+(www.apple.com/privacy) and is not shared with any other company. By using
+this tool and sending the results to Apple, you consent to Apple using the
+contents of these files to improve Apple products.
+
+An error occurred while running devicectl diagnose. Will archive the diagnostics collected thus far.
+Wrote file to /Users/riesz/net_http/webchannel/benchmark/lens/2026-10-20_12-38_omnient-delay-sweep-100pairs-upstream_JST/delay-0ms/xcresults/batch-0001.xcresult/Staging/1_Test/Diagnostics/devicectl_diagnostics.zip
+Partial devicectl diagnose bundle located here: /Users/riesz/net_http/webchannel/benchmark/lens/2026-10-20_12-38_omnient-delay-sweep-100pairs-upstream_JST/delay-0ms/xcresults/batch-0001.xcresult/Staging/1_Test/Diagnostics/devicectl_diagnostics.zip
+
+2026-10-20 12:42:36.129 xcodebuild[28998:4483963] [MT] IDETestOperationsObserverDebug: 227.041 elapsed -- Testing started completed.
+2026-10-20 12:42:36.129 xcodebuild[28998:4483963] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-10-20 12:42:36.129 xcodebuild[28998:4483963] [MT] IDETestOperationsObserverDebug: 227.041 sec, +227.041 sec -- end
+
+Test session results, code coverage, and logs:
+	/Users/riesz/net_http/webchannel/benchmark/lens/2026-10-20_12-38_omnient-delay-sweep-100pairs-upstream_JST/delay-0ms/xcresults/batch-0001.xcresult
+
+Failing tests:
+	LensBenchmarkTests.testColdBinaryOmnientBatch()
+
+** TEST EXECUTE FAILED **
+
+Testing started

@@ -13,12 +13,7 @@ class WebStreamServerConnection:
         self.path = handler_ref.path() or "/"
         self._recv_queue = asyncio.Queue()
         self._closed = False
-
-        def terminate(error):
-            if self._closed:
-                return
-            self._closed = True
-            self._recv_queue.put_nowait(error)
+        self._recv_error = None
 
         def safe_call(func, *args):
             if not self._loop.is_closed():
@@ -27,19 +22,29 @@ class WebStreamServerConnection:
                 except RuntimeError:
                     pass
 
+        def enqueue_message(opcode, msg):
+            if not self._closed:
+                self._recv_queue.put_nowait((opcode, msg))
+
         def on_message(opcode, msg):
-            safe_call(self._recv_queue.put_nowait, (opcode, msg))
+            safe_call(enqueue_message, opcode, msg)
 
         def on_error():
-            safe_call(terminate, ConnectionError("Connection lost or error occurred"))
+            safe_call(self._terminate, ConnectionError("Connection lost or error occurred"))
 
         def on_close():
-            safe_call(terminate, ConnectionAbortedError("Connection closed by client"))
+            safe_call(self._terminate, ConnectionAbortedError("Connection closed by client"))
 
         self._handler_ref.set_on_message(on_message)
         self._handler_ref.set_on_error(on_error)
         self._handler_ref.set_on_close(on_close)
-        self._terminate = terminate
+
+    def _terminate(self, error):
+        if self._closed:
+            return
+        self._closed = True
+        self._recv_error = (type(error), error.args)
+        self._recv_queue.put_nowait(None)
 
     async def send_text(self, text: str):
         if self._closed:
@@ -64,12 +69,13 @@ class WebStreamServerConnection:
             await self.send_text(str(data))
 
     async def recv(self, decode=None):
-        if self._closed and self._recv_queue.empty():
-            raise RuntimeError("Connection is closed")
-
+        """Receive buffered messages, then keep raising the first terminal error."""
         res = await self._recv_queue.get()
-        if isinstance(res, Exception):
-            raise res
+        if res is None:
+            # Leave the terminal marker available for every other receiver.
+            self._recv_queue.put_nowait(None)
+            error_type, args = self._recv_error
+            raise error_type(*args)
 
         opcode, msg = res
         should_decode = decode
@@ -90,9 +96,10 @@ class WebStreamServerConnection:
                 ref.set_on_message(None)
                 ref.set_on_close(None)
                 ref.set_on_error(None)
+            finally:
+                # Always attempt the protocol EOF, even if detaching a callback
+                # fails. Let cleanup/transport failures reach the caller.
                 ref.close()
-            except Exception:
-                pass
 
     async def __aiter__(self):
         try:
@@ -133,8 +140,10 @@ class WebStreamServer:
                     if self._stream_handler:
                         await self._stream_handler(conn)
                 finally:
-                    await conn.close()
-                    self._connections.discard(conn)
+                    try:
+                        await conn.close()
+                    finally:
+                        self._connections.discard(conn)
 
             asyncio.run_coroutine_threadsafe(handle(), self._loop)
 

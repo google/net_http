@@ -18,6 +18,7 @@ struct LogEntry: Identifiable, Equatable {
 /// Core metrics captured during a Lens simulation run.
 struct LensBenchmarkMetrics: Equatable {
   var handshakeDurationMs: Double? = nil
+  var m1DelayFromConnectMs: Double? = nil
   var m3RttToAckMs: Double? = nil  // Time to First ACK (TTFA)
   var m3TimeToFirstDetectionMs: Double? = nil  // Time to First Detection (TTFD)
   var m4RttMs: Double? = nil  // M4 Final Capture RTT
@@ -63,6 +64,7 @@ final class WebChannelService: NSObject, @unchecked Sendable {
   var lastConnectAndSendLatencyMs: Double? = nil
   var isBackChannelBinaryEncodingEnabled: Bool = false
   var lensMetrics = LensBenchmarkMetrics()
+  private(set) var testSupport: TestAppSupport?
   private(set) var isConnectAndSendRunning: Bool = false
 
   // Channel Options
@@ -164,6 +166,7 @@ final class WebChannelService: NSObject, @unchecked Sendable {
     state = .connecting
 
     let support = TestAppSupport(service: self)
+    testSupport = support
     guard
       let newClient = WCWebChannelClient(
         url: url, options: options, delegate: self, support: support)
@@ -351,15 +354,17 @@ final class WebChannelService: NSObject, @unchecked Sendable {
   /// Runs the Lens lifecycle latency benchmark.
   /// - Parameters:
   ///   - endpointUrl: The WebChannel endpoint URL (e.g. /staging/channel/lens).
-  ///   - isOmnient: If true, dispatches M1 (Sticky Cluster) and M3 (Prefetch) at T=0
-  ///     concurrently with handshake (0-RTT test).
+  ///   - isOmnient: If true, dispatches M1 (Sticky Cluster) and M3 (Prefetch)
+  ///     together during connection establishment.
   ///   - imageSizeKb: Size of the dummy image payload for Prefetch (default 150KB).
   ///   - detectionDelayMs: Backend detection inference delay to simulate (default 50ms).
+  ///   - initialMessageDelayMs: Delay after connect() before M1 (and Omnient M3).
   func startLensBenchmark(
     endpointUrl: String,
     isOmnient: Bool = true,
     imageSizeKb: Int = 150,
-    detectionDelayMs: Int = 50
+    detectionDelayMs: Int = 50,
+    initialMessageDelayMs: Int = 0
   ) {
     disconnect()
     clearLogs()
@@ -372,16 +377,50 @@ final class WebChannelService: NSObject, @unchecked Sendable {
     let optionsLog =
       "⚙️ Options: fastHandshake2=\(fastHandshake2), fastHandshake=\(fastHandshake), "
       + "nonBlockingSend=\(nonBlockingSend), binary=\(enableBinaryEncoding), "
-      + "imageSize=\(imageSizeKb)KB"
+      + "imageSize=\(imageSizeKb)KB, initialMessageDelayMs=\(initialMessageDelayMs)"
     log(optionsLog)
     log("==================================================================")
 
     connect(to: endpointUrl, clearLogHistory: false)
 
+    let sendInitialMessages: () -> Void = { [weak self] in
+      guard let self = self, self.lensMetrics.isRunning else { return }
+      self.sendLensStickyClusterInfo()
+      if isOmnient {
+        self.sendLensPrefetch(imageSizeKb: imageSizeKb, detectionDelayMs: detectionDelayMs)
+      }
+    }
+    let delayMs = max(0, initialMessageDelayMs)
+    if delayMs == 0 {
+      sendInitialMessages()
+    } else {
+      log("⏱ [Lens] Scheduled M1\(isOmnient ? " and M3" : "") for T+\(delayMs)ms...")
+      DispatchQueue.main.asyncAfter(deadline: .now() + Double(delayMs) / 1000.0) {
+        sendInitialMessages()
+      }
+    }
+
+    if !isOmnient {
+      // Viewfinder M2 and M3 remain at T+200ms and T+500ms after connect().
+      log("⏱ [Viewfinder] Warming channel with M2 Heartbeat, prefetch in 500ms...")
+      DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { [weak self] in
+        guard let self = self, self.lensMetrics.isRunning else { return }
+        self.sendLensHeartbeat()
+      }
+      DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+        guard let self = self, self.lensMetrics.isRunning else { return }
+        self.sendLensPrefetch(imageSizeKb: imageSizeKb, detectionDelayMs: detectionDelayMs)
+      }
+    }
+  }
+
+  private func sendLensStickyClusterInfo() {
     let nowMs = Int64(Date().timeIntervalSince1970 * 1000)
     lensM1SendTimeMs = nowMs
+    let elapsed = (CFAbsoluteTimeGetCurrent() - connectTime) * 1000.0
+    lensMetrics.m1DelayFromConnectMs = elapsed
+    log(String(format: "⏱ [Lens M1] send() at T+%.1fms from connect start", elapsed))
 
-    // Message 1: Sticky Cluster Info
     let m1Payload: [String: Any] = [
       "type": "sticky_cluster_info",
       "client_send_time_ms": nowMs,
@@ -396,22 +435,6 @@ final class WebChannelService: NSObject, @unchecked Sendable {
       }
     } else {
       sendPayload(m1Payload, description: "M1 StickyClusterInfo")
-    }
-
-    if isOmnient {
-      // Omnient mode: Send Prefetch immediately at T=0
-      sendLensPrefetch(imageSizeKb: imageSizeKb, detectionDelayMs: detectionDelayMs)
-    } else {
-      // Camera Viewfinder mode: Send M2 heartbeat during warmup, then Prefetch at 500ms
-      log("⏱ [Viewfinder] Warming channel with M2 Heartbeat, prefetch in 500ms...")
-      DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { [weak self] in
-        guard let self = self, self.lensMetrics.isRunning else { return }
-        self.sendLensHeartbeat()
-      }
-      DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
-        guard let self = self, self.lensMetrics.isRunning else { return }
-        self.sendLensPrefetch(imageSizeKb: imageSizeKb, detectionDelayMs: detectionDelayMs)
-      }
     }
   }
 

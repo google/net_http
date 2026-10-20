@@ -1,0 +1,50 @@
+{
+  "pairsPerDelay": 1000,
+  "delaysMs": [
+    0,
+    50,
+    100,
+    150,
+    200
+  ],
+  "handshakeThresholdMs": 20,
+  "includeEarlyPost400": true,
+  "enableBinaryEncoding": true,
+  "deviceID": "00008110-001C34513686201E",
+  "derivedData": "/tmp/net-http-lens-20261013-1000-build",
+  "sourceGitHead": "746de29aea36a561f16a1d207d480dd79ddb728c",
+  "userReportedConnectionConditions": {
+    "iPhoneUnlockedDuringPriorFailures": true,
+    "macScreenSaverDisabled": true,
+    "macDisplayAutoSleepDisabled": true,
+    "macSystemAutoSleepDisabled": true,
+    "usbDirectConnection": true
+  },
+  "scriptsSHA256": {
+    "run-omnient-delay-sweep.sh": "2cf8a5bebb5a89a6b5a4bcfc5a734108c4aabdc57f67593bbfb98a1a7dcee7dd",
+    "run-cold-benchmark.sh": "1dc985d6cb2ac16a65cc47c3ed86ec4cb6ed3d1d751c3412729ecb2a19f4e48a",
+    "run-bounded-command.py": "b9f6b3703ea8dd6b0f259a576e626ac6679254df08775b12bfba101895e35396",
+    "capture-device-diagnostics.py": "5cdf2ae61a5b022ec92b11234a3f90efc82bfef4df38ad54da1741ade8b417bc",
+    "summarize-delay-sweep.py": "862d152bb7d6e5676ae92d38cdb7d87f58a10661c1e3cb20a2b057a9ce11f205",
+    "summarize-cold-benchmark.py": "221cbd4250cd71f09007878e971dc662d829b6591c10e1461a4a6c37a19649fb",
+    "run-resumable-delay-sweep.py": "edc30a487cf6d86b15fa9624171768b9f81f5bbf905b068e506786b3395a3f99",
+    "finalize-delay-sweep.py": "8ad861c088bfd21c707491940882c0bb787f80f4516d209424d78740e84eba75"
+  },
+  "reportPython": "/tmp/net-http-lens-plot-env/bin/python",
+  "recoveryWorkflow": {
+    "enabledUTC": "2026-10-13T10:55:07.032212+00:00",
+    "waitForExistingRunnerPID": 86854,
+    "policy": "Only destination-availability errors before XCTest and before any benchmark result; retain evidence, query lock state and DDI services, then resume. At most three recovery attempts for the same unstarted trial.",
+    "afterMeasurements": "Generate inclusive report and independently verify evidence, selection, signed differences, bins, source hashes, links, and deterministic regeneration."
+  },
+  "scriptRevisions": [
+    {
+      "script": "run-resumable-delay-sweep.py",
+      "previousSHA256": "4d03d8cd2685ce6f112ba0a086570a31970f74a3020e144469dbbcf55de31eb7",
+      "newSHA256": "edc30a487cf6d86b15fa9624171768b9f81f5bbf905b068e506786b3395a3f99",
+      "changedUTC": "2026-10-13T22:56:23.599343+00:00",
+      "beforeResumeAt": "delay-0ms pair 501 OFF",
+      "reason": "Select the last FAIL entry so recorded measurement timeouts earlier in a runner invocation do not mask a later unstarted development-service failure. Changed only while all runners were stopped; regression verified."
+    }
+  ]
+}

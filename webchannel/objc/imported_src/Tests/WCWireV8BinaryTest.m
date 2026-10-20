@@ -147,6 +147,14 @@
   XCTAssertNil(envelopes);
 }
 
+/** An id outside the int64_t range is invalid; it is not clamped. */
+- (void)testDecodeBinaryChunkRejectsOutOfRangeId {
+  XCTAssertNil([WCWireV8Binary decodeBinaryChunk:[@"id=9223372036854775808&size=1\r\nx"
+                                                     dataUsingEncoding:NSUTF8StringEncoding]]);
+  XCTAssertNil([WCWireV8Binary decodeBinaryChunk:[@"id=-9223372036854775809&size=1\r\nx"
+                                                     dataUsingEncoding:NSUTF8StringEncoding]]);
+}
+
 - (void)testIsBinaryChunk {
   NSString *sizePart = nil;
 
