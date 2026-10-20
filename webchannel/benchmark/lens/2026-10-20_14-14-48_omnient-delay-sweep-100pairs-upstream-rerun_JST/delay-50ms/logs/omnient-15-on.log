@@ -1,0 +1,36 @@
+LENS_BATCH_TRIAL_STARTED {"batchId":"a4efb3f6-f461-4194-9f1b-cef893b11b1d","batchPair":15,"batchSetting":"on","batchTrialOrdinal":30,"processId":3136,"processInstanceId":"66AB8FDD-56A3-40E3-A564-51CC2C3B1615","trialStartedEpochSeconds":1792473589.25365}
+[SDK Debug] Opening Forward Channel.
+🌐 [HTTP Req] (39877) [attempt 1] GET https://webchannel.sandbox.google.com/staging/channel/lens?VER=8&RID=39877&CVER=25&X-HTTP-Session-Id=gsessionid&%24req=count%3D0%26%0D%0A&SID=c-RA5Mpk0tAFZaFKLVSmpYX3&t=1
+2026-10-20 14:19:49.256480+0900 WebChanneliOSDemo[3136:141330] GTMSessionFetcher 0x1135d9e00 (https://webchannel.sandbox.google.com/staging/channel/lens?VER=8&RID=39877&CVER=25&X-HTTP-Session-Id=gsessionid&%24req=count%3D0%26%0D%0A&SID=c-RA5Mpk0tAFZaFKLVSmpYX3&t=1) was already running
+🌐 [HTTP Req] (39878) [attempt 1] POST https://webchannel.sandbox.google.com/staging/channel/lens?VER=8&SID=c-RA5Mpk0tAFZaFKLVSmpYX3&RID=39878&AID=-1&t=1 | PostData: {length = 147, bytes = 0x636f756e 743d3126 6f66733d 300d0a69 ... 77223a74 7275657d }
+🌐 [HTTP Req] (39879) [attempt 1] POST https://webchannel.sandbox.google.com/staging/channel/lens?VER=8&SID=c-RA5Mpk0tAFZaFKLVSmpYX3&RID=39879&AID=-1&t=1 | PostData: {length = 188, bytes = 0x636f756e 743d3126 6f66733d 310d0a69 ... 745f6964 223a317d }
+🌐 [HTTP Resp Meta] (39879) [attempt 1] POST https://webchannel.sandbox.google.com/staging/channel/lens?VER=8&SID=c-RA5Mpk0tAFZaFKLVSmpYX3&RID=39879&AID=-1&t=1 status: 400
+[SDK Debug] Request Complete.
+[SDK Debug] Maybe retrying, last error: WCChannelRequestErrorUnknown SessionId
+🌐 [HTTP Resp Meta] (39878) [attempt 1] POST https://webchannel.sandbox.google.com/staging/channel/lens?VER=8&SID=c-RA5Mpk0tAFZaFKLVSmpYX3&RID=39878&AID=-1&t=1 status: 400
+[SDK Debug] Request Complete.
+[SDK Debug] Not retrying due to error type.
+[SDK Debug] Error: HTTP request failed.
+[SDK Error] Error code: 1
+[SDK Debug] HttpChannel: error - 1
+[SDK Info] WebChannel aborted on https://webchannel.sandbox.google.com/staging/channel/lens due to channel error 1
+[SDK Debug] Number of undelivered maps pending: 1, outgoing: 1
+[SDK Info] WebChannel closed on https://webchannel.sandbox.google.com/staging/channel/lens with pending data: (
+    "<WCQueuedMap: 0x113609780>"
+) and undelivered data: (
+    "<WCQueuedMap: 0x11360b3e0>"
+)
+LENS_BENCHMARK_RESULT omnient #1 fastHandshake2=true: failed
+/Users/riesz/net_http/webchannel/objc/demo/WebChanneliOSDemo/WebChanneliOSDemoTests/LensBenchmarkTests.swift:224: error: -[WebChanneliOSDemoTests.LensBenchmarkTests testColdBinaryOmnientBatch] : XCTAssertTrue failed - Incomplete benchmark runs: omnient #1 fastHandshake2=true
+LENS_BATCH_TRIAL_FINISHED {"batchId":"a4efb3f6-f461-4194-9f1b-cef893b11b1d","batchPair":15,"batchSetting":"on","batchTrialOrdinal":30,"processId":3136,"processInstanceId":"66AB8FDD-56A3-40E3-A564-51CC2C3B1615","trialStartedEpochSeconds":1792473589.25365}
+Test Case '-[WebChanneliOSDemoTests.LensBenchmarkTests testColdBinaryOmnientBatch]' failed (0.338 seconds).
+Test Suite 'LensBenchmarkTests' failed at 2026-10-20 14:19:49.586.
+	 Executed 1 test, with 1 failure (0 unexpected) in 0.338 (0.339) seconds
+Test Suite 'WebChanneliOSDemoTests.xctest' failed at 2026-10-20 14:19:49.586.
+	 Executed 1 test, with 1 failure (0 unexpected) in 0.338 (0.339) seconds
+Test Suite 'Selected tests' failed at 2026-10-20 14:19:49.586.
+	 Executed 1 test, with 1 failure (0 unexpected) in 0.338 (0.340) seconds
+Test Suite 'Selected tests' started at 2026-10-20 14:19:50.201.
+Test Suite 'WebChanneliOSDemoTests.xctest' started at 2026-10-20 14:19:50.201.
+Test Suite 'LensBenchmarkTests' started at 2026-10-20 14:19:50.201.
+Test Case '-[WebChanneliOSDemoTests.LensBenchmarkTests testColdBinaryOmnientBatch]' started.

@@ -39,6 +39,12 @@ Include direct raw-data links in `report.md`: combined unfiltered observations a
 
 Include logs, attachments, and xcresult contents in version control for the October 20 upstream-sync sweep and future runs, including associated preflight evidence. Preserve historical per-directory `.gitignore` rules; do not add evidence exclusions to the shared `.gitignore` or new run directories. See README.md for Jujutsu file-size configuration. This supersedes the earlier permission to omit result bundles for these new runs.
 
+## Compact publication: October 20 rerun onward
+
+The user's later policy supersedes the full-evidence upload rule above for the October 20 14:14 rerun and future publications. Keep each trial's original JSON, CSV and WebChannel/HTTP log directly accessible. Keep batch exports, shared batch stdout, xcresults (including aliases), duplicate per-trial batch manifests, all archives and source-code snapshots locally, but exclude them from GitHub. Retain one original export manifest per batch, mapping/identity/hashes, settings, audits and report provenance. Preserve all original local evidence; exclusion does not authorize deletion. Earlier published runs keep their existing policy.
+
+After the full measurement and original-evidence verification complete, run `publish-trial-evidence.py RUN_DIR`, then regenerate the unpaired report. Publication has separate settings and frozen evidence hashes; do not modify measurement settings, mappings, completion records or measured files. Verify that a copy containing only publishable files can regenerate identical plots and validate all published evidence without local-only files. Do not rerun legacy measurement finalization after changing rendering scripts.
+
 ## Retrospective exception: October 20 12:38 upstream run
 
 The user explicitly requested the compact publication policy for `2026-10-20_12-38_omnient-delay-sweep-100pairs-upstream_JST` too. Apply its per-run `.gitignore`; retain original per-trial JSON/CSV and WebChannel/HTTP logs, one shared batch export manifest, identities/hashes and audits. Do not publish duplicate batch exports/shared stdout, xcresults/aliases, duplicate trial manifests, archives, local provenance or source snapshots. Preserve every local original and measurement setting. Keep report regeneration portable using published files only. This specific retrospective request overrides earlier instructions to leave this run's full-upload policy unchanged.
