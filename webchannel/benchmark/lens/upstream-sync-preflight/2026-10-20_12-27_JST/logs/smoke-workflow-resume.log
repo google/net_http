@@ -1,0 +1,42 @@
+Starting 0 ms: 1 OFF/ON pairs, batch 6367e36f-1129-48af-932a-0fb381bdfe1e
+Recorded 0 ms: 2 trials; 2 completed
+Starting 50 ms: 1 OFF/ON pairs, batch 518d4166-dd4a-47a4-ba3c-cecf3b2e648c
+Recorded 50 ms: 2 trials; 2 completed
+Starting 100 ms: 1 OFF/ON pairs, batch 796d3129-fff6-45d3-852d-e75abd8f52ff
+Recorded 100 ms: 2 trials; 2 completed
+Starting 150 ms: 1 OFF/ON pairs, batch b67b90aa-0511-41cd-8c2f-6e56f9e746bf
+Recorded 150 ms: 2 trials; 2 completed
+Starting 200 ms: 1 OFF/ON pairs, batch bc7105ab-ab57-4663-9029-ecc5b7f5b2d8
+Recorded 200 ms: 2 trials; 2 completed
+Traceback (most recent call last):
+  File "/Users/riesz/net_http/webchannel/benchmark/lens/summarize-cold-benchmark.py", line 563, in <module>
+    main()
+  File "/Users/riesz/net_http/webchannel/benchmark/lens/summarize-cold-benchmark.py", line 385, in main
+    histogram_data["histograms"][metric] = plot_histogram(values, path, metric, initial_message_delay_ms)
+  File "/Users/riesz/net_http/webchannel/benchmark/lens/summarize-cold-benchmark.py", line 114, in plot_histogram
+    import matplotlib
+ModuleNotFoundError: No module named 'matplotlib'
+Traceback (most recent call last):
+  File "/Users/riesz/net_http/webchannel/benchmark/lens/summarize-delay-sweep.py", line 254, in <module>
+    main()
+  File "/Users/riesz/net_http/webchannel/benchmark/lens/summarize-delay-sweep.py", line 151, in main
+    subprocess.run(command, check=True)
+  File "/Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/subprocess.py", line 524, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command '['/private/tmp/net-http-lens-plot-env/bin/python', '-B', '/Users/riesz/net_http/webchannel/benchmark/lens/summarize-cold-benchmark.py', '/Users/riesz/net_http/webchannel/benchmark/lens/upstream-sync-preflight/2026-10-20_12-27_JST/smoke/delay-0ms', '1', '--scenarios', 'omnient', '--report-format', 'histogram', '--handshake-threshold-ms', '20.0', '--early-post-400-policy', 'include']' returned non-zero exit status 1.
+Traceback (most recent call last):
+  File "/Users/riesz/net_http/webchannel/benchmark/lens/finalize-delay-sweep.py", line 156, in <module>
+    main()
+  File "/Users/riesz/net_http/webchannel/benchmark/lens/finalize-delay-sweep.py", line 35, in main
+    subprocess.run(command, env=environment, check=True)
+  File "/Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/subprocess.py", line 524, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command '['/private/tmp/net-http-lens-plot-env/bin/python', '-B', '/Users/riesz/net_http/webchannel/benchmark/lens/summarize-delay-sweep.py', '/Users/riesz/net_http/webchannel/benchmark/lens/upstream-sync-preflight/2026-10-20_12-27_JST/smoke', '--pairs', '1', '--delays-ms', '0', '50', '100', '150', '200', '--handshake-threshold-ms', '20', '--early-post-400-policy', 'include']' returned non-zero exit status 1.
+Traceback (most recent call last):
+  File "/Users/riesz/net_http/webchannel/benchmark/lens/run-relaunch-delay-sweep.py", line 142, in <module>
+    main()
+  File "/Users/riesz/net_http/webchannel/benchmark/lens/run-relaunch-delay-sweep.py", line 136, in main
+    subprocess.run([settings["reportPython"], "-B", str(scripts / "finalize-delay-sweep.py"), str(root)], check=True)
+  File "/Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/subprocess.py", line 524, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command '['/tmp/net-http-lens-plot-env/bin/python', '-B', '/Users/riesz/net_http/webchannel/benchmark/lens/finalize-delay-sweep.py', '/Users/riesz/net_http/webchannel/benchmark/lens/upstream-sync-preflight/2026-10-20_12-27_JST/smoke']' returned non-zero exit status 1.

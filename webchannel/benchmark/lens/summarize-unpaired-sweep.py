@@ -22,6 +22,11 @@ def write_json(path, value):
     path.write_text(json.dumps(value, indent=2, allow_nan=False) + "\n")
 
 
+def publication_mode(root):
+    path = root / "publication-settings.json"
+    return path.exists() and json.loads(path.read_text())["evidenceLayout"] == "per-trial"
+
+
 def load(root):
     settings = json.loads((root / "execution-settings.json").read_text())
     spec = importlib.util.spec_from_file_location("cold_summary", Path(__file__).with_name("summarize-cold-benchmark.py"))
@@ -33,11 +38,15 @@ def load(root):
         mapping = json.loads((phase / "batch-trial-map.json").read_text())
         assert sorted(x["ordinal"] for x in mapping.values()) == list(range(1, 2 * settings["pairsPerDelay"] + 1))
         for stem, item in sorted(mapping.items(), key=lambda entry: entry[1]["ordinal"]):
-            source = phase / item["originalJSON"]
+            canonical = phase / "attachments" / f"{stem}-attachments"
+            source = (canonical / Path(item["originalJSON"]).name
+                      if publication_mode(root) else phase / item["originalJSON"])
+            csv_source = (canonical / Path(item["originalCSV"]).name
+                          if publication_mode(root) else phase / item["originalCSV"])
             row = json.loads(source.read_text())[0]
             setting = "on" if row["fastHandshake2"] else "off"
             assert digest(source) == item["jsonSHA256"]
-            assert digest(phase / item["originalCSV"]) == item["csvSHA256"]
+            assert digest(csv_source) == item["csvSHA256"]
             assert row["batchTrialOrdinal"] == item["ordinal"] and row["processInstanceId"] == item["processInstanceId"]
             assert row["batchId"] == item["batchId"] and row["processId"] == item["processId"]
             assert row["batchSetting"] == setting and row["initialMessageDelayMs"] == delay
@@ -45,12 +54,17 @@ def load(root):
             identities.add(row["processInstanceId"])
             canonical = phase / "attachments" / f"{stem}-attachments"
             assert digest(canonical / source.name) == item["jsonSHA256"]
-            csv_source = phase / item["originalCSV"]
             assert digest(canonical / csv_source.name) == item["csvSHA256"]
             begin, end = item["stdoutByteRange"]
-            chunk = (phase / item["batchLog"]).read_bytes()[begin:end]
-            assert hashlib.sha256(chunk).hexdigest() == item["trialLogSHA256"]
-            assert (phase / "logs" / f"{stem}.log").read_bytes() == chunk
+            trial_log = (phase / "logs" / f"{stem}.log").read_bytes()
+            assert hashlib.sha256(trial_log).hexdigest() == item["trialLogSHA256"]
+            if not publication_mode(root) or (phase / item["batchLog"]).exists():
+                chunk = (phase / item["batchLog"]).read_bytes()[begin:end]
+                assert trial_log == chunk
+            for key, expected in (("originalJSON", "jsonSHA256"), ("originalCSV", "csvSHA256")):
+                original = phase / item[key]
+                if original.exists():
+                    assert digest(original) == item[expected]
             record = {"delayMs": delay, "trialOrdinal": item["ordinal"], "setting": setting,
                       "startedEpochSeconds": row["trialStartedEpochSeconds"], "status": row["status"],
                       "coldConnection": row.get("coldConnection"),
@@ -144,7 +158,8 @@ def generate(root, settings, records):
              "|---:|---|---|"]
     for delay in settings["delaysMs"]:
         dirs = sorted({str(Path(r["originalJSON"]).parent) for r in records if r["delayMs"] == delay})
-        links = " · ".join(f"[Batch {i+1}]({p}/)" for i, p in enumerate(dirs))
+        links = (f"[Per-trial JSON/CSV](delay-{delay}ms/attachments/)" if publication_mode(root)
+                 else " · ".join(f"[Batch {i+1}]({p}/)" for i, p in enumerate(dirs)))
         lines.append(f"| {delay} | {links} | [All trials](delay-{delay}ms/artifacts.md) |")
     lines += ["", "## Observation counts and initial early POST rejection", "",
               "No handshake-difference filter is applied. HTTP 400 and unresolved HTTP status do not exclude observed values. The HTTP 400 rate uses all recorded ON trials as its denominator.", "",
@@ -196,7 +211,7 @@ def generate(root, settings, records):
                   "## Benchmark elapsed time by delay", "", "[Original timing](timing.json) includes launch, measurement, export and any recovery gaps; excludes build and report generation.", "",
                   "| M1 delay (ms) | Elapsed seconds |", "|---:|---:|"]
     artifacts.extend(f"| {d} | {timing['delays'][str(d)]['elapsedSeconds']:.3f} |" for d in settings["delaysMs"])
-    artifacts += ["", "Raw exports, log files, result bundles and the connection audit are unchanged. Trial file identifiers retain their original names; they are not analytical pairings."]
+    artifacts += ["", ("Per-trial JSON/CSV exports and WebChannel/HTTP logs are published byte-for-byte. Batch exports, shared stdout, xcresults, archives and source snapshots remain local and are not uploaded. The original batch mapping and shared export manifests preserve provenance. See [publication policy](publication-settings.json)." if publication_mode(root) else "Raw exports, log files, result bundles and the connection audit are unchanged. Trial file identifiers retain their original names; they are not analytical pairings.")]
     (root / "artifacts.md").write_text("\n".join(artifacts) + "\n")
 
 
@@ -204,11 +219,26 @@ def run_verified(root):
     root = Path(root).resolve()
     plots = root / "plots"
     plots.mkdir(exist_ok=True)
-    raw = {p.relative_to(root).as_posix(): digest(p) for phase in root.glob("delay-*ms")
-           for category in ("logs", "attachments") for p in (phase / category).rglob("*") if p.is_file()}
+    if publication_mode(root):
+        raw = {}
+        for phase in root.glob("delay-*ms"):
+            mapping = json.loads((phase / "batch-trial-map.json").read_text())
+            for stem, item in mapping.items():
+                folder = phase / "attachments" / f"{stem}-attachments"
+                for p in (folder / Path(item["originalJSON"]).name, folder / Path(item["originalCSV"]).name,
+                          phase / "logs" / f"{stem}.log"):
+                    raw[p.relative_to(root).as_posix()] = digest(p)
+            for p in (phase / "export-manifests").glob("*.json"):
+                raw[p.relative_to(root).as_posix()] = digest(p)
+        # Validate against the frozen publication manifest before replacing generated input hashes.
+        expected = json.loads((root / "publication-settings.json").read_text())["publishedEvidenceSHA256"]
+        assert raw == expected, "Published evidence differs from the verified original exports/logs"
+    else:
+        raw = {p.relative_to(root).as_posix(): digest(p) for phase in root.glob("delay-*ms")
+               for category in ("logs", "attachments") for p in (phase / category).rglob("*") if p.is_file()}
     for phase in root.glob("delay-*ms"):
         manifest = phase / "histograms/input-manifest.json"
-        if manifest.exists():
+        if manifest.exists() and not publication_mode(root):
             for item in json.loads(manifest.read_text()):
                 assert digest(phase / item["path"]) == item["sha256"]
     settings, records = load(root)
@@ -260,6 +290,7 @@ def run_verified(root):
     result = {"status": "complete", "trials": len(records), "rawFilesPreserved": len(raw),
               "metricObservationCounts": {m: {s: sum(r['setting']==s and available(r[m.lower()+'Ms']) for r in records)
                                              for s in ('off','on')} for m in ('TTFA','TTFD')},
+              "evidenceLayout": "per-trial" if publication_mode(root) else "full",
               "verification": "Original export/log identity and hashes, all finite metric observations, missing counts, ECDF, links, shared limits and deterministic regeneration verified"}
     write_json(plots / "verification.json", result)
     print(json.dumps(result))
