@@ -1,0 +1,55 @@
+[
+  {
+    "batchId" : "6367e36f-1129-48af-932a-0fb381bdfe1e",
+    "batchPair" : 1,
+    "batchSetting" : "off",
+    "batchTrialOrdinal" : 1,
+    "coldConnection" : true,
+    "coldConnectionSource" : "handshake",
+    "detectionDelayMs" : 50,
+    "deviceModel" : "iPhone",
+    "enableBinaryEncoding" : true,
+    "endpoint" : "https:\/\/webchannel.sandbox.google.com\/staging\/channel\/lens",
+    "fastHandshake2" : false,
+    "handshakeMs" : 370.05293369293213,
+    "imageSizeKb" : 150,
+    "initialMessageDelayMs" : 0,
+    "log" : "[12:32:33.253] ==================================================================\n[12:32:33.253] 🚀 [Lens Benchmark] Starting Lens Latency Run (Omnient 0-RTT)\n[12:32:33.253] ⚙️ Options: fastHandshake2=false, fastHandshake=false, nonBlockingSend=false, binary=true, imageSize=150KB, initialMessageDelayMs=0\n[12:32:33.253] ==================================================================\n[12:32:33.253] >>> [1. Handshake Request] Opening WebChannel connection to: https:\/\/webchannel.sandbox.google.com\/staging\/channel\/lens\n[12:32:33.253] >>> Options: enableBinaryEncoding=true, nonBlockingSend=false, blockingHandshake=false, sendRawJson=true, fastHandshake=false, fastHandshake2=false\n[12:32:33.253] ⏱ [Lens M1] send() at T+1.6ms from connect start\n[12:32:33.253] 📸 [Message 1] Sending StickyClusterInfo (~50 B)...\n[12:32:33.253] >>> Sending M1 StickyClusterInfo (117 bytes): [7b 22 63 6c 69 65 6e 74 5f 73 65 6e 64 5f 74 69 6d 65 5f 6d 73 22 3a 31 37 39 32 34 36 37 31 35...] [State: Connecting (Opening)...]\n[12:32:33.253] 📸 [Message 3 - Prefetch] Sending 150 KB image payload [State: Connecting (Opening)...]...\n[12:32:33.253] >>> Sending M3 Prefetch (150 KB) (158 bytes): [7b 22 61 63 6b 5f 72 65 71 75 65 73 74 65 64 22 3a 74 72 75 65 2c 22 73 65 72 76 65 72 5f 73 65...] [State: Connecting (Opening)...]\n[12:32:33.256] 🌐 [HTTP Req] (52639) [attempt 1] POST https:\/\/webchannel.sandbox.google.com\/staging\/channel\/lens?VER=8&RID=52639&CVER=25&X-HTTP-Session-Id=gsessionid&t=1 | PostData: {length = 320, bytes = 0x636f756e 743d3226 6f66733d 300d0a69 ... 37313533 3235327d }\n[12:32:33.621] 🌐 [HTTP Resp Body] (52639): [[0,[\"c\",\"J5lQr21SBejGxmI0BU1zsA\",\"\",8,15,30000]]]\n\n[12:32:33.622] ✅ [Event: webChannelOpened] Handshake completed at T+370.1ms -> State: Connected (Opened) [Binary Encoding: Inactive]\n[12:32:33.627] 🌐 [HTTP Req] (rpc) [attempt 1] GET https:\/\/webchannel.sandbox.google.com\/staging\/channel\/lens?gsessionid=KRVbnY-PlINj5GVMoz5uiSw8jVnMR_S2xZoopLvgsMA&VER=8&RID=rpc&SID=J5lQr21SBejGxmI0BU1zsA&CI=0&AID=0&TYPE=xmlhttp&t=1\n[12:32:33.785] 🌐 [HTTP Resp Body] (rpc): {length = 661, bytes = 0x69643d31 2673697a 653d3234 370d0a7b ... 74696f6e 73227d0a }\n[12:32:33.786] 🎯 [Lens M1] StickyClusterInfo response received! Cluster: us-central1-b | Forward (est): 344.0 ms\n[12:32:33.786] <<< [Event: didReceiveMessage] Message: [Binary NSData: 247 bytes] Hex: [7b 22 63 6c 69 65 6e 74 5f 73 65 6e 64 5f 74 69 6d 65 5f 6d 73 22 3a 31 37 39 32 34 36 37 31 35...] | UTF-8: {\"client_send_time_ms\":1792467153252,\"cluster\":\"us-central1-b\",\"forward_latency_ms\":344,\"routing_token\":\"rt_staging_us_central1_001\",\"server_receive_time_ms\":1792467153596,\"server_send_time_ms\":1792467153596,\"type\":\"sticky_cluster_info_response\"}\n\n[12:32:33.786] 🎯 [Lens M3 Prefetch] Stream ACK received! TTFA (RTT): 533.1 ms | Forward (est): 344.0 ms\n[12:32:33.786] <<< [Event: didReceiveMessage] Message: [Binary NSData: 175 bytes] Hex: [7b 22 63 6c 69 65 6e 74 5f 73 65 6e 64 5f 74 69 6d 65 5f 6d 73 22 3a 31 37 39 32 34 36 37 31 35...] | UTF-8: {\"client_send_time_ms\":1792467153252,\"forward_latency_ms\":344,\"request_id\":1,\"server_receive_time_ms\":1792467153596,\"server_send_time_ms\":1792467153596,\"type\":\"ack_response\"}\n\n[12:32:33.787] 🎯 [Lens M3 Prefetch] Preliminary Detections received! TTFD: 533.5 ms\n[12:32:33.787] 📸 [Message 4 - Final Capture] Sending final interaction request (~1 KB)...\n[12:32:33.787] >>> Sending M4 Final Capture (151 bytes): [7b 22 72 65 71 75 65 73 74 5f 69 64 22 3a 32 2c 22 75 73 65 72 5f 69 6e 74 65 72 61 63 74 69 6f...] [State: Connected (Opened)]\n[12:32:33.787] <<< [Event: didReceiveMessage] Message: [Binary NSData: 194 bytes] Hex: [7b 22 63 6c 69 65 6e 74 5f 73 65 6e 64 5f 74 69 6d 65 5f 6d 73 22 3a 31 37 39 32 34 36 37 31 35...] | UTF-8: {\"client_send_time_ms\":1792467153252,\"detected_objects\":[{\"confidence\":0.96,\"label\":\"simulated_lens_object\"}],\"request_id\":1,\"server_send_time_ms\":1792467153647,\"type\":\"preliminary_detections\"}\n\n[12:32:33.790] 🌐 [HTTP Req] (52640) [attempt 1] POST https:\/\/webchannel.sandbox.google.com\/staging\/channel\/lens?VER=8&gsessionid=KRVbnY-PlINj5GVMoz5uiSw8jVnMR_S2xZoopLvgsMA&SID=J5lQr21SBejGxmI0BU1zsA&RID=52640&AID=3&t=1 | PostData: {length = 181, bytes = 0x636f756e 743d3126 6f66733d 320d0a69 ... 65717565 7374227d }\n[12:32:33.945] 🌐 [HTTP Resp Body] (52640): [1,3,7]\n\n[12:32:33.945] 🌐 [HTTP Resp Body] (rpc): {length = 217, bytes = 0x69643d34 2673697a 653d3230 320d0a7b ... 706f6e73 65227d0a }\n[12:32:33.946] 🎉 [Lens Benchmark Complete] All lifecycle stages finished! M4 RTT: 159.5 ms | Forward (est): 124.0 ms\n[12:32:33.946] <<< [Event: didReceiveMessage] Message: [Binary NSData: 202 bytes] Hex: [7b 22 63 6c 69 65 6e 74 5f 73 65 6e 64 5f 74 69 6d 65 5f 6d 73 22 3a 31 37 39 32 34 36 37 31 35...] | UTF-8: {\"client_send_time_ms\":1792467153786,\"forward_latency_ms\":124,\"request_id\":2,\"server_receive_time_ms\":1792467153910,\"server_send_time_ms\":1792467153910,\"status\":\"SUCCESS\",\"type\":\"interaction_response\"}\n",
+    "m1DelayFromConnectMs" : 1.6258955001831055,
+    "m4RttMs" : 159.46900844573975,
+    "processId" : 1026,
+    "processInstanceId" : "999AF9F3-6E30-4221-8B11-A49A57C729CC",
+    "repetition" : 1,
+    "scenario" : "omnient",
+    "status" : "completed",
+    "systemVersion" : "26.3.1",
+    "transportMetrics" : [
+      {
+        "localPort" : 58440,
+        "method" : "POST",
+        "protocol" : "h2",
+        "remoteAddress" : "2404:6800:400b:c017::451",
+        "remotePort" : 443,
+        "reusedConnection" : false,
+        "rid" : "52639",
+        "tcpConnectMs" : 47.00005054473877,
+        "tlsMs" : 32.000064849853516,
+        "url" : "https:\/\/webchannel.sandbox.google.com\/staging\/channel\/lens?VER=8&RID=52639&CVER=25&X-HTTP-Session-Id=gsessionid&t=1"
+      },
+      {
+        "localPort" : 58440,
+        "method" : "POST",
+        "protocol" : "h2",
+        "remoteAddress" : "2404:6800:400b:c017::451",
+        "remotePort" : 443,
+        "reusedConnection" : true,
+        "rid" : "52640",
+        "url" : "https:\/\/webchannel.sandbox.google.com\/staging\/channel\/lens?VER=8&gsessionid=KRVbnY-PlINj5GVMoz5uiSw8jVnMR_S2xZoopLvgsMA&SID=J5lQr21SBejGxmI0BU1zsA&RID=52640&AID=3&t=1"
+      }
+    ],
+    "trialRecordedEpochSeconds" : 1792467153.9872642,
+    "trialStartedEpochSeconds" : 1792467153.2503591,
+    "ttfaMs" : 533.08391571044922,
+    "ttfdMs" : 533.54799747467041
+  }
+]

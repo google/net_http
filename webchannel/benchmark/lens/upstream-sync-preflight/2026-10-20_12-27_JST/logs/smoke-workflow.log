@@ -1,0 +1,9 @@
+Starting 0 ms: 1 OFF/ON pairs, batch cad8606a-60f7-47b1-b0e3-c48bb7763e3a
+Traceback (most recent call last):
+  File "/Users/riesz/net_http/webchannel/benchmark/lens/run-relaunch-delay-sweep.py", line 142, in <module>
+    main()
+  File "/Users/riesz/net_http/webchannel/benchmark/lens/run-relaunch-delay-sweep.py", line 114, in main
+    new_mapping, rows = importer.import_batch(phase, batch_id, start_ordinal, iterations, delay, log, export, bundle)
+  File "/Users/riesz/net_http/webchannel/benchmark/lens/import-relaunch-batch.py", line 17, in import_batch
+    raise ValueError("Entered iterations are missing, repeated, or out of order; no trial is retried")
+ValueError: Entered iterations are missing, repeated, or out of order; no trial is retried

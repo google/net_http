@@ -1,0 +1,252 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test-without-building -workspace /Users/riesz/net_http/webchannel/objc/demo/WebChanneliOSDemo/WebChanneliOSDemo.xcworkspace -scheme WebChanneliOSDemo -configuration Debug -destination id=00008110-001C34513686201E -derivedDataPath /tmp/net-http-lens-upstream-20261020-build -parallel-testing-enabled NO "-only-testing:WebChanneliOSDemoTests/LensBenchmarkTests/testColdBinaryOmnientBatch" -test-iterations 2 -test-repetition-relaunch-enabled YES -resultBundlePath /Users/riesz/net_http/webchannel/benchmark/lens/upstream-sync-preflight/2026-10-20_12-27_JST/smoke/delay-0ms/xcresults/batch-0001.xcresult
+
+Running tests repeatedly 2 times.
+
+Writing result bundle at path:
+	/Users/riesz/net_http/webchannel/benchmark/lens/upstream-sync-preflight/2026-10-20_12-27_JST/smoke/delay-0ms/xcresults/batch-0001.xcresult
+
+2026-10-20 12:31:20.001 xcodebuild[24273:4469064]  IDELaunchReport: acf75b7519569300:acf75b7519569300: Finished with error: The application could not be launched because the Developer App Certificate is not trusted.
+Domain: IDELaunchCoreDevice
+Code: 0
+Recovery Suggestion: Verify that the Developer App certificate for your account is trusted on your device. Open Settings on the device and navigate to General -> VPN & Device Management, then select your Developer App certificate to trust it.
+User Info: {
+    DVTErrorCreationDateKey = "2026-10-20 03:31:20 +0000";
+    IDERunOperationFailingWorker = IDELaunchCoreDeviceWorker;
+}
+--
+The application failed to launch.
+Domain: com.apple.dt.CoreDeviceError
+Code: 10002
+User Info: {
+    BundleIdentifier = "com.pmodular.webchannel.demo";
+}
+--
+The request to open "com.pmodular.webchannel.demo" failed.
+Domain: FBSOpenApplicationServiceErrorDomain
+Code: 1
+Failure Reason: The request was denied by service delegate (SBMainWorkspace) for reason: Security ("Unable to launch com.pmodular.webchannel.demo because it has an invalid code signature, inadequate entitlements or its profile has not been explicitly trusted by the user").
+User Info: {
+    BSErrorCodeDescription = RequestDenied;
+    FBSOpenApplicationRequestID = 0x5b2f;
+}
+--
+The operation couldn’t be completed. Unable to launch com.pmodular.webchannel.demo because it has an invalid code signature, inadequate entitlements or its profile has not been explicitly trusted by the user.
+Domain: FBSOpenApplicationErrorDomain
+Code: 3
+Failure Reason: Unable to launch com.pmodular.webchannel.demo because it has an invalid code signature, inadequate entitlements or its profile has not been explicitly trusted by the user.
+User Info: {
+    BSErrorCodeDescription = Security;
+}
+--
+
+2026-10-20 12:31:20.001 xcodebuild[24273:4469064]  IDELaunchReport: acf75b7519569300:acf75b7519569300: com.apple.dt.IDERunOperationWorkerFinished {
+    "device_identifier" = "00008110-001C34513686201E";
+    "device_isCoreDevice" = 1;
+    "device_model" = "iPhone14,6";
+    "device_osBuild" = "26.3.1 (23D8133)";
+    "device_osBuild_monotonic" = 2303813300;
+    "device_os_variant" = 1;
+    "device_platform" = "com.apple.platform.iphoneos";
+    "device_platform_family" = 2;
+    "device_reality" = 1;
+    "device_thinningType" = "iPhone14,6";
+    "device_transport" = 1;
+    "launchSession_schemeCommand" = Test;
+    "launchSession_schemeCommand_enum" = 2;
+    "launchSession_targetArch" = arm64;
+    "launchSession_targetArch_enum" = 6;
+    "operation_duration_ms" = 5216;
+    "operation_errorCode" = 0;
+    "operation_errorDomain" = IDELaunchCoreDevice;
+    "operation_errorWorker" = IDELaunchCoreDeviceWorker;
+    "operation_error_reportable" = 0;
+    "operation_name" = IDERunOperationWorkerGroup;
+    "param_consoleMode" = 0;
+    "param_debugger_attachToExtensions" = 0;
+    "param_debugger_attachToXPC" = 0;
+    "param_debugger_type" = 1;
+    "param_destination_isProxy" = 0;
+    "param_destination_platform" = "com.apple.platform.iphoneos";
+    "param_diag_MTE_enable" = 0;
+    "param_diag_MainThreadChecker_stopOnIssue" = 0;
+    "param_diag_MallocStackLogging_enableDuringAttach" = 0;
+    "param_diag_MallocStackLogging_enableForXPC" = 0;
+    "param_diag_allowLocationSimulation" = 1;
+    "param_diag_checker_mtc_enable" = 0;
+    "param_diag_checker_tpc_enable" = 1;
+    "param_diag_gpu_frameCapture_enable" = 3;
+    "param_diag_gpu_shaderValidation_enable" = 0;
+    "param_diag_gpu_validation_enable" = 1;
+    "param_diag_guardMalloc_enable" = 0;
+    "param_diag_memoryGraphOnResourceException" = 0;
+    "param_diag_queueDebugging_enable" = 0;
+    "param_diag_runtimeProfile_generate" = 0;
+    "param_diag_sanitizer_asan_enable" = 0;
+    "param_diag_sanitizer_tsan_enable" = 0;
+    "param_diag_sanitizer_tsan_stopOnIssue" = 0;
+    "param_diag_sanitizer_ubsan_enable" = 0;
+    "param_diag_sanitizer_ubsan_stopOnIssue" = 0;
+    "param_diag_showNonLocalizedStrings" = 0;
+    "param_diag_viewDebugging_enabled" = 0;
+    "param_diag_viewDebugging_insertDylibOnLaunch" = 0;
+    "param_install_style" = 2;
+    "param_launcher_UID" = 2;
+    "param_launcher_allowDeviceSensorReplayData" = 0;
+    "param_launcher_kind" = 0;
+    "param_launcher_style" = 0;
+    "param_launcher_substyle" = 0;
+    "param_runnable_appExtensionHostRunMode" = 0;
+    "param_runnable_productType" = "com.apple.product-type.application";
+    "param_testing_launchedForTesting" = 1;
+    "param_testing_suppressSimulatorApp" = 1;
+    "param_testing_usingCLI" = 0;
+    "sdk_canonicalName" = "iphoneos26.5";
+    "sdk_osVersion" = "26.5";
+    "sdk_platformID" = 2;
+    "sdk_variant" = iphoneos;
+    "sdk_version_monotonic" = 2305008100;
+}
+
+
+*** If you believe this error represents a bug, please attach the result bundle at /Users/riesz/net_http/webchannel/benchmark/lens/upstream-sync-preflight/2026-10-20_12-27_JST/smoke/delay-0ms/xcresult
+
+2026-10-20 12:31:20.340 xcodebuild[24273:4469064]  IDELaunchReport: acf75b751a624200:acf75b751a624200: Finished with error: The application could not be launched because the Developer App Certificate is not trusted.
+Domain: IDELaunchCoreDevice
+Code: 0
+Recovery Suggestion: Verify that the Developer App certificate for your account is trusted on your device. Open Settings on the device and navigate to General -> VPN & Device Management, then select your Developer App certificate to trust it.
+User Info: {
+    DVTErrorCreationDateKey = "2026-10-20 03:31:20 +0000";
+    IDERunOperationFailingWorker = IDELaunchCoreDeviceWorker;
+}
+--
+The application failed to launch.
+Domain: com.apple.dt.CoreDeviceError
+Code: 10002
+User Info: {
+    BundleIdentifier = "com.pmodular.webchannel.demo";
+}
+--
+The request to open "com.pmodular.webchannel.demo" failed.
+Domain: FBSOpenApplicationServiceErrorDomain
+Code: 1
+Failure Reason: The request was denied by service delegate (SBMainWorkspace) for reason: Security ("Unable to launch com.pmodular.webchannel.demo because it has an invalid code signature, inadequate entitlements or its profile has not been explicitly trusted by the user").
+User Info: {
+    BSErrorCodeDescription = RequestDenied;
+    FBSOpenApplicationRequestID = 0x2b54;
+}
+--
+The operation couldn’t be completed. Unable to launch com.pmodular.webchannel.demo because it has an invalid code signature, inadequate entitlements or its profile has not been explicitly trusted by the user.
+Domain: FBSOpenApplicationErrorDomain
+Code: 3
+Failure Reason: Unable to launch com.pmodular.webchannel.demo because it has an invalid code signature, inadequate entitlements or its profile has not been explicitly trusted by the user.
+User Info: {
+    BSErrorCodeDescription = Security;
+}
+--
+
+2026-10-20 12:31:20.340 xcodebuild[24273:4469064]  IDELaunchReport: acf75b751a624200:acf75b751a624200: com.apple.dt.IDERunOperationWorkerFinished {
+    "device_identifier" = "00008110-001C34513686201E";
+    "device_isCoreDevice" = 1;
+    "device_model" = "iPhone14,6";
+    "device_osBuild" = "26.3.1 (23D8133)";
+    "device_osBuild_monotonic" = 2303813300;
+    "device_os_variant" = 1;
+    "device_platform" = "com.apple.platform.iphoneos";
+    "device_platform_family" = 2;
+    "device_reality" = 1;
+    "device_thinningType" = "iPhone14,6";
+    "device_transport" = 1;
+    "launchSession_schemeCommand" = Test;
+    "launchSession_schemeCommand_enum" = 2;
+    "launchSession_targetArch" = arm64;
+    "launchSession_targetArch_enum" = 6;
+    "operation_duration_ms" = 52;
+    "operation_errorCode" = 0;
+    "operation_errorDomain" = IDELaunchCoreDevice;
+    "operation_errorWorker" = IDELaunchCoreDeviceWorker;
+    "operation_error_reportable" = 0;
+    "operation_name" = IDERunOperationWorkerGroup;
+    "param_consoleMode" = 0;
+    "param_debugger_attachToExtensions" = 0;
+    "param_debugger_attachToXPC" = 0;
+    "param_debugger_type" = 1;
+    "param_destination_isProxy" = 0;
+    "param_destination_platform" = "com.apple.platform.iphoneos";
+    "param_diag_MTE_enable" = 0;
+    "param_diag_MainThreadChecker_stopOnIssue" = 0;
+    "param_diag_MallocStackLogging_enableDuringAttach" = 0;
+    "param_diag_MallocStackLogging_enableForXPC" = 0;
+    "param_diag_allowLocationSimulation" = 1;
+    "param_diag_checker_mtc_enable" = 0;
+    "param_diag_checker_tpc_enable" = 1;
+    "param_diag_gpu_frameCapture_enable" = 3;
+    "param_diag_gpu_shaderValidation_enable" = 0;
+    "param_diag_gpu_validation_enable" = 1;
+    "param_diag_guardMalloc_enable" = 0;
+    "param_diag_memoryGraphOnResourceException" = 0;
+    "param_diag_queueDebugging_enable" = 0;
+    "param_diag_runtimeProfile_generate" = 0;
+    "param_diag_sanitizer_asan_enable" = 0;
+    "param_diag_sanitizer_tsan_enable" = 0;
+    "param_diag_sanitizer_tsan_stopOnIssue" = 0;
+    "param_diag_sanitizer_ubsan_enable" = 0;
+    "param_diag_sanitizer_ubsan_stopOnIssue" = 0;
+    "param_diag_showNonLocalizedStrings" = 0;
+    "param_diag_viewDebugging_enabled" = 0;
+    "param_diag_viewDebugging_insertDylibOnLaunch" = 0;
+    "param_install_style" = 2;
+    "param_launcher_UID" = 2;
+    "param_launcher_allowDeviceSensorReplayData" = 0;
+    "param_launcher_kind" = 0;
+    "param_launcher_style" = 0;
+    "param_launcher_substyle" = 0;
+    "param_runnable_appExtensionHostRunMode" = 0;
+    "param_runnable_productType" = "com.apple.product-type.application";
+    "param_testing_launchedForTesting" = 1;
+    "param_testing_suppressSimulatorApp" = 1;
+    "param_testing_usingCLI" = 0;
+    "sdk_canonicalName" = "iphoneos26.5";
+    "sdk_osVersion" = "26.5";
+    "sdk_platformID" = 2;
+    "sdk_variant" = iphoneos;
+    "sdk_version_monotonic" = 2305008100;
+}
+
+
+*** If you believe this error represents a bug, please attach the result bundle at /Users/riesz/net_http/webchannel/benchmark/lens/upstream-sync-preflight/2026-10-20_12-27_JST/smoke/delay-0ms/xcresult
+
+2026-10-20 12:31:20.732 xcodebuild[24273:4469099]  IDETestOperationsObserverDebug: Failure collecting diagnostics from devices: Process exited with error 1:
+ ERROR: The operation couldn?t be completed. (CoreDeviceCLISupport.DiagnoseError error 0.)
+This tool generates files that allow Apple to investigate issues with your
+computer and help improve Apple products. The files might contain personal
+information found on your device or associated with your Apple Account(s),
+including but not limited to your name, serial numbers of your device,
+your device name, your device's location over the last one to two days,
+your attached peripheral devices, your user name, your email address and
+email settings, file paths, file names, Siri suggestions, your computer's
+IP addresses, and network connection information.
+
+This information is used by Apple in accordance with its privacy policy
+(www.apple.com/privacy) and is not shared with any other company. By using
+this tool and sending the results to Apple, you consent to Apple using the
+contents of these files to improve Apple products.
+
+An error occurred while running devicectl diagnose. Will archive the diagnostics collected thus far.
+Wrote file to /Users/riesz/net_http/webchannel/benchmark/lens/upstream-sync-preflight/2026-10-20_12-27_JST/smoke/delay-0ms/xcresults/batch-0001.xcresult/Staging/1_Test/Diagnostics/devicectl_diagnostics.zip
+Partial devicectl diagnose bundle located here: /Users/riesz/net_http/webchannel/benchmark/lens/upstream-sync-preflight/2026-10-20_12-27_JST/smoke/delay-0ms/xcresults/batch-0001.xcresult/Staging/1_Test/Diagnostics/devicectl_diagnostics.zip
+
+2026-10-20 12:31:20.738 xcodebuild[24273:4469062] [MT] IDETestOperationsObserverDebug: 6.380 elapsed -- Testing started completed.
+2026-10-20 12:31:20.738 xcodebuild[24273:4469062] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-10-20 12:31:20.738 xcodebuild[24273:4469062] [MT] IDETestOperationsObserverDebug: 6.380 sec, +6.380 sec -- end
+
+Test session results, code coverage, and logs:
+	/Users/riesz/net_http/webchannel/benchmark/lens/upstream-sync-preflight/2026-10-20_12-27_JST/smoke/delay-0ms/xcresults/batch-0001.xcresult
+
+Testing failed:
+	The application could not be launched because the Developer App Certificate is not trusted.
+	WebChanneliOSDemo encountered an error (Failed to install or launch the test runner. (Underlying Error: The application could not be launched because the Developer App Certificate is not trusted. Verify that the Developer App certificate for your account is trusted on your device. Open Settings on the device and navigate to General -> VPN & Device Management, then select your Developer App certificate to trust it. (Underlying Error: The application failed to launch. (Underlying Error: The request to open "com.pmodular.webchannel.demo" failed. The request was denied by service delegate (SBMainWorkspace) for reason: Security ("Unable to launch com.pmodular.webchannel.demo because it has an invalid code signature, inadequate entitlements or its profile has not been explicitly trusted by the user"). (Underlying Error: The operation couldn’t be completed. Unable to launch com.pmodular.webchannel.demo because it has an invalid code signature, inadequate entitlements or its profile has not been explicitly trusted by the user.)))))
+
+** TEST EXECUTE FAILED **
+
+Testing started
