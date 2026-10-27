@@ -2,7 +2,6 @@
 
 import asyncio
 import unittest
-from unittest.mock import Mock, patch
 
 from web_stream.client import WebStreamConnection
 from web_stream.server import WebStreamServerConnection
@@ -10,18 +9,14 @@ from web_stream.server import WebStreamServerConnection
 
 class TestRecvTermination(unittest.IsolatedAsyncioTestCase):
     async def make_connection(self, side):
-        native = Mock()
         if side == "client":
-            with patch("web_stream.client.web_stream_ext.PlainClient", return_value=native):
-                conn = WebStreamConnection("127.0.0.1", 80, False)
-            native.set_on_open.call_args[0][0](Mock())
-            await asyncio.sleep(0)
+            conn = WebStreamConnection("127.0.0.1", 80, False)
         else:
-            native.path.return_value = "/"
-            conn = WebStreamServerConnection(native, asyncio.get_running_loop())
+            conn = WebStreamServerConnection(None, None)
         callbacks = {
-            name: getattr(native, "set_on_" + name).call_args[0][0]
-            for name in ("message", "close", "error")
+            "message": conn._feed_message,
+            "close": lambda: conn._terminate(ConnectionAbortedError("Connection closed")),
+            "error": lambda: conn._terminate(ConnectionError("Connection lost")),
         }
         return conn, callbacks
 

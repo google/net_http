@@ -1,169 +1,178 @@
 import asyncio
-import threading
-from . import web_stream_ext
 
-WEB_STREAM_OPCODE_TEXT = 1
-WEB_STREAM_OPCODE_BINARY = 2
-WEB_STREAM_OPCODE_METADATA = 3
+from .connection import Connection
+from .runtime import Limits, WebStreamError, acquire_runtime, finish_cleanup, release_runtime
 
-class WebStreamServerConnection:
-    def __init__(self, handler_ref, loop):
-        self._handler_ref = handler_ref
-        self._loop = loop
-        self.path = handler_ref.path() or "/"
-        self._recv_queue = asyncio.Queue()
-        self._closed = False
-        self._recv_error = None
 
-        def safe_call(func, *args):
-            if not self._loop.is_closed():
-                try:
-                    self._loop.call_soon_threadsafe(func, *args)
-                except RuntimeError:
-                    pass
-
-        def enqueue_message(opcode, msg):
-            if not self._closed:
-                self._recv_queue.put_nowait((opcode, msg))
-
-        def on_message(opcode, msg):
-            safe_call(enqueue_message, opcode, msg)
-
-        def on_error():
-            safe_call(self._terminate, ConnectionError("Connection lost or error occurred"))
-
-        def on_close():
-            safe_call(self._terminate, ConnectionAbortedError("Connection closed by client"))
-
-        self._handler_ref.set_on_message(on_message)
-        self._handler_ref.set_on_error(on_error)
-        self._handler_ref.set_on_close(on_close)
-
-    def _terminate(self, error):
-        if self._closed:
-            return
-        self._closed = True
-        self._recv_error = (type(error), error.args)
-        self._recv_queue.put_nowait(None)
-
-    async def send_text(self, text: str):
-        if self._closed:
-            raise RuntimeError("Connection is closed")
-        self._handler_ref.send_text(text)
-
-    async def send_binary(self, data):
-        if self._closed:
-            raise RuntimeError("Connection is closed")
-        self._handler_ref.send_binary(data)
-
-    async def send_metadata(self, data):
-        if self._closed:
-            raise RuntimeError("Connection is closed")
-        self._handler_ref.send_metadata(data)
-
-    async def send(self, data):
-        """Sends data over the connection. If bytes, sends binary, else text."""
-        if isinstance(data, bytes):
-            await self.send_binary(data)
-        else:
-            await self.send_text(str(data))
-
-    async def recv(self, decode=None):
-        """Receive buffered messages, then keep raising the first terminal error."""
-        res = await self._recv_queue.get()
-        if res is None:
-            # Leave the terminal marker available for every other receiver.
-            self._recv_queue.put_nowait(None)
-            error_type, args = self._recv_error
-            raise error_type(*args)
-
-        opcode, msg = res
-        should_decode = decode
-        if should_decode is None:
-            should_decode = (opcode == WEB_STREAM_OPCODE_TEXT)
-
-        if should_decode:
-            return msg.decode("utf-8")
-        else:
-            return msg
-
-    async def close(self):
-        self._terminate(ConnectionAbortedError("Connection closed"))
-        if self._handler_ref:
-            ref = self._handler_ref
-            self._handler_ref = None
-            try:
-                ref.set_on_message(None)
-                ref.set_on_close(None)
-                ref.set_on_error(None)
-            finally:
-                # Always attempt the protocol EOF, even if detaching a callback
-                # fails. Let cleanup/transport failures reach the caller.
-                ref.close()
-
-    async def __aiter__(self):
-        try:
-            while True:
-                yield await self.recv()
-        except (ConnectionAbortedError, ConnectionError, RuntimeError):
-            pass
+class WebStreamServerConnection(Connection):
+    def __init__(self, runtime, identifier, path="/", *, limits=None, close_timeout=5.0):
+        self._initialize(runtime, identifier, path, limits, close_timeout)
 
 
 class WebStreamServer:
-    def __init__(self, port, tls=False, ca_file="", cert_file="", key_file="", connection_cls=WebStreamServerConnection):
+    def __init__(self, port, tls=False, ca_file="", cert_file="", key_file="",
+                 connection_cls=WebStreamServerConnection, *, runtime=None,
+                 limits=None, max_connections=10000, shutdown_timeout=5.0,
+                 close_timeout=5.0):
+        if shutdown_timeout < 0 or close_timeout <= 0 or max_connections < 0:
+            raise ValueError("Invalid server limits or timeouts")
         self.port = port
         self.tls = tls
+        self.limits = limits or Limits()
+        self.shutdown_timeout = shutdown_timeout
+        self.close_timeout = close_timeout
+        self._options = (port, tls, ca_file, cert_file, key_file)
+        self._max_connections = max_connections
         self._connection_cls = connection_cls
-        if tls:
-            self._server = web_stream_ext.TlsServer(ca_file, cert_file, key_file, port)
-        else:
-            self._server = web_stream_ext.PlainServer(port)
-
+        self._requested_runtime = runtime
+        self._runtime = None
+        self._owned_runtime = False
+        self._identifier = None
         self._loop = None
-        self._thread = None
         self._stream_handler = None
         self._connections = set()
+        self._tasks = set()
+        self._start_task = None
+        self._stop_task = None
+        self._stopping = False
 
     def set_stream_handler(self, handler):
-        """handler is an async function: async def handler(conn: WebStreamServerConnection)"""
+        if handler is not None and not callable(handler):
+            raise TypeError("handler must be callable")
         self._stream_handler = handler
 
     async def start(self):
-        self._loop = asyncio.get_running_loop()
+        loop = asyncio.get_running_loop()
+        if self._loop is not None and loop is not self._loop:
+            raise RuntimeError("Server must be used from its owning asyncio loop")
+        if self._stopping:
+            raise RuntimeError("Server is stopped")
+        self._loop = loop
+        if self._start_task is None:
+            self._start_task = loop.create_task(self._start())
+        try:
+            await asyncio.shield(self._start_task)
+        except BaseException:
+            await finish_cleanup(loop.create_task(self.stop()), propagate_cancel=False)
+            raise
 
-        def on_stream(handler_ref):
-            conn = self._connection_cls(handler_ref, self._loop)
-            self._connections.add(conn)
+    async def _start(self):
+        self._runtime, self._owned_runtime = await acquire_runtime(self._requested_runtime)
+        self._identifier = next(self._runtime._ids)
+        self._runtime._objects[self._identifier] = self
+        await self._runtime._request(
+            "listen", self._identifier, *self._options,
+            self.limits._native(), self._max_connections)
 
-            async def handle():
+    def _accept(self, identifier, path):
+        if self._stopping:
+            self._runtime._discard(identifier)
+            return
+        try:
+            conn = self._connection_cls(
+                self._runtime, identifier, path, limits=self.limits,
+                close_timeout=self.close_timeout)
+        except Exception as error:
+            self._runtime._discard(identifier)
+            self._loop.call_exception_handler({
+                "message": "Failed to construct web-stream connection",
+                "exception": error, "server": self})
+            return
+        self._runtime._objects[identifier] = conn
+        self._connections.add(conn)
+
+        async def handle():
+            try:
+                if self._stream_handler is not None:
+                    await self._stream_handler(conn)
+            finally:
                 try:
-                    if self._stream_handler:
-                        await self._stream_handler(conn)
+                    await conn.close()
                 finally:
-                    try:
-                        await conn.close()
-                    finally:
-                        self._connections.discard(conn)
+                    self._connections.discard(conn)
 
-            asyncio.run_coroutine_threadsafe(handle(), self._loop)
+        task = self._loop.create_task(handle())
+        self._tasks.add(task)
 
-        self._server.set_on_stream(on_stream)
-        self._server.init()
+        def completed(task):
+            self._tasks.discard(task)
+            if not task.cancelled():
+                error = task.exception()
+                if error is not None:
+                    self._loop.call_exception_handler({
+                        "message": "Unhandled web-stream handler exception",
+                        "exception": error, "task": task, "server": self})
+        task.add_done_callback(completed)
 
-        self._thread = threading.Thread(target=self._server.run, daemon=True)
-        self._thread.start()
+    def _runtime_stopped(self):
+        for conn in list(self._connections):
+            conn._runtime_stopped()
+        for task in self._tasks:
+            task.cancel()
 
     async def stop(self):
-        for conn in list(self._connections):
-            try:
-                await conn.close()
-            except Exception:
-                pass
-        self._connections.clear()
+        """Stop accepting, close connections, and join handler tasks."""
+        loop = asyncio.get_running_loop()
+        if self._loop is None:
+            self._loop = loop
+        if loop is not self._loop:
+            raise RuntimeError("Server must be used from its owning asyncio loop")
+        if self._stop_task is None:
+            self._stopping = True
+            caller = asyncio.current_task()
+            self._stop_task = loop.create_task(self._stop(caller))
+        await finish_cleanup(self._stop_task)
 
-        if self._server:
-            self._server.stop()
-        if self._thread and self._thread.is_alive():
-            await asyncio.to_thread(self._thread.join)
-        self._thread = None
-        self._server = None
+    def _listener_failed(self, error):
+        self._loop.call_exception_handler({
+            "message": "Web-stream listener failed", "exception": error, "server": self})
+        task = self._loop.create_task(self.stop())
+        task.add_done_callback(lambda task: None if task.cancelled() else task.exception())
+
+    async def _stop(self, caller):
+        try:
+            if self._start_task is not None:
+                await asyncio.gather(self._start_task, return_exceptions=True)
+            if self._runtime is None:
+                return
+            try:
+                await self._runtime._request("stop_accepting", self._identifier)
+            except WebStreamError:
+                pass
+            await asyncio.gather(*(conn.close() for conn in list(self._connections)),
+                                 return_exceptions=True)
+            tasks = self._tasks - {caller}
+            if tasks:
+                _, pending = await asyncio.wait(tasks, timeout=self.shutdown_timeout)
+                for task in pending:
+                    task.cancel()
+                await asyncio.gather(*tasks, return_exceptions=True)
+            await asyncio.gather(*(conn.abort() for conn in list(self._connections)),
+                                 return_exceptions=True)
+        finally:
+            runtime = self._runtime
+            if runtime is not None:
+                try:
+                    if self._identifier is not None:
+                        try:
+                            await runtime._request("remove_listener", self._identifier)
+                        except WebStreamError:
+                            pass
+                        runtime._objects.pop(self._identifier, None)
+                finally:
+                    await release_runtime(runtime, self._owned_runtime)
+                    self._owned_runtime = False
+            self._connections.clear()
+
+    async def _close_from_runtime(self, caller):
+        if self._stop_task is None:
+            self._stopping = True
+            self._stop_task = self._loop.create_task(self._stop(caller))
+        await finish_cleanup(self._stop_task)
+
+    async def __aenter__(self):
+        await self.start()
+        return self
+
+    async def __aexit__(self, *_):
+        await self.stop()

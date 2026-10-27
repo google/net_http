@@ -93,8 +93,8 @@ class TestTlsIdentity(unittest.IsolatedAsyncioTestCase):
                 with self.assertRaises(ConnectionError):
                     await asyncio.wait_for(exchange(), 5)
                 self.assertEqual(opened, [])
-            self.assertIsNone(context.conn._client)
-            self.assertIsNone(context.conn._thread)
+            self.assertTrue(context.conn._released)
+            self.assertNotIn(context.conn._identifier, server._runtime._objects)
         finally:
             await server.stop()
 

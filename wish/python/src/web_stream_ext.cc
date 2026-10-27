@@ -6,6 +6,7 @@
 #include <nanobind/stl/string.h>
 
 #include <atomic>
+#include <array>
 #include <condition_variable>
 #include <exception>
 #include <functional>
@@ -13,6 +14,7 @@
 #include <mutex>
 #include <thread>
 #include <unordered_map>
+#include <vector>
 
 #include "buffer_event_web_stream.h"
 #include "plain_client.h"
@@ -22,6 +24,8 @@
 #include "wish_opcodes.h"
 
 namespace nb = nanobind;
+
+void BindRuntime(nb::module_& m);
 
 // All operations run on the owning libevent thread. Cross-thread callers wait
 // for their command, but stop() wakes them even if the loop is inside a callback.
@@ -189,6 +193,23 @@ struct WebStreamHandlerRef : std::enable_shared_from_this<WebStreamHandlerRef> {
   nb::object on_message_cb;
   nb::object on_close_cb;
   nb::object on_error_cb;
+  // Native streams root their Python handle until termination. Without this
+  // external root, GC could mistake an active native callback for an isolated
+  // Python cycle and clear it while the stream is still receiving messages.
+  nb::object active_owner;
+
+  void ClearCallbacks() {
+    // Moving references under the lock is safe; decref outside the lock because
+    // a Python finalizer may reenter this handle.
+    std::array<nb::object, 4> old;
+    {
+      std::lock_guard<std::mutex> lock(mu);
+      std::swap(old[0], on_message_cb);
+      std::swap(old[1], on_close_cb);
+      std::swap(old[2], on_error_cb);
+      std::swap(old[3], active_owner);
+    }
+  }
 
   ~WebStreamHandlerRef() {
     if (Py_IsInitialized()) {
@@ -196,10 +217,12 @@ struct WebStreamHandlerRef : std::enable_shared_from_this<WebStreamHandlerRef> {
       on_message_cb = nb::object();
       on_close_cb = nb::object();
       on_error_cb = nb::object();
+      active_owner = nb::object();
     } else {
       on_message_cb.release();
       on_close_cb.release();
       on_error_cb.release();
+      active_owner.release();
     }
   }
 
@@ -299,15 +322,21 @@ struct ServerHandlerRegistry {
   }
 
   void Invalidate() {
-    std::lock_guard<std::mutex> lock(mu);
-    stopped = true;
-    for (auto& entry : refs) {
-      if (auto ref = entry.second.lock()) {
-        std::lock_guard<std::mutex> ref_lock(ref->mu);
-        ref->ptr = nullptr;
+    std::vector<std::shared_ptr<WebStreamHandlerRef>> handles;
+    {
+      std::lock_guard<std::mutex> lock(mu);
+      stopped = true;
+      for (auto& entry : refs) {
+        if (auto ref = entry.second.lock()) {
+          std::lock_guard<std::mutex> ref_lock(ref->mu);
+          ref->ptr = nullptr;
+          handles.push_back(std::move(ref));
+        }
       }
+      refs.clear();
     }
-    refs.clear();
+    nb::gil_scoped_acquire acquire;
+    for (auto& ref : handles) ref->ClearCallbacks();
   }
 };
 
@@ -470,11 +499,14 @@ static void tls_do_cleanup(TlsClientPy* w) {
 }
 
 static void tls_finalize(PyObject* self) {
+  if (!nb::inst_ready(self)) return;
   TlsClientPy* w = nb::inst_ptr<TlsClientPy>(nb::handle(self));
   tls_do_cleanup(w);
 }
 
 static int tls_traverse(PyObject* self, visitproc visit, void* arg) {
+  Py_VISIT(Py_TYPE(self));
+  if (!nb::inst_ready(self)) return 0;
   TlsClientPy* w = nb::inst_ptr<TlsClientPy>(nb::handle(self));
 
   Py_VISIT(w->on_open_cb.ptr());
@@ -486,6 +518,7 @@ static int tls_traverse(PyObject* self, visitproc visit, void* arg) {
 }
 
 static int tls_clear(PyObject* self) {
+  if (!nb::inst_ready(self)) return 0;
   TlsClientPy* w = nb::inst_ptr<TlsClientPy>(nb::handle(self));
 
   tls_do_cleanup(w);
@@ -529,11 +562,14 @@ static void plain_do_cleanup(PlainClientPy* w) {
 }
 
 static void plain_finalize(PyObject* self) {
+  if (!nb::inst_ready(self)) return;
   PlainClientPy* w = nb::inst_ptr<PlainClientPy>(nb::handle(self));
   plain_do_cleanup(w);
 }
 
 static int plain_traverse(PyObject* self, visitproc visit, void* arg) {
+  Py_VISIT(Py_TYPE(self));
+  if (!nb::inst_ready(self)) return 0;
   PlainClientPy* w = nb::inst_ptr<PlainClientPy>(nb::handle(self));
 
   Py_VISIT(w->on_open_cb.ptr());
@@ -545,6 +581,7 @@ static int plain_traverse(PyObject* self, visitproc visit, void* arg) {
 }
 
 static int plain_clear(PyObject* self) {
+  if (!nb::inst_ready(self)) return 0;
   PlainClientPy* w = nb::inst_ptr<PlainClientPy>(nb::handle(self));
 
   plain_do_cleanup(w);
@@ -613,17 +650,21 @@ static void plain_server_do_cleanup(PlainServerPy* w) {
 }
 
 static void plain_server_finalize(PyObject* self) {
+  if (!nb::inst_ready(self)) return;
   PlainServerPy* w = nb::inst_ptr<PlainServerPy>(nb::handle(self));
   plain_server_do_cleanup(w);
 }
 
 static int plain_server_traverse(PyObject* self, visitproc visit, void* arg) {
+  Py_VISIT(Py_TYPE(self));
+  if (!nb::inst_ready(self)) return 0;
   PlainServerPy* w = nb::inst_ptr<PlainServerPy>(nb::handle(self));
   Py_VISIT(w->on_stream_cb.ptr());
   return 0;
 }
 
 static int plain_server_clear(PyObject* self) {
+  if (!nb::inst_ready(self)) return 0;
   PlainServerPy* w = nb::inst_ptr<PlainServerPy>(nb::handle(self));
   plain_server_do_cleanup(w);
   w->on_stream_cb = nb::object();
@@ -685,17 +726,21 @@ static void tls_server_do_cleanup(TlsServerPy* w) {
 }
 
 static void tls_server_finalize(PyObject* self) {
+  if (!nb::inst_ready(self)) return;
   TlsServerPy* w = nb::inst_ptr<TlsServerPy>(nb::handle(self));
   tls_server_do_cleanup(w);
 }
 
 static int tls_server_traverse(PyObject* self, visitproc visit, void* arg) {
+  Py_VISIT(Py_TYPE(self));
+  if (!nb::inst_ready(self)) return 0;
   TlsServerPy* w = nb::inst_ptr<TlsServerPy>(nb::handle(self));
   Py_VISIT(w->on_stream_cb.ptr());
   return 0;
 }
 
 static int tls_server_clear(PyObject* self) {
+  if (!nb::inst_ready(self)) return 0;
   TlsServerPy* w = nb::inst_ptr<TlsServerPy>(nb::handle(self));
   tls_server_do_cleanup(w);
   w->on_stream_cb = nb::object();
@@ -704,6 +749,21 @@ static int tls_server_clear(PyObject* self) {
 
 // ---------------------------------------------------------------------------
 
+static int handler_traverse(PyObject* self, visitproc visit, void* arg) {
+  Py_VISIT(Py_TYPE(self));
+  if (!nb::inst_ready(self)) return 0;
+  auto* ref = nb::inst_ptr<WebStreamHandlerRef>(self);
+  Py_VISIT(ref->on_message_cb.ptr());
+  Py_VISIT(ref->on_close_cb.ptr());
+  Py_VISIT(ref->on_error_cb.ptr());
+  return 0;
+}
+
+static int handler_clear(PyObject* self) {
+  if (nb::inst_ready(self)) nb::inst_ptr<WebStreamHandlerRef>(self)->ClearCallbacks();
+  return 0;
+}
+
 NB_MODULE(web_stream_ext, m) {
 #ifdef _WIN32
   evthread_use_windows_threads();
@@ -711,7 +771,12 @@ NB_MODULE(web_stream_ext, m) {
   evthread_use_pthreads();
 #endif
 
-  nb::class_<WebStreamHandlerRef>(m, "BufferEventWebStream")
+  BindRuntime(m);
+
+  static PyType_Slot handler_slots[] = {
+      {Py_tp_traverse, (void*)handler_traverse},
+      {Py_tp_clear, (void*)handler_clear}, {0, nullptr}};
+  nb::class_<WebStreamHandlerRef>(m, "BufferEventWebStream", nb::type_slots(handler_slots))
       .def("send_text", [](WebStreamHandlerRef& self, const std::string& msg) {
         nb::gil_scoped_release release;
         return self.send_text(msg);
@@ -722,8 +787,7 @@ NB_MODULE(web_stream_ext, m) {
           nb::bytes b = nb::cast<nb::bytes>(data);
           s = std::string(b.c_str(), b.size());
         } else if (nb::isinstance<nb::str>(data)) {
-          nb::str str_obj = nb::cast<nb::str>(data);
-          s = str_obj.c_str();
+          s = nb::cast<std::string>(data);
         } else {
           throw nb::type_error("send_binary() expects bytes or str");
         }
@@ -737,8 +801,7 @@ NB_MODULE(web_stream_ext, m) {
           nb::bytes b = nb::cast<nb::bytes>(data);
           s = std::string(b.c_str(), b.size());
         } else if (nb::isinstance<nb::str>(data)) {
-          nb::str str_obj = nb::cast<nb::str>(data);
-          s = str_obj.c_str();
+          s = nb::cast<std::string>(data);
         } else {
           throw nb::type_error("send_metadata() expects bytes or str");
         }
@@ -747,16 +810,13 @@ NB_MODULE(web_stream_ext, m) {
         return self.send_metadata(s);
       })
       .def("set_on_message", [](WebStreamHandlerRef& self, nb::object cb) {
-        std::lock_guard<std::mutex> lock(self.mu);
-        self.on_message_cb = cb;
+        { std::lock_guard<std::mutex> lock(self.mu); std::swap(self.on_message_cb, cb); }
       }, nb::arg("cb").none())
       .def("set_on_close", [](WebStreamHandlerRef& self, nb::object cb) {
-        std::lock_guard<std::mutex> lock(self.mu);
-        self.on_close_cb = cb;
+        { std::lock_guard<std::mutex> lock(self.mu); std::swap(self.on_close_cb, cb); }
       }, nb::arg("cb").none())
       .def("set_on_error", [](WebStreamHandlerRef& self, nb::object cb) {
-        std::lock_guard<std::mutex> lock(self.mu);
-        self.on_error_cb = cb;
+        { std::lock_guard<std::mutex> lock(self.mu); std::swap(self.on_error_cb, cb); }
       }, nb::arg("cb").none())
       .def("close", [](WebStreamHandlerRef& self) {
         nb::gil_scoped_release release;
@@ -806,10 +866,8 @@ NB_MODULE(web_stream_ext, m) {
               std::lock_guard<std::mutex> lock(ref->mu);
               cb = ref->on_close_cb;
               ref->ptr = nullptr;
-              ref->on_message_cb = nb::object();
-              ref->on_close_cb = nb::object();
-              ref->on_error_cb = nb::object();
             }
+            ref->ClearCallbacks();
             handlers->Remove(ref.get());
             if (cb.ptr() && !cb.is_none()) {
               try {
@@ -828,10 +886,8 @@ NB_MODULE(web_stream_ext, m) {
               std::lock_guard<std::mutex> lock(ref->mu);
               cb = ref->on_error_cb;
               ref->ptr = nullptr;
-              ref->on_message_cb = nb::object();
-              ref->on_close_cb = nb::object();
-              ref->on_error_cb = nb::object();
             }
+            ref->ClearCallbacks();
             handlers->Remove(ref.get());
             if (cb.ptr() && !cb.is_none()) {
               try {
@@ -846,6 +902,7 @@ NB_MODULE(web_stream_ext, m) {
           nb::gil_scoped_acquire acquire;
           if (self.on_stream_cb.ptr() && !self.on_stream_cb.is_none()) {
             try {
+              ref->active_owner = nb::cast(ref);
               self.on_stream_cb(ref);
             } catch (nb::python_error& e) {
               e.restore();
@@ -911,10 +968,8 @@ NB_MODULE(web_stream_ext, m) {
               std::lock_guard<std::mutex> lock(ref->mu);
               cb = ref->on_close_cb;
               ref->ptr = nullptr;
-              ref->on_message_cb = nb::object();
-              ref->on_close_cb = nb::object();
-              ref->on_error_cb = nb::object();
             }
+            ref->ClearCallbacks();
             handlers->Remove(ref.get());
             if (cb.ptr() && !cb.is_none()) {
               try {
@@ -933,10 +988,8 @@ NB_MODULE(web_stream_ext, m) {
               std::lock_guard<std::mutex> lock(ref->mu);
               cb = ref->on_error_cb;
               ref->ptr = nullptr;
-              ref->on_message_cb = nb::object();
-              ref->on_close_cb = nb::object();
-              ref->on_error_cb = nb::object();
             }
+            ref->ClearCallbacks();
             handlers->Remove(ref.get());
             if (cb.ptr() && !cb.is_none()) {
               try {
@@ -968,6 +1021,7 @@ NB_MODULE(web_stream_ext, m) {
           nb::gil_scoped_acquire acquire;
           if (self.on_stream_cb.ptr() && !self.on_stream_cb.is_none()) {
             try {
+              ref->active_owner = nb::cast(ref);
               self.on_stream_cb(ref);
             } catch (nb::python_error& e) {
               e.restore();

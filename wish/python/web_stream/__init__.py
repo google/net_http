@@ -15,7 +15,14 @@ from .fastapi import (
     mount_web_stream,
 )
 
+from .connection import Message
+from .runtime import Runtime, Limits, WebStreamError
+
 __all__ = [
+    "Runtime",
+    "Limits",
+    "Message",
+    "WebStreamError",
     "connect",
     "WebStreamConnection",
     "WebStreamServer",

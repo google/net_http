@@ -90,13 +90,13 @@ def probe(extension_dir, transport, scenario):
 
         def echo(opcode, message):
             method = {1: handle.send_text, 2: handle.send_binary, 3: handle.send_metadata}[opcode]
-            assert method(message.decode() if opcode == 1 else message) == 0
+            assert method(message.decode() if opcode in (1, 2) else message) == 0
             if opcode == 3:
                 assert handle.close() == 0
 
         handle.set_on_message(echo)
         if scenario == "echo":
-            assert handle.send_metadata(b"ready") == 0
+            assert handle.send_metadata("ready\x00metadata") == 0
 
     def on_open(handle):
         handles["client"] = handle
@@ -141,7 +141,7 @@ def probe(extension_dir, transport, scenario):
         else:
             assert done.wait(3), f"callback operation did not finish: {unraisable}"
         if scenario == "echo":
-            assert received == [(3, b"ready"), (1, b"open"),
+            assert received == [(3, b"ready\x00metadata"), (1, b"open"),
                                 (2, b"binary\x00payload"), (3, b"metadata")], received
         assert not unraisable, [info.exc_value for info in unraisable]
     finally:

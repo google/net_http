@@ -65,8 +65,25 @@ class BufferEventWebStream : public WebStream {
 
   // Signal EOF on the outbound HTTP/1.1 chunked body by writing a terminal
   // zero-length chunk ("0\r\n\r\n").
+  // Inbound EOF independently triggers SetOnClose; the outbound direction
+  // remains available until Close(), and destruction waits for output drain.
   // Returns 0 on success, or -1 if Close() has already been called.
   int Close() override;
+
+  // These operations must run on the owning event loop. Read suspension also
+  // stops parsing messages already buffered by libevent.
+  void SetReadEnabled(bool enabled);
+  void SetMaxMessageSize(size_t bytes);
+  size_t PendingWriteBytes() const;
+  // May delete *this through the owner's cleanup callback.
+  void Abort();
+  // Distinct from inbound EOF: called immediately before native destruction.
+  // Event-loop-thread-only; observers must not call back into the stream.
+  void SetOnDestroy(std::function<void()> callback);
+  // Notify when output falls below the watermark. Callback must not destroy
+  // the stream; it can submit more sends or adjust the watermark.
+  void SetOnWritable(std::function<void()> callback);
+  void SetWriteLowWatermark(size_t bytes);
 
   const std::string& path() const override { return path_; }
   void set_path(const std::string& path) { path_ = path; }
@@ -77,6 +94,7 @@ class BufferEventWebStream : public WebStream {
 
   enum State {
     OPEN,
+    READ_CLOSED,
     // Inbound terminal chunk received; draining outbound buffer before delete.
     DRAINING,
     CLOSED
@@ -85,6 +103,7 @@ class BufferEventWebStream : public WebStream {
 
   bool is_server_;
   bool in_message_ = false;
+  bool read_enabled_ = true;
   wslay_event_context* ctx_;
 
   // ---- Chunked-encoding send state ----
@@ -113,12 +132,15 @@ class BufferEventWebStream : public WebStream {
   ErrorCallback on_error_;
 
   CleanupCallback cleanup_cb_;
+  std::function<void()> on_destroy_;
+  std::function<void()> on_writable_;
 
   // libevent callbacks
   static void ReadCallback(bufferevent* bev,
                            void* ctx);
   static void DrainCallback(bufferevent* bev,
                             void* ctx);
+  static void WriteCallback(bufferevent* bev, void* ctx);
   static void EventCallback(bufferevent* bev,
                             short what,  // NOLINT(runtime/int)
                             void* ctx);

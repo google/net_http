@@ -39,7 +39,8 @@ class WebStreamRouter:
         tls: bool = False,
         ca_file: str = "",
         cert_file: str = "",
-        key_file: str = ""
+        key_file: str = "",
+        **server_options
     ) -> WebStreamServer:
         server = WebStreamServer(
             port=port,
@@ -47,7 +48,8 @@ class WebStreamRouter:
             ca_file=ca_file,
             cert_file=cert_file,
             key_file=key_file,
-            connection_cls=WebStreamSession
+            connection_cls=WebStreamSession,
+            **server_options
         )
 
         async def on_connection(session: WebStreamSession):
@@ -77,7 +79,8 @@ def mount_web_stream(
     tls: bool = False,
     ca_file: str = "",
     cert_file: str = "",
-    key_file: str = ""
+    key_file: str = "",
+    **server_options
 ) -> WebStreamServer:
     """Attaches a WebStreamServer to a FastAPI application lifecycle.
 
@@ -96,7 +99,8 @@ def mount_web_stream(
         tls=tls,
         ca_file=ca_file,
         cert_file=cert_file,
-        key_file=key_file
+        key_file=key_file,
+        **server_options
     )
 
     @app.on_event("startup")
