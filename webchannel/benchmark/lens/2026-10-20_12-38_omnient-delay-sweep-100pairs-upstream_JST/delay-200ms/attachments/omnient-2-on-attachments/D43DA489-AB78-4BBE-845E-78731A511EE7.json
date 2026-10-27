@@ -1,0 +1,61 @@
+[
+  {
+    "batchId" : "c8f3d8af-19da-4bfc-b0b6-94b147aecd0d",
+    "batchPair" : 2,
+    "batchSetting" : "on",
+    "batchTrialOrdinal" : 4,
+    "coldConnection" : true,
+    "coldConnectionSource" : "handshake",
+    "detectionDelayMs" : 50,
+    "deviceModel" : "iPhone",
+    "enableBinaryEncoding" : true,
+    "endpoint" : "https:\/\/webchannel.sandbox.google.com\/staging\/channel\/lens",
+    "fastHandshake2" : true,
+    "imageSizeKb" : 150,
+    "initialMessageDelayMs" : 200,
+    "log" : "[12:55:25.442] ==================================================================\n[12:55:25.442] 🚀 [Lens Benchmark] Starting Lens Latency Run (Omnient 0-RTT)\n[12:55:25.442] ⚙️ Options: fastHandshake2=true, fastHandshake=false, nonBlockingSend=false, binary=true, imageSize=150KB, initialMessageDelayMs=200\n[12:55:25.442] ==================================================================\n[12:55:25.442] >>> [1. Handshake Request] Opening WebChannel connection to: https:\/\/webchannel.sandbox.google.com\/staging\/channel\/lens\n[12:55:25.442] >>> Options: enableBinaryEncoding=true, nonBlockingSend=false, blockingHandshake=false, sendRawJson=true, fastHandshake=false, fastHandshake2=true\n[12:55:25.442] ⏱ [Lens] Scheduled M1 and M3 for T+200ms...\n[12:55:25.444] 🌐 [HTTP Req] (58188) [attempt 1] GET https:\/\/webchannel.sandbox.google.com\/staging\/channel\/lens?VER=8&RID=58188&CVER=25&X-HTTP-Session-Id=gsessionid&%24req=count%3D0%26%0D%0A&SID=c-vy8wqvvVwHvMSYtdH6TI9W&t=1\n[12:55:25.643] ⏱ [Lens M1] send() at T+200.8ms from connect start\n[12:55:25.643] 📸 [Message 1] Sending StickyClusterInfo (~50 B)...\n[12:55:25.643] >>> Sending M1 StickyClusterInfo (117 bytes): [7b 22 74 79 70 65 22 3a 22 73 74 69 63 6b 79 5f 63 6c 75 73 74 65 72 5f 69 6e 66 6f 22 2c 22 63...] [State: Connecting (Opening)...]\n[12:55:25.643] 📸 [Message 3 - Prefetch] Sending 150 KB image payload [State: Connecting (Opening)...]...\n[12:55:25.643] >>> Sending M3 Prefetch (150 KB) (158 bytes): [7b 22 61 63 6b 5f 72 65 71 75 65 73 74 65 64 22 3a 74 72 75 65 2c 22 69 6d 61 67 65 5f 73 69 7a...] [State: Connecting (Opening)...]\n[12:55:25.644] 🌐 [HTTP Req] (58189) [attempt 1] POST https:\/\/webchannel.sandbox.google.com\/staging\/channel\/lens?VER=8&SID=c-vy8wqvvVwHvMSYtdH6TI9W&RID=58189&AID=-1&t=1 | PostData: {length = 147, bytes = 0x636f756e 743d3126 6f66733d 300d0a69 ... 535f3138 5f30227d }\n[12:55:25.645] 🌐 [HTTP Req] (58190) [attempt 1] POST https:\/\/webchannel.sandbox.google.com\/staging\/channel\/lens?VER=8&SID=c-vy8wqvvVwHvMSYtdH6TI9W&RID=58190&AID=-1&t=1 | PostData: {length = 188, bytes = 0x636f756e 743d3126 6f66733d 310d0a69 ... 745f6964 223a317d }\n[12:55:25.963] ❌ <<< [Event: encounteredError] Error: RequestFailed (code 1)",
+    "m1DelayFromConnectMs" : 200.76990127563477,
+    "processId" : 2115,
+    "processInstanceId" : "AD3ED90C-4DB8-438F-B2E4-83424E4CD907",
+    "repetition" : 1,
+    "scenario" : "omnient",
+    "status" : "failed",
+    "systemVersion" : "26.3.1",
+    "transportMetrics" : [
+      {
+        "localPort" : 61463,
+        "method" : "POST",
+        "protocol" : "h2",
+        "remoteAddress" : "192.178.226.81",
+        "remotePort" : 443,
+        "reusedConnection" : true,
+        "rid" : "58189",
+        "url" : "https:\/\/webchannel.sandbox.google.com\/staging\/channel\/lens?VER=8&SID=c-vy8wqvvVwHvMSYtdH6TI9W&RID=58189&AID=-1&t=1"
+      },
+      {
+        "localPort" : 61463,
+        "method" : "POST",
+        "protocol" : "h2",
+        "remoteAddress" : "192.178.226.81",
+        "remotePort" : 443,
+        "reusedConnection" : true,
+        "rid" : "58190",
+        "url" : "https:\/\/webchannel.sandbox.google.com\/staging\/channel\/lens?VER=8&SID=c-vy8wqvvVwHvMSYtdH6TI9W&RID=58190&AID=-1&t=1"
+      },
+      {
+        "localPort" : 61463,
+        "method" : "GET",
+        "protocol" : "h2",
+        "remoteAddress" : "192.178.226.81",
+        "remotePort" : 443,
+        "reusedConnection" : false,
+        "rid" : "58188",
+        "tcpConnectMs" : 250,
+        "tlsMs" : 34.000039100646973,
+        "url" : "https:\/\/webchannel.sandbox.google.com\/staging\/channel\/lens?VER=8&RID=58188&CVER=25&X-HTTP-Session-Id=gsessionid&%24req=count%3D0%26%0D%0A&SID=c-vy8wqvvVwHvMSYtdH6TI9W&t=1"
+      }
+    ],
+    "trialRecordedEpochSeconds" : 1792468526.009392,
+    "trialStartedEpochSeconds" : 1792468525.441478
+  }
+]

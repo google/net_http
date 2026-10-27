@@ -77,9 +77,17 @@ Used to measure round-trip latency and validate non-blocking message delivery:
 
 3.  **Latency Calculation**: The client calculates:
 
-    -   **Echo Round-Trip Time**: \(T_{\text{received}} - T_{\text{send}}\)
-    -   **Total Connection Elapsed Time**: \(T_{\text{received}} -
-        T_{\text{connect}}\)
+    -   **Handshake Latency**: \(T_{\text{opened}} - T_{\text{connect}}\)
+        measuring connection initialization time.
+    -   **Send Latency (RTT)**: \(T_{\text{received}} - T_{\text{send}}\)
+        measuring round-trip time from send dispatch to response reception.
+    -   **Connect & Send Total Latency**: \(T_{\text{received}} -
+        T_{\text{connect}}\) measuring full duration from connection initiation
+        to echo completion.
+    -   **Delta vs Handshake**: \(\text{Connect \& Send Total} - \text{Handshake
+        Latency}\) quantifying whether the message was dispatched concurrently
+        (e.g. \(\le +50\text{ms}\) with `fastHandshake2`) or serialized after a
+        1-RTT handshake delay (e.g. \(\approx +350\text{ms}\)).
 
 ### B. Streaming Generator Mode
 

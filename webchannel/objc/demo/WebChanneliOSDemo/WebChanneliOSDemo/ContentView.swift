@@ -88,7 +88,7 @@ struct GeneratorTabView: View {
     }
     .padding()
     .background(Color(.secondarySystemBackground))
-    .cornerRadius(10)
+    .clipShape(RoundedRectangle(cornerRadius: 10))
   }
 
   private var optionsSection: some View {
@@ -99,7 +99,7 @@ struct GeneratorTabView: View {
           Text("Wire Format & Encoding")
             .font(.caption)
             .fontWeight(.semibold)
-            .foregroundColor(.secondary)
+            .foregroundStyle(.secondary)
           Toggle("enableBinaryEncoding (V8 Binary Framing)", isOn: $service.enableBinaryEncoding)
           Toggle(
             service.enableBinaryEncoding
@@ -116,7 +116,7 @@ struct GeneratorTabView: View {
           Text("Handshake & Concurrency")
             .font(.caption)
             .fontWeight(.semibold)
-            .foregroundColor(.secondary)
+            .foregroundStyle(.secondary)
           Toggle("fastHandshake2 (0-RTT + Non-Blocking)", isOn: $service.fastHandshake2)
           Toggle("fastHandshake (1-RTT)", isOn: $service.fastHandshake)
           Toggle("nonBlockingSend", isOn: $service.nonBlockingSend)
@@ -140,7 +140,7 @@ struct GeneratorTabView: View {
           Text("Transport & Resilience")
             .font(.caption)
             .fontWeight(.semibold)
-            .foregroundColor(.secondary)
+            .foregroundStyle(.secondary)
           Toggle("forceLongPolling", isOn: $service.forceLongPolling)
           Toggle("detectBufferingProxy", isOn: $service.detectBufferingProxy)
         }
@@ -151,7 +151,7 @@ struct GeneratorTabView: View {
     }
     .padding()
     .background(Color(.secondarySystemBackground))
-    .cornerRadius(10)
+    .clipShape(RoundedRectangle(cornerRadius: 10))
   }
 
   private var connectionSection: some View {
@@ -168,21 +168,38 @@ struct GeneratorTabView: View {
           }
 
           if service.state == .connected {
-            HStack(spacing: 4) {
-              Circle()
-                .fill(service.enableBinaryEncoding ? Color.purple : Color.blue)
-                .frame(width: 7, height: 7)
-              Text(service.channelModeBadgeText)
-                .font(.caption2)
-                .foregroundColor(service.enableBinaryEncoding ? .purple : .blue)
+            HStack(spacing: 6) {
+              HStack(spacing: 4) {
+                Circle()
+                  .fill(service.enableBinaryEncoding ? Color.purple : Color.blue)
+                  .frame(width: 7, height: 7)
+                Text(service.channelModeBadgeText)
+                  .font(.caption2)
+                  .foregroundStyle(service.enableBinaryEncoding ? Color.purple : Color.blue)
+              }
+              .padding(.horizontal, 6)
+              .padding(.vertical, 2)
+              .background(
+                service.enableBinaryEncoding
+                  ? Color.purple.opacity(0.12) : Color.blue.opacity(0.1)
+              )
+              .clipShape(RoundedRectangle(cornerRadius: 4))
+
+              if let handshake = service.handshakeLatencyMs {
+                HStack(spacing: 4) {
+                  Image(systemName: "bolt.fill")
+                    .font(.system(size: 9))
+                  Text(String(format: "Handshake: %.1f ms", handshake))
+                    .font(.caption2)
+                    .fontWeight(.semibold)
+                }
+                .padding(.horizontal, 6)
+                .padding(.vertical, 2)
+                .background(Color.green.opacity(0.12))
+                .foregroundStyle(.green)
+                .clipShape(RoundedRectangle(cornerRadius: 4))
+              }
             }
-            .padding(.horizontal, 6)
-            .padding(.vertical, 2)
-            .background(
-              service.enableBinaryEncoding
-                ? Color.purple.opacity(0.12) : Color.blue.opacity(0.1)
-            )
-            .cornerRadius(4)
           }
         }
 
@@ -222,11 +239,23 @@ struct GeneratorTabView: View {
           .buttonStyle(.borderedProminent)
           .tint(.purple)
         }
+
+        HStack {
+          Label("Early Send Delay: \(service.earlySendDelayMs)ms", systemImage: "timer")
+            .font(.caption)
+            .fontWeight(.medium)
+            .foregroundStyle(.secondary)
+          Spacer()
+          Stepper("", value: $service.earlySendDelayMs, in: 0...500, step: 25)
+            .labelsHidden()
+        }
+        .padding(.horizontal, 4)
+        .padding(.top, 4)
       }
     }
     .padding()
     .background(Color(.secondarySystemBackground))
-    .cornerRadius(10)
+    .clipShape(RoundedRectangle(cornerRadius: 10))
   }
 
   private var messagingSection: some View {
@@ -244,7 +273,7 @@ struct GeneratorTabView: View {
             : "Channel Mode: Text/JSON"
         )
         .font(.caption2)
-        .foregroundColor(.secondary)
+        .foregroundStyle(.secondary)
       }
 
       Picker("Mode", selection: $selectedMode) {
@@ -283,47 +312,40 @@ struct GeneratorTabView: View {
         }
       }
 
-      HStack {
-        Button {
-          switch selectedMode {
-          case .streaming:
-            service.sendStreaming(
-              message: messageText,
-              numMessages: numMessages,
-              intervalMs: messageIntervalMs
-            )
-          case .echo:
-            if service.enableBinaryEncoding {
-              service.sendBinaryEcho(message: messageText)
-            } else {
-              service.sendEcho(message: messageText)
-            }
-          }
-        } label: {
-          Label(
-            sendButtonTitle,
-            systemImage: service.enableBinaryEncoding ? "arrow.up.doc.fill" : "paperplane.fill"
+      Button {
+        switch selectedMode {
+        case .streaming:
+          service.sendStreaming(
+            message: messageText,
+            numMessages: numMessages,
+            intervalMs: messageIntervalMs
           )
-          .frame(maxWidth: .infinity)
+        case .echo:
+          if service.enableBinaryEncoding {
+            service.sendBinaryEcho(message: messageText)
+          } else {
+            service.sendEcho(message: messageText)
+          }
         }
-        .buttonStyle(.borderedProminent)
-        .disabled(service.state == .disconnected)
+      } label: {
+        Label(
+          sendButtonTitle,
+          systemImage: service.enableBinaryEncoding ? "arrow.up.doc.fill" : "paperplane.fill"
+        )
+        .frame(maxWidth: .infinity)
+      }
+      .buttonStyle(.borderedProminent)
+      .disabled(service.state == .disconnected)
 
-        if selectedMode == .echo, let latency = service.lastLatencyMs {
-          Text(String(format: "Latency: %.1f ms", latency))
-            .font(.caption)
-            .fontWeight(.semibold)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
-            .background(Color.blue.opacity(0.15))
-            .foregroundColor(.blue)
-            .cornerRadius(6)
-        }
+      if selectedMode == .echo,
+        service.lastLatencyMs != nil || service.handshakeLatencyMs != nil
+      {
+        GeneratorLatencyScorecardView(service: service)
       }
     }
     .padding()
     .background(Color(.secondarySystemBackground))
-    .cornerRadius(10)
+    .clipShape(RoundedRectangle(cornerRadius: 10))
   }
 
   private var sendButtonTitle: String {
@@ -331,6 +353,94 @@ struct GeneratorTabView: View {
       return selectedMode == .echo ? "Send Binary Echo" : "Send Binary Streaming"
     } else {
       return selectedMode == .echo ? "Send Echo" : "Send Streaming"
+    }
+  }
+}
+
+// MARK: - GeneratorLatencyScorecardView
+
+struct GeneratorLatencyScorecardView: View {
+  @Bindable var service: WebChannelService
+
+  var body: some View {
+    VStack(spacing: 8) {
+      Divider()
+
+      if let handshake = service.handshakeLatencyMs {
+        GeneratorMetricRow(
+          icon: "bolt.fill",
+          title: "Handshake Latency",
+          value: String(format: "%.1f ms", handshake),
+          color: .primary
+        )
+      }
+
+      if let connectAndSend = service.lastConnectAndSendLatencyMs {
+        GeneratorMetricRow(
+          icon: "timer",
+          title: "Early Send Delay",
+          value: "\(service.earlySendDelayMs) ms",
+          color: .secondary
+        )
+      }
+
+      if let sendRtt = service.lastLatencyMs {
+        GeneratorMetricRow(
+          icon: "stopwatch.fill",
+          title: "Send Latency (RTT)",
+          value: String(format: "%.1f ms", sendRtt),
+          color: .blue
+        )
+      }
+
+      if let connectAndSend = service.lastConnectAndSendLatencyMs {
+        GeneratorMetricRow(
+          icon: "arrow.forward.circle.fill",
+          title: "Connect & Send Total",
+          value: String(format: "%.1f ms", connectAndSend),
+          color: .purple
+        )
+
+        if let handshake = service.handshakeLatencyMs {
+          let delta = connectAndSend - handshake
+          GeneratorMetricRow(
+            icon: "plusminus",
+            title: "Delta vs Handshake",
+            value: WebChannelService.formatDeltaVsHandshake(delta: delta, handshake: handshake),
+            color: delta <= 50 ? .green : .orange
+          )
+        }
+      }
+    }
+    .padding(8)
+    .background(Color(.systemBackground))
+    .clipShape(RoundedRectangle(cornerRadius: 6))
+  }
+}
+
+private struct GeneratorMetricRow: View {
+  let icon: String
+  let title: String
+  let value: String
+  let color: Color
+
+  var body: some View {
+    HStack(alignment: .center, spacing: 8) {
+      Image(systemName: icon)
+        .font(.caption)
+        .foregroundStyle(color == .primary ? Color.secondary : color)
+        .frame(width: 16)
+
+      Text(title)
+        .font(.caption)
+        .foregroundStyle(.secondary)
+
+      Spacer()
+
+      Text(value)
+        .font(.system(.caption, design: .monospaced))
+        .fontWeight(.bold)
+        .foregroundStyle(color)
     }
   }
 }
@@ -370,7 +480,7 @@ struct LogsSectionView: View {
             if service.logs.isEmpty {
               Text("No logs yet. Connect to a server to see activity.")
                 .font(.caption)
-                .foregroundColor(.secondary)
+                .foregroundStyle(.secondary)
                 .padding(.vertical, 12)
             } else {
               ForEach(service.logs) { entry in
@@ -386,7 +496,7 @@ struct LogsSectionView: View {
         }
         .frame(minHeight: 200, maxHeight: 350)
         .background(Color(.systemBackground))
-        .cornerRadius(8)
+        .clipShape(RoundedRectangle(cornerRadius: 8))
         .overlay(
           RoundedRectangle(cornerRadius: 8)
             .stroke(Color.secondary.opacity(0.3), lineWidth: 1)
@@ -400,7 +510,7 @@ struct LogsSectionView: View {
     }
     .padding()
     .background(Color(.secondarySystemBackground))
-    .cornerRadius(10)
+    .clipShape(RoundedRectangle(cornerRadius: 10))
   }
 }
 
@@ -440,7 +550,7 @@ struct LensBenchmarkTabView: View {
         Label("fastHandshake2", systemImage: "bolt.fill")
           .font(.subheadline)
           .fontWeight(.semibold)
-          .foregroundColor(service.fastHandshake2 ? .indigo : .primary)
+          .foregroundStyle(service.fastHandshake2 ? Color.indigo : Color.primary)
         Spacer()
         Toggle("", isOn: $service.fastHandshake2)
           .labelsHidden()
@@ -454,7 +564,7 @@ struct LensBenchmarkTabView: View {
             + "response before dispatching forward requests."
       )
       .font(.caption)
-      .foregroundColor(.secondary)
+      .foregroundStyle(.secondary)
     }
     .padding()
     .background(
@@ -502,7 +612,7 @@ struct LensBenchmarkTabView: View {
     }
     .padding()
     .background(Color(.secondarySystemBackground))
-    .cornerRadius(10)
+    .clipShape(RoundedRectangle(cornerRadius: 10))
   }
 
   private var optionsSection: some View {
@@ -513,7 +623,7 @@ struct LensBenchmarkTabView: View {
           Text("Wire Format & Encoding")
             .font(.caption)
             .fontWeight(.semibold)
-            .foregroundColor(.secondary)
+            .foregroundStyle(.secondary)
           Toggle("enableBinaryEncoding (V8 Binary Framing)", isOn: $service.enableBinaryEncoding)
           Toggle(
             service.enableBinaryEncoding
@@ -530,7 +640,7 @@ struct LensBenchmarkTabView: View {
           Text("Transport & Resilience")
             .font(.caption)
             .fontWeight(.semibold)
-            .foregroundColor(.secondary)
+            .foregroundStyle(.secondary)
           Toggle("forceLongPolling", isOn: $service.forceLongPolling)
           Toggle("detectBufferingProxy", isOn: $service.detectBufferingProxy)
         }
@@ -541,7 +651,7 @@ struct LensBenchmarkTabView: View {
     }
     .padding()
     .background(Color(.secondarySystemBackground))
-    .cornerRadius(10)
+    .clipShape(RoundedRectangle(cornerRadius: 10))
   }
 
   private var lensLifecycleSection: some View {
@@ -560,11 +670,11 @@ struct LensBenchmarkTabView: View {
           Text("Completed")
             .font(.caption2)
             .fontWeight(.bold)
-            .foregroundColor(.green)
+            .foregroundStyle(.green)
             .padding(.horizontal, 6)
             .padding(.vertical, 2)
             .background(Color.green.opacity(0.12))
-            .cornerRadius(4)
+            .clipShape(RoundedRectangle(cornerRadius: 4))
         }
       }
 
@@ -573,7 +683,7 @@ struct LensBenchmarkTabView: View {
           + "M3 Prefetch (\(lensImageSizeKb)KB) + Preliminary ML Detections + M4 Final Capture."
       )
       .font(.caption)
-      .foregroundColor(.secondary)
+      .foregroundStyle(.secondary)
 
       Picker("Lifecycle Mode", selection: $isOmnientMode) {
         Text("Omnient (0-RTT)").tag(true)
@@ -632,7 +742,7 @@ struct LensBenchmarkTabView: View {
     }
     .padding()
     .background(Color(.secondarySystemBackground))
-    .cornerRadius(10)
+    .clipShape(RoundedRectangle(cornerRadius: 10))
   }
 
   private var metricsTable: some View {
@@ -669,7 +779,7 @@ struct LensBenchmarkTabView: View {
     }
     .padding(8)
     .background(Color(.systemBackground))
-    .cornerRadius(6)
+    .clipShape(RoundedRectangle(cornerRadius: 6))
   }
 
   private func metricRow(
@@ -681,12 +791,12 @@ struct LensBenchmarkTabView: View {
     HStack(alignment: .center, spacing: 8) {
       Image(systemName: icon)
         .font(.caption)
-        .foregroundColor(color == .primary ? .secondary : color)
+        .foregroundStyle(color == .primary ? Color.secondary : color)
         .frame(width: 16)
 
       Text(title)
         .font(.caption)
-        .foregroundColor(.secondary)
+        .foregroundStyle(.secondary)
 
       Spacer()
 
@@ -694,11 +804,11 @@ struct LensBenchmarkTabView: View {
         Text(String(format: "%.1f ms", val))
           .font(.system(.caption, design: .monospaced))
           .fontWeight(.bold)
-          .foregroundColor(color)
+          .foregroundStyle(color)
       } else {
         Text("...")
           .font(.caption)
-          .foregroundColor(.secondary)
+          .foregroundStyle(.secondary)
       }
     }
   }

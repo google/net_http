@@ -1,0 +1,32 @@
+LENS_BATCH_TRIAL_STARTED {"batchId":"4a271ef5-5e0f-4adf-95fb-3785f7092aea","batchPair":56,"batchSetting":"on","batchTrialOrdinal":112,"processId":1224,"processInstanceId":"F9D7CD0E-1091-4CBC-AF8A-1E109D4370EE","trialStartedEpochSeconds":1792467659.4986119}
+[SDK Debug] Opening Forward Channel.
+🌐 [HTTP Req] (89338) [attempt 1] GET https://webchannel.sandbox.google.com/staging/channel/lens?VER=8&RID=89338&CVER=25&X-HTTP-Session-Id=gsessionid&%24req=count%3D0%26%0D%0A&SID=c-MAp0UpcGVakpTt4ufZiVUA&t=1
+2026-10-20 12:40:59.501338+0900 WebChanneliOSDemo[1224:65328] GTMSessionFetcher 0x112db1b80 (https://webchannel.sandbox.google.com/staging/channel/lens?VER=8&RID=89338&CVER=25&X-HTTP-Session-Id=gsessionid&%24req=count%3D0%26%0D%0A&SID=c-MAp0UpcGVakpTt4ufZiVUA&t=1) was already running
+🌐 [HTTP Req] (89339) [attempt 1] POST https://webchannel.sandbox.google.com/staging/channel/lens?VER=8&SID=c-MAp0UpcGVakpTt4ufZiVUA&RID=89339&AID=-1&t=1 | PostData: {length = 320, bytes = 0x636f756e 743d3226 6f66733d 300d0a69 ... 745f6964 223a317d }
+🌐 [HTTP Resp Meta] (89339) [attempt 1] POST https://webchannel.sandbox.google.com/staging/channel/lens?VER=8&SID=c-MAp0UpcGVakpTt4ufZiVUA&RID=89339&AID=-1&t=1 status: 400
+[SDK Debug] Request Complete.
+[SDK Debug] Not retrying due to error type.
+[SDK Debug] Error: HTTP request failed.
+[SDK Error] Error code: 1
+[SDK Debug] HttpChannel: error - 1
+[SDK Info] WebChannel aborted on https://webchannel.sandbox.google.com/staging/channel/lens due to channel error 1
+[SDK Debug] Number of undelivered maps pending: 2, outgoing: 0
+[SDK Info] WebChannel closed on https://webchannel.sandbox.google.com/staging/channel/lens with pending data: (
+    "<WCQueuedMap: 0x112dcece0>",
+    "<WCQueuedMap: 0x112dced40>"
+) and undelivered data: (
+)
+LENS_BENCHMARK_RESULT omnient #1 fastHandshake2=true: failed
+/Users/riesz/net_http/webchannel/objc/demo/WebChanneliOSDemo/WebChanneliOSDemoTests/LensBenchmarkTests.swift:224: error: -[WebChanneliOSDemoTests.LensBenchmarkTests testColdBinaryOmnientBatch] : XCTAssertTrue failed - Incomplete benchmark runs: omnient #1 fastHandshake2=true
+LENS_BATCH_TRIAL_FINISHED {"batchId":"4a271ef5-5e0f-4adf-95fb-3785f7092aea","batchPair":56,"batchSetting":"on","batchTrialOrdinal":112,"processId":1224,"processInstanceId":"F9D7CD0E-1091-4CBC-AF8A-1E109D4370EE","trialStartedEpochSeconds":1792467659.4986119}
+Test Case '-[WebChanneliOSDemoTests.LensBenchmarkTests testColdBinaryOmnientBatch]' failed (0.271 seconds).
+Test Suite 'LensBenchmarkTests' failed at 2026-10-20 12:40:59.763.
+	 Executed 1 test, with 1 failure (0 unexpected) in 0.271 (0.271) seconds
+Test Suite 'WebChanneliOSDemoTests.xctest' failed at 2026-10-20 12:40:59.763.
+	 Executed 1 test, with 1 failure (0 unexpected) in 0.271 (0.271) seconds
+Test Suite 'Selected tests' failed at 2026-10-20 12:40:59.764.
+	 Executed 1 test, with 1 failure (0 unexpected) in 0.271 (0.272) seconds
+Test Suite 'Selected tests' started at 2026-10-20 12:41:00.387.
+Test Suite 'WebChanneliOSDemoTests.xctest' started at 2026-10-20 12:41:00.387.
+Test Suite 'LensBenchmarkTests' started at 2026-10-20 12:41:00.387.
+Test Case '-[WebChanneliOSDemoTests.LensBenchmarkTests testColdBinaryOmnientBatch]' started.

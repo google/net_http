@@ -1,5 +1,6 @@
 #import "WCWireV8Binary.h"
 
+#import "WCSimpleAtoi.h"
 #import "WCQueuedMap.h"
 
 @implementation WCWireV8Binary
@@ -93,19 +94,15 @@
     NSString *sizeString =
         [headerString substringFromIndex:sizePrefixRange.location + sizePrefixRange.length];
 
-    NSScanner *idScanner = [NSScanner scannerWithString:idString];
-    long long scannedMapID = 0;
-    if (![idScanner scanLongLong:&scannedMapID] || ![idScanner isAtEnd]) {
+    int64_t mapID = 0;
+    if (!WCSimpleAtoi64(idString, &mapID)) {
       return nil;
     }
-    int64_t mapID = (int64_t)scannedMapID;
 
-    NSScanner *sizeScanner = [NSScanner scannerWithString:sizeString];
-    long long scannedSize = 0;
-    if (![sizeScanner scanLongLong:&scannedSize] || ![sizeScanner isAtEnd] || scannedSize < 0) {
+    int64_t size = 0;
+    if (!WCSimpleAtoi64(sizeString, &size) || size < 0) {
       return nil;
     }
-    int64_t size = (int64_t)scannedSize;
 
     offset = crlfRange.location + crlfRange.length;
 

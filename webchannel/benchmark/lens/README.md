@@ -79,3 +79,32 @@ python3 -B webchannel/benchmark/lens/summarize-delay-sweep.py OUTPUT_DIR --repor
 Each delay has scatter plots of elapsed time versus measured TTFA/TTFD and ECDFs of the observed latencies, distinguishing OFF/ON by colors and marks/line styles. Only a missing/nonfinite metric cannot be plotted; selection is independent per metric, including finite values from incomplete trials. Reports link combined observations and original JSON/CSV exports. Overall duration remains in report.md; per-delay duration remains in artifacts.md. Rendering verifies raw preservation, explicit source identities, membership, missing counts, ECDFs and deterministic output. Measurement execution settings remain frozen; report generation has separate provenance. The saved format preserves unpaired rendering on ordinary regeneration; earlier runs keep the historical paired format.
 
 The October 15 noon report now uses all independent observed TTFA/TTFD values (OFF 500, ON 499 for each metric), without handshake-difference or HTTP-status selection. Its root report links combined data and original exports; the earlier paired main report is retained as explicitly superseded analysis.
+
+The [October 20 upstream-sync sweep](2026-10-20_12-38_omnient-delay-sweep-100pairs-upstream_JST/report.md) uses upstream commit `236d7a20e92df95806471e7ac0fe2c840b855a79` and records 100 OFF/ON pairs at each of the five delays. All 1,000 trials used distinct application processes and verified fresh HTTP/2 TCP/TLS transport; 947 completed and 53 ON trials failed with `RequestFailed (code 1)`. The report plots all available independent observations and links raw data. Total benchmark elapsed time was 1252.976 seconds; no startup connection error occurred. [Outcome and connection audit](2026-10-20_12-38_omnient-delay-sweep-100pairs-upstream_JST/connection-reuse-audit.md) retains the failure evidence.
+
+## Version control of benchmark evidence
+
+Starting with the October 20 upstream-sync sweep, include `logs/`, `attachments/`, and `xcresults/` (including `.xcresult` bundle contents) in version control. Keep these subdirectories in future runs; do not add ignore rules for their evidence. Historical run directories and the earlier device-connection investigation retain local `.gitignore` files with the previous exclusion policy. The current upstream-sync preflight evidence is included too. Shared ignore rules cover only Python bytecode. Ignore rules do not remove files already tracked.
+
+Jujutsu also limits automatic tracking by file size. This checkout uses repository-local `snapshot.max-new-file-size = "10MiB"`; that setting is not shared through Git. In another checkout, configure it with `jj config set --repo snapshot.max-new-file-size 10MiB` when needed, and review any remaining oversized-file warning rather than omitting evidence.
+
+## Compact publication: October 20 rerun onward
+
+For the October 20 14:14 rerun and future results, publish each trial's original JSON/CSV and exact WebChannel/HTTP log segment, with direct links from artifacts.md. Keep one shared export manifest per batch. Batch export directories, shared batch stdout, xcresults and aliases, repeated per-trial batch manifests, archives and source-code snapshots remain local and are excluded by each run's `.gitignore`. This supersedes the preceding full-evidence upload policy for these runs; do not change earlier published runs or delete local originals. Source/build hashes and original mapping identities remain published.
+
+After the measurement workflow and full-evidence checks finish, use:
+
+```bash
+python3 -B webchannel/benchmark/lens/publish-trial-evidence.py RUN_DIR
+python3 -B webchannel/benchmark/lens/summarize-delay-sweep.py RUN_DIR --report-format unpaired
+```
+
+The first command verifies byte-identical per-trial exports and shared stdout ranges, preserves the original rendering provenance locally, writes per-trial evidence indexes, and freezes publication hashes in `publication-settings.json`. The renderer verifies the published original JSON/CSV and log hashes/identities, all metric observations and deterministic output. In a checkout without local batch files, those original exports and log segments are sufficient to regenerate the report. Original completion checks describe the full local measurement verification; published regeneration does not claim to re-inspect an absent xcresult or shared stdout. A publication-only copy must pass regeneration before upload.
+
+The [October 20 14:14 rerun](2026-10-20_14-14-48_omnient-delay-sweep-100pairs-upstream-rerun_JST/report.md) records 100 OFF/ON pairs for each of the five delays using the same validated upstream build. All 1,000 trials have verified fresh HTTP/2 TCP/TLS transport; 986 completed and 14 ON trials failed with RequestFailed (code 1). Elapsed measurement time was 1294.197 seconds. Every finite TTFA/TTFD value is included independently, including available values from failed trials.
+
+The [October 20 16:00 scheduled sweep](2026-10-20_16-01-22_omnient-delay-sweep-100pairs-1600_JST/report.md) records 100 OFF/ON pairs at each of 0, 50, 100, 150 and 200 ms. All 1,000 trials completed and verified fresh HTTP/2 TCP/TLS transport with distinct application processes. Benchmark elapsed time was 1251.436 seconds. Its per-trial JSON/CSV and WebChannel/HTTP logs are published under the compact policy above; all local original evidence is preserved.
+
+## Retrospective compact publication of the October 20 12:38 run
+
+At the user's request, the October 20 12:38 upstream-sync run now also uses compact publication: publish per-trial original JSON/CSV and WebChannel/HTTP logs and one shared export manifest per batch; keep duplicate batch exports/stdout, xcresults, repeated trial manifests, archives and source-code snapshots local only. The run's `.gitignore`, `publication-settings.json` and `publication-verification.json` record this policy and verification. Original measured values, measurement settings, mappings and completion evidence are unchanged. Report links use the published per-trial files. `publish-trial-evidence.py RUN_DIR` followed by `summarize-delay-sweep.py RUN_DIR --report-format unpaired` supports both the older list-shaped outcome index and newer trial dictionaries. This is an explicit exception to earlier full-upload/leave-earlier-runs-unchanged instructions, scoped to this run; its separate preflight is unchanged.
