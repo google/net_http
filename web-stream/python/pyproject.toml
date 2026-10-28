@@ -10,6 +10,9 @@ readme = "README.md"
 requires-python = ">=3.9"
 dependencies = []
 
+[project.optional-dependencies]
+test-asgi = ["fastapi>=0.115,<1"]
+
 [tool.scikit-build]
 cmake.version = ">=3.14"
 ninja.version = ">=1.5"

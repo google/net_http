@@ -273,6 +273,99 @@ also combined. No finer diagnosis is inferred from an empty native callback.
 The FastAPI router's `create_server()` and `mount_web_stream()` accept the same
 `runtime`, `limits`, and shutdown options as `WebStreamServer`.
 
+## Experimental ASGI WebSocket adapter
+
+`ASGIWebSocketAdapter` calls an ASGI 3 application with a `websocket` scope for
+each established web-stream connection. Existing FastAPI/Starlette WebSocket
+routes can handle text and binary messages, including their normal routing,
+dependencies, and ASGI middleware. Clients still use web-stream, not RFC 6455
+WebSocket. This is an application compatibility experiment, **not full ASGI
+WebSocket protocol conformance**.
+
+```python
+import asyncio
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from web_stream import ASGIWebSocketAdapter
+
+app = FastAPI()
+
+@app.websocket("/echo/{room}")
+async def echo(ws: WebSocket, room: str):
+    await ws.accept()
+    try:
+        while True:
+            await ws.send_text(f"{room}: {await ws.receive_text()}")
+    except WebSocketDisconnect:
+        pass
+
+async def main():
+    # For this standalone example, explicitly enter FastAPI's lifespan context.
+    # An existing host must own lifespan instead when sharing its app instance.
+    async with app.router.lifespan_context(app) as state:
+        adapter = ASGIWebSocketAdapter(app, state=state)
+        async with adapter.create_server(8080, host="127.0.0.1") as server:
+            await server.serve_forever()
+
+asyncio.run(main())
+```
+
+Connect with `web_stream.connect("webstream://127.0.0.1:8080/echo/room")`.
+`create_server(port, **server_options)` forwards Runtime, TLS, flow-control, and
+shutdown options to `WebStreamServer`, and infers `ws`/`wss` for the scope from
+TLS. Alternatively, install the adapter using
+`server.set_stream_handler(ASGIWebSocketAdapter(app, scheme="wss"))` on an existing
+TLS server (`scheme="ws"` is the default). No FastAPI dependency is needed for a
+plain ASGI callable. The adapter itself is a stream handler, not an ASGI app.
+
+The first receive returns `websocket.connect`; later receives wait for accept or
+close. Sends await the existing transport flow control. App return, exceptions,
+and cancellation close the connection, and retained callbacks cannot communicate
+after app return. The host's existing server shutdown grace period applies.
+The adapter never drives lifespan: run it only after host startup completes and
+stop its server before host shutdown. A supplied `state` dict is shallow-copied
+into each scope. The optional `root_path` is scope metadata; it does not rewrite
+the request path. When sharing an app, use the same owning asyncio loop.
+
+Compatibility boundaries:
+
+- The native HTTP opening handshake has already completed before the app runs.
+  `accept` permits application message delivery; it does not complete a deferred
+  handshake. Closing before accept (including an unknown route) closes an
+  established web-stream; it cannot return HTTP 403. HTTP denial-response
+  extensions are not advertised or supported.
+- Path decoding, raw path, and query bytes come from the request target. Request
+  headers, peer/listener addresses, and offered subprotocols are not currently
+  exposed by the native connection API. Scopes use empty `headers` and
+  `subprotocols`, and `None` addresses. Header/cookie authentication, Origin/Host
+  checks, and subprotocol-dependent apps therefore cannot be assumed compatible.
+  Nonempty accept headers and any selected subprotocol raise `ValueError` rather
+  than being silently discarded. The `ws`/`wss` scheme describes the compatibility
+  interface, not the wire protocol. No extensions are advertised.
+- Clean inbound EOF maps to disconnect code 1005 (no peer close code); transport
+  failure maps to 1006. Inbound EOF ends the whole adapted connection: web-stream
+  half-close semantics are unavailable through this interface. A local close's
+  code/reason are retained for local disconnect notifications but are **not sent
+  to the peer**. WebSocket close frames/codes are not available on this transport.
+- Metadata messages are not converted to binary messages: they terminate the
+  adapted connection with local disconnect code 1003. Invalid UTF-8 text uses
+  local code 1007. Neither code is transmitted. Ping/pong keepalive remains a
+  transport feature pending in the existing Python API.
+- `asgi.version=3.0` and `spec_version=2.5` describe the application event format
+  implemented by the adapter, including disconnect reasons. They do not remove
+  the transport limitations above. ASGI 2 callables are not supported.
+
+Install the optional compatibility-test dependency and run the tests:
+
+```bash
+pip install '.[test-asgi]'
+python -m unittest discover -s tests -p test_asgi.py -v
+```
+
+The tests cover raw ASGI state transitions, real web-stream message exchange,
+FastAPI routing/query/path dependencies, Starlette authentication middleware,
+externally managed lifespan/state, peer/local close, unknown routes, and cleanup.
+FastAPI integration cases are skipped if its optional dependency is unavailable.
+
 ## Low-level compatibility
 
 `web_stream_ext.PlainClient`, `TlsClient`, `PlainServer`, `TlsServer`, and their
