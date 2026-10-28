@@ -7,7 +7,7 @@ import sys
 import unittest
 import web_stream
 
-# Project root based on known directory structure (wish/python/tests/test_client.py)
+# Project root based on known directory structure (web-stream/python/tests/test_e2e.py)
 TEST_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.abspath(os.path.join(TEST_DIR, "..", ".."))
 
