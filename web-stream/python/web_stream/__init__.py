@@ -17,10 +17,12 @@ from .fastapi import (
 )
 
 from .connection import Message
+from .asgi import ASGIWebSocketAdapter
 from .runtime import Runtime, Limits, WebStreamError
 from .exceptions import ConnectionClosed, ConnectionClosedOK, ConnectionClosedError, ConcurrencyError
 
 __all__ = [
+    "ASGIWebSocketAdapter",
     "serve",
     "ConnectionClosed",
     "ConnectionClosedOK",
