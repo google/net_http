@@ -4,11 +4,13 @@ import asyncio
 import atexit
 from dataclasses import dataclass
 import itertools
+import sys
 import threading
 import weakref
-from typing import Callable
+from typing import Callable, Optional
 
 from . import web_stream_ext
+from .exceptions import WebStreamError
 
 
 _workers = set()
@@ -24,18 +26,6 @@ def _shutdown_workers():
 
 
 atexit.register(_shutdown_workers)
-
-
-class WebStreamError(ConnectionError):
-    """Native failure with a stable operation/stage code and diagnostic detail."""
-
-    def __init__(self, code, detail):
-        self.code = code
-        self.detail = detail
-        super().__init__(code, detail)
-
-    def __str__(self):
-        return f"{self.code}: {self.detail}"
 
 
 @dataclass(frozen=True)
@@ -54,6 +44,63 @@ class Limits:
     def _native(self):
         return web_stream_ext._Limits(
             self.max_message_size, self.receive_buffer_limit, self.write_buffer_limit)
+
+
+_UNSET = object()
+
+
+def _watermarks(value, name, *, allow_none=False):
+    if isinstance(value, tuple):
+        if len(value) != 2:
+            raise ValueError(f"{name} requires a (high, low) pair")
+        high, low = value
+    else:
+        high, low = value, None
+    if high is None and allow_none:
+        if low is not None:
+            raise ValueError(f"{name} low watermark requires a high watermark")
+        return None, None
+    if not isinstance(high, int) or isinstance(high, bool) or high <= 0:
+        raise ValueError(f"{name} must be a positive integer")
+    low = high // 4 if low is None else low
+    if not isinstance(low, int) or isinstance(low, bool) or not 0 <= low <= high:
+        raise ValueError(f"{name} requires 0 <= low <= high")
+    return high, low
+
+
+@dataclass(frozen=True)
+class _FlowLimits:
+    max_message_size: Optional[int]
+    receive_buffer_limit: Optional[int]
+    write_buffer_limit: int
+    max_queue: Optional[int]
+    queue_low: Optional[int]
+    write_low: int
+    send_limit: Optional[int] = None
+
+    def _native(self):
+        native = web_stream_ext._Limits(
+            self.max_message_size if self.max_message_size is not None else sys.maxsize * 2 + 1,
+            self.receive_buffer_limit or 0, self.write_buffer_limit)
+        native.flexible = True
+        native.receive_messages = self.max_queue or 0
+        native.messages_low = self.queue_low or 0
+        native.write_low = self.write_low
+        return native
+
+
+def resolve_limits(limits=None, *, max_size=_UNSET, max_queue=_UNSET, write_limit=_UNSET):
+    if max_size is _UNSET and max_queue is _UNSET and write_limit is _UNSET:
+        return limits or Limits()
+    if limits is not None:
+        raise ValueError("Use either limits or max_size/max_queue/write_limit")
+    max_size = 1024 * 1024 if max_size is _UNSET else max_size
+    if max_size is not None and (
+            not isinstance(max_size, int) or isinstance(max_size, bool) or max_size < 0):
+        raise ValueError("max_size must be a non-negative integer or None")
+    high, low = _watermarks(16 if max_queue is _UNSET else max_queue, "max_queue", allow_none=True)
+    write, write_low = _watermarks(32768 if write_limit is _UNSET else write_limit, "write_limit")
+    return _FlowLimits(max_size, None, write, high, low, write_low)
 
 
 async def finish_cleanup(task, *, propagate_cancel=True):
@@ -170,7 +217,7 @@ class Runtime:
                 if number:
                     future.set_exception(_error(payload))
                 else:
-                    future.set_result(None)
+                    future.set_result(payload or None)
         elif kind == "open" and number:
             server = self._objects.get(number)
             if server is not None:

@@ -46,6 +46,7 @@ class TlsClient {
   ~TlsClient();
 
   bool Init();
+  void SetHandshakeTimeout(int seconds) { handshake_timeout_ = seconds; }
 
   void SetOnOpen(OpenCallback cb);
   void SetOnError(ErrorCallback cb);
@@ -59,6 +60,7 @@ class TlsClient {
   std::string host_;
   int port_;
   std::string path_;
+  int handshake_timeout_ = kDefaultHandshakeTimeoutSeconds;
 
   std::string ca_file_;
   std::string cert_file_;

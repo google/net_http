@@ -1,10 +1,14 @@
 """Shared asyncio message, flow-control, and connection lifecycle contracts."""
 
 import asyncio
+from collections.abc import AsyncIterable, Iterable, Mapping
 from dataclasses import dataclass
 from typing import AsyncIterator, Optional, Union
 
 from .runtime import Limits, WebStreamError, finish_cleanup, release_runtime
+from .exceptions import (
+    ConnectionClosed, ConnectionClosedOK, ConnectionClosedError, ConcurrencyError,
+)
 
 WEB_STREAM_OPCODE_TEXT = 1
 WEB_STREAM_OPCODE_BINARY = 2
@@ -20,7 +24,7 @@ class Message:
 class Connection:
     def _initialize(self, runtime=None, identifier=None, path="/", limits=None,
                     close_timeout=5.0):
-        if close_timeout <= 0:
+        if close_timeout is not None and close_timeout <= 0:
             raise ValueError("close_timeout must be positive")
         self._loop = asyncio.get_running_loop()
         self._runtime = runtime
@@ -42,6 +46,7 @@ class Connection:
         self._native_closed = self._loop.create_future()
         self._write_lock = asyncio.Lock()
         self._writes = set()
+        self._receiving = False
 
     def _check_loop(self):
         if asyncio.get_running_loop() is not self._loop:
@@ -53,6 +58,13 @@ class Connection:
 
     def _terminate(self, error):
         if not self._closed:
+            if not isinstance(error, ConnectionClosed):
+                if isinstance(error, ConnectionAbortedError):
+                    error = ConnectionClosedOK(*error.args)
+                else:
+                    error = ConnectionClosedError(
+                        getattr(error, "code", "transport"),
+                        getattr(error, "detail", str(error)))
             self._closed = True
             self._recv_error = (type(error), error.args)
             self._recv_queue.put_nowait(None)
@@ -66,9 +78,17 @@ class Connection:
     def _ensure_open(self):
         self._check_loop()
         if self._transport_failed or self._closing or self._released or self._identifier is None:
-            raise RuntimeError("Connection is closed or not open")
+            self._raise_closed()
         if self._eof:
-            raise RuntimeError("Outbound EOF already sent")
+            raise ConnectionClosedOK("Outbound EOF already sent")
+
+    def _raise_closed(self):
+        if self._recv_error is not None:
+            error_type, args = self._recv_error
+            raise error_type(*args)
+        if self._transport_failed:
+            raise ConnectionClosedError("transport", "Connection is closed")
+        raise ConnectionClosedOK("Connection is closed or not open")
 
     def _write_task(self, coroutine):
         task = self._loop.create_task(coroutine)
@@ -83,7 +103,8 @@ class Connection:
 
     async def _send(self, opcode, data):
         self._ensure_open()
-        if len(data) > self.limits.max_message_size:
+        send_limit = getattr(self.limits, "send_limit", self.limits.max_message_size)
+        if send_limit is not None and len(data) > send_limit:
             raise ValueError("Message exceeds max_message_size")
         # The lock remains held by the operation even if its waiter is cancelled.
         submitted = asyncio.Event()
@@ -98,9 +119,15 @@ class Connection:
     async def _send_locked(self, opcode, data, submitted):
         async with self._write_lock:
             if self._transport_failed or self._released or self._eof:
-                raise RuntimeError("Connection is closed for sending")
+                self._raise_closed()
             submitted.set()
-            await self._runtime._request("operation", self._identifier, opcode, data)
+            try:
+                await self._runtime._request("operation", self._identifier, opcode, data)
+            except WebStreamError as error:
+                if error.code == "limit":
+                    raise
+                self._terminate(error)
+                self._raise_closed()
 
     async def send_text(self, text: str) -> None:
         if not isinstance(text, str):
@@ -117,16 +144,60 @@ class Connection:
             raise TypeError("send_metadata expects bytes-like data")
         await self._send(WEB_STREAM_OPCODE_METADATA, bytes(data))
 
-    async def send(self, data: object) -> None:
-        if isinstance(data, (bytes, bytearray, memoryview)):
-            await self.send_binary(data)
+    async def send(self, data: object, *, text: Optional[bool] = None) -> None:
+        def encode(item):
+            if isinstance(item, str):
+                return True, item.encode("utf-8")
+            if isinstance(item, (bytes, bytearray, memoryview)):
+                return False, bytes(item)
+            raise TypeError("send expects str, bytes-like data, or an iterable of them")
+
+        if isinstance(data, (str, bytes, bytearray, memoryview)):
+            is_text, payload = encode(data)
         else:
-            await self.send_text(str(data))
+            if isinstance(data, Mapping) or not isinstance(data, (Iterable, AsyncIterable)):
+                raise TypeError("send expects str, bytes-like data, or an iterable of them")
+            parts = []
+            is_text = None
+            size = 0
+
+            def append(item):
+                nonlocal is_text, size
+                kind, part = encode(item)
+                if is_text is not None and kind != is_text:
+                    raise TypeError("All message parts must have the same type")
+                is_text = kind
+                size += len(part)
+                limit = getattr(self.limits, "send_limit", self.limits.max_message_size)
+                if limit is not None and size > limit:
+                    raise ValueError("Message exceeds max_message_size")
+                parts.append(part)
+
+            if isinstance(data, AsyncIterable):
+                async for item in data:
+                    append(item)
+            else:
+                for item in data:
+                    append(item)
+            if is_text is None:
+                return
+            payload = b"".join(parts)
+        opcode = (WEB_STREAM_OPCODE_TEXT if (is_text if text is None else text)
+                  else WEB_STREAM_OPCODE_BINARY)
+        if opcode == WEB_STREAM_OPCODE_TEXT:
+            payload.decode("utf-8")
+        await self._send(opcode, payload)
 
     async def recv_message(self) -> Message:
         """Receive opcode and bytes without losing metadata message identity."""
         self._check_loop()
-        message = await self._recv_queue.get()
+        if self._receiving:
+            raise ConcurrencyError("Another coroutine is already receiving")
+        self._receiving = True
+        try:
+            message = await self._recv_queue.get()
+        finally:
+            self._receiving = False
         if message is None:
             self._recv_queue.put_nowait(None)
             error_type, args = self._recv_error

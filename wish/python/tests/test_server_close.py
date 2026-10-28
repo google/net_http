@@ -6,7 +6,7 @@ import socket
 import unittest
 from unittest.mock import Mock
 
-from web_stream import connect, WebStreamRouter, WebStreamServer
+from web_stream import ConnectionClosedOK, connect, WebStreamRouter, WebStreamServer
 from web_stream.server import WebStreamServerConnection
 
 
@@ -89,7 +89,7 @@ class TestServerClose(unittest.IsolatedAsyncioTestCase):
         # Repeated close consistently reports the original cleanup failure.
         with self.assertRaisesRegex(TypeError, "EOF cleanup failed"):
             await conn.close()
-        with self.assertRaisesRegex(RuntimeError, "closed"):
+        with self.assertRaisesRegex(ConnectionClosedOK, "closed"):
             await conn.send_text("after close")
 
     async def test_transport_close_failure_is_reported(self):

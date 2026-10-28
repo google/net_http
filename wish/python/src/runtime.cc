@@ -28,7 +28,16 @@ struct Limits {
   size_t message;
   size_t receive;
   size_t write;
+  bool flexible = false;
+  size_t receive_messages = 0;
+  size_t messages_low = 0;
+  size_t write_low = 0;
   void Validate() const {
+    if (flexible) {
+      if (!write || write_low > write || messages_low > receive_messages)
+        throw std::invalid_argument("Invalid flow-control watermarks");
+      return;
+    }
     if (!message || !receive || write < 1024 || message > write / 2) {
       throw std::invalid_argument(
           "positive limits and max_message_size <= "
@@ -107,11 +116,14 @@ class NativeRuntime {
       if (tls) {
         raw->tls =
             std::make_unique<TlsClient>(base_, host, port, ca, cert, key, path);
+        // The asyncio caller owns the deadline, including DNS and TLS setup.
+        raw->tls->SetHandshakeTimeout(0);
         raw->tls->SetOnOpen(opened);
         raw->tls->SetOnError(failed);
         ok = raw->tls->Init();
       } else {
         raw->plain = std::make_unique<PlainClient>(base_, host, port, path);
+        raw->plain->SetHandshakeTimeout(0);
         raw->plain->SetOnOpen(opened);
         raw->plain->SetOnError(failed);
         ok = raw->plain->Init();
@@ -122,7 +134,7 @@ class NativeRuntime {
 
   void Listen(int64_t id, int64_t op, int port, bool tls, const std::string &ca,
               const std::string &cert, const std::string &key, Limits limits,
-              size_t max_connections) {
+              size_t max_connections, const std::string &host) {
     limits.Validate();
     Post(op, [=] {
       auto listener = std::make_unique<Listener>();
@@ -146,12 +158,14 @@ class NativeRuntime {
       bool ok;
       if (tls) {
         listener->tls = std::make_unique<TlsServer>(base_, port, ca, cert, key);
+        listener->tls->SetHost(host);
         listener->tls->SetMaxConnections(max_connections);
         listener->tls->SetOnStream(accepted);
         listener->tls->SetOnError(failed);
         ok = listener->tls->Init();
       } else {
         listener->plain = std::make_unique<PlainServer>(base_, port);
+        listener->plain->SetHost(host);
         listener->plain->SetMaxConnections(max_connections);
         listener->plain->SetOnStream(accepted);
         listener->plain->SetOnError(failed);
@@ -161,8 +175,10 @@ class NativeRuntime {
         Emit("result", op, 1, "listen: Server initialization failed");
         return;
       }
+      int bound_port = listener->tls ? listener->tls->bound_port()
+                                     : listener->plain->bound_port();
       listeners_.emplace(id, std::move(listener));
-      Emit("result", op, 0, "");
+      Emit("result", op, 0, std::to_string(bound_port));
     });
   }
 
@@ -203,8 +219,9 @@ class NativeRuntime {
         return;
       }
       auto &state = *it->second;
-      if (opcode > 0 && (data.size() > state.limits.message ||
-                         data.size() > state.limits.write / 2)) {
+      if (opcode > 0 && !state.limits.flexible &&
+          (data.size() > state.limits.message ||
+           data.size() > state.limits.write / 2)) {
         Emit("result", op, 1, "limit: Message exceeds configured limit");
         return;
       }
@@ -219,8 +236,11 @@ class NativeRuntime {
       if (it == states_.end()) return;
       auto &state = *it->second;
       state.received -= std::min(bytes, state.received);
+      if (state.received_messages) --state.received_messages;
       if (state.stream && state.paused &&
-          state.received < state.limits.receive / 2 + 1) {
+          (!state.limits.receive || state.received <= state.limits.receive / 2) &&
+          (!state.limits.receive_messages ||
+           state.received_messages <= state.limits.messages_low)) {
         state.paused = false;
         state.stream->SetReadEnabled(true);
       }
@@ -263,6 +283,7 @@ class NativeRuntime {
     int64_t listener = 0;
     int64_t opening = 0;
     size_t received = 0;
+    size_t received_messages = 0;
     bool paused = false;
     bool eof = false;
     std::deque<OperationState> operations;
@@ -351,7 +372,10 @@ class NativeRuntime {
       auto &state = *states_.at(id);
       state.received +=
           data.size() + 64;  // Empty messages also consume credit.
-      if (state.received >= state.limits.receive) {
+      ++state.received_messages;
+      if ((state.limits.receive && state.received >= state.limits.receive) ||
+          (state.limits.receive_messages &&
+           state.received_messages >= state.limits.receive_messages)) {
         state.paused = true;
         state.stream->SetReadEnabled(false);
       }
@@ -397,12 +421,13 @@ class NativeRuntime {
           state.operations.pop_front();
           continue;
         }
-        // A single message uses at most half the write budget; the remaining
-        // half reserves framing overhead and the previous batch's low
-        // watermark.
+        // Wait for the previous batch before submitting another message.
+        size_t low = state.limits.flexible ? state.limits.write_low
+                                          : state.limits.write / 4;
+        size_t high = state.limits.flexible ? state.limits.write : low;
         if (op.opcode > 0 &&
-            state.stream->PendingWriteBytes() > state.limits.write / 4) {
-          state.stream->SetWriteLowWatermark(state.limits.write / 4);
+            state.stream->PendingWriteBytes() > high) {
+          state.stream->SetWriteLowWatermark(low);
           return;
         }
         int result = 0;
@@ -434,8 +459,13 @@ class NativeRuntime {
         op.submitted = true;
         op.data.clear();
       }
-      size_t watermark = op.opcode > 0 ? state.limits.write / 4 : 0;
-      if (state.stream->PendingWriteBytes() > watermark) {
+      size_t watermark = op.opcode > 0
+                             ? (state.limits.flexible ? state.limits.write_low
+                                                      : state.limits.write / 4)
+                             : 0;
+      size_t high = op.opcode > 0 && state.limits.flexible ? state.limits.write
+                                                         : watermark;
+      if (state.stream->PendingWriteBytes() > high) {
         state.stream->SetWriteLowWatermark(watermark);
         return;
       }
@@ -477,7 +507,12 @@ void BindRuntime(nb::module_ &m) {
       {Py_tp_traverse, reinterpret_cast<void *>(Traverse)},
       {Py_tp_clear, reinterpret_cast<void *>(Clear)},
       {0, nullptr}};
-  nb::class_<Limits>(m, "_Limits").def(nb::init<size_t, size_t, size_t>());
+  nb::class_<Limits>(m, "_Limits")
+      .def(nb::init<size_t, size_t, size_t>())
+      .def_rw("flexible", &Limits::flexible)
+      .def_rw("receive_messages", &Limits::receive_messages)
+      .def_rw("messages_low", &Limits::messages_low)
+      .def_rw("write_low", &Limits::write_low);
   nb::class_<NativeRuntime>(m, "_Runtime", nb::type_slots(slots))
       .def(nb::init<nb::object>())
       .def("run", &NativeRuntime::Run, nb::call_guard<nb::gil_scoped_release>())

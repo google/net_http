@@ -42,6 +42,7 @@ class PlainClient {
   ~PlainClient();
 
   bool Init();
+  void SetHandshakeTimeout(int seconds) { handshake_timeout_ = seconds; }
 
   void SetOnOpen(OpenCallback cb);
   void SetOnError(ErrorCallback cb);
@@ -55,6 +56,7 @@ class PlainClient {
   std::string host_;
   int port_;
   std::string path_;
+  int handshake_timeout_ = kDefaultHandshakeTimeoutSeconds;
 
   evdns_base* dns_base_;
 

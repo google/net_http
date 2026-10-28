@@ -37,8 +37,9 @@ waiting for a send result suspends its coroutine rather than the asyncio thread.
 | --- | --- |
 | [web_stream/__init__.py](web_stream/__init__.py) | Public exports: connection/client/server APIs, `Runtime`, `Limits`, `Message`, errors, opcodes, and FastAPI helpers. |
 | [web_stream/runtime.py](web_stream/runtime.py) | `Runtime` owns the worker and native runtime, allocates identifiers, tracks objects/Futures, and dispatches native events. `Limits` validates budgets; `WebStreamError` carries stage/detail; `finish_cleanup` protects cleanup against repeated cancellation. |
+| [web_stream/exceptions.py](web_stream/exceptions.py) | Public normal/failure termination errors, native stage/detail errors, and receive concurrency errors. |
 | [web_stream/connection.py](web_stream/connection.py) | Shared `Connection` behavior: send serialization, receive credit return, persistent terminal notifications, opcode-preserving `Message`, text/bytes convenience methods, EOF/drain/close/abort, and native release. |
-| [web_stream/client.py](web_stream/client.py) | `WebStreamConnection` acquires a Runtime and opens a native client. `connect()` parses URIs and returns the async context manager; failed/cancelled entry aborts and releases the client. |
+| [web_stream/client.py](web_stream/client.py) | `WebStreamConnection` acquires a Runtime and opens a native client under an optional deadline. `connect()` supports awaiting, async context management, and retry iteration; failed/cancelled entry aborts and releases the client. |
 | [web_stream/server.py](web_stream/server.py) | `WebStreamServer` manages the listener, accepted connections, handler tasks, exception reporting, and shutdown. `WebStreamServerConnection` uses the common connection behavior. Custom connection classes receive `(runtime, identifier, path, *, limits, close_timeout)`. |
 | [web_stream/fastapi.py](web_stream/fastapi.py) | `WebStreamRouter` maps paths to handlers, `WebStreamSession` specializes server connections, and `mount_web_stream` attaches a separate server to application startup/shutdown. Runtime/limit/shutdown options pass through to the server. |
 | [src/runtime.cc](src/runtime.cc) | `NativeRuntime`, exposed privately as `_Runtime` and `_Limits`. Owns the event base, command queue, native clients/listeners, stream state, flow-control accounting, operation progression, and event emission. `BindRuntime` registers it. |
@@ -121,8 +122,9 @@ binding has its own traverse/clear slots for its event-delivery callback.
 
 | Tests | Coverage |
 | --- | --- |
+| [test_asyncio_api.py](tests/test_asyncio_api.py) | Awaitable connections, retry and cancellation, strict message types and iterable parts, timeout cleanup, flow-control arguments, IPv6, ephemeral server ports, and scheduled/awaited shutdown. |
 | [test_runtime.py](tests/test_runtime.py) | Shared/default Runtime ownership, custom worker factory, asyncio progress during native waits, receive/send backpressure, message types, half-close, size limits, cancellation, self-shutdown, GC, and interpreter exit. |
-| [test_connect_cancellation.py](tests/test_connect_cancellation.py), [test_recv_termination.py](tests/test_recv_termination.py) | Failed/cancelled connect cleanup, repeated cancellation, late notifications, buffered messages, and concurrent receiver termination. |
+| [test_connect_cancellation.py](tests/test_connect_cancellation.py), [test_recv_termination.py](tests/test_recv_termination.py) | Failed/cancelled connect cleanup, repeated cancellation, late notifications, buffered messages, receive exclusion, and persistent termination errors. |
 | [test_python_server.py](tests/test_python_server.py), [test_server_close.py](tests/test_server_close.py) | Server echo/routing, waiting-handler shutdown, clean protocol EOF, and cleanup failure reporting. |
 | [test_callback_dispatch.py](tests/test_callback_dispatch.py), [test_callback_exceptions.py](tests/test_callback_exceptions.py) | Legacy callback-thread sends/close, pending-operation cancellation, embedded NUL preservation, and unraisable exception reporting. |
 | [test_dangling_pointer.py](tests/test_dangling_pointer.py), [test_server_handler_lifetime.py](tests/test_server_handler_lifetime.py) | Retained-handle safety, invalidation, active callback rooting, and stopped-handle cycle collection. |

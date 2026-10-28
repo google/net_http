@@ -23,6 +23,7 @@
 
 #include <functional>
 #include <memory>
+#include <string>
 #include <vector>
 
 #include "web_stream.h"
@@ -42,6 +43,8 @@ class PlainServer {
   ~PlainServer();
 
   bool Init();
+  void SetHost(std::string host) { host_ = std::move(host); }
+  int bound_port() const;
   // Event-loop-thread-only: stop accepting, retaining established streams.
   void StopAccepting();
   void SetOnStream(StreamCallback cb);
@@ -65,6 +68,7 @@ class PlainServer {
   event_base* base_;
 
   int port_;
+  std::string host_;
 
   evconnlistener* listener_;
 

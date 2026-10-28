@@ -92,10 +92,84 @@ if __name__ == "__main__":
 
 Messages queued before termination remain available through `recv()`. After those
 messages, every `recv()` raises the first terminal error, including calls after
-`close()` cleanup. Concurrent receivers are all notified. The first terminal event
-determines the exception: `ConnectionAbortedError` for a local or clean remote
-close, or `ConnectionError` for a transport failure. This applies to both client
-and server connections.
+`close()` cleanup. Only one receiver may wait on a connection: concurrent
+`recv()` or `recv_message()` calls raise `ConcurrencyError`. Cancelling a receiver
+releases that reservation without consuming a message or terminal notification.
+The first terminal event determines the exception: `ConnectionClosedOK` for a
+local or clean remote close, or `ConnectionClosedError` for a transport failure.
+Both derive from `ConnectionClosed` and `ConnectionError`; the clean exception
+also derives from `ConnectionAbortedError`, and the failure exception retains
+`WebStreamError`'s `code` and `detail`. This applies to clients and servers.
+
+## Asyncio entry points
+
+`connect()` can be awaited directly or used as an async context manager. Direct
+callers must close the returned connection. `open_timeout` (default 10 seconds)
+covers runtime acquisition, DNS, TCP, TLS, and the HTTP opening handshake;
+`None` disables the deadline. Failed and cancelled attempts release native state
+before propagating their exception.
+
+```python
+from web_stream import connect, serve
+
+async def echo(conn):
+    async for message in conn:
+        await conn.send(message)
+
+async def run():
+    async with serve(echo, "127.0.0.1", 0) as server:
+        conn = await connect(f"webstream://127.0.0.1:{server.port}")
+        try:
+            await conn.send(["hello", " world"])
+            assert await conn.recv() == "hello world"
+        finally:
+            await conn.close()
+```
+
+`async for conn in connect(uri)` reconnects after each iteration and retries
+connection-stage failures with exponential backoff. Every successful iteration
+closes its connection before the next attempt. `process_exception(error)` returns
+`None` to retry or an exception to propagate; `reconnect_delays()` supplies an
+iterator of delays in seconds. By default, `OSError`, timeouts, and native
+`connect`-stage errors are retried; other errors propagate. Native connect errors
+currently combine DNS, TCP, TLS, and handshake failures, so applications that
+need stricter retry decisions should supply `process_exception`. Cancellation
+interrupts connection attempts and backoff waits.
+
+`send()` accepts `str`, `bytes`, `bytearray`, and `memoryview`, or a synchronous or
+asynchronous iterable containing consistently typed text or binary parts.
+Iterable parts are collected and validated before submitting one complete
+message. Unsupported types, mappings, and mixed text/binary parts raise
+`TypeError` without sending a string representation. `text=True` sends valid
+UTF-8 bytes as text; `text=False` sends encoded strings as binary. `recv(decode)`
+retains its text/binary decoding override.
+
+`serve(handler, host, port)` can be awaited or used as an async context manager.
+Host names use IPv4; numeric IPv6 addresses are also supported. `host=None`
+retains the IPv4 wildcard listener. Port 0 selects a port and exposes it as
+`server.port`. The existing `WebStreamServer` constructor also accepts `host`.
+`server.close()` schedules shutdown, and `await server.wait_closed()` joins it.
+`server.close(close_connections=False)` stops accepting and waits for existing
+handlers to finish; a later `close()` or `stop()` also closes those connections.
+`serve_forever()` waits until shutdown and stops the server when cancelled.
+`is_serving()` reports acceptance state and `connections` returns a snapshot of
+the active connections. The existing `start()` and `stop()` remain available.
+
+As an alternative to `Limits`, client and server entry points accept
+`max_size`, `max_queue`, and `write_limit`. These options cannot be combined
+with `limits`. Supplying any of them selects defaults of 1 MiB per incoming
+message, 16 queued messages, and 32 KiB of output. `max_size=None` disables the
+incoming message limit, and `max_queue=None` disables receive flow control.
+`max_queue` and `write_limit` accept a positive high watermark or `(high, low)`;
+the default low watermark is one quarter of the high watermark. Queue watermarks
+count complete messages, including messages awaiting delivery to asyncio.
+Write watermarks suspend sending when output exceeds the high watermark and
+resume at the low watermark. One complete message and framing can cross the
+write watermark; these options do not impose an outgoing message-size limit.
+The original `Limits` API continues to provide byte budgets and an outgoing
+size limit.
+
+Ping/pong and their periodic keepalive and timeout options are pending.
 
 ## Runtime and threading
 
@@ -175,7 +249,7 @@ as a fallback; it does not run application handler cleanup.
 - `write_eof()` flushes the outbound EOF while allowing a final inbound response.
   Inbound EOF terminates `recv()` but leaves sending available until local EOF.
   `wait_closed()` waits for native transport teardown. `close()` flushes EOF
-  (bounded by `close_timeout`, default 5 seconds), then releases the transport;
+  (bounded by `close_timeout`, default 5 seconds; `None` disables it), then releases the transport;
   a timeout or send failure is reported after cleanup. `abort()` releases the
   transport without flushing. Close/abort cleanup completes even if cancelled.
 - Server `stop()` first stops accepting and closes established connections,

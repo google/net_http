@@ -10,7 +10,7 @@ from pathlib import Path
 import unittest
 from unittest.mock import patch
 
-from web_stream import Limits, Message, Runtime, WebStreamError, WebStreamServer, connect
+from web_stream import ConnectionClosedOK, Limits, Message, Runtime, WebStreamError, WebStreamServer, connect
 from web_stream import web_stream_ext
 
 
@@ -168,7 +168,7 @@ class TestRuntime(unittest.IsolatedAsyncioTestCase):
                 await client.send("request")
                 await client.write_eof()
                 await client.write_eof()
-                with self.assertRaises(RuntimeError):
+                with self.assertRaises(ConnectionClosedOK):
                     await client.send("after EOF")
                 self.assertEqual(await asyncio.wait_for(client.recv(), 2), "final response")
                 with self.assertRaises(ConnectionAbortedError):
