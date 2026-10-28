@@ -5,10 +5,10 @@ verify SANs rather than the legacy Common Name. Regenerate the server certificat
 from the repository root with:
 
 ```sh
-openssl x509 -req -in wish/cpp/certs/server.csr \
-  -CA wish/cpp/certs/ca.crt -CAkey wish/cpp/certs/ca.key \
+openssl x509 -req -in web-stream/cpp/certs/server.csr \
+  -CA web-stream/cpp/certs/ca.crt -CAkey web-stream/cpp/certs/ca.key \
   -set_serial 0x2026101901 -days 365 -sha256 \
-  -extfile wish/cpp/certs/server.ext -out wish/cpp/certs/server.crt
+  -extfile web-stream/cpp/certs/server.ext -out web-stream/cpp/certs/server.crt
 ```
 
 The effective validity is also limited by the CA certificate's expiration date.

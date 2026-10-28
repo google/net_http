@@ -44,7 +44,7 @@ This sub-project is intended to be used with a Python virtual environment (`venv
 ## Running Tests
 
 After installing the Python bindings, build the C++ echo servers used by the
-integration and safety tests. Run these commands from `wish/python`:
+integration and safety tests. Run these commands from `web-stream/python`:
 
 ```bash
 cmake -S ../cpp -B ../cpp/build -DWISH_BUILD_EXAMPLES=ON \
