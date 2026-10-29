@@ -10,7 +10,7 @@ from web_stream import ConnectionClosedOK, connect, WebStreamRouter, WebStreamSe
 from web_stream.server import WebStreamServerConnection
 
 
-CERTS_DIR = Path(__file__).resolve().parents[2] / "cpp" / "certs"
+CERTS_DIR = Path(__file__).resolve().parents[3] / "cpp" / "certs"
 
 
 class TestServerClose(unittest.IsolatedAsyncioTestCase):
