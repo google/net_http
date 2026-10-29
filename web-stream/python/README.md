@@ -14,7 +14,7 @@ This sub-project is intended to be used with a Python virtual environment (`venv
 
 ### Prerequisites
 - Python 3.9+
-- CMake 3.14+
+- CMake 3.24+ (including CMake 4)
 - A working C++17 compiler
 - Background libraries like BoringSSL and libevent
 
@@ -87,6 +87,10 @@ CTest runs the three suites as `python_core_tests`, `python_asgi_tests`, and
 `ctest --test-dir build/tests -L core --output-on-failure`. Wheel/editable package
 builds disable test prerequisites by default. Explicitly enable them with
 `-DWISH_PYTHON_BUILD_TESTS=ON` when configuring a development build.
+
+Wheel builds compile the extension target and install only the `python` CMake
+component. Third-party headers, tools, and static libraries are excluded from
+the wheel.
 
 For an installed package, direct unittest discovery is also supported with
 `python -m unittest discover -s tests -t . -v`, or `-s tests/core` (similarly

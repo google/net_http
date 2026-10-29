@@ -1,5 +1,5 @@
-cmake_minimum_required(VERSION 3.14)
-project(web_stream_python)
+cmake_minimum_required(VERSION 3.24)
+project(web_stream_python LANGUAGES C CXX)
 
 
 set(CMAKE_CXX_STANDARD 17)
@@ -7,13 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 
-if (CMAKE_VERSION VERSION_LESS 3.18)
-  set(DEV_MODULE Development)
-else()
-  set(DEV_MODULE Development.Module)
-endif()
-
-find_package(Python 3.9 COMPONENTS Interpreter ${DEV_MODULE} REQUIRED)
+find_package(Python 3.9 COMPONENTS Interpreter Development.Module REQUIRED)
 
 if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build." FORCE)
@@ -36,20 +30,18 @@ option(WISH_PYTHON_BUILD_TESTS "Build prerequisites and register Python tests"
        ${_python_tests_default})
 
 # Build only the C++ components needed by bindings and optional Python tests.
-set(WISH_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-set(WISH_BUILD_BENCHMARKS OFF CACHE BOOL "" FORCE)
-set(WISH_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-set(WISH_BUILD_ECHO_SERVERS ${WISH_PYTHON_BUILD_TESTS} CACHE BOOL "" FORCE)
+set(WISH_BUILD_TESTS OFF)
+set(WISH_BUILD_BENCHMARKS OFF)
+set(WISH_BUILD_EXAMPLES OFF)
+set(WISH_BUILD_ECHO_SERVERS ${WISH_PYTHON_BUILD_TESTS})
 add_subdirectory(../cpp web_stream_cpp_build)
 
 
 nanobind_add_module(web_stream_ext src/web_stream_ext.cc src/runtime.cc)
 
-# Provide the include directory so web_stream_ext.cc can find tls_client.h etc.
-target_include_directories(web_stream_ext PRIVATE ../cpp/src)
 target_link_libraries(web_stream_ext PRIVATE web_stream event_pthreads)
 
-install(TARGETS web_stream_ext DESTINATION web_stream)
+install(TARGETS web_stream_ext DESTINATION web_stream COMPONENT python)
 
 if(WISH_PYTHON_BUILD_TESTS)
   enable_testing()

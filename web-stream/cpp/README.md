@@ -17,6 +17,8 @@ For a comprehensive file-by-file reference and architectural code map, see [CODE
 
 ## Building
 
+CMake 3.24 or newer is required; CMake 4 is supported.
+
 To build the C++ targets (libraries, examples, benchmarks, and tests) using Clang and Ninja:
 
 ```bash
@@ -34,6 +36,31 @@ To run unit tests after a standard build:
 
 ```bash
 ctest --test-dir build --output-on-failure
+```
+
+When this directory is the top-level project, `WISH_BUILD_TESTS`,
+`WISH_BUILD_BENCHMARKS`, and `WISH_BUILD_EXAMPLES` default to `ON`. They default
+to `OFF` when embedded with `add_subdirectory`. Override them explicitly as
+needed. `WISH_BUILD_ECHO_SERVERS=ON` builds just the HTTP/1 plain/TLS echo
+servers even when the other examples are disabled.
+
+An embedding project can link `web_stream::web_stream` to obtain public headers,
+the C++17 requirement, and transitive link dependencies:
+
+```cmake
+add_subdirectory(path/to/web-stream/cpp web_stream_build)
+target_link_libraries(my_app PRIVATE web_stream::web_stream)
+```
+
+Third-party options are scoped to dependency setup. Settings such as
+`BUILD_SHARED_LIBS`, `BUILD_TESTING`, and the parent's C++ standard are preserved.
+The embedding regression fixture builds a shared consumer with no manual
+include paths and verifies that parent settings survive:
+
+```bash
+cmake -S tests/cmake/consumer -B build/consumer
+cmake --build build/consumer --parallel 4
+ctest --test-dir build/consumer --output-on-failure
 ```
 
 # Development Conventions

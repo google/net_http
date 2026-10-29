@@ -16,7 +16,7 @@ add_executable(plain_echo_server
     plain_echo_server.cc
 )
 target_link_libraries(plain_echo_server
-    web_stream
+    PRIVATE web_stream
     event_pthreads
     absl::flags
     absl::flags_parse
@@ -30,7 +30,7 @@ add_executable(tls_echo_server
     tls_echo_server.cc
 )
 target_link_libraries(tls_echo_server
-    web_stream
+    PRIVATE web_stream
     absl::flags
     absl::flags_parse
     absl::log
@@ -47,7 +47,7 @@ add_executable(plain_hello_client
     plain_hello_client.cc
 )
 target_link_libraries(plain_hello_client
-    web_stream
+    PRIVATE web_stream
     absl::flags
     absl::flags_parse
     absl::log
@@ -59,7 +59,7 @@ add_executable(tls_hello_client
     tls_hello_client.cc
 )
 target_link_libraries(tls_hello_client
-    web_stream
+    PRIVATE web_stream
     absl::flags
     absl::flags_parse
     absl::log
@@ -73,7 +73,7 @@ add_executable(h2_echo_server
     h2_echo_server.cc
 )
 target_link_libraries(h2_echo_server
-    web_stream
+    PRIVATE web_stream
     absl::flags
     absl::flags_parse
     absl::log
@@ -85,7 +85,7 @@ add_executable(h2_hello_client
     h2_hello_client.cc
 )
 target_link_libraries(h2_hello_client
-    web_stream
+    PRIVATE web_stream
     absl::flags
     absl::flags_parse
     absl::log
@@ -97,7 +97,7 @@ add_executable(h2_tls_echo_server
     h2_tls_echo_server.cc
 )
 target_link_libraries(h2_tls_echo_server
-    web_stream
+    PRIVATE web_stream
     absl::flags
     absl::flags_parse
     absl::log
@@ -109,7 +109,7 @@ add_executable(h2_tls_hello_client
     h2_tls_hello_client.cc
 )
 target_link_libraries(h2_tls_hello_client
-    web_stream
+    PRIVATE web_stream
     absl::flags
     absl::flags_parse
     absl::log

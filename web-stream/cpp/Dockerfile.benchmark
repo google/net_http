@@ -18,8 +18,9 @@ WORKDIR /src
 # CMake validates source file existence during the configure phase,
 # so src/ must be present before `cmake -B build` runs.
 # FetchContent downloads are still cached as long as CMakeLists.txt,
-# patches/, src/, and benchmark/ are unchanged.
+# cmake/, patches/, src/, and benchmark/ are unchanged.
 COPY CMakeLists.txt .
+COPY cmake/ cmake/
 COPY patches/ patches/
 COPY src/ src/
 COPY benchmark/ benchmark/
@@ -39,10 +40,10 @@ RUN --mount=type=cache,target=/cmake-cache,sharing=locked \
             -DWISH_BUILD_BENCHMARKS=ON \
             -DWISH_BUILD_EXAMPLES=OFF \
         && cmake --build /cmake-build \
-            --target benchmark_client tls_benchmark_client high_qps_benchmark_client \
+            --target plain_benchmark_client tls_benchmark_client high_qps_benchmark_client \
             -- -j"$(nproc)" \
         && mkdir -p build \
-        && cp /cmake-build/benchmark/benchmark_client          build/benchmark_client \
+        && cp /cmake-build/benchmark/plain_benchmark_client          build/benchmark_client \
         && cp /cmake-build/benchmark/tls_benchmark_client      build/tls_benchmark_client \
         && cp /cmake-build/benchmark/high_qps_benchmark_client build/high_qps_benchmark_client
 

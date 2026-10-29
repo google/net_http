@@ -149,5 +149,8 @@ Tools for benchmarking QPS and throughput:
 * [`patches/`](patches/): Patch files applied during build (e.g. [`patches/wslay.patch`](patches/wslay.patch) for framing integration).
 * [`scripts/`](scripts/): Container image build and push utilities ([`scripts/build-and-push.sh`](scripts/build-and-push.sh)).
 * [`CMakeLists.txt`](CMakeLists.txt): Main project CMake configuration file.
+* [`cmake/Dependencies.cmake`](cmake/Dependencies.cmake): Pinned dependencies with function-scoped options that preserve parent settings, including CMake 4 compatibility for wslay.
+* [`cmake/PatchWslay.cmake`](cmake/PatchWslay.cmake): Idempotent dependency patch application without shell-specific operators.
+* [`tests/cmake/consumer/`](tests/cmake/consumer/): Embedding regression fixture for parent settings, public headers, C++17, and shared-library linking.
 * [`Makefile`](Makefile): Convenience Makefile targets for building, running tests, ASan/LSan, and Docker images.
 * [`Dockerfile.echo_server`](Dockerfile.echo_server), [`Dockerfile.benchmark`](Dockerfile.benchmark): Docker container recipes for echo server and benchmarking tools.
