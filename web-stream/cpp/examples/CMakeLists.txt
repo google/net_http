@@ -26,10 +26,10 @@ target_link_libraries(plain_echo_server
     "$<LINK_LIBRARY:WHOLE_ARCHIVE,absl::log_flags>"
 )
 
-add_executable(plain_hello_client
-    plain_hello_client.cc
+add_executable(tls_echo_server
+    tls_echo_server.cc
 )
-target_link_libraries(plain_hello_client
+target_link_libraries(tls_echo_server
     web_stream
     absl::flags
     absl::flags_parse
@@ -38,10 +38,15 @@ target_link_libraries(plain_hello_client
     "$<LINK_LIBRARY:WHOLE_ARCHIVE,absl::log_flags>"
 )
 
-add_executable(tls_echo_server
-    tls_echo_server.cc
+# Python integration tests only need the two HTTP/1 echo servers.
+if(NOT WISH_BUILD_EXAMPLES)
+    return()
+endif()
+
+add_executable(plain_hello_client
+    plain_hello_client.cc
 )
-target_link_libraries(tls_echo_server
+target_link_libraries(plain_hello_client
     web_stream
     absl::flags
     absl::flags_parse
