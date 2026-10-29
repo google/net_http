@@ -14,10 +14,13 @@ import threading
 import time
 import unittest
 
+from web_stream import web_stream_ext
+
 TEST_DIR = os.path.dirname(os.path.abspath(__file__))
-PROJECT_ROOT = os.path.abspath(os.path.join(TEST_DIR, "..", ".."))
-SERVER_PLAIN_BIN = os.path.join(
-    PROJECT_ROOT, "cpp", "build", "examples", "plain_echo_server"
+PROJECT_ROOT = os.path.abspath(os.path.join(TEST_DIR, "..", "..", ".."))
+SERVER_PLAIN_BIN = os.environ.get(
+    "WEB_STREAM_PLAIN_ECHO_SERVER",
+    os.path.join(PROJECT_ROOT, "cpp", "build", "examples", "plain_echo_server"),
 )
 
 
@@ -27,22 +30,6 @@ def get_free_port() -> int:
         return s.getsockname()[1]
 
 
-def _import_web_stream_ext():
-    try:
-        from web_stream import web_stream_ext  # noqa: PLC0415
-        return web_stream_ext
-    except ImportError:
-        return None
-
-
-web_stream_ext = _import_web_stream_ext()
-
-
-@unittest.skipIf(web_stream_ext is None, "web_stream_ext extension module not available – run 'pip install .'")
-@unittest.skipUnless(
-    os.path.exists(SERVER_PLAIN_BIN),
-    f"Plain echo server not found at {SERVER_PLAIN_BIN} – compile the C++ project first",
-)
 class TestDanglingPointer(unittest.TestCase):
     """Verify that BufferEventWebStream cannot be used after the connection is closed."""
 

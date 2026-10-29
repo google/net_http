@@ -12,14 +12,14 @@ import unittest
 from web_stream import connect, WebStreamServer
 
 
-CERTS_DIR = Path(__file__).resolve().parents[2] / "cpp" / "certs"
+CERTS_DIR = Path(__file__).resolve().parents[3] / "cpp" / "certs"
 
 
 class TestTlsIdentity(unittest.IsolatedAsyncioTestCase):
     @classmethod
     def setUpClass(cls):
         if not shutil.which("openssl"):
-            raise unittest.SkipTest("openssl is required to generate test certificates")
+            raise FileNotFoundError("openssl is required to generate test certificates")
         cls.temp = tempfile.TemporaryDirectory()
         cls.addClassCleanup(cls.temp.cleanup)
         cls.certificates = {}

@@ -8,7 +8,7 @@ import unittest
 from web_stream import connect, WebStreamServer
 
 
-CERTS_DIR = Path(__file__).resolve().parents[2] / "cpp" / "certs"
+CERTS_DIR = Path(__file__).resolve().parents[3] / "cpp" / "certs"
 
 
 class TestIdleConnection(unittest.IsolatedAsyncioTestCase):

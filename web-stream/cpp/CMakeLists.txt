@@ -19,6 +19,7 @@ project(wish_cpp)
 option(WISH_BUILD_TESTS "Build wish unit tests" ON)
 option(WISH_BUILD_BENCHMARKS "Build wish benchmarks" ON)
 option(WISH_BUILD_EXAMPLES "Build wish examples" ON)
+option(WISH_BUILD_ECHO_SERVERS "Build echo servers for integration tests" OFF)
 
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -223,7 +224,7 @@ add_library(web_stream INTERFACE)
 target_link_libraries(web_stream INTERFACE web_stream_client web_stream_server)
 
 
-if(WISH_BUILD_EXAMPLES)
+if(WISH_BUILD_EXAMPLES OR WISH_BUILD_ECHO_SERVERS)
     add_subdirectory(examples)
 endif()
 

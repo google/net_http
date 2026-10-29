@@ -7,12 +7,18 @@ import sys
 import unittest
 import web_stream
 
-# Project root based on known directory structure (web-stream/python/tests/test_e2e.py)
+# Project root based on known directory structure (web-stream/python/tests/core/test_e2e.py)
 TEST_DIR = os.path.dirname(os.path.abspath(__file__))
-PROJECT_ROOT = os.path.abspath(os.path.join(TEST_DIR, "..", ".."))
+PROJECT_ROOT = os.path.abspath(os.path.join(TEST_DIR, "..", "..", ".."))
 
-SERVER_BIN = os.path.join(PROJECT_ROOT, "cpp", "build", "examples", "tls_echo_server")
-SERVER_PLAIN_BIN = os.path.join(PROJECT_ROOT, "cpp", "build", "examples", "plain_echo_server")
+SERVER_BIN = os.environ.get(
+    "WEB_STREAM_TLS_ECHO_SERVER",
+    os.path.join(PROJECT_ROOT, "cpp", "build", "examples", "tls_echo_server"),
+)
+SERVER_PLAIN_BIN = os.environ.get(
+    "WEB_STREAM_PLAIN_ECHO_SERVER",
+    os.path.join(PROJECT_ROOT, "cpp", "build", "examples", "plain_echo_server"),
+)
 CERTS_DIR = os.path.join(PROJECT_ROOT, "cpp", "certs")
 
 def get_free_port():
@@ -26,7 +32,7 @@ class TestWebStreamClientE2E(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         if not os.path.exists(SERVER_BIN):
-            raise unittest.SkipTest(f"Echo server not found at {SERVER_BIN}. Compile the C++ project first.")
+            raise FileNotFoundError(f"Required echo server not found at {SERVER_BIN}. Run the check-python CMake target.")
             
         cls.port = get_free_port()
         
@@ -84,7 +90,7 @@ class TestWebStreamClientPlainE2E(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         if not os.path.exists(SERVER_PLAIN_BIN):
-            raise unittest.SkipTest(f"Plain echo server not found at {SERVER_PLAIN_BIN}. Compile the C++ project first.")
+            raise FileNotFoundError(f"Required echo server not found at {SERVER_PLAIN_BIN}. Run the check-python CMake target.")
             
         cls.port = get_free_port()
         

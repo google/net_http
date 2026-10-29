@@ -8,13 +8,9 @@ from unittest.mock import AsyncMock
 
 from web_stream import ConnectionClosed, connect, mount_web_stream
 
-try:
-    from fastapi import APIRouter, Depends, FastAPI, WebSocket, WebSocketDisconnect
-except ImportError:
-    FastAPI = None
+from fastapi import APIRouter, Depends, FastAPI, WebSocket, WebSocketDisconnect
 
 
-@unittest.skipIf(FastAPI is None, "Install the fastapi extra to test FastAPI mounting")
 class TestFastAPIMount(unittest.IsolatedAsyncioTestCase):
     @asynccontextmanager
     async def lifespan(self, app):

@@ -11,7 +11,7 @@ from web_stream import connect
 from web_stream.client import WebStreamConnection
 
 
-CERTS_DIR = Path(__file__).resolve().parents[2] / "cpp" / "certs"
+CERTS_DIR = Path(__file__).resolve().parents[3] / "cpp" / "certs"
 
 
 class TestConnectCancellation(unittest.IsolatedAsyncioTestCase):

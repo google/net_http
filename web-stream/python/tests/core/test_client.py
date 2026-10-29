@@ -1,8 +1,9 @@
 import asyncio
+from pathlib import Path
 import web_stream
 
 # Certs created for the tls_echo_server example (adjust paths if needed)
-CERTS_DIR = "../../cpp/certs"
+CERTS_DIR = Path(__file__).resolve().parents[3] / "cpp" / "certs"
 
 async def main():
     print("Connecting to WebStream server...")
