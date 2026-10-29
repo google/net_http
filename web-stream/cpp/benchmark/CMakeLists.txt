@@ -16,7 +16,7 @@ add_executable(plain_benchmark_client
     plain_client.cc
 )
 target_link_libraries(plain_benchmark_client
-    web_stream
+    PRIVATE web_stream
     absl::flags
     absl::flags_parse
     absl::log
@@ -30,7 +30,7 @@ add_executable(high_qps_benchmark_client
     high_qps_client.cc
 )
 target_link_libraries(high_qps_benchmark_client
-    web_stream
+    PRIVATE web_stream
     absl::flags
     absl::flags_parse
     absl::log
@@ -43,7 +43,7 @@ add_executable(tls_benchmark_client
     tls_client.cc
 )
 target_link_libraries(tls_benchmark_client
-    web_stream
+    PRIVATE web_stream
     absl::flags
     absl::flags_parse
     absl::log

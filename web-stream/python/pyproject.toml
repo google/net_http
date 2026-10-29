@@ -16,8 +16,10 @@ test-asgi = ["fastapi>=0.115,<1"]
 test-fastapi = ["fastapi>=0.115,<1"]
 
 [tool.scikit-build]
-cmake.version = ">=3.14"
+cmake.version = ">=3.24"
 ninja.version = ">=1.5"
+install.components = ["python"]
+build.targets = ["web_stream_ext"]
 
 build-dir = "build/{wheel_tag}"
 

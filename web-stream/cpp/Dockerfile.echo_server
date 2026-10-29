@@ -18,8 +18,9 @@ WORKDIR /src
 # CMake validates source file existence during the configure phase,
 # so src/ must be present before `cmake -B build` runs.
 # FetchContent downloads are still cached as long as CMakeLists.txt,
-# patches/, and src/ are unchanged.
+# cmake/, patches/, and src/ are unchanged.
 COPY CMakeLists.txt .
+COPY cmake/ cmake/
 COPY patches/ patches/
 COPY src/ src/
 COPY examples/ examples/

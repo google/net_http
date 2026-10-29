@@ -142,7 +142,10 @@ unittest test case. Core EOF, read-resume, and oversized-frame tests live in
 [`pyproject.toml`](pyproject.toml) declares Python 3.9+ and the scikit-build-core /
 nanobind build. [`CMakeLists.txt`](CMakeLists.txt) compiles both binding sources into
 `web_stream_ext`, links the sibling C++ library and libevent threading support,
-and installs the extension into `web_stream`. Standalone builds enable
+and obtains public headers through the C++ target's usage requirements. The
+extension installs into `web_stream` in the `python` component; scikit-build-core
+installs only this component, excluding third-party headers, tools, and static
+libraries from wheels. Both CMake projects require CMake 3.24+. Standalone builds enable
 `WISH_PYTHON_BUILD_TESTS` and provide `check-python` for all suites plus
 `check-python-core`, `check-python-asgi`, and `check-python-fastapi` for explicit
 selection. The core/all targets build both HTTP/1 echo servers; ASGI/FastAPI only
