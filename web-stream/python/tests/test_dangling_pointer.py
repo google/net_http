@@ -16,8 +16,9 @@ import unittest
 
 TEST_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.abspath(os.path.join(TEST_DIR, "..", ".."))
-SERVER_PLAIN_BIN = os.path.join(
-    PROJECT_ROOT, "cpp", "build", "examples", "plain_echo_server"
+SERVER_PLAIN_BIN = os.environ.get(
+    "WEB_STREAM_PLAIN_ECHO_SERVER",
+    os.path.join(PROJECT_ROOT, "cpp", "build", "examples", "plain_echo_server"),
 )
 
 

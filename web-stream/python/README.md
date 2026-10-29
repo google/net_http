@@ -43,19 +43,34 @@ This sub-project is intended to be used with a Python virtual environment (`venv
 
 ## Running Tests
 
-After installing the Python bindings, build the C++ echo servers used by the
-integration and safety tests. Run these commands from `web-stream/python`:
+With your virtual environment active and `nanobind` installed, run these commands
+from `web-stream/python`:
 
 ```bash
-cmake -S ../cpp -B ../cpp/build -DWISH_BUILD_EXAMPLES=ON \
-  -DWISH_BUILD_TESTS=OFF -DWISH_BUILD_BENCHMARKS=OFF
-cmake --build ../cpp/build --target plain_echo_server tls_echo_server --parallel 4
-python -m unittest discover -s tests -v
+cmake -S . -B build/tests -DPython_EXECUTABLE="$VIRTUAL_ENV/bin/python"
+cmake --build build/tests --target check-python --parallel 4
 ```
 
-The callback-exception and dangling-pointer tests use
-`../cpp/build/examples/plain_echo_server`. They are skipped if the extension or
-that executable is unavailable; the E2E tests also use `tls_echo_server`.
+`check-python` builds the native extension and the `plain_echo_server` and
+`tls_echo_server` test prerequisites before running unittest discovery. Tests use
+the current Python sources and the extension from this build without reinstalling
+the package. CMake supplies the actual executable paths, including for custom
+build directories and multi-configuration generators; missing required artifacts
+are an error rather than a skipped test. FastAPI integration tests still require
+the optional `fastapi` dependency (`pip install fastapi`).
+
+Standalone CMake builds enable `WISH_PYTHON_BUILD_TESTS` by default. A regular
+`cmake --build build/tests` also builds all test prerequisites; afterwards the
+registered `python_tests` suite can be run with CTest. Wheel/editable package
+builds disable this option by default, so ordinary installation does not build
+test servers. It can be explicitly enabled with
+`-DWISH_PYTHON_BUILD_TESTS=ON` when configuring a development build.
+
+For an already installed package, `python -m unittest discover -s tests -v` is
+still supported. That command looks for echo servers in `../cpp/build/examples`
+unless `WEB_STREAM_PLAIN_ECHO_SERVER` and `WEB_STREAM_TLS_ECHO_SERVER` specify
+their paths; without those executables the dependent tests are skipped. Use
+`check-python` to build and run them together.
 
 ## Usage Example
 

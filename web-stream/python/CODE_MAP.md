@@ -140,6 +140,9 @@ unittest test case. Core EOF, read-resume, and oversized-frame tests live in
 [`pyproject.toml`](pyproject.toml) declares Python 3.9+ and the scikit-build-core /
 nanobind build. [`CMakeLists.txt`](CMakeLists.txt) compiles both binding sources into
 `web_stream_ext`, links the sibling C++ library and libevent threading support,
-and installs the extension into `web_stream`. It disables C++ examples/tests for
-the package build; integration tests that need echo executables build them
-separately as described in the README.
+and installs the extension into `web_stream`. Standalone builds enable
+`WISH_PYTHON_BUILD_TESTS` and provide a `check-python` target depending on the
+extension and both HTTP/1 echo servers. `tests/run_tests.py` loads that extension
+alongside current Python sources and passes the executable paths to the tests.
+The same command is registered as `python_tests` in CTest. Package builds disable
+these test prerequisites by default; unrelated C++ examples/tests remain disabled.

@@ -26,11 +26,20 @@ execute_process(
   OUTPUT_STRIP_TRAILING_WHITESPACE OUTPUT_VARIABLE nanobind_ROOT)
 find_package(nanobind CONFIG REQUIRED)
 
+# Standalone development builds include tests; wheel builds only need bindings.
+if(SKBUILD)
+  set(_python_tests_default OFF)
+else()
+  set(_python_tests_default ON)
+endif()
+option(WISH_PYTHON_BUILD_TESTS "Build prerequisites and register Python tests"
+       ${_python_tests_default})
 
-# Exclude examples and tests from cpp/CMakeLists.txt
+# Build only the C++ components needed by bindings and optional Python tests.
 set(WISH_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(WISH_BUILD_BENCHMARKS OFF CACHE BOOL "" FORCE)
 set(WISH_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(WISH_BUILD_ECHO_SERVERS ${WISH_PYTHON_BUILD_TESTS} CACHE BOOL "" FORCE)
 add_subdirectory(../cpp web_stream_cpp_build)
 
 
@@ -41,3 +50,17 @@ target_include_directories(web_stream_ext PRIVATE ../cpp/src)
 target_link_libraries(web_stream_ext PRIVATE web_stream event_pthreads)
 
 install(TARGETS web_stream_ext DESTINATION web_stream)
+
+if(WISH_PYTHON_BUILD_TESTS)
+  enable_testing()
+  set(_python_test_command
+      "${Python_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/tests/run_tests.py"
+      --extension "$<TARGET_FILE:web_stream_ext>"
+      --plain-echo-server "$<TARGET_FILE:plain_echo_server>"
+      --tls-echo-server "$<TARGET_FILE:tls_echo_server>")
+  add_test(NAME python_tests COMMAND ${_python_test_command})
+  add_custom_target(check-python
+      COMMAND ${_python_test_command}
+      DEPENDS web_stream_ext plain_echo_server tls_echo_server
+      USES_TERMINAL VERBATIM)
+endif()
