@@ -1,14 +1,23 @@
-from typing import Callable, Dict, Optional
-import asyncio
+"""FastAPI ASGI integration and legacy standalone stream routing helpers."""
+
+from contextlib import asynccontextmanager
+from typing import Callable, Dict
+
+from .asgi import ASGIWebSocketAdapter
 from .server import WebStreamServer, WebStreamServerConnection
 
 class WebStreamSession(WebStreamServerConnection):
-    """Represents an active web-stream session in a FastAPI endpoint handler."""
+    """Legacy standalone stream session; FastAPI routes use WebSocket instead."""
     pass
 
 
 class WebStreamRouter:
-    """FastAPI-style APIRouter for WebStream protocol endpoints."""
+    """Legacy standalone path dispatcher, independent of FastAPI's routing.
+
+    For FastAPI use @app.websocket() or APIRouter.websocket(), and
+    mount_web_stream(app, port=...). This helper does not run ASGI middleware
+    or dependency injection and remains available for standalone applications.
+    """
 
     def __init__(self):
         self._routes: Dict[str, Callable] = {}
@@ -74,7 +83,6 @@ class WebStreamRouter:
 
 def mount_web_stream(
     app,
-    router: WebStreamRouter,
     port: int,
     tls: bool = False,
     ca_file: str = "",
@@ -82,19 +90,32 @@ def mount_web_stream(
     key_file: str = "",
     **server_options
 ) -> WebStreamServer:
-    """Attaches a WebStreamServer to a FastAPI application lifecycle.
+    """Serve a FastAPI app's WebSocket routes over web-stream using ASGI.
+
+    Wraps the app's existing lifespan context. Startup finishes before listening;
+    stream handlers finish before the app's shutdown resources are released.
+    Lifespan state is shallow-copied into each connection by the ASGI adapter.
+    Call once per listener before running the application's lifespan, after
+    configuring routers and lifespan. Each returned server supports one run.
+
+    This replaces mount_web_stream(app, legacy_router, port=...). Migrate legacy
+    stream handlers to FastAPI WebSocket handlers (including accept()). The
+    ASGI adapter's transport compatibility limitations apply.
 
     Example:
         app = FastAPI()
-        ws_router = WebStreamRouter()
+        @app.websocket("/stream")
+        async def stream_handler(websocket: WebSocket):
+            await websocket.accept()
+            await websocket.send_text("Hello")
+            await websocket.close()
 
-        @ws_router.web_stream("/stream")
-        async def stream_handler(session: WebStreamSession):
-            ...
-
-        ws_server = mount_web_stream(app, ws_router, port=8080)
+        ws_server = mount_web_stream(app, port=8080)
     """
-    server = router.create_server(
+    if app.middleware_stack is not None:
+        raise RuntimeError("mount_web_stream must be called before the app starts")
+    adapter = ASGIWebSocketAdapter(app)
+    server = adapter.create_server(
         port=port,
         tls=tls,
         ca_file=ca_file,
@@ -103,12 +124,18 @@ def mount_web_stream(
         **server_options
     )
 
-    @app.on_event("startup")
-    async def _on_startup():
-        await server.start()
+    original_lifespan = app.router.lifespan_context
 
-    @app.on_event("shutdown")
-    async def _on_shutdown():
-        await server.stop()
+    @asynccontextmanager
+    async def lifespan(application):
+        async with original_lifespan(application) as state:
+            adapter.state = state
+            try:
+                await server.start()
+                yield state
+            finally:
+                await server.stop()
+
+    app.router.lifespan_context = lifespan
 
     return server

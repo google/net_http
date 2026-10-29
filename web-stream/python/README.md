@@ -270,8 +270,75 @@ Codes identify the stage (`connect`, `listen`, `transport`, `send`, `limit`,
 and handshake failures into one connect error; framing and transport errors are
 also combined. No finer diagnosis is inferred from an empty native callback.
 
-The FastAPI router's `create_server()` and `mount_web_stream()` accept the same
-`runtime`, `limits`, and shutdown options as `WebStreamServer`.
+## FastAPI integration
+
+Install the optional framework dependency with `pip install '.[fastapi]'`.
+`mount_web_stream(app, port=...)` exposes the app's normal WebSocket routes over
+web-stream through `ASGIWebSocketAdapter`. Requests pass through FastAPI routing,
+dependencies, and ASGI middleware. Register routes with `@app.websocket()` or a
+FastAPI `APIRouter.websocket()` as usual.
+
+```python
+from contextlib import asynccontextmanager
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from web_stream import mount_web_stream
+
+@asynccontextmanager
+async def lifespan(app):
+    # Initialize shared resources here, before either listener handles requests.
+    yield {"prefix": "Echo"}
+    # Mounted stream handlers have finished before resource cleanup here.
+
+app = FastAPI(lifespan=lifespan)
+
+@app.websocket("/stream")
+async def stream(websocket: WebSocket):
+    await websocket.accept()
+    try:
+        while True:
+            text = await websocket.receive_text()
+            await websocket.send_text(f"{websocket.state.prefix}: {text}")
+    except WebSocketDisconnect:
+        pass
+
+stream_server = mount_web_stream(app, port=8081, host="127.0.0.1")
+# Save as app.py and run: uvicorn app:app --port 8080
+```
+
+The host serves ordinary HTTP/WebSocket on its configured port; web-stream
+clients connect to `webstream://127.0.0.1:8081/stream`. Both listeners invoke the
+same application in the same worker's asyncio loop. The helper wraps the existing
+lifespan rather than registering deprecated `on_event` hooks: custom lifespan
+and default startup/shutdown handlers keep working. Startup initializes the app
+before the stream listener starts. Shutdown stops that listener and joins its
+handlers before releasing app resources. State yielded by the app's lifespan is
+shallow-copied into each stream's scope. No duplicate ASGI lifespan is started.
+
+Call `mount_web_stream` after configuring the app/routers/lifespan and before the
+host runs the app. The host must enable lifespan. The returned server supports
+one lifespan run; construct a fresh app/server for another run. Options such as
+`tls`, `runtime`, `limits`, and `shutdown_timeout` pass to `WebStreamServer`.
+With multiple host workers, each worker creates a listener: allocate distinct
+ports or arrange external routing; a shared fixed web-stream port is not
+automatically supported. No Uvicorn plugin or shared HTTP listener is installed.
+The experimental adapter's compatibility limits below still apply, including
+missing headers/cookies and unsupported handshake negotiation.
+
+Migration from the previous FastAPI helper:
+
+- Replace `mount_web_stream(app, router, port=...)` with
+  `mount_web_stream(app, port=...)`.
+- Replace `@router.web_stream(path)` with `@app.websocket(path)` (or use a normal
+  FastAPI `APIRouter` and `app.include_router()`).
+- Replace the `WebStreamSession` argument with a FastAPI `WebSocket`. Explicitly
+  `await websocket.accept()` and use its send/receive methods and
+  `WebSocketDisconnect` handling. Metadata and half-close have no representation
+  in this interface.
+
+`WebStreamRouter` and `WebStreamSession` remain available as legacy **standalone**
+stream helpers. Their `create_server()` path remains independent of ASGI and
+does not provide FastAPI middleware or dependencies. Use `mount_web_stream()`
+for FastAPI integration.
 
 ## Experimental ASGI WebSocket adapter
 
@@ -365,6 +432,9 @@ The tests cover raw ASGI state transitions, real web-stream message exchange,
 FastAPI routing/query/path dependencies, Starlette authentication middleware,
 externally managed lifespan/state, peer/local close, unknown routes, and cleanup.
 FastAPI integration cases are skipped if its optional dependency is unavailable.
+`tests/test_fastapi_mount.py` additionally exercises the mounting helper through
+the ASGI lifespan protocol, including startup failures, cancellation, state
+sharing, multiple listeners, and shutdown ordering.
 
 ## Low-level compatibility
 
