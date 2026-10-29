@@ -14,7 +14,7 @@ import time
 import unittest
 
 
-CERTS_DIR = Path(__file__).resolve().parents[2] / "cpp" / "certs"
+CERTS_DIR = Path(__file__).resolve().parents[3] / "cpp" / "certs"
 
 
 def probe(extension_dir, transport, scenario):

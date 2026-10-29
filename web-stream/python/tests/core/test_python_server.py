@@ -46,7 +46,7 @@ class TestPythonWebStreamServer(unittest.TestCase):
         finally:
             loop.close()
 
-    def test_fastapi_router_multi_path_dispatch(self):
+    def test_legacy_router_multi_path_dispatch(self):
         async def run():
             port = get_free_port()
             router = WebStreamRouter()

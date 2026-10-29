@@ -123,17 +123,19 @@ binding has its own traverse/clear slots for its event-delivery callback.
 
 | Tests | Coverage |
 | --- | --- |
-| [test_asyncio_api.py](tests/test_asyncio_api.py) | Awaitable connections, retry and cancellation, strict message types and iterable parts, timeout cleanup, flow-control arguments, IPv6, ephemeral server ports, and scheduled/awaited shutdown. |
-| [test_asgi.py](tests/test_asgi.py) | ASGI event/state/cleanup contracts, raw ASGI integration, and optional real FastAPI/Starlette routing, dependencies, middleware, and externally managed lifespan. |
-| [test_fastapi_mount.py](tests/test_fastapi_mount.py) | FastAPI mounting via the ASGI lifespan protocol, routing/dependencies/middleware, state, startup failure/cancellation, multiple listeners, and ordered shutdown. |
-| [test_runtime.py](tests/test_runtime.py) | Shared/default Runtime ownership, custom worker factory, asyncio progress during native waits, receive/send backpressure, message types, half-close, size limits, cancellation, self-shutdown, GC, and interpreter exit. |
-| [test_connect_cancellation.py](tests/test_connect_cancellation.py), [test_recv_termination.py](tests/test_recv_termination.py) | Failed/cancelled connect cleanup, repeated cancellation, late notifications, buffered messages, receive exclusion, and persistent termination errors. |
-| [test_python_server.py](tests/test_python_server.py), [test_server_close.py](tests/test_server_close.py) | Server echo/routing, waiting-handler shutdown, clean protocol EOF, and cleanup failure reporting. |
-| [test_callback_dispatch.py](tests/test_callback_dispatch.py), [test_callback_exceptions.py](tests/test_callback_exceptions.py) | Legacy callback-thread sends/close, pending-operation cancellation, embedded NUL preservation, and unraisable exception reporting. |
-| [test_dangling_pointer.py](tests/test_dangling_pointer.py), [test_server_handler_lifetime.py](tests/test_server_handler_lifetime.py) | Retained-handle safety, invalidation, active callback rooting, and stopped-handle cycle collection. |
-| [test_e2e.py](tests/test_e2e.py), [test_idle_connection.py](tests/test_idle_connection.py), [test_tls_identity.py](tests/test_tls_identity.py) | Plain/TLS integration, idle survival, certificate identity/chain verification, and SNI. |
+| [test_asyncio_api.py](tests/core/test_asyncio_api.py) | Awaitable connections, retry and cancellation, strict message types and iterable parts, timeout cleanup, flow-control arguments, IPv6, ephemeral server ports, and scheduled/awaited shutdown. |
+| [test_asgi.py](tests/asgi/test_asgi.py) | ASGI event/state/cleanup contracts and raw ASGI integration, without FastAPI dependencies. |
+| [test_integration.py](tests/fastapi/test_integration.py) | FastAPI/Starlette routing, dependencies, middleware, and externally managed lifespan. |
+| [test_fastapi_mount.py](tests/fastapi/test_fastapi_mount.py) | FastAPI mounting via the ASGI lifespan protocol, routing/dependencies/middleware, state, startup failure/cancellation, multiple listeners, and ordered shutdown. |
+| [test_runtime.py](tests/core/test_runtime.py) | Shared/default Runtime ownership, custom worker factory, asyncio progress during native waits, receive/send backpressure, message types, half-close, size limits, cancellation, self-shutdown, GC, and interpreter exit. |
+| [test_connect_cancellation.py](tests/core/test_connect_cancellation.py), [test_recv_termination.py](tests/core/test_recv_termination.py) | Failed/cancelled connect cleanup, repeated cancellation, late notifications, buffered messages, receive exclusion, and persistent termination errors. |
+| [test_python_server.py](tests/core/test_python_server.py), [test_server_close.py](tests/core/test_server_close.py) | Server echo/routing, waiting-handler shutdown, clean protocol EOF, and cleanup failure reporting. |
+| [test_callback_dispatch.py](tests/core/test_callback_dispatch.py), [test_callback_exceptions.py](tests/core/test_callback_exceptions.py) | Legacy callback-thread sends/close, pending-operation cancellation, embedded NUL preservation, and unraisable exception reporting. |
+| [test_dangling_pointer.py](tests/core/test_dangling_pointer.py), [test_server_handler_lifetime.py](tests/core/test_server_handler_lifetime.py) | Retained-handle safety, invalidation, active callback rooting, and stopped-handle cycle collection. |
+| [test_e2e.py](tests/core/test_e2e.py), [test_idle_connection.py](tests/core/test_idle_connection.py), [test_tls_identity.py](tests/core/test_tls_identity.py) | Plain/TLS integration, idle survival, certificate identity/chain verification, and SNI. |
+| [test_prerequisites.py](tests/core/test_prerequisites.py) | Missing extensions, echo servers, OpenSSL, and selected FastAPI dependencies cause failure rather than skips. |
 
-[test_client.py](tests/test_client.py) is a manually run client example, not a
+[test_client.py](tests/core/test_client.py) is a manually run client example, not a
 unittest test case. Core EOF, read-resume, and oversized-frame tests live in
 [`../cpp/src/buffer_event_web_stream_test.cc`](../cpp/src/buffer_event_web_stream_test.cc).
 
@@ -141,8 +143,11 @@ unittest test case. Core EOF, read-resume, and oversized-frame tests live in
 nanobind build. [`CMakeLists.txt`](CMakeLists.txt) compiles both binding sources into
 `web_stream_ext`, links the sibling C++ library and libevent threading support,
 and installs the extension into `web_stream`. Standalone builds enable
-`WISH_PYTHON_BUILD_TESTS` and provide a `check-python` target depending on the
-extension and both HTTP/1 echo servers. `tests/run_tests.py` loads that extension
-alongside current Python sources and passes the executable paths to the tests.
-The same command is registered as `python_tests` in CTest. Package builds disable
-these test prerequisites by default; unrelated C++ examples/tests remain disabled.
+`WISH_PYTHON_BUILD_TESTS` and provide `check-python` for all suites plus
+`check-python-core`, `check-python-asgi`, and `check-python-fastapi` for explicit
+selection. The core/all targets build both HTTP/1 echo servers; ASGI/FastAPI only
+need the extension. `tests/run_tests.py` loads the chosen extension alongside
+current Python sources and passes executable paths to the core suite. CTest
+registers the three suites separately with matching labels. Required artifacts
+and selected dependencies are never skipped. Package builds disable test
+prerequisites by default; unrelated C++ examples/tests remain disabled.

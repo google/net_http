@@ -53,14 +53,28 @@ install(TARGETS web_stream_ext DESTINATION web_stream)
 
 if(WISH_PYTHON_BUILD_TESTS)
   enable_testing()
-  set(_python_test_command
-      "${Python_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/tests/run_tests.py"
-      --extension "$<TARGET_FILE:web_stream_ext>"
-      --plain-echo-server "$<TARGET_FILE:plain_echo_server>"
-      --tls-echo-server "$<TARGET_FILE:tls_echo_server>")
-  add_test(NAME python_tests COMMAND ${_python_test_command})
-  add_custom_target(check-python
-      COMMAND ${_python_test_command}
-      DEPENDS web_stream_ext plain_echo_server tls_echo_server
-      USES_TERMINAL VERBATIM)
+  function(add_python_check suite)
+    set(command "${Python_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/tests/run_tests.py"
+        --suite "${suite}" --extension "$<TARGET_FILE:web_stream_ext>")
+    set(prerequisites web_stream_ext)
+    if(suite STREQUAL "all" OR suite STREQUAL "core")
+      list(APPEND command
+          --plain-echo-server "$<TARGET_FILE:plain_echo_server>"
+          --tls-echo-server "$<TARGET_FILE:tls_echo_server>")
+      list(APPEND prerequisites plain_echo_server tls_echo_server)
+    endif()
+    if(suite STREQUAL "all")
+      set(target check-python)
+    else()
+      set(target check-python-${suite})
+      add_test(NAME python_${suite}_tests COMMAND ${command})
+      set_tests_properties(python_${suite}_tests PROPERTIES LABELS "python;${suite}")
+    endif()
+    add_custom_target(${target}
+        COMMAND ${command} DEPENDS ${prerequisites}
+        USES_TERMINAL VERBATIM)
+  endfunction()
+  foreach(suite all core asgi fastapi)
+    add_python_check(${suite})
+  endforeach()
 endif()
