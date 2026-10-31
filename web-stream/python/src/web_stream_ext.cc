@@ -859,7 +859,10 @@ NB_MODULE(web_stream_ext, m) {
             }
           });
 
-          stream->SetOnClose([ref, handlers]() {
+          stream->SetOnClose([ref, handlers, stream]() {
+            // Legacy EOF invalidates the handle, so finish the outbound
+            // direction first. Close() drains queued output before cleanup.
+            stream->Close();
             nb::gil_scoped_acquire acquire;
             nb::object cb;
             {
@@ -961,7 +964,10 @@ NB_MODULE(web_stream_ext, m) {
             return;
           }
 
-          stream->SetOnClose([ref, handlers]() {
+          stream->SetOnClose([ref, handlers, stream]() {
+            // Legacy EOF invalidates the handle, so finish the outbound
+            // direction first. Close() drains queued output before cleanup.
+            stream->Close();
             nb::gil_scoped_acquire acquire;
             nb::object cb;
             {

@@ -494,7 +494,11 @@ sharing, multiple listeners, and shutdown ordering are also exercised.
 synchronous callback/handle APIs remain available. Their callbacks run on the
 native loop thread, and cross-thread send/close calls block until execution.
 Configure/init those objects before running them; callback reconfiguration and
-reinitialization during `run()` are unsupported. The high-level asyncio API uses
+reinitialization during `run()` are unsupported. On inbound protocol EOF, legacy
+server handles become closed and the server finishes its outbound direction,
+draining queued messages and the terminal chunk before releasing the socket.
+This also happens without an `on_close` callback or when that callback raises.
+The high-level asyncio API uses
 the separate Runtime implementation. Custom `connection_cls` constructors now
 receive `(runtime, identifier, path, *, limits, close_timeout)` and must derive
 from `WebStreamServerConnection` or implement the same lifecycle contract.

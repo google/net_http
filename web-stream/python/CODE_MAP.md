@@ -114,6 +114,9 @@ execution path. Their `EventLoopDispatcher` blocks cross-thread callers until
 execution; it is not the asyncio Runtime's command queue.
 
 `WebStreamHandlerRef` holds a nullable borrowed `WebStream*`.
+Legacy server EOF callbacks close the native outbound direction before
+invalidating the handle, so queued output drains and the socket is released
+even without a Python close callback or if that callback raises.
 `ServerHandlerRegistry` invalidates retained handles at shutdown. `active_owner`
 roots the Python handle while its native server stream is active, preventing GC
 from clearing a live callback cycle. Terminal/shutdown paths clear callbacks and
