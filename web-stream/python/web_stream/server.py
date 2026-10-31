@@ -49,6 +49,7 @@ class WebStreamServer:
         self._close_requested = asyncio.Event()
         self._closed_event = asyncio.Event()
         self._shutdown_callers = set()
+        self._shutdown_waiters = {}
 
     @property
     def connections(self):
@@ -155,8 +156,7 @@ class WebStreamServer:
         if loop is not self._loop:
             raise RuntimeError("Server must be used from its owning asyncio loop")
         caller = asyncio.current_task()
-        if caller in self._tasks:
-            self._shutdown_callers.add(caller)
+        self._register_shutdown_caller(caller)
         if close_connections:
             self._close_connections = True
             self._close_requested.set()
@@ -185,6 +185,26 @@ class WebStreamServer:
         task = self._loop.create_task(self.stop())
         task.add_done_callback(lambda task: None if task.cancelled() else task.exception())
 
+    def _register_shutdown_caller(self, caller):
+        if caller in self._tasks:
+            self._shutdown_callers.add(caller)
+            waiter = self._shutdown_waiters.get(caller)
+            if waiter is not None and not waiter.done():
+                waiter.set_result(None)
+
+    async def _wait_for_handler(self, task):
+        if task.done() or task in self._shutdown_callers:
+            return
+        waiter = self._loop.create_future()
+        self._shutdown_waiters[task] = waiter
+        try:
+            # A handler can join shutdown after we start waiting for it. Wake
+            # the join without cancelling the handler or the shared cleanup.
+            await asyncio.wait((task, waiter), return_when=asyncio.FIRST_COMPLETED)
+        finally:
+            self._shutdown_waiters.pop(task, None)
+            waiter.cancel()
+
     async def _stop(self, caller):
         try:
             if self._start_task is not None:
@@ -197,22 +217,27 @@ class WebStreamServer:
                 pass
             tasks = self._tasks - self._shutdown_callers - {caller}
             if not self._close_connections and tasks:
-                joined = asyncio.gather(*tasks, return_exceptions=True)
+                joined = asyncio.gather(*(self._wait_for_handler(task) for task in tasks))
                 requested = self._loop.create_task(self._close_requested.wait())
                 try:
                     await asyncio.wait((joined, requested), return_when=asyncio.FIRST_COMPLETED)
                 finally:
                     requested.cancel()
-                    await asyncio.gather(requested, return_exceptions=True)
+                    joined.cancel()
+                    await asyncio.gather(requested, joined, return_exceptions=True)
             if self._close_connections:
                 await asyncio.gather(*(conn.close() for conn in list(self._connections)),
                                      return_exceptions=True)
             tasks = self._tasks - self._shutdown_callers - {caller}
             if tasks and self._close_connections:
-                _, pending = await asyncio.wait(tasks, timeout=self.shutdown_timeout)
-                for task in pending - self._shutdown_callers:
-                    task.cancel()
-                await asyncio.gather(*(tasks - self._shutdown_callers), return_exceptions=True)
+                joined = {self._loop.create_task(self._wait_for_handler(task)): task
+                          for task in tasks}
+                _, pending = await asyncio.wait(joined, timeout=self.shutdown_timeout)
+                for waiter in pending:
+                    task = joined[waiter]
+                    if task not in self._shutdown_callers:
+                        task.cancel()
+                await asyncio.gather(*joined, return_exceptions=True)
             await asyncio.gather(*(conn.abort() for conn in list(self._connections)),
                                  return_exceptions=True)
         finally:
@@ -232,8 +257,7 @@ class WebStreamServer:
             self._closed_event.set()
 
     async def _close_from_runtime(self, caller):
-        if caller in self._tasks:
-            self._shutdown_callers.add(caller)
+        self._register_shutdown_caller(caller)
         self._close_connections = True
         self._close_requested.set()
         if self._stop_task is None:

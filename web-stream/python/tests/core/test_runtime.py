@@ -339,6 +339,72 @@ class TestRuntimeProcessLifecycle(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertNotIn("nanobind: leaked", result.stderr)
 
+    def probe_handler_shutdown(self, mode):
+        self.probe(f"mode = {mode!r}\n" + textwrap.dedent('''
+            import asyncio
+            from web_stream import Runtime, WebStreamServer, connect
+
+            async def main():
+                runtime = await Runtime().start()
+                release = asyncio.Event()
+                ready = asyncio.Event()
+                handlers = []
+                finished = []
+
+                async def handler(conn):
+                    handlers.append(asyncio.current_task())
+                    if len(handlers) == 2:
+                        ready.set()
+                    await release.wait()
+                    if mode == "late":
+                        await conn.wait_closed()
+                        await asyncio.sleep(.02)
+                    elif mode == "cancelled":
+                        try:
+                            await asyncio.Event().wait()
+                        finally:
+                            await runtime.close()
+                            finished.append(True)
+                        return
+                    await runtime.close()
+                    finished.append(True)
+
+                servers = [WebStreamServer(
+                    0, host="127.0.0.1", runtime=runtime,
+                    shutdown_timeout=.01 if mode == "cancelled" else 1)
+                    for _ in range(2 if mode == "multiple_servers" else 1)]
+                for server in servers:
+                    server.set_stream_handler(handler)
+                    await server.start()
+                clients = [await connect(
+                    f"webstream://127.0.0.1:{servers[i % len(servers)].port}",
+                    runtime=runtime) for i in range(2)]
+                await asyncio.wait_for(ready.wait(), 1)
+                release.set()
+                if mode in ("late", "cancelled"):
+                    await runtime.close()
+                await asyncio.gather(*handlers, return_exceptions=True)
+                assert len(finished) == 2, finished
+                assert not runtime._thread.is_alive()
+                assert not runtime._objects
+                assert all(not server._tasks for server in servers)
+                await runtime.close()
+
+            asyncio.run(main())
+        '''))
+
+    def test_handlers_can_close_runtime_concurrently(self):
+        self.probe_handler_shutdown("concurrent")
+
+    def test_handlers_on_different_servers_can_close_runtime(self):
+        self.probe_handler_shutdown("multiple_servers")
+
+    def test_handlers_can_join_runtime_close_during_shutdown(self):
+        self.probe_handler_shutdown("late")
+
+    def test_cancelled_handlers_can_close_runtime_in_finally(self):
+        self.probe_handler_shutdown("cancelled")
+
     def test_interpreter_exit_joins_live_runtime(self):
         self.probe('''
             import asyncio

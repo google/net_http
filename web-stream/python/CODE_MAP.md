@@ -96,6 +96,9 @@ Events cross through `Emit` into `Runtime._dispatch`:
   be cooperative. A handler closing its own server/Runtime is excluded from that
   shutdown's task join to avoid waiting for itself.
 - `Runtime.close` cleans up registered objects before stopping/joining its worker.
+  Every handler calling it registers with its server, including calls made
+  during shutdown. Server joins wake when a handler becomes a shutdown caller,
+  avoiding circular waits while still joining unrelated handlers.
   A weak finalizer stops an unreferenced Runtime; `_shutdown_workers` is the
   interpreter-exit fallback and does not run application handler cleanup.
 
