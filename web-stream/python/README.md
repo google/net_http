@@ -299,8 +299,11 @@ as a fallback; it does not run application handler cleanup.
   wakes receivers, then waits for handler tasks. After `shutdown_timeout`
   (default 5 seconds) it cancels remaining handlers and joins them. Handlers
   must cooperate with task cancellation. Handler exceptions are reported to
-  the asyncio loop's exception handler. A handler can stop its own server;
-  that caller is excluded from the server's task join.
+  the asyncio loop's exception handler. Handlers can stop their own server or
+  close their shared Runtime, including concurrently and during shutdown.
+  Those callers are excluded from the server's task join, so shutdown does not
+  wait on handlers that are themselves waiting for it. Other handlers are still
+  joined and, when necessary, cancelled after the grace period.
 
 Both client and server connections expose `send_text()`, `send_binary()`,
 `send_metadata()`, and `recv_message() -> Message(opcode, data)`. `send()` and

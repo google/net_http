@@ -276,8 +276,15 @@ class Runtime:
         if self._loop is None:
             self._loop = asyncio.get_running_loop()
         self._check_loop()
+        caller = asyncio.current_task()
+        # Every handler awaiting this shared close must be excluded from its
+        # server's join, including callers that arrive after shutdown starts.
+        for obj in self._objects.values():
+            register = getattr(obj, "_register_shutdown_caller", None)
+            if register is not None:
+                register(caller)
         if self._close_task is None:
-            self._close_task = self._loop.create_task(self._close(asyncio.current_task()))
+            self._close_task = self._loop.create_task(self._close(caller))
         await finish_cleanup(self._close_task)
 
     async def _close(self, caller):
