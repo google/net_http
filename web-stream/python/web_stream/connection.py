@@ -5,7 +5,7 @@ from collections.abc import AsyncIterable, Iterable, Mapping
 from dataclasses import dataclass
 from typing import AsyncIterator, Optional, Union
 
-from .runtime import Limits, WebStreamError, finish_cleanup, release_runtime
+from .runtime import WebStreamError, finish_cleanup, release_runtime, resolve_limits
 from .exceptions import (
     ConnectionClosed, ConnectionClosedOK, ConnectionClosedError, ConcurrencyError,
 )
@@ -31,7 +31,7 @@ class Connection:
         self._identifier = identifier
         self._owned_runtime = False
         self.path = path or "/"
-        self.limits = limits or Limits()
+        self.limits = resolve_limits(limits)
         self.close_timeout = close_timeout
         self._recv_queue = asyncio.Queue()
         self._closed = False
@@ -103,7 +103,7 @@ class Connection:
 
     async def _send(self, opcode, data):
         self._ensure_open()
-        send_limit = getattr(self.limits, "send_limit", self.limits.max_message_size)
+        send_limit = self.limits.send_limit
         if send_limit is not None and len(data) > send_limit:
             raise ValueError("Message exceeds max_message_size")
         # The lock remains held by the operation even if its waiter is cancelled.
@@ -168,7 +168,7 @@ class Connection:
                     raise TypeError("All message parts must have the same type")
                 is_text = kind
                 size += len(part)
-                limit = getattr(self.limits, "send_limit", self.limits.max_message_size)
+                limit = self.limits.send_limit
                 if limit is not None and size > limit:
                     raise ValueError("Message exceeds max_message_size")
                 parts.append(part)

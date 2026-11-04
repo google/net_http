@@ -238,6 +238,43 @@ class TestAsyncioAPI(unittest.IsolatedAsyncioTestCase):
                 with self.assertRaises(ConnectionClosedError):
                     await conn.recv()
 
+    async def test_limits_reject_oversized_sends_without_sending_partial_messages(self):
+        from web_stream import Limits
+
+        async def parts():
+            yield b"x" * 16
+            yield b"x" * 17
+
+        limits = Limits(max_message_size=32, receive_buffer_limit=1024,
+                        write_buffer_limit=1024)
+        async with serve(echo, "127.0.0.1", 0) as server:
+            async with connect(f"webstream://127.0.0.1:{server.port}", limits=limits) as conn:
+                await conn.send([b"x" * 16, b"x" * 16])
+                self.assertEqual(await asyncio.wait_for(conn.recv(), 2), b"x" * 32)
+                for data in (b"x" * 33, [b"x" * 16, b"x" * 17],
+                             ["日" * 6, "本" * 6], parts()):
+                    with self.subTest(data=type(data)), self.assertRaises(ValueError):
+                        await conn.send(data)
+                    await conn.send(b"still usable")
+                    self.assertEqual(await asyncio.wait_for(conn.recv(), 2), b"still usable")
+
+    async def test_flow_arguments_do_not_limit_outgoing_message_size(self):
+        received = asyncio.Queue()
+
+        async def acknowledge(conn):
+            received.put_nowait(len(await conn.recv()))
+            await conn.send_binary(b"")
+
+        payload = b"x" * (1024 * 1024 + 1)
+        async with serve(acknowledge, "127.0.0.1", 0, max_size=None) as server:
+            for options in ({"max_size": 0}, {"max_size": 16},
+                            {"max_queue": None}, {"write_limit": (1, 0)}):
+                with self.subTest(options=options):
+                    async with connect(f"webstream://127.0.0.1:{server.port}", **options) as conn:
+                        await asyncio.wait_for(conn.send(payload), 3)
+                        self.assertEqual(await asyncio.wait_for(conn.recv(), 3), b"")
+                        self.assertEqual(await asyncio.wait_for(received.get(), 2), len(payload))
+
     async def test_queue_watermarks_pause_and_resume(self):
         ready = asyncio.Event()
         accepted = asyncio.get_running_loop().create_future()
@@ -261,6 +298,8 @@ class TestAsyncioAPI(unittest.IsolatedAsyncioTestCase):
         from web_stream import Limits
         for options in ({"max_size": -1}, {"max_queue": (2, 3)},
                         {"write_limit": 0}, {"max_queue": False},
+                        {"max_size": False}, {"write_limit": (2, 3)},
+                        {"max_queue": (None, 1)}, {"write_limit": (4, -1)},
                         {"limits": Limits(), "max_size": 1}):
             with self.subTest(options=options), self.assertRaises(ValueError):
                 connect("webstream://127.0.0.1:1", **options)

@@ -36,7 +36,7 @@ waiting for a send result suspends its coroutine rather than the asyncio thread.
 | File | Main symbols and responsibility |
 | --- | --- |
 | [web_stream/__init__.py](web_stream/__init__.py) | Public exports: connection/client/server APIs, `Runtime`, `Limits`, `Message`, errors, opcodes, and FastAPI helpers. |
-| [web_stream/runtime.py](web_stream/runtime.py) | `Runtime` owns the worker and native runtime, allocates identifiers, tracks objects/Futures, and dispatches native events. `Limits` validates budgets; `WebStreamError` carries stage/detail; `finish_cleanup` protects cleanup against repeated cancellation. |
+| [web_stream/runtime.py](web_stream/runtime.py) | `Runtime` owns the worker and native runtime, allocates identifiers, tracks objects/Futures, and dispatches native events. `Limits` validates byte budgets; `resolve_limits` normalizes all configuration into `_FlowLimits`. `WebStreamError` carries stage/detail; `finish_cleanup` protects cleanup against repeated cancellation. |
 | [web_stream/exceptions.py](web_stream/exceptions.py) | Public normal/failure termination errors, native stage/detail errors, and receive concurrency errors. |
 | [web_stream/connection.py](web_stream/connection.py) | Shared `Connection` behavior: send serialization, receive credit return, persistent terminal notifications, opcode-preserving `Message`, text/bytes convenience methods, EOF/drain/close/abort, and native release. |
 | [web_stream/client.py](web_stream/client.py) | `WebStreamConnection` acquires a Runtime and opens a native client under an optional deadline. `connect()` supports awaiting, async context management, and retry iteration; failed/cancelled entry aborts and releases the client. |
@@ -73,6 +73,16 @@ Events cross through `Emit` into `Runtime._dispatch`:
 
 ## Ownership, Flow Control, and Shutdown
 
+- `resolve_limits` converts both the public `Limits` input and individual
+  `max_size`/`max_queue`/`write_limit` arguments into one immutable `_FlowLimits`
+  representation. It records incoming and outgoing size limits separately,
+  receive byte/message budgets, and explicit high/low watermarks. Native state
+  receives these values directly and does not select a configuration mode.
+  `Limits` retains its outgoing size cap, receive resume point at half the byte
+  budget, and send completion point at a quarter of the write budget (equal
+  high/low watermarks). Individual arguments retain their incoming-only size
+  cap, message-count receive budget, and configurable write high/low watermarks.
+  Drain and EOF operations always wait for zero native output.
 - An explicit `Runtime` can serve multiple clients/listeners and stays alive until
   closed. `acquire_runtime` / `release_runtime` share a default Runtime per asyncio
   loop and stop/join it when its last client/listener owner releases it.
