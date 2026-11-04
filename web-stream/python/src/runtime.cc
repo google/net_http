@@ -4,6 +4,7 @@
 #include <event2/event.h>
 #include <event2/thread.h>
 #include <nanobind/nanobind.h>
+#include <nanobind/stl/optional.h>
 #include <nanobind/stl/string.h>
 
 #include <algorithm>
@@ -12,6 +13,7 @@
 #include <functional>
 #include <memory>
 #include <mutex>
+#include <optional>
 #include <stdexcept>
 #include <unordered_map>
 
@@ -26,22 +28,18 @@ namespace {
 
 struct Limits {
   size_t message;
+  std::optional<size_t> send;
   size_t receive;
-  size_t write;
-  bool flexible = false;
-  size_t receive_messages = 0;
-  size_t messages_low = 0;
-  size_t write_low = 0;
+  size_t receive_low;
+  size_t receive_messages;
+  size_t messages_low;
+  size_t write_high;
+  size_t write_low;
+
   void Validate() const {
-    if (flexible) {
-      if (!write || write_low > write || messages_low > receive_messages)
-        throw std::invalid_argument("Invalid flow-control watermarks");
-      return;
-    }
-    if (!message || !receive || write < 1024 || message > write / 2) {
-      throw std::invalid_argument(
-          "positive limits and max_message_size <= "
-          "write_buffer_limit / 2 required");
+    if (!write_high || write_low > write_high || receive_low > receive ||
+        messages_low > receive_messages) {
+      throw std::invalid_argument("Invalid flow-control watermarks");
     }
   }
 };
@@ -219,9 +217,8 @@ class NativeRuntime {
         return;
       }
       auto &state = *it->second;
-      if (opcode > 0 && !state.limits.flexible &&
-          (data.size() > state.limits.message ||
-           data.size() > state.limits.write / 2)) {
+      if (opcode > 0 && state.limits.send &&
+          data.size() > *state.limits.send) {
         Emit("result", op, 1, "limit: Message exceeds configured limit");
         return;
       }
@@ -238,7 +235,7 @@ class NativeRuntime {
       state.received -= std::min(bytes, state.received);
       if (state.received_messages) --state.received_messages;
       if (state.stream && state.paused &&
-          (!state.limits.receive || state.received <= state.limits.receive / 2) &&
+          (!state.limits.receive || state.received <= state.limits.receive_low) &&
           (!state.limits.receive_messages ||
            state.received_messages <= state.limits.messages_low)) {
         state.paused = false;
@@ -415,6 +412,8 @@ class NativeRuntime {
   void Progress(State &state) {
     while (state.stream && !state.operations.empty()) {
       auto &op = state.operations.front();
+      const size_t high = op.opcode > 0 ? state.limits.write_high : 0;
+      const size_t low = op.opcode > 0 ? state.limits.write_low : 0;
       if (!op.submitted) {
         if (op.opcode > 0 && state.eof) {
           Emit("result", op.id, 1, "closed: Outbound EOF already sent");
@@ -422,9 +421,6 @@ class NativeRuntime {
           continue;
         }
         // Wait for the previous batch before submitting another message.
-        size_t low = state.limits.flexible ? state.limits.write_low
-                                          : state.limits.write / 4;
-        size_t high = state.limits.flexible ? state.limits.write : low;
         if (op.opcode > 0 &&
             state.stream->PendingWriteBytes() > high) {
           state.stream->SetWriteLowWatermark(low);
@@ -459,14 +455,8 @@ class NativeRuntime {
         op.submitted = true;
         op.data.clear();
       }
-      size_t watermark = op.opcode > 0
-                             ? (state.limits.flexible ? state.limits.write_low
-                                                      : state.limits.write / 4)
-                             : 0;
-      size_t high = op.opcode > 0 && state.limits.flexible ? state.limits.write
-                                                         : watermark;
       if (state.stream->PendingWriteBytes() > high) {
-        state.stream->SetWriteLowWatermark(watermark);
+        state.stream->SetWriteLowWatermark(low);
         return;
       }
       Emit("result", op.id, 0, "");
@@ -508,11 +498,8 @@ void BindRuntime(nb::module_ &m) {
       {Py_tp_clear, reinterpret_cast<void *>(Clear)},
       {0, nullptr}};
   nb::class_<Limits>(m, "_Limits")
-      .def(nb::init<size_t, size_t, size_t>())
-      .def_rw("flexible", &Limits::flexible)
-      .def_rw("receive_messages", &Limits::receive_messages)
-      .def_rw("messages_low", &Limits::messages_low)
-      .def_rw("write_low", &Limits::write_low);
+      .def(nb::init<size_t, std::optional<size_t>, size_t, size_t,
+                    size_t, size_t, size_t, size_t>());
   nb::class_<NativeRuntime>(m, "_Runtime", nb::type_slots(slots))
       .def(nb::init<nb::object>())
       .def("run", &NativeRuntime::Run, nb::call_guard<nb::gil_scoped_release>())

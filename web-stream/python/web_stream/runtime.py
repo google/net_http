@@ -41,9 +41,15 @@ class Limits:
         if self.write_buffer_limit < 1024 or self.max_message_size > self.write_buffer_limit // 2:
             raise ValueError("max_message_size must be <= write_buffer_limit / 2 (minimum write limit: 1024)")
 
-    def _native(self):
-        return web_stream_ext._Limits(
-            self.max_message_size, self.receive_buffer_limit, self.write_buffer_limit)
+    def _resolve(self):
+        return _FlowLimits(
+            max_message_size=self.max_message_size,
+            send_limit=self.max_message_size,
+            receive_buffer_limit=self.receive_buffer_limit,
+            receive_low=self.receive_buffer_limit // 2,
+            max_queue=0, queue_low=0,
+            write_high=self.write_buffer_limit // 4,
+            write_low=self.write_buffer_limit // 4)
 
 
 _UNSET = object()
@@ -70,28 +76,28 @@ def _watermarks(value, name, *, allow_none=False):
 
 @dataclass(frozen=True)
 class _FlowLimits:
+    """Normalized budgets and watermarks shared by every connection."""
+
     max_message_size: Optional[int]
-    receive_buffer_limit: Optional[int]
-    write_buffer_limit: int
-    max_queue: Optional[int]
-    queue_low: Optional[int]
+    send_limit: Optional[int]
+    receive_buffer_limit: int
+    receive_low: int
+    max_queue: int
+    queue_low: int
+    write_high: int
     write_low: int
-    send_limit: Optional[int] = None
 
     def _native(self):
-        native = web_stream_ext._Limits(
+        return web_stream_ext._Limits(
             self.max_message_size if self.max_message_size is not None else sys.maxsize * 2 + 1,
-            self.receive_buffer_limit or 0, self.write_buffer_limit)
-        native.flexible = True
-        native.receive_messages = self.max_queue or 0
-        native.messages_low = self.queue_low or 0
-        native.write_low = self.write_low
-        return native
+            self.send_limit, self.receive_buffer_limit, self.receive_low,
+            self.max_queue, self.queue_low, self.write_high, self.write_low)
 
 
 def resolve_limits(limits=None, *, max_size=_UNSET, max_queue=_UNSET, write_limit=_UNSET):
     if max_size is _UNSET and max_queue is _UNSET and write_limit is _UNSET:
-        return limits or Limits()
+        limits = limits or Limits()
+        return limits._resolve() if isinstance(limits, Limits) else limits
     if limits is not None:
         raise ValueError("Use either limits or max_size/max_queue/write_limit")
     max_size = 1024 * 1024 if max_size is _UNSET else max_size
@@ -100,7 +106,11 @@ def resolve_limits(limits=None, *, max_size=_UNSET, max_queue=_UNSET, write_limi
         raise ValueError("max_size must be a non-negative integer or None")
     high, low = _watermarks(16 if max_queue is _UNSET else max_queue, "max_queue", allow_none=True)
     write, write_low = _watermarks(32768 if write_limit is _UNSET else write_limit, "write_limit")
-    return _FlowLimits(max_size, None, write, high, low, write_low)
+    return _FlowLimits(
+        max_message_size=max_size, send_limit=None,
+        receive_buffer_limit=0, receive_low=0,
+        max_queue=high or 0, queue_low=low or 0,
+        write_high=write, write_low=write_low)
 
 
 async def finish_cleanup(task, *, propagate_cancel=True):
