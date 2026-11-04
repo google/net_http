@@ -130,7 +130,7 @@ binding has its own traverse/clear slots for its event-delivery callback.
 | Tests | Coverage |
 | --- | --- |
 | [test_asyncio_api.py](tests/core/test_asyncio_api.py) | Awaitable connections, retry and cancellation, strict message types and iterable parts, timeout cleanup, flow-control arguments, IPv6, ephemeral server ports, and scheduled/awaited shutdown. |
-| [test_asgi.py](tests/asgi/test_asgi.py) | ASGI event/state/cleanup contracts and raw ASGI integration, without FastAPI dependencies. |
+| [test_asgi.py](tests/asgi/test_asgi.py) | ASGI event/state/cleanup contracts, closing during blocked/queued sends, and native backpressure/close-timeout integration, without FastAPI dependencies. |
 | [test_integration.py](tests/fastapi/test_integration.py) | FastAPI/Starlette routing, dependencies, middleware, and externally managed lifespan. |
 | [test_fastapi_mount.py](tests/fastapi/test_fastapi_mount.py) | FastAPI mounting via the ASGI lifespan protocol, routing/dependencies/middleware, state, startup failure/cancellation, multiple listeners, and ordered shutdown. |
 | [test_runtime.py](tests/core/test_runtime.py) | Shared/default Runtime ownership, custom worker factory, asyncio progress during native waits, receive/send backpressure, message types, half-close, size limits, cancellation, self-shutdown, GC, and interpreter exit. |

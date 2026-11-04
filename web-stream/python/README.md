@@ -431,7 +431,11 @@ TLS server (`scheme="ws"` is the default). No FastAPI dependency is needed for a
 plain ASGI callable. The adapter itself is a stream handler, not an ASGI app.
 
 The first receive returns `websocket.connect`; later receives wait for accept or
-close. Sends await the existing transport flow control. App return, exceptions,
+close. Sends await the existing transport flow control. A concurrent
+`websocket.close` starts transport shutdown even while a send is blocked by
+backpressure; the connection's `close_timeout` bounds graceful flushing before
+transport release. Queued and later sends fail with `OSError`, and a transport
+close timeout remains observable to the caller. App return, exceptions,
 and cancellation close the connection, and retained callbacks cannot communicate
 after app return. The host's existing server shutdown grace period applies.
 The adapter never drives lifespan: run it only after host startup completes and
