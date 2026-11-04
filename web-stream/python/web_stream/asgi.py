@@ -129,20 +129,26 @@ class _Session:
         return event
 
     async def send(self, message):
+        if self.finished or self.disconnect is not None:
+            raise OSError("ASGI WebSocket connection is closed")
+        kind = message["type"]
+        if kind == "websocket.close":
+            code = message.get("code", 1000)
+            reason = message.get("reason") or ""
+            if not isinstance(code, int) or isinstance(code, bool):
+                raise TypeError("WebSocket close code must be int")
+            if not isinstance(reason, str):
+                raise TypeError("WebSocket close reason must be str")
+            # Close must start the transport's timeout even if a send holds
+            # the adapter lock while waiting for the peer to read. Mark the
+            # session closed before yielding so queued sends are rejected.
+            self._disconnected(code, reason)
+            await self.connection.close()
+            return
         async with self.send_lock:
             if self.finished or self.disconnect is not None:
                 raise OSError("ASGI WebSocket connection is closed")
-            kind = message["type"]
-            if kind == "websocket.close":
-                code = message.get("code", 1000)
-                reason = message.get("reason") or ""
-                if not isinstance(code, int) or isinstance(code, bool):
-                    raise TypeError("WebSocket close code must be int")
-                if not isinstance(reason, str):
-                    raise TypeError("WebSocket close reason must be str")
-                self._disconnected(code, reason)
-                await self.connection.close()
-            elif kind == "websocket.accept" and not self.accepted:
+            if kind == "websocket.accept" and not self.accepted:
                 if message.get("subprotocol") is not None or list(message.get("headers", [])):
                     raise ValueError("web-stream cannot negotiate subprotocols or accept headers")
                 self.accepted = True

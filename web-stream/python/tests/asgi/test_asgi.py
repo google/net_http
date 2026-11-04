@@ -123,6 +123,50 @@ class TestASGIAdapter(unittest.IsolatedAsyncioTestCase):
 
         await ASGIWebSocketAdapter(app)(FakeConnection())
 
+    async def test_close_interrupts_blocked_send_and_rejects_queued_send(self):
+        class BackpressuredConnection(FakeConnection):
+            def __init__(self):
+                super().__init__()
+                self.sending = asyncio.Event()
+                self.released = asyncio.Event()
+
+            async def send_text(self, text):
+                self.sending.set()
+                await self.released.wait()
+                raise ConnectionClosedOK("closed during send")
+
+            async def close(self):
+                await super().close()
+                self.released.set()
+
+        connection = BackpressuredConnection()
+
+        async def app(scope, receive, send):
+            await receive()
+            await send({"type": "websocket.accept"})
+            sending = asyncio.create_task(send({"type": "websocket.send", "text": "blocked"}))
+            queued = None
+            try:
+                await connection.sending.wait()
+                queued = asyncio.create_task(send({"type": "websocket.send", "text": "queued"}))
+                await asyncio.sleep(0)
+                await asyncio.wait_for(send({"type": "websocket.close", "code": 1001,
+                                             "reason": "shutdown"}), 1)
+                for task in (sending, queued):
+                    with self.assertRaises(OSError):
+                        await task
+                self.assertEqual(await receive(), {"type": "websocket.disconnect",
+                                                  "code": 1001, "reason": "shutdown"})
+                with self.assertRaises(OSError):
+                    await send({"type": "websocket.send", "text": "late"})
+                self.assertFalse(connection.sent)
+            finally:
+                await connection.close()
+                await asyncio.gather(*(task for task in (sending, queued) if task is not None),
+                                     return_exceptions=True)
+
+        await ASGIWebSocketAdapter(app)(connection)
+
     async def test_cancelled_receive_after_accept_does_not_consume_next_message(self):
         connection = FakeConnection()
 
@@ -166,6 +210,8 @@ class TestASGIAdapter(unittest.IsolatedAsyncioTestCase):
             ({"type": "websocket.send", "text": "", "bytes": b""}, True, ValueError),
             ({"type": "websocket.send", "text": b"wrong"}, True, TypeError),
             ({"type": "websocket.send", "bytes": "wrong"}, True, TypeError),
+            ({"type": "websocket.close", "code": True}, True, TypeError),
+            ({"type": "websocket.close", "reason": 123}, True, TypeError),
         ]
         for event, accepted, error in cases:
             with self.subTest(event=event):
@@ -225,6 +271,72 @@ class TestASGIAdapter(unittest.IsolatedAsyncioTestCase):
 
 
 class TestASGIIntegration(unittest.IsolatedAsyncioTestCase):
+    async def test_close_timeout_releases_backpressured_transport(self):
+        loop = asyncio.get_running_loop()
+        callbacks = loop.create_future()
+        app_finished = asyncio.Event()
+        contexts = []
+        previous_handler = loop.get_exception_handler()
+        loop.set_exception_handler(lambda loop, context: contexts.append(context))
+
+        async def app(scope, receive, send):
+            await receive()
+            await send({"type": "websocket.accept"})
+            callbacks.set_result((send, receive))
+            await app_finished.wait()
+
+        try:
+            async with Runtime() as runtime:
+                server = ASGIWebSocketAdapter(app).create_server(
+                    0, host="127.0.0.1", runtime=runtime,
+                    close_timeout=.02, write_limit=32768)
+                async with server:
+                    async with connect(f"webstream://127.0.0.1:{server.port}",
+                                       runtime=runtime, max_queue=1):
+                        send, receive = await asyncio.wait_for(callbacks, 2)
+                        connection = next(iter(server.connections))
+
+                        async def flood():
+                            payload = b"x" * (1024 * 1024)
+                            for _ in range(64):
+                                await send({"type": "websocket.send", "bytes": payload})
+
+                        sending = asyncio.create_task(flood())
+                        closing = None
+                        try:
+                            # The peer does not consume messages. Its bounded
+                            # queue pauses reads and eventually stalls sends.
+                            await asyncio.sleep(.2)
+                            self.assertFalse(sending.done())
+                            closing = asyncio.create_task(send(
+                                {"type": "websocket.close", "code": 1001}))
+                            done, _ = await asyncio.wait((closing,), timeout=2)
+                            self.assertIn(closing, done, "ASGI close never started transport cleanup")
+                            with self.assertRaises(asyncio.TimeoutError):
+                                await closing
+                            with self.assertRaises(OSError):
+                                await sending
+                            self.assertTrue(connection._released)
+                            self.assertFalse(connection._writes)
+                            self.assertEqual((await receive())["code"], 1001)
+                        finally:
+                            await connection.abort()
+                            app_finished.set()
+                            for task in (sending, closing):
+                                if task is not None:
+                                    task.cancel()
+                            await asyncio.gather(*(task for task in (sending, closing)
+                                                   if task is not None), return_exceptions=True)
+                # Adapter cleanup observes the same transport timeout rather
+                # than hiding a failed graceful close from the host server.
+                self.assertEqual(len(contexts), 1)
+                self.assertIsInstance(contexts[0]["exception"], asyncio.TimeoutError)
+                self.assertFalse(server.connections)
+            self.assertFalse(runtime._objects)
+            self.assertFalse(runtime._thread.is_alive())
+        finally:
+            loop.set_exception_handler(previous_handler)
+
     async def test_shutdown_cancels_busy_app_and_joins_cleanup(self):
         entered = asyncio.Event()
         cleaned = asyncio.Event()
