@@ -38,10 +38,10 @@ To run unit tests after a standard build:
 ctest --test-dir build --output-on-failure
 ```
 
-When this directory is the top-level project, `WISH_BUILD_TESTS`,
-`WISH_BUILD_BENCHMARKS`, and `WISH_BUILD_EXAMPLES` default to `ON`. They default
+When this directory is the top-level project, `WEB_STREAM_BUILD_TESTS`,
+`WEB_STREAM_BUILD_BENCHMARKS`, and `WEB_STREAM_BUILD_EXAMPLES` default to `ON`. They default
 to `OFF` when embedded with `add_subdirectory`. Override them explicitly as
-needed. `WISH_BUILD_ECHO_SERVERS=ON` builds just the HTTP/1 plain/TLS echo
+needed. `WEB_STREAM_BUILD_ECHO_SERVERS=ON` builds just the HTTP/1 plain/TLS echo
 servers even when the other examples are disabled.
 
 An embedding project can link `web_stream::web_stream` to obtain public headers,

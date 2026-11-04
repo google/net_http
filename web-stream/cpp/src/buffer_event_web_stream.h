@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef WISH_CPP_SRC_BUFFER_EVENT_WEB_STREAM_H_
-#define WISH_CPP_SRC_BUFFER_EVENT_WEB_STREAM_H_
+#ifndef WEB_STREAM_CPP_SRC_BUFFER_EVENT_WEB_STREAM_H_
+#define WEB_STREAM_CPP_SRC_BUFFER_EVENT_WEB_STREAM_H_
 
 #include <event2/buffer.h>
 #include <event2/bufferevent.h>
@@ -26,7 +26,7 @@
 #include <vector>
 
 #include "web_stream.h"
-#include "wish_opcodes.h"
+#include "web_stream_opcodes.h"
 
 // wslay forward decl
 extern "C" {
@@ -178,4 +178,4 @@ class BufferEventWebStream : public WebStream {
   ssize_t ReadChunkedBytes(uint8_t* buf, size_t len);
 };
 
-#endif  // WISH_CPP_SRC_BUFFER_EVENT_WEB_STREAM_H_
+#endif  // WEB_STREAM_CPP_SRC_BUFFER_EVENT_WEB_STREAM_H_

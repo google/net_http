@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef WISH_CPP_SRC_H2_TLS_SERVER_H_
-#define WISH_CPP_SRC_H2_TLS_SERVER_H_
+#ifndef WEB_STREAM_CPP_SRC_H2_TLS_SERVER_H_
+#define WEB_STREAM_CPP_SRC_H2_TLS_SERVER_H_
 
 #include <event2/bufferevent.h>
 #include <event2/event.h>
@@ -142,4 +142,4 @@ class H2TlsServer {
   size_t active_sessions_count_ = 0;
 };
 
-#endif  // WISH_CPP_SRC_H2_TLS_SERVER_H_
+#endif  // WEB_STREAM_CPP_SRC_H2_TLS_SERVER_H_

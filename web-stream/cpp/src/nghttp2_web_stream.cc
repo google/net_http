@@ -22,7 +22,7 @@
 #include <algorithm>
 #include <random>
 
-#include "wish_opcodes.h"
+#include "web_stream_opcodes.h"
 
 NGHTTP2WebStream::NGHTTP2WebStream(nghttp2_session* session,
                                    int32_t stream_id,

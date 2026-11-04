@@ -36,9 +36,9 @@ RUN --mount=type=cache,target=/cmake-cache,sharing=locked \
         cmake -S . -B /cmake-build -G Ninja \
             -DFETCHCONTENT_BASE_DIR=/cmake-cache \
             -DCMAKE_BUILD_TYPE=Release \
-            -DWISH_BUILD_TESTS=OFF \
-            -DWISH_BUILD_BENCHMARKS=ON \
-            -DWISH_BUILD_EXAMPLES=OFF \
+            -DWEB_STREAM_BUILD_TESTS=OFF \
+            -DWEB_STREAM_BUILD_BENCHMARKS=ON \
+            -DWEB_STREAM_BUILD_EXAMPLES=OFF \
         && cmake --build /cmake-build \
             --target plain_benchmark_client tls_benchmark_client high_qps_benchmark_client \
             -- -j"$(nproc)" \
@@ -63,4 +63,4 @@ COPY --from=builder /src/build/high_qps_benchmark_client /usr/local/bin/high_qps
 # Default: latency benchmark client.
 # Override the ENTRYPOINT or CMD in the Job spec to switch clients.
 ENTRYPOINT ["/usr/local/bin/benchmark_client"]
-CMD ["--host=wish-echo-server", "--port=8080"]
+CMD ["--host=web-stream-echo-server", "--port=8080"]

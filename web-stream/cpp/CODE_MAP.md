@@ -89,7 +89,7 @@ exiting the entire shared base.
 
 #### Core Abstractions & Protocol Standards
 * [`src/web_stream.h`](src/web_stream.h): Base abstract class `WebStream` defining standard event callbacks (`SetOnMessage`, `SetOnClose`, `SetOnError`) and messaging primitives (`SendText`, `SendBinary`, `SendMetadata`, `Close`).
-* [`src/wish_opcodes.h`](src/wish_opcodes.h): Framing opcode definitions (`WEB_STREAM_OPCODE_TEXT`, `WEB_STREAM_OPCODE_BINARY`, `WEB_STREAM_OPCODE_METADATA`).
+* [`src/web_stream_opcodes.h`](src/web_stream_opcodes.h): Framing opcode definitions (`WEB_STREAM_OPCODE_TEXT`, `WEB_STREAM_OPCODE_BINARY`, `WEB_STREAM_OPCODE_METADATA`).
 
 #### Stream Framers
 * [`src/buffer_event_web_stream.h`](src/buffer_event_web_stream.h), [`src/buffer_event_web_stream.cc`](src/buffer_event_web_stream.cc): Established HTTP/1.1 stream framing over libevent `bufferevent`, including chunked-body parsing, directional EOF, receive limits, read suspension, write-watermark notifications, and native destruction notification. HTTP handshake processing is separate.

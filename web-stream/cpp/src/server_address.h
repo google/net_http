@@ -3,8 +3,8 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at https://www.apache.org/licenses/LICENSE-2.0
 
-#ifndef WISH_CPP_SRC_SERVER_ADDRESS_H_
-#define WISH_CPP_SRC_SERVER_ADDRESS_H_
+#ifndef WEB_STREAM_CPP_SRC_SERVER_ADDRESS_H_
+#define WEB_STREAM_CPP_SRC_SERVER_ADDRESS_H_
 
 #include <event2/listener.h>
 #include <event2/util.h>
@@ -41,4 +41,4 @@ inline int StreamListenerPort(evconnlistener* listener) {
   return ntohs(reinterpret_cast<sockaddr_in*>(&address)->sin_port);
 }
 
-#endif  // WISH_CPP_SRC_SERVER_ADDRESS_H_
+#endif  // WEB_STREAM_CPP_SRC_SERVER_ADDRESS_H_

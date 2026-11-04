@@ -39,7 +39,7 @@ target_link_libraries(tls_echo_server
 )
 
 # Python integration tests only need the two HTTP/1 echo servers.
-if(NOT WISH_BUILD_EXAMPLES)
+if(NOT WEB_STREAM_BUILD_EXAMPLES)
     return()
 endif()
 

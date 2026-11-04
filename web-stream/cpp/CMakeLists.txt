@@ -13,13 +13,13 @@
 # limitations under the License.
 
 cmake_minimum_required(VERSION 3.24)
-project(wish_cpp LANGUAGES C CXX)
+project(web_stream_cpp LANGUAGES C CXX)
 
 
-option(WISH_BUILD_TESTS "Build wish unit tests" ${PROJECT_IS_TOP_LEVEL})
-option(WISH_BUILD_BENCHMARKS "Build wish benchmarks" ${PROJECT_IS_TOP_LEVEL})
-option(WISH_BUILD_EXAMPLES "Build wish examples" ${PROJECT_IS_TOP_LEVEL})
-option(WISH_BUILD_ECHO_SERVERS "Build echo servers for integration tests" OFF)
+option(WEB_STREAM_BUILD_TESTS "Build web-stream unit tests" ${PROJECT_IS_TOP_LEVEL})
+option(WEB_STREAM_BUILD_BENCHMARKS "Build web-stream benchmarks" ${PROJECT_IS_TOP_LEVEL})
+option(WEB_STREAM_BUILD_EXAMPLES "Build web-stream examples" ${PROJECT_IS_TOP_LEVEL})
+option(WEB_STREAM_BUILD_ECHO_SERVERS "Build echo servers for integration tests" OFF)
 
 
 if(PROJECT_IS_TOP_LEVEL)
@@ -31,7 +31,7 @@ if(BUILD_SHARED_LIBS AND NOT DEFINED CMAKE_POSITION_INDEPENDENT_CODE)
 endif()
 
 include(cmake/Dependencies.cmake)
-wish_fetch_dependencies()
+web_stream_fetch_dependencies()
 FetchContent_GetProperties(libevent)
 FetchContent_GetProperties(picohttpparser)
 
@@ -97,15 +97,15 @@ add_library(web_stream::web_stream ALIAS web_stream)
 target_link_libraries(web_stream INTERFACE web_stream_client web_stream_server)
 
 
-if(WISH_BUILD_EXAMPLES OR WISH_BUILD_ECHO_SERVERS)
+if(WEB_STREAM_BUILD_EXAMPLES OR WEB_STREAM_BUILD_ECHO_SERVERS)
     add_subdirectory(examples)
 endif()
 
-if(WISH_BUILD_BENCHMARKS)
+if(WEB_STREAM_BUILD_BENCHMARKS)
     add_subdirectory(benchmark)
 endif()
 
-if(WISH_BUILD_TESTS)
+if(WEB_STREAM_BUILD_TESTS)
     enable_testing()
 
     add_executable(buffer_event_web_stream_test src/buffer_event_web_stream_test.cc)

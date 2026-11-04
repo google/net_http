@@ -384,16 +384,16 @@ int H2Server::OnFrameRecvCallback(nghttp2_session* session,
   }
 
   // Reject non-web-stream requests with 415 Unsupported Media Type.
-  bool is_wish = false;
+  bool is_web_stream = false;
   auto it_stream = sess->incoming_streams.find(stream_id);
   if (it_stream != sess->incoming_streams.end()) {
     auto ct_it = it_stream->second.headers.find("content-type");
     if (ct_it != it_stream->second.headers.end() && ct_it->second == "application/web-stream") {
-      is_wish = true;
+      is_web_stream = true;
     }
   }
 
-  if (!is_wish) {
+  if (!is_web_stream) {
     const nghttp2_nv hdrs[] = {H2S_MAKE_NV(":status", "415")};
     int submit_response_rv = nghttp2_submit_response2(session,
                                                       stream_id,
