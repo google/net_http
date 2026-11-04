@@ -36,9 +36,9 @@ RUN --mount=type=cache,target=/cmake-cache,sharing=locked \
         cmake -S . -B /cmake-build -G Ninja \
             -DFETCHCONTENT_BASE_DIR=/cmake-cache \
             -DCMAKE_BUILD_TYPE=Release \
-            -DWISH_BUILD_TESTS=OFF \
-            -DWISH_BUILD_BENCHMARKS=OFF \
-            -DWISH_BUILD_EXAMPLES=ON \
+            -DWEB_STREAM_BUILD_TESTS=OFF \
+            -DWEB_STREAM_BUILD_BENCHMARKS=OFF \
+            -DWEB_STREAM_BUILD_EXAMPLES=ON \
         && cmake --build /cmake-build \
             --target plain_echo_server tls_echo_server \
             -- -j"$(nproc)" \

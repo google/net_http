@@ -3,7 +3,7 @@ include(FetchContent)
 # Normal variables in this function override dependency options without changing
 # the caller's cache. Targets and FetchContent properties remain available after
 # the function returns; temporary options and policy defaults do not.
-function(wish_fetch_dependencies)
+function(web_stream_fetch_dependencies)
     set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
     set(CMAKE_POLICY_DEFAULT_CMP0126 NEW)
     if(NOT CMAKE_CXX_STANDARD OR CMAKE_CXX_STANDARD LESS 17)
@@ -96,7 +96,7 @@ function(wish_fetch_dependencies)
         GIT_TAG 539bb9f510f5aefc8efda53aaf822a21ecae2832) # v1.2
     FetchContent_MakeAvailable(wslay libevent boringssl picohttpparser)
 
-    if(WISH_BUILD_BENCHMARKS)
+    if(WEB_STREAM_BUILD_BENCHMARKS)
         set(BENCHMARK_ENABLE_TESTING OFF)
         set(BENCHMARK_ENABLE_GTEST_TESTS OFF)
         set(BENCHMARK_ENABLE_INSTALL OFF)
@@ -107,7 +107,7 @@ function(wish_fetch_dependencies)
             GIT_TAG 192ef10025eb2c4cdd392bc502f0c852196baa48) # v1.9.5
         FetchContent_MakeAvailable(googlebenchmark)
     endif()
-    if(WISH_BUILD_TESTS)
+    if(WEB_STREAM_BUILD_TESTS)
         FetchContent_Declare(googletest
             GIT_REPOSITORY https://github.com/google/googletest.git
             GIT_TAG 52eb8108c5bdec04579160ae17225d66034bd723) # v1.17.0

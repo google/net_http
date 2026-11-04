@@ -15,7 +15,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: wish-stress
+  name: web-stream-stress
 spec:
   completions: 4
   parallelism: 4
@@ -29,15 +29,15 @@ spec:
           requiredDuringSchedulingIgnoredDuringExecution:
             - labelSelector:
                 matchLabels:
-                  app: wish-echo-server
+                  app: web-stream-echo-server
               topologyKey: kubernetes.io/hostname
             - labelSelector:
                 matchExpressions:
                   - key: job-name
                     operator: In
                     values:
-                      - wish-benchmark
-                      - wish-stress
+                      - web-stream-benchmark
+                      - web-stream-stress
               topologyKey: kubernetes.io/hostname
       containers:
         - name: client
@@ -45,7 +45,7 @@ spec:
           command: ["high_qps_benchmark_client"]
           args:
             - "--stderrthreshold=0"
-            - "--host=wish-echo-server"
+            - "--host=web-stream-echo-server"
             - "--port=8080"
           resources:
             requests:

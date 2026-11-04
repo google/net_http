@@ -14,14 +14,14 @@
 # limitations under the License.
 
 # build-and-push.sh
-# Builds wish-server and wish-bench-client images, pushes them to Artifact Registry.
+# Builds echo-server and benchmark images, pushes them to Artifact Registry.
 #
 # Prerequisites:
 #   gcloud auth configure-docker "${REGION}-docker.pkg.dev"
 #   (or: gcloud auth login && gcloud auth application-default login)
 #
 # Usage:
-#   REGION=asia-northeast1 PROJECT=my-gcp-project REPOSITORY=wish ./scripts/build-and-push.sh
+#   REGION=asia-northeast1 PROJECT=my-gcp-project REPOSITORY=web-stream ./scripts/build-and-push.sh
 #
 # Optional env vars:
 #   TAG          – image tag (default: git short SHA or "latest")

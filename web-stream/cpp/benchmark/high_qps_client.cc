@@ -338,7 +338,7 @@ double MeasureQps(std::atomic<int64_t>& completed, int window_ms) {
   return static_cast<double>(after - before) / elapsed_s;
 }
 
-// Benchmark WiSH throughput under a fixed target QPS with multiple workers.
+// Benchmark web-stream throughput under a fixed target QPS with multiple workers.
 //
 // Workers are sequential per-connection libevent loops; N workers run in
 // parallel so that aggregate QPS can exceed 1/RTT. The centralized

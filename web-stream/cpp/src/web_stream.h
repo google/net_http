@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef WISH_CPP_SRC_WEB_STREAM_H_
-#define WISH_CPP_SRC_WEB_STREAM_H_
+#ifndef WEB_STREAM_CPP_SRC_WEB_STREAM_H_
+#define WEB_STREAM_CPP_SRC_WEB_STREAM_H_
 
 #include <cstdint>
 #include <functional>
@@ -63,4 +63,4 @@ class WebStream {
   }
 };
 
-#endif  // WISH_CPP_SRC_WEB_STREAM_H_
+#endif  // WEB_STREAM_CPP_SRC_WEB_STREAM_H_

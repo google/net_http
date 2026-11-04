@@ -186,7 +186,7 @@ static void BM_TlsClient(benchmark::State& state) {
 
   ClientState client;
   if (!InitConnection(&client)) {
-    state.SkipWithError("Failed to establish TLS WiSH connection");
+    state.SkipWithError("Failed to establish TLS web-stream connection");
     CleanupConnection(&client);
     return;
   }

@@ -26,14 +26,14 @@ if(SKBUILD)
 else()
   set(_python_tests_default ON)
 endif()
-option(WISH_PYTHON_BUILD_TESTS "Build prerequisites and register Python tests"
+option(WEB_STREAM_PYTHON_BUILD_TESTS "Build prerequisites and register Python tests"
        ${_python_tests_default})
 
 # Build only the C++ components needed by bindings and optional Python tests.
-set(WISH_BUILD_TESTS OFF)
-set(WISH_BUILD_BENCHMARKS OFF)
-set(WISH_BUILD_EXAMPLES OFF)
-set(WISH_BUILD_ECHO_SERVERS ${WISH_PYTHON_BUILD_TESTS})
+set(WEB_STREAM_BUILD_TESTS OFF)
+set(WEB_STREAM_BUILD_BENCHMARKS OFF)
+set(WEB_STREAM_BUILD_EXAMPLES OFF)
+set(WEB_STREAM_BUILD_ECHO_SERVERS ${WEB_STREAM_PYTHON_BUILD_TESTS})
 add_subdirectory(../cpp web_stream_cpp_build)
 
 
@@ -43,7 +43,7 @@ target_link_libraries(web_stream_ext PRIVATE web_stream event_pthreads)
 
 install(TARGETS web_stream_ext DESTINATION web_stream COMPONENT python)
 
-if(WISH_PYTHON_BUILD_TESTS)
+if(WEB_STREAM_PYTHON_BUILD_TESTS)
   enable_testing()
   function(add_python_check suite)
     set(command "${Python_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/tests/run_tests.py"

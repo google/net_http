@@ -15,9 +15,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  # Append a unique suffix (e.g. timestamp) to run multiple benchmarks:
-  #   kubectl create job wish-benchmark-$(date +%s) --from=job/wish-benchmark-client
-  name: wish-benchmark
+  name: web-stream-benchmark
 spec:
   # Do not retry on failure so a broken binary doesn't loop.
   backoffLimit: 0
@@ -29,14 +27,14 @@ spec:
           requiredDuringSchedulingIgnoredDuringExecution:
             - labelSelector:
                 matchLabels:
-                  app: wish-echo-server
+                  app: web-stream-echo-server
               topologyKey: kubernetes.io/hostname
             - labelSelector:
                 matchExpressions:
                   - key: job-name
                     operator: In
                     values:
-                      - wish-stress
+                      - web-stream-stress
               topologyKey: kubernetes.io/hostname
       containers:
         - name: client
@@ -44,7 +42,7 @@ spec:
           command: ["high_qps_benchmark_client"]
           args:
             - "--stderrthreshold=0"
-            - "--host=wish-echo-server"
+            - "--host=web-stream-echo-server"
             - "--port=8080"
           resources:
             requests:

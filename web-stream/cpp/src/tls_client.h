@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef WISH_CPP_SRC_TLS_CLIENT_H_
-#define WISH_CPP_SRC_TLS_CLIENT_H_
+#ifndef WEB_STREAM_CPP_SRC_TLS_CLIENT_H_
+#define WEB_STREAM_CPP_SRC_TLS_CLIENT_H_
 
 #include <event2/bufferevent.h>
 #include <event2/dns.h>
@@ -77,4 +77,4 @@ class TlsClient {
   ErrorCallback on_error_;
 };
 
-#endif  // WISH_CPP_SRC_TLS_CLIENT_H_
+#endif  // WEB_STREAM_CPP_SRC_TLS_CLIENT_H_

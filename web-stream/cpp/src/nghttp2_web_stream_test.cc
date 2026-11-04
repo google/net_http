@@ -20,7 +20,7 @@
 #include <cstring>
 #include <string>
 
-#include "wish_opcodes.h"
+#include "web_stream_opcodes.h"
 
 // Create a minimal nghttp2 session whose send callback discards all bytes.
 // This lets NGHTTP2WebStream call nghttp2_session_resume_data /

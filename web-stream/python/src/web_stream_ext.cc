@@ -21,7 +21,7 @@
 #include "plain_server.h"
 #include "tls_client.h"
 #include "tls_server.h"
-#include "wish_opcodes.h"
+#include "web_stream_opcodes.h"
 
 namespace nb = nanobind;
 

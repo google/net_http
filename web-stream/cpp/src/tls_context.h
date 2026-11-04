@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef WISH_CPP_SRC_TLS_CONTEXT_H_
-#define WISH_CPP_SRC_TLS_CONTEXT_H_
+#ifndef WEB_STREAM_CPP_SRC_TLS_CONTEXT_H_
+#define WEB_STREAM_CPP_SRC_TLS_CONTEXT_H_
 
 #include <string>
 
@@ -54,4 +54,4 @@ class TlsContext {
   SSL_CTX* ssl_ctx_;
 };
 
-#endif  // WISH_CPP_SRC_TLS_CONTEXT_H_
+#endif  // WEB_STREAM_CPP_SRC_TLS_CONTEXT_H_

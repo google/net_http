@@ -153,13 +153,13 @@ void CleanupConnection(ClientState* client) {
   }
 }
 
-static void BM_WiSHClient(benchmark::State& state) {
+static void BM_WebStreamClient(benchmark::State& state) {
   const int payload_size = static_cast<int>(state.range(0));
   const std::string payload(payload_size, 'A');
 
   ClientState client;
   if (!InitConnection(&client)) {
-    state.SkipWithError("Failed to establish WiSH connection");
+    state.SkipWithError("Failed to establish web-stream connection");
     CleanupConnection(&client);
     return;
   }
@@ -171,7 +171,7 @@ static void BM_WiSHClient(benchmark::State& state) {
 
     const int send_result = client.handler->SendBinary(payload);
     if (send_result != 0) {
-      state.SkipWithError("WishHandler::SendBinary failed");
+      state.SkipWithError("WebStream::SendBinary failed");
       break;
     }
 
@@ -200,7 +200,7 @@ static void BM_WiSHClient(benchmark::State& state) {
   CleanupConnection(&client);
 }
 
-BENCHMARK(BM_WiSHClient)
+BENCHMARK(BM_WebStreamClient)
     ->UseRealTime()
     ->Unit(benchmark::kMicrosecond)
     ->Args({0})

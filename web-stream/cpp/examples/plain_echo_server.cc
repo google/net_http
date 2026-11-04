@@ -21,7 +21,7 @@
 #include <string>
 
 #include "../src/plain_server.h"
-#include "../src/wish_opcodes.h"
+#include "../src/web_stream_opcodes.h"
 
 ABSL_FLAG(int, port, 8080, "Port to listen on");
 

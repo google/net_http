@@ -80,13 +80,13 @@ FastAPI is unnecessary for the core and raw ASGI suites. Selecting the FastAPI
 suite without its dependency fails rather than silently omitting its tests.
 `test-fastapi` is the test extra; `test-asgi` remains a compatibility alias.
 
-Standalone CMake builds enable `WISH_PYTHON_BUILD_TESTS` by default. A regular
+Standalone CMake builds enable `WEB_STREAM_PYTHON_BUILD_TESTS` by default. A regular
 `cmake --build build/tests` also builds all native test prerequisites. Afterwards,
 CTest runs the three suites as `python_core_tests`, `python_asgi_tests`, and
 `python_fastapi_tests`; labels `core`, `asgi`, and `fastapi` allow selection, e.g.
 `ctest --test-dir build/tests -L core --output-on-failure`. Wheel/editable package
 builds disable test prerequisites by default. Explicitly enable them with
-`-DWISH_PYTHON_BUILD_TESTS=ON` when configuring a development build.
+`-DWEB_STREAM_PYTHON_BUILD_TESTS=ON` when configuring a development build.
 
 Wheel builds compile the extension target and install only the `python` CMake
 component. Third-party headers, tools, and static libraries are excluded from

@@ -20,7 +20,7 @@
 #include <string>
 
 #include "../src/h2_client.h"
-#include "../src/wish_opcodes.h"
+#include "../src/web_stream_opcodes.h"
 
 ABSL_FLAG(std::string, host, "127.0.0.1", "Server host address");
 ABSL_FLAG(int, port, 8080, "Server port");

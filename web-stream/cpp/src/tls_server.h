@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef WISH_CPP_SRC_TLS_SERVER_H_
-#define WISH_CPP_SRC_TLS_SERVER_H_
+#ifndef WEB_STREAM_CPP_SRC_TLS_SERVER_H_
+#define WEB_STREAM_CPP_SRC_TLS_SERVER_H_
 
 #include <event2/bufferevent.h>
 #include <event2/event.h>
@@ -91,4 +91,4 @@ class TlsServer {
   std::vector<std::unique_ptr<BufferEventWebStream>> active_streams_;
 };
 
-#endif  // WISH_CPP_SRC_TLS_SERVER_H_
+#endif  // WEB_STREAM_CPP_SRC_TLS_SERVER_H_
