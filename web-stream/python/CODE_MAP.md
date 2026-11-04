@@ -1,7 +1,10 @@
 # web-stream Python Code Map
 
 This map describes the Python API and its native runtime.
-See [README.md](README.md) for usage, limits, and build/test commands;
+See the [README](README.md) for installation and quick start, the
+[asyncio API](docs/asyncio-api.md) and [ASGI guide](docs/asgi.md) for public
+contracts and limits, and the [development guide](docs/development.md) for
+build/test commands;
 see the [C++ code map](../cpp/CODE_MAP.md) for framing and transport internals.
 
 ## Architecture and Thread Boundaries
@@ -42,7 +45,7 @@ waiting for a send result suspends its coroutine rather than the asyncio thread.
 | [web_stream/client.py](web_stream/client.py) | `WebStreamConnection` acquires a Runtime and opens a native client under an optional deadline. `connect()` supports awaiting, async context management, and retry iteration; failed/cancelled entry aborts and releases the client. |
 | [web_stream/server.py](web_stream/server.py) | `WebStreamServer` manages the listener, accepted connections, handler tasks, exception reporting, and shutdown. `WebStreamServerConnection` uses the common connection behavior. Custom connection classes receive `(runtime, identifier, path, *, limits, close_timeout)`. |
 | [web_stream/fastapi.py](web_stream/fastapi.py) | `mount_web_stream` exposes FastAPI WebSocket routes through `ASGIWebSocketAdapter`, composing the app's lifespan to share state and order listener startup/handler shutdown. `WebStreamRouter` and `WebStreamSession` remain legacy standalone helpers. |
-| [web_stream/asgi.py](web_stream/asgi.py) | Experimental `ASGIWebSocketAdapter` invokes an ASGI 3 app with WebSocket scopes over established streams. Maps text/binary and termination, validates event ordering, closes on app exit, and leaves lifespan to the host. Transport compatibility limits are documented in the README. |
+| [web_stream/asgi.py](web_stream/asgi.py) | Experimental `ASGIWebSocketAdapter` invokes an ASGI 3 app with WebSocket scopes over established streams. Maps text/binary and termination, validates event ordering, closes on app exit, and leaves lifespan to the host. Transport compatibility limits are documented in the [ASGI guide](docs/asgi.md). |
 | [src/runtime.cc](src/runtime.cc) | `NativeRuntime`, exposed privately as `_Runtime` and `_Limits`. Owns the event base, command queue, native clients/listeners, stream state, flow-control accounting, operation progression, and event emission. `BindRuntime` registers it. |
 | [src/web_stream_ext.cc](src/web_stream_ext.cc) | Module initialization: enables libevent threading support and calls `BindRuntime` to register the private Runtime bindings. |
 
