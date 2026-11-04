@@ -37,16 +37,14 @@ class TestPrerequisites(unittest.TestCase):
         self.assertNotIn("skipped=", result.stderr)
 
     def test_missing_plain_echo_fails_direct_discovery(self):
-        for name in ("test_callback_exceptions", "test_dangling_pointer",
-                     "test_e2e.TestWebStreamClientPlainE2E"):
-            with self.subTest(test=name):
-                result = self.probe(f"""
-                    os.environ['WEB_STREAM_PLAIN_ECHO_SERVER'] = '/missing/plain_echo_server'
-                    suite = unittest.defaultTestLoader.loadTestsFromName('tests.core.{name}')
-                    result = unittest.TextTestRunner().run(suite)
-                    sys.exit(not result.wasSuccessful())
-                """)
-                self.assert_failed_without_skip(result, "FileNotFoundError")
+        result = self.probe("""
+            os.environ['WEB_STREAM_PLAIN_ECHO_SERVER'] = '/missing/plain_echo_server'
+            suite = unittest.defaultTestLoader.loadTestsFromName(
+                'tests.core.test_e2e.TestWebStreamClientPlainE2E')
+            result = unittest.TextTestRunner().run(suite)
+            sys.exit(not result.wasSuccessful())
+        """)
+        self.assert_failed_without_skip(result, "FileNotFoundError")
 
     def test_missing_tls_echo_fails_direct_discovery(self):
         result = self.probe("""
@@ -66,7 +64,7 @@ class TestPrerequisites(unittest.TestCase):
                         raise ModuleNotFoundError('Injected missing native extension')
             sys.meta_path.insert(0, MissingNative())
             suite = unittest.defaultTestLoader.loadTestsFromNames([
-                'tests.core.test_callback_exceptions', 'tests.core.test_dangling_pointer'])
+                'tests.core.test_runtime', 'tests.core.test_e2e'])
             result = unittest.TextTestRunner().run(suite)
             sys.exit(not result.wasSuccessful())
         """, load_extension=False)

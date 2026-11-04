@@ -1,7 +1,7 @@
 # web-stream Python Code Map
 
-This map describes the Python API, its native runtime, and the compatibility
-bindings. See [README.md](README.md) for usage, limits, and build/test commands;
+This map describes the Python API and its native runtime.
+See [README.md](README.md) for usage, limits, and build/test commands;
 see the [C++ code map](../cpp/CODE_MAP.md) for framing and transport internals.
 
 ## Architecture and Thread Boundaries
@@ -44,7 +44,7 @@ waiting for a send result suspends its coroutine rather than the asyncio thread.
 | [web_stream/fastapi.py](web_stream/fastapi.py) | `mount_web_stream` exposes FastAPI WebSocket routes through `ASGIWebSocketAdapter`, composing the app's lifespan to share state and order listener startup/handler shutdown. `WebStreamRouter` and `WebStreamSession` remain legacy standalone helpers. |
 | [web_stream/asgi.py](web_stream/asgi.py) | Experimental `ASGIWebSocketAdapter` invokes an ASGI 3 app with WebSocket scopes over established streams. Maps text/binary and termination, validates event ordering, closes on app exit, and leaves lifespan to the host. Transport compatibility limits are documented in the README. |
 | [src/runtime.cc](src/runtime.cc) | `NativeRuntime`, exposed privately as `_Runtime` and `_Limits`. Owns the event base, command queue, native clients/listeners, stream state, flow-control accounting, operation progression, and event emission. `BindRuntime` registers it. |
-| [src/web_stream_ext.cc](src/web_stream_ext.cc) | Module initialization and the original synchronous Plain/TLS bindings. Calls `BindRuntime`; independently implements legacy dispatch, borrowed-stream handles, invalidation, Python callback ownership, and GC slots. |
+| [src/web_stream_ext.cc](src/web_stream_ext.cc) | Module initialization: enables libevent threading support and calls `BindRuntime` to register the private Runtime bindings. |
 
 ### Native Operation and Event Routing
 
@@ -101,29 +101,12 @@ Events cross through `Emit` into `Runtime._dispatch`:
   avoiding circular waits while still joining unrelated handlers.
   A weak finalizer stops an unreferenced Runtime; `_shutdown_workers` is the
   interpreter-exit fallback and does not run application handler cleanup.
+- The native Runtime binding defines GC traverse/clear slots for its
+  event-delivery callback. Clearing it also requests native worker shutdown.
 
 The C++ core still combines DNS/TCP/TLS/handshake failures into a connect failure,
 and framing/transport failures into a stream failure. Error translation lives in
 `runtime.py`; finer causes require changes to the C++ error callbacks.
-
-## Legacy Binding Lifetime and GC
-
-The synchronous `PlainClient`, `TlsClient`, `PlainServer`, `TlsServer`, and
-`BufferEventWebStream` Python handle in `src/web_stream_ext.cc` remain a separate
-execution path. Their `EventLoopDispatcher` blocks cross-thread callers until
-execution; it is not the asyncio Runtime's command queue.
-
-`WebStreamHandlerRef` holds a nullable borrowed `WebStream*`.
-Legacy server EOF callbacks close the native outbound direction before
-invalidating the handle, so queued output drains and the socket is released
-even without a Python close callback or if that callback raises.
-`ServerHandlerRegistry` invalidates retained handles at shutdown. `active_owner`
-roots the Python handle while its native server stream is active, preventing GC
-from clearing a live callback cycle. Terminal/shutdown paths clear callbacks and
-that root; GC traverse/clear slots collect isolated cycles afterwards.
-`ClearCallbacks` and callback setters release old Python references outside the
-handle mutex because decref can run reentrant Python finalizers. The Runtime
-binding has its own traverse/clear slots for its event-delivery callback.
 
 ## Tests and Build Entry Points
 
@@ -136,8 +119,6 @@ binding has its own traverse/clear slots for its event-delivery callback.
 | [test_runtime.py](tests/core/test_runtime.py) | Shared/default Runtime ownership, custom worker factory, asyncio progress during native waits, receive/send backpressure, message types, half-close, size limits, cancellation, self-shutdown, GC, and interpreter exit. |
 | [test_connect_cancellation.py](tests/core/test_connect_cancellation.py), [test_recv_termination.py](tests/core/test_recv_termination.py) | Failed/cancelled connect cleanup, repeated cancellation, late notifications, buffered messages, receive exclusion, and persistent termination errors. |
 | [test_python_server.py](tests/core/test_python_server.py), [test_server_close.py](tests/core/test_server_close.py) | Server echo/routing, waiting-handler shutdown, clean protocol EOF, and cleanup failure reporting. |
-| [test_callback_dispatch.py](tests/core/test_callback_dispatch.py), [test_callback_exceptions.py](tests/core/test_callback_exceptions.py) | Legacy callback-thread sends/close, pending-operation cancellation, embedded NUL preservation, and unraisable exception reporting. |
-| [test_dangling_pointer.py](tests/core/test_dangling_pointer.py), [test_server_handler_lifetime.py](tests/core/test_server_handler_lifetime.py) | Retained-handle safety, invalidation, active callback rooting, and stopped-handle cycle collection. |
 | [test_e2e.py](tests/core/test_e2e.py), [test_idle_connection.py](tests/core/test_idle_connection.py), [test_tls_identity.py](tests/core/test_tls_identity.py) | Plain/TLS integration, idle survival, certificate identity/chain verification, and SNI. |
 | [test_prerequisites.py](tests/core/test_prerequisites.py) | Missing extensions, echo servers, OpenSSL, and selected FastAPI dependencies cause failure rather than skips. |
 
