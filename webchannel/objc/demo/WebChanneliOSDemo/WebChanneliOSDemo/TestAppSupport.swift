@@ -263,7 +263,10 @@ final class NetworkFailureControl: @unchecked Sendable {
           NetworkFailureLog.emit("lifecycle", ["notification": note.name.rawValue])
         })
     }
-    for name in ["com.pmodular.webchannel.nettest.send", "com.pmodular.webchannel.nettest.close"] {
+    for name in [
+      "com.pmodular.webchannel.nettest.send", "com.pmodular.webchannel.nettest.close",
+      "com.pmodular.webchannel.nettest.probe",
+    ] {
       CFNotificationCenterAddObserver(
         CFNotificationCenterGetDarwinNotifyCenter(),
         Unmanaged.passUnretained(self).toOpaque(),
@@ -280,6 +283,7 @@ final class NetworkFailureControl: @unchecked Sendable {
         "traffic": ProcessInfo.processInfo.environment["NETTEST_TRAFFIC"] ?? "idle",
         "model": UIDevice.current.model, "os": UIDevice.current.systemVersion,
         "pid": ProcessInfo.processInfo.processIdentifier,
+        "controlProtocolVersion": 2,
       ])
   }
   private func handle(_ name: String) {
@@ -287,6 +291,10 @@ final class NetworkFailureControl: @unchecked Sendable {
     if name.hasSuffix(".close") {
       timer?.invalidate()
       service?.disconnect()
+      return
+    }
+    if name.hasSuffix(".probe") {
+      service?.sendEcho(message: "NETTEST_PROBE")
       return
     }
     service?.sendEcho(message: "network-failure pending write")

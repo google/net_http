@@ -280,6 +280,7 @@ final class WebChannelService: NSObject, @unchecked Sendable {
 
     let defaultMsg = "Hello from iOS Generator :)"
     let echoToken = "req_\(Int(Date().timeIntervalSince1970 * 1000))"
+    NetworkFailureLog.emit("echo_sent", ["token": echoToken, "message": message])
     var payload: [String: Any] = [
       "echo": echoToken,
       "message": message.isEmpty ? defaultMsg : message,
@@ -610,6 +611,7 @@ extension WebChannelService: WCWebChannelClientHandlerDelegate {
       }
 
       if let token = self.pendingEchoToken, formattedMessage.contains(token) {
+        NetworkFailureLog.emit("echo_reply", ["token": token])
         let sendRtt = (now - self.lastSendTime) * 1000.0
         let totalFromConnect = (now - self.connectTime) * 1000.0
         self.lastLatencyMs = sendRtt

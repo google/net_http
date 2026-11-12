@@ -1,0 +1,55 @@
+diff --git a/webchannel/objc/demo/WebChanneliOSDemo/WebChanneliOSDemo/TestAppSupport.swift b/webchannel/objc/demo/WebChanneliOSDemo/WebChanneliOSDemo/TestAppSupport.swift
+index 50d941d22a..877ac9d802 100644
+--- a/webchannel/objc/demo/WebChanneliOSDemo/WebChanneliOSDemo/TestAppSupport.swift
++++ b/webchannel/objc/demo/WebChanneliOSDemo/WebChanneliOSDemo/TestAppSupport.swift
+@@ -263,7 +263,10 @@
+           NetworkFailureLog.emit("lifecycle", ["notification": note.name.rawValue])
+         })
+     }
+-    for name in ["com.pmodular.webchannel.nettest.send", "com.pmodular.webchannel.nettest.close"] {
++    for name in [
++      "com.pmodular.webchannel.nettest.send", "com.pmodular.webchannel.nettest.close",
++      "com.pmodular.webchannel.nettest.probe",
++    ] {
+       CFNotificationCenterAddObserver(
+         CFNotificationCenterGetDarwinNotifyCenter(),
+         Unmanaged.passUnretained(self).toOpaque(),
+@@ -280,6 +283,7 @@
+         "traffic": ProcessInfo.processInfo.environment["NETTEST_TRAFFIC"] ?? "idle",
+         "model": UIDevice.current.model, "os": UIDevice.current.systemVersion,
+         "pid": ProcessInfo.processInfo.processIdentifier,
++        "controlProtocolVersion": 2,
+       ])
+   }
+   private func handle(_ name: String) {
+@@ -289,6 +293,10 @@
+       service?.disconnect()
+       return
+     }
++    if name.hasSuffix(".probe") {
++      service?.sendEcho(message: "NETTEST_PROBE")
++      return
++    }
+     service?.sendEcho(message: "network-failure pending write")
+     if ProcessInfo.processInfo.environment["NETTEST_TRAFFIC"] == "periodic" {
+       timer?.invalidate()
+diff --git a/webchannel/objc/demo/WebChanneliOSDemo/WebChanneliOSDemo/WebChannelService.swift b/webchannel/objc/demo/WebChanneliOSDemo/WebChanneliOSDemo/WebChannelService.swift
+index 9a43d52c92..d06f6ab5dd 100644
+--- a/webchannel/objc/demo/WebChanneliOSDemo/WebChanneliOSDemo/WebChannelService.swift
++++ b/webchannel/objc/demo/WebChanneliOSDemo/WebChanneliOSDemo/WebChannelService.swift
+@@ -280,6 +280,7 @@
+ 
+     let defaultMsg = "Hello from iOS Generator :)"
+     let echoToken = "req_\(Int(Date().timeIntervalSince1970 * 1000))"
++    NetworkFailureLog.emit("echo_sent", ["token": echoToken, "message": message])
+     var payload: [String: Any] = [
+       "echo": echoToken,
+       "message": message.isEmpty ? defaultMsg : message,
+@@ -610,6 +611,7 @@
+       }
+ 
+       if let token = self.pendingEchoToken, formattedMessage.contains(token) {
++        NetworkFailureLog.emit("echo_reply", ["token": token])
+         let sendRtt = (now - self.lastSendTime) * 1000.0
+         let totalFromConnect = (now - self.connectTime) * 1000.0
+         self.lastLatencyMs = sendRtt
