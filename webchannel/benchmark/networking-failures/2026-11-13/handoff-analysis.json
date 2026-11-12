@@ -1,0 +1,87 @@
+{
+  "scenario": "wifi-cellular-wifi",
+  "requestedHoldSeconds": 15,
+  "trials": [
+    {
+      "trial": "02",
+      "folder": "human-handoff-02",
+      "outcome": "handoff-observed",
+      "requestedHoldSeconds": 15.0,
+      "restoreCueObservedSeconds": 15.99980808334658,
+      "cellularToWifiObservedSeconds": 26.946928416669834,
+      "echoRTTms": [
+        150.32224997412413,
+        199.85387500491925,
+        732.0302083389834
+      ],
+      "openCount": 1,
+      "uniqueSIDCount": 1,
+      "errorCodes": [],
+      "cleanupError": null,
+      "transactions": 7,
+      "cellularTransactions": 4,
+      "protocols": [
+        "h2"
+      ],
+      "sourceSHA256": {
+        "run-handoff.py": "b7699a876a5bc84ec314829af66376bbcbb6ee78aba0aaea2f78a7d493803bce",
+        "run-network-failures.py": "5d92ad54fe993fd018a040c66053c8064ad880320f57c10d3d6bd7696f0d53f5"
+      }
+    },
+    {
+      "trial": "03",
+      "folder": "human-handoff-03",
+      "outcome": "handoff-observed",
+      "requestedHoldSeconds": 15.0,
+      "restoreCueObservedSeconds": 15.489659916667733,
+      "cellularToWifiObservedSeconds": 25.446546791645233,
+      "echoRTTms": [
+        251.10541668254882,
+        181.83566667721607,
+        698.6470416595694
+      ],
+      "openCount": 1,
+      "uniqueSIDCount": 1,
+      "errorCodes": [],
+      "cleanupError": null,
+      "transactions": 7,
+      "cellularTransactions": 4,
+      "protocols": [
+        "h2"
+      ],
+      "sourceSHA256": {
+        "run-handoff.py": "b7699a876a5bc84ec314829af66376bbcbb6ee78aba0aaea2f78a7d493803bce",
+        "run-network-failures.py": "5d92ad54fe993fd018a040c66053c8064ad880320f57c10d3d6bd7696f0d53f5"
+      }
+    },
+    {
+      "trial": "04",
+      "folder": "human-handoff-04",
+      "outcome": "handoff-observed",
+      "requestedHoldSeconds": 15.0,
+      "restoreCueObservedSeconds": 15.618546625017188,
+      "cellularToWifiObservedSeconds": 28.555813333339756,
+      "echoRTTms": [
+        201.14595833001658,
+        217.3145416600164,
+        872.8159583406523
+      ],
+      "openCount": 1,
+      "uniqueSIDCount": 1,
+      "errorCodes": [],
+      "cleanupError": null,
+      "transactions": 7,
+      "cellularTransactions": 4,
+      "protocols": [
+        "h2"
+      ],
+      "sourceSHA256": {
+        "run-handoff.py": "b7699a876a5bc84ec314829af66376bbcbb6ee78aba0aaea2f78a7d493803bce",
+        "run-network-failures.py": "5d92ad54fe993fd018a040c66053c8064ad880320f57c10d3d6bd7696f0d53f5"
+      }
+    }
+  ],
+  "selectionNote": "02 and 03 were initially procedure validation; inclusion as measurement repeats was agreed before trial 04. Trial 01 uses older guidance and is excluded.",
+  "medianObservedCellularToWifiSeconds": 26.946928416669834,
+  "sourceHashesIdentical": true
+}

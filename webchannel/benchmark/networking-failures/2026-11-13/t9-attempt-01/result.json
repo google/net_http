@@ -1,0 +1,122 @@
+{
+  "run": "handoff-8183df20a4f9",
+  "scenario": "T9-l3-idle",
+  "requestedHoldSeconds": 10.0,
+  "outcome": "interrupted",
+  "milestones": {
+    "baselinePath": {
+      "cellular": false,
+      "constrained": false,
+      "deviceUnixSeconds": 1794538517.678372,
+      "deviceUptimeSeconds": 172340.12326516668,
+      "expensive": false,
+      "kind": "path",
+      "run": "handoff-8183df20a4f9",
+      "status": "satisfied",
+      "wifi": true,
+      "wired": false,
+      "hostReceivedMonotonic": 544626.729257875,
+      "hostReceivedUTC": "2026-11-13T02:55:17.483Z"
+    },
+    "baselineEcho": {
+      "deviceUnixSeconds": 1794538519.324273,
+      "deviceUptimeSeconds": 172341.76919508335,
+      "kind": "echo_reply",
+      "run": "handoff-8183df20a4f9",
+      "token": "req_1794538519156",
+      "hostReceivedMonotonic": 544628.374430541,
+      "hostReceivedUTC": "2026-11-13T02:55:19.128Z"
+    }
+  },
+  "timingNotes": [
+    "Device intervals use deviceUptimeSeconds; no host/device UTC subtraction.",
+    "Path callbacks describe observed routing, not physical switch timestamps.",
+    "Cue times are host times; human response is measured, not assumed instantaneous.",
+    "No SDK test-case pass/fail or real OS suspension is inferred."
+  ],
+  "error": "KeyboardInterrupt",
+  "cleanupError": "Command '['xcrun', 'devicectl', 'device', 'process', 'terminate', '--device', 'TEST_COREDEVICE_ID', '--pid', '27666']' returned non-zero exit status 1.",
+  "finishedUTC": "2026-11-13T02:55:41.328Z",
+  "errorCodes": [],
+  "openCount": 1,
+  "lifecycleEvents": [
+    {
+      "deviceUnixSeconds": 1794538517.929884,
+      "deviceUptimeSeconds": 172340.374781625,
+      "kind": "lifecycle",
+      "notification": "UIApplicationDidBecomeActiveNotification",
+      "run": "handoff-8183df20a4f9",
+      "hostReceivedMonotonic": 544626.981247083,
+      "hostReceivedUTC": "2026-11-13T02:55:17.735Z"
+    },
+    {
+      "deviceUnixSeconds": 1794538524.797017,
+      "deviceUptimeSeconds": 172347.24202870834,
+      "kind": "lifecycle",
+      "notification": "UIApplicationWillResignActiveNotification",
+      "run": "handoff-8183df20a4f9",
+      "hostReceivedMonotonic": 544633.852052625,
+      "hostReceivedUTC": "2026-11-13T02:55:24.605Z"
+    }
+  ],
+  "taskMetrics": [
+    {
+      "deviceUnixSeconds": 1794538517.890267,
+      "deviceUptimeSeconds": 172340.33516425002,
+      "kind": "task_metrics",
+      "run": "handoff-8183df20a4f9",
+      "transactions": [
+        {
+          "fetchStart": 1794538517.691097,
+          "isCellular": false,
+          "localAddress": "2400:4050:b781:4c00:1446:9b39:4b51:c062",
+          "localPort": 58880,
+          "method": "POST",
+          "protocol": "h2",
+          "remoteAddress": "2404:6800:400b:c015::451",
+          "remotePort": 443,
+          "requestEnd": 1794538517.74858,
+          "requestStart": 1794538517.748493,
+          "responseEnd": 1794538517.888842,
+          "responseStart": 1794538517.8885841,
+          "reusedConnection": false,
+          "rid": "84876",
+          "tcpConnectMs": 24.99997615814209,
+          "tlsMs": 16.99995994567871,
+          "url": "https://webchannel.sandbox.google.com/staging/channel/generator?VER=8&RID=84876&CVER=25&X-HTTP-Session-Id=gsessionid&t=1"
+        }
+      ],
+      "hostReceivedMonotonic": 544626.941573833,
+      "hostReceivedUTC": "2026-11-13T02:55:17.695Z"
+    },
+    {
+      "deviceUnixSeconds": 1794538519.315212,
+      "deviceUptimeSeconds": 172341.76013191667,
+      "kind": "task_metrics",
+      "run": "handoff-8183df20a4f9",
+      "transactions": [
+        {
+          "fetchStart": 1794538519.15938,
+          "isCellular": false,
+          "localAddress": "2400:4050:b781:4c00:1446:9b39:4b51:c062",
+          "localPort": 58880,
+          "method": "POST",
+          "protocol": "h2",
+          "remoteAddress": "2404:6800:400b:c015::451",
+          "remotePort": 443,
+          "requestEnd": 1794538519.160596,
+          "requestStart": 1794538519.160038,
+          "responseEnd": 1794538519.313315,
+          "responseStart": 1794538519.312827,
+          "reusedConnection": true,
+          "rid": "84877",
+          "url": "https://webchannel.sandbox.google.com/staging/channel/generator?VER=8&gsessionid=-XYjbjyEMmGCiCZ91YiYrcqzz_NXM0TGc0XwOMxLwFw&SID=VvwWiN9RQeVpsQFE49jfnw&RID=84877&AID=1&t=1"
+        }
+      ],
+      "hostReceivedMonotonic": 544628.365822916,
+      "hostReceivedUTC": "2026-11-13T02:55:19.119Z"
+    }
+  ],
+  "operatorNote": "Operator reported an unsuccessful procedure and requested interruption; exclude this attempt from measurement repetitions.",
+  "excludeFromMeasurement": true
+}
