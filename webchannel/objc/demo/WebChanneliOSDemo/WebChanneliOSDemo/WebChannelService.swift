@@ -89,6 +89,16 @@ final class WebChannelService: NSObject, @unchecked Sendable {
 
   private static let maxHexPreviewBytes = 32
 
+  @ObservationIgnored private var networkFailureControl: NetworkFailureControl?
+  @ObservationIgnored private var networkFailureStarted = false
+
+  func startNetworkFailureExperimentIfRequested() {
+    guard NetworkFailureLog.enabled, !networkFailureStarted else { return }
+    networkFailureStarted = true
+    networkFailureControl = NetworkFailureControl(service: self)
+    connect(to: "https://webchannel.sandbox.google.com/staging/channel/generator")
+  }
+
   private var client: WCWebChannelClient?
   private var lastSendTime: CFAbsoluteTime = 0
   private var connectTime: CFAbsoluteTime = 0
@@ -102,6 +112,7 @@ final class WebChannelService: NSObject, @unchecked Sendable {
   // MARK: - Public Actions
 
   func log(_ text: String) {
+    NetworkFailureLog.emit("app_log", ["text": text])
     DispatchQueue.main.async {
       self.logs.append(LogEntry(date: Date(), text: text))
     }
@@ -143,6 +154,11 @@ final class WebChannelService: NSObject, @unchecked Sendable {
     options.isNonBlockingSend = nonBlockingSend
     options.isBlockingHandshake = blockingHandshake
     options.httpSessionIDParam = "gsessionid"
+    if NetworkFailureLog.enabled && ProcessInfo.processInfo.environment["NETTEST_FAILFAST"] == "1" {
+      let params = WCInternalChannelParams()
+      params.shouldFailFast = true
+      options.internalChannelParams = params
+    }
 
     if blockingHandshake {
       options.initialMessageHeaders = [
@@ -554,6 +570,7 @@ extension WebChannelService: WCWebChannelClientHandlerDelegate {
 
     DispatchQueue.main.async {
       self.state = .connected
+      self.networkFailureControl?.opened()
       self.isBackChannelBinaryEncodingEnabled = isBinary
       self.handshakeLatencyMs = elapsed
       self.lensMetrics.handshakeDurationMs = elapsed
@@ -568,6 +585,7 @@ extension WebChannelService: WCWebChannelClientHandlerDelegate {
   }
 
   func webChannelClosed(_ client: any WCWebChannelClientProtocol) {
+    NetworkFailureLog.emit("closed")
     DispatchQueue.main.async {
       self.state = .disconnected
       self.client = nil
@@ -703,6 +721,7 @@ extension WebChannelService: WCWebChannelClientHandlerDelegate {
     _ client: any WCWebChannelClientProtocol,
     encounteredError error: WCWebChannelClientError
   ) {
+    NetworkFailureLog.emit("error", ["code": error.rawValue])
     let errorDesc = self.describeError(error)
     DispatchQueue.main.async {
       self.state = .error(errorDesc)

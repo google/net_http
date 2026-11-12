@@ -17,6 +17,7 @@ struct ContentView: View {
           Label("Lens Benchmark", systemImage: "camera.viewfinder")
         }
     }
+    .task { service.startNetworkFailureExperimentIfRequested() }
   }
 }
 

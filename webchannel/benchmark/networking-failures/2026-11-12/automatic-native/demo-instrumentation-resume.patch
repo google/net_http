@@ -1,0 +1,249 @@
+diff --git a/webchannel/objc/demo/WebChanneliOSDemo/WebChanneliOSDemo/ContentView.swift b/webchannel/objc/demo/WebChanneliOSDemo/WebChanneliOSDemo/ContentView.swift
+index 8ff02e79..d4b1af47 100644
+--- a/webchannel/objc/demo/WebChanneliOSDemo/WebChanneliOSDemo/ContentView.swift
++++ b/webchannel/objc/demo/WebChanneliOSDemo/WebChanneliOSDemo/ContentView.swift
+@@ -17,6 +17,7 @@ struct ContentView: View {
+           Label("Lens Benchmark", systemImage: "camera.viewfinder")
+         }
+     }
++    .task { service.startNetworkFailureExperimentIfRequested() }
+   }
+ }
+ 
+diff --git a/webchannel/objc/demo/WebChanneliOSDemo/WebChanneliOSDemo/TestAppSupport.swift b/webchannel/objc/demo/WebChanneliOSDemo/WebChanneliOSDemo/TestAppSupport.swift
+index 9b00dceb..a3d16b5c 100644
+--- a/webchannel/objc/demo/WebChanneliOSDemo/WebChanneliOSDemo/TestAppSupport.swift
++++ b/webchannel/objc/demo/WebChanneliOSDemo/WebChanneliOSDemo/TestAppSupport.swift
+@@ -12,10 +12,12 @@ final class TestAppLogger: NSObject, WCLogger, @unchecked Sendable {
+ 
+   func logInfo(_ message: String) {
+     print("[SDK Info] \(message)")
++    NetworkFailureLog.emit("sdk_info", ["text": message])
+   }
+ 
+   func logDebug(_ message: String) {
+     print("[SDK Debug] \(message)")
++    NetworkFailureLog.emit("sdk_debug", ["text": message])
+   }
+ 
+   func logWarning(_ message: String) {
+@@ -28,6 +30,7 @@ final class TestAppLogger: NSObject, WCLogger, @unchecked Sendable {
+ 
+   func logError(_ message: String) {
+     print("[SDK Error] \(message)")
++    NetworkFailureLog.emit("sdk_error", ["text": message])
+   }
+ 
+   func logHTTPRequest(
+@@ -41,6 +44,7 @@ final class TestAppLogger: NSObject, WCLogger, @unchecked Sendable {
+     let logMsg =
+       "🌐 [HTTP Req] (\(id)) [attempt \(attempt)] \(verb) \(url.absoluteString)\(postPreview)"
+     print(logMsg)
++    NetworkFailureLog.emit("http_log", ["text": logMsg])
+     DispatchQueue.main.async {
+       self.service?.log(logMsg)
+     }
+@@ -54,6 +58,8 @@ final class TestAppLogger: NSObject, WCLogger, @unchecked Sendable {
+     state: WCRequestReadyState,
+     statusCode code: Int32
+   ) {
++    NetworkFailureLog.emit("http_state", ["rid": id, "attempt": attempt, "url": url.absoluteString,
++      "method": verb, "readyState": state.rawValue, "status": code])
+     print(
+       "🌐 [HTTP Resp Meta] (\(id)) [attempt \(attempt)] \(verb) \(url.absoluteString) status: \(code)"
+     )
+@@ -63,6 +69,7 @@ final class TestAppLogger: NSObject, WCLogger, @unchecked Sendable {
+     let descPart = desc != nil ? " [\(desc!)]" : ""
+     let logMsg = "🌐 [HTTP Resp Body] (\(id))\(descPart): \(text)"
+     print(logMsg)
++    NetworkFailureLog.emit("http_log", ["text": logMsg])
+     DispatchQueue.main.async {
+       self.service?.log(logMsg)
+     }
+@@ -101,6 +108,7 @@ final class TestAppSupport: NSObject, WCSupport, @unchecked Sendable {
+         "url": url?.absoluteString ?? "",
+         "protocol": transaction.networkProtocolName ?? "unknown",
+         "reusedConnection": transaction.isReusedConnection,
++        "isCellular": transaction.isCellular,
+       ]
+       if let start = transaction.connectStartDate, let end = transaction.connectEndDate {
+         record["tcpConnectMs"] = end.timeIntervalSince(start) * 1000
+@@ -110,6 +118,12 @@ final class TestAppSupport: NSObject, WCSupport, @unchecked Sendable {
+       {
+         record["tlsMs"] = end.timeIntervalSince(start) * 1000
+       }
++      for (key, date) in [("fetchStart", transaction.fetchStartDate), ("requestStart", transaction.requestStartDate),
++        ("requestEnd", transaction.requestEndDate), ("responseStart", transaction.responseStartDate),
++        ("responseEnd", transaction.responseEndDate)] {
++        if let date { record[key] = date.timeIntervalSince1970 }
++      }
++      if let address = transaction.localAddress { record["localAddress"] = address }
+       if let address = transaction.remoteAddress { record["remoteAddress"] = address }
+       if let port = transaction.localPort { record["localPort"] = port }
+       if let port = transaction.remotePort { record["remotePort"] = port }
+@@ -117,6 +131,7 @@ final class TestAppSupport: NSObject, WCSupport, @unchecked Sendable {
+     }
+     metricsLock.lock()
+     collectedTaskMetrics.append(contentsOf: records)
++    NetworkFailureLog.emit("task_metrics", ["transactions": records])
+     metricsLock.unlock()
+   }
+ 
+@@ -158,6 +173,7 @@ final class TestAppSupport: NSObject, WCSupport, @unchecked Sendable {
+   }
+ 
+   func notifyHandshakeTimingEvent(withRtt rtt: TimeInterval) {
++    NetworkFailureLog.emit("handshake_rtt", ["rtt": rtt])
+     defaultSupport.notifyHandshakeTimingEvent(withRtt: rtt)
+   }
+ 
+@@ -181,3 +197,84 @@ final class TestAppSupport: NSObject, WCSupport, @unchecked Sendable {
+     defaultSupport.clearTimeout(timer)
+   }
+ }
++
++// Opt-in networking experiment support. Normal launches do not enable this.
++import Network
++import UIKit
++
++final class NetworkFailureLog: @unchecked Sendable {
++  static let enabled = ProcessInfo.processInfo.environment["NETTEST_AUTORUN"] == "1"
++  private static let lock = NSLock()
++  static func emit(_ kind: String, _ fields: [String: Any] = [:]) {
++    guard enabled else { return }
++    var record = fields
++    record["kind"] = kind
++    record["deviceUnixSeconds"] = Date().timeIntervalSince1970
++    record["deviceUptimeSeconds"] = ProcessInfo.processInfo.systemUptime
++    record["run"] = ProcessInfo.processInfo.environment["NETTEST_RUN"] ?? ""
++    guard let data = try? JSONSerialization.data(withJSONObject: record, options: [.sortedKeys]),
++      let text = String(data: data, encoding: .utf8) else { return }
++    lock.lock(); print("[NETTEST] \(text)"); fflush(stdout); lock.unlock()
++  }
++}
++
++final class NetworkFailureControl: @unchecked Sendable {
++  weak var service: WebChannelService?
++  private let monitor = NWPathMonitor()
++  private var observers: [NSObjectProtocol] = []
++  private var timer: Timer?
++  private var healthTimer: Timer?
++  init(service: WebChannelService) {
++    self.service = service
++    UIApplication.shared.isIdleTimerDisabled = true
++    healthTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
++      NetworkFailureLog.emit("heartbeat", ["applicationState": UIApplication.shared.applicationState.rawValue])
++    }
++    monitor.pathUpdateHandler = { path in
++      NetworkFailureLog.emit("path", ["status": String(describing: path.status),
++        "wifi": path.usesInterfaceType(.wifi), "cellular": path.usesInterfaceType(.cellular),
++        "wired": path.usesInterfaceType(.wiredEthernet), "expensive": path.isExpensive,
++        "constrained": path.isConstrained])
++    }
++    monitor.start(queue: DispatchQueue(label: "nettest.path"))
++    for name in [UIApplication.didEnterBackgroundNotification, UIApplication.willEnterForegroundNotification,
++                 UIApplication.didBecomeActiveNotification, UIApplication.willResignActiveNotification] {
++      observers.append(NotificationCenter.default.addObserver(forName: name, object: nil, queue: nil) { note in
++        NetworkFailureLog.emit("lifecycle", ["notification": note.name.rawValue])
++      })
++    }
++    for name in ["com.pmodular.webchannel.nettest.send", "com.pmodular.webchannel.nettest.close"] {
++      CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(),
++        Unmanaged.passUnretained(self).toOpaque(), { _, pointer, name, _, _ in
++          guard let pointer, let name else { return }
++          let control = Unmanaged<NetworkFailureControl>.fromOpaque(pointer).takeUnretainedValue()
++          let action = name.rawValue as String
++          DispatchQueue.main.async { control.handle(action) }
++        }, name as CFString, nil, .deliverImmediately)
++    }
++    NetworkFailureLog.emit("autorun_start", ["traffic": ProcessInfo.processInfo.environment["NETTEST_TRAFFIC"] ?? "idle",
++      "model": UIDevice.current.model, "os": UIDevice.current.systemVersion, "pid": ProcessInfo.processInfo.processIdentifier])
++  }
++  private func handle(_ name: String) {
++    NetworkFailureLog.emit("control", ["action": name])
++    if name.hasSuffix(".close") { timer?.invalidate(); service?.disconnect(); return }
++    service?.sendEcho(message: "network-failure pending write")
++    if ProcessInfo.processInfo.environment["NETTEST_TRAFFIC"] == "periodic" {
++      timer?.invalidate()
++      timer = Timer.scheduledTimer(withTimeInterval: 5, repeats: true) { [weak self] _ in
++        self?.service?.sendEcho(message: "network-failure periodic write")
++      }
++    }
++  }
++  func opened() {
++    NetworkFailureLog.emit("open")
++    if ProcessInfo.processInfo.environment["NETTEST_TRAFFIC"] == "streaming" {
++      service?.sendStreaming(message: "network-failure stream", numMessages: 1000, intervalMs: 1000)
++    }
++  }
++  deinit {
++    monitor.cancel(); timer?.invalidate(); healthTimer?.invalidate()
++    for observer in observers { NotificationCenter.default.removeObserver(observer) }
++    CFNotificationCenterRemoveEveryObserver(CFNotificationCenterGetDarwinNotifyCenter(), Unmanaged.passUnretained(self).toOpaque())
++  }
++}
+diff --git a/webchannel/objc/demo/WebChanneliOSDemo/WebChanneliOSDemo/WebChannelService.swift b/webchannel/objc/demo/WebChanneliOSDemo/WebChanneliOSDemo/WebChannelService.swift
+index b00e29bb..fbd74a6f 100644
+--- a/webchannel/objc/demo/WebChanneliOSDemo/WebChanneliOSDemo/WebChannelService.swift
++++ b/webchannel/objc/demo/WebChanneliOSDemo/WebChanneliOSDemo/WebChannelService.swift
+@@ -86,6 +86,16 @@ final class WebChannelService: NSObject, @unchecked Sendable {
+ 
+   private static let maxHexPreviewBytes = 32
+ 
++  @ObservationIgnored private var networkFailureControl: NetworkFailureControl?
++  @ObservationIgnored private var networkFailureStarted = false
++
++  func startNetworkFailureExperimentIfRequested() {
++    guard NetworkFailureLog.enabled, !networkFailureStarted else { return }
++    networkFailureStarted = true
++    networkFailureControl = NetworkFailureControl(service: self)
++    connect(to: "https://webchannel.sandbox.google.com/staging/channel/generator")
++  }
++
+   private var client: WCWebChannelClient?
+   private var lastSendTime: CFAbsoluteTime = 0
+   private var connectTime: CFAbsoluteTime = 0
+@@ -99,6 +109,7 @@ final class WebChannelService: NSObject, @unchecked Sendable {
+   // MARK: - Public Actions
+ 
+   func log(_ text: String) {
++    NetworkFailureLog.emit("app_log", ["text": text])
+     DispatchQueue.main.async {
+       self.logs.append(LogEntry(date: Date(), text: text))
+     }
+@@ -137,6 +148,11 @@ final class WebChannelService: NSObject, @unchecked Sendable {
+     options.isNonBlockingSend = nonBlockingSend
+     options.isBlockingHandshake = blockingHandshake
+     options.httpSessionIDParam = "gsessionid"
++    if NetworkFailureLog.enabled && ProcessInfo.processInfo.environment["NETTEST_FAILFAST"] == "1" {
++      let params = WCInternalChannelParams()
++      params.shouldFailFast = true
++      options.internalChannelParams = params
++    }
+ 
+     if blockingHandshake {
+       options.initialMessageHeaders = [
+@@ -541,6 +557,7 @@ extension WebChannelService: WCWebChannelClientHandlerDelegate {
+ 
+     DispatchQueue.main.async {
+       self.state = .connected
++      self.networkFailureControl?.opened()
+       self.isBackChannelBinaryEncodingEnabled = isBinary
+       self.lensMetrics.handshakeDurationMs = elapsed
+       let binaryStatus = self.isBackChannelBinaryEncodingEnabled ? "Active" : "Inactive"
+@@ -554,6 +571,7 @@ extension WebChannelService: WCWebChannelClientHandlerDelegate {
+   }
+ 
+   func webChannelClosed(_ client: any WCWebChannelClientProtocol) {
++    NetworkFailureLog.emit("closed")
+     DispatchQueue.main.async {
+       self.state = .disconnected
+       self.client = nil
+@@ -653,6 +671,7 @@ extension WebChannelService: WCWebChannelClientHandlerDelegate {
+     _ client: any WCWebChannelClientProtocol,
+     encounteredError error: WCWebChannelClientError
+   ) {
++    NetworkFailureLog.emit("error", ["code": error.rawValue])
+     let errorDesc = self.describeError(error)
+     DispatchQueue.main.async {
+       self.state = .error(errorDesc)
