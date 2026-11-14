@@ -1,5 +1,9 @@
 # iOS networking failure tests — 2026-11-12
 
+**Network topology clarification:** T1–T8 traversed a Linux box. The operator
+subsequently connected the AP directly to the switching hub, bypassing that box.
+See the [operator-reported wiring change](../network-topology-note.md) before comparing phases.
+
 ## Automatic rerun
 
 **Completed:** 36 native-controlled blackhole/periodic-send/fail-fast trials.

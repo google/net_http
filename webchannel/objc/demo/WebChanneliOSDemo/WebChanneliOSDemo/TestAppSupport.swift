@@ -236,8 +236,12 @@ final class NetworkFailureControl: @unchecked Sendable {
   private var observers: [NSObjectProtocol] = []
   private var timer: Timer?
   private var healthTimer: Timer?
+  private var interfaceProbe: InterfaceConnectivityProbe?
   init(service: WebChannelService) {
     self.service = service
+    if ProcessInfo.processInfo.environment["NETTEST_INTERFACE_ONLY"] == "1" {
+      interfaceProbe = InterfaceConnectivityProbe()
+    }
     UIApplication.shared.isIdleTimerDisabled = true
     healthTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
       NetworkFailureLog.emit(
@@ -266,6 +270,7 @@ final class NetworkFailureControl: @unchecked Sendable {
     for name in [
       "com.pmodular.webchannel.nettest.send", "com.pmodular.webchannel.nettest.close",
       "com.pmodular.webchannel.nettest.probe",
+      "com.pmodular.webchannel.nettest.interfaces",
     ] {
       CFNotificationCenterAddObserver(
         CFNotificationCenterGetDarwinNotifyCenter(),
@@ -283,14 +288,19 @@ final class NetworkFailureControl: @unchecked Sendable {
         "traffic": ProcessInfo.processInfo.environment["NETTEST_TRAFFIC"] ?? "idle",
         "model": UIDevice.current.model, "os": UIDevice.current.systemVersion,
         "pid": ProcessInfo.processInfo.processIdentifier,
-        "controlProtocolVersion": 2,
+        "controlProtocolVersion": 3,
       ])
   }
   private func handle(_ name: String) {
     NetworkFailureLog.emit("control", ["action": name])
     if name.hasSuffix(".close") {
       timer?.invalidate()
+      interfaceProbe?.cancel()
       service?.disconnect()
+      return
+    }
+    if name.hasSuffix(".interfaces") {
+      interfaceProbe?.run()
       return
     }
     if name.hasSuffix(".probe") {
@@ -312,6 +322,7 @@ final class NetworkFailureControl: @unchecked Sendable {
     }
   }
   deinit {
+    interfaceProbe?.cancel()
     monitor.cancel()
     timer?.invalidate()
     healthTimer?.invalidate()

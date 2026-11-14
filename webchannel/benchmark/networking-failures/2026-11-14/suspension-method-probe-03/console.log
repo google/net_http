@@ -1,0 +1,47 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -workspace webchannel/objc/demo/WebChanneliOSDemo/WebChanneliOSDemo.xcworkspace -scheme NetworkFailureSuspension -configuration Debug -destination platform=iOS,id=TEST_DEVICE_UDID -destination-timeout 20 -derivedDataPath /private/tmp/net-http-suspension-build -resultBundlePath /private/tmp/net-http-suspension-probe-20261114-03.xcresult -parallel-testing-enabled NO "-only-testing:NetworkFailureUITests/SuspensionProbeTests/testOSReportedSuspensionAndResume" test-without-building
+
+Writing result bundle at path:
+	/private/tmp/net-http-suspension-probe-20261114-03.xcresult
+
+2026-11-14 00:06:05.026174+0900 NetworkFailureUITests-Runner[32366:1644752] [Default] Running tests...
+    t =      nans Interface orientation changed to Portrait
+Test Suite 'Selected tests' started at 2026-11-14 00:06:05.407.
+Test Suite 'NetworkFailureUITests.xctest' started at 2026-11-14 00:06:05.408.
+Test Suite 'SuspensionProbeTests' started at 2026-11-14 00:06:05.408.
+Test Case '-[NetworkFailureUITests.SuspensionProbeTests testOSReportedSuspensionAndResume]' started.
+    t =     0.00s Start Test at 2026-11-14 00:06:05.408
+    t =     0.01s Set Up
+    t =     0.02s Wait for com.pmodular.webchannel.demo to become Running Foreground
+SUSPENSION_PROBE {"applicationState":4,"deviceUnixSeconds":1794582365.4259439,"deviceUptimeSeconds":216188.61233745835,"event":"foreground","isMainThread":true,"stateName":"runningForeground"}
+    t =     0.02s Pressing Home button
+SUSPENSION_PROBE {"applicationState":4,"deviceUnixSeconds":1794582365.8867102,"deviceUptimeSeconds":216189.07311108336,"event":"home_returned","isMainThread":true,"stateName":"runningForeground"}
+SUSPENSION_PROBE {"applicationState":4,"deviceUnixSeconds":1794582365.887043,"deviceUptimeSeconds":216189.07344533334,"event":"state_observed","isMainThread":true,"stateName":"runningForeground"}
+SUSPENSION_PROBE {"applicationState":2,"deviceUnixSeconds":1794582366.9298129,"deviceUptimeSeconds":216190.11623258336,"event":"state_observed","isMainThread":true,"stateName":"runningBackgroundSuspended"}
+SUSPENSION_PROBE {"applicationState":2,"deviceUnixSeconds":1794582366.9300141,"deviceUptimeSeconds":216190.11643429167,"event":"suspended_confirmed","isMainThread":true,"stateName":"runningBackgroundSuspended"}
+    t =     1.52s Open com.pmodular.webchannel.demo
+    t =     1.53s     Activate com.pmodular.webchannel.demo
+    t =     1.63s         Wait for com.pmodular.webchannel.demo to idle
+    t =     1.65s Wait for com.pmodular.webchannel.demo to become Running Foreground
+SUSPENSION_PROBE {"applicationState":4,"deviceUnixSeconds":1794582367.0579181,"deviceUptimeSeconds":216190.24434016668,"event":"foreground_after_resume","isMainThread":true,"stateName":"runningForeground"}
+SUSPENSION_PROBE {"applicationState":4,"deviceUnixSeconds":1794582367.0579572,"deviceUptimeSeconds":216190.24437966669,"event":"cleanup","isMainThread":true,"stateName":"runningForeground"}
+    t =     1.65s Added attachment named 'os-suspension-state-observations'
+    t =     1.65s Terminate com.pmodular.webchannel.demo:32362
+    t =     2.70s Tear Down
+Test Case '-[NetworkFailureUITests.SuspensionProbeTests testOSReportedSuspensionAndResume]' passed (2.708 seconds).
+Test Suite 'SuspensionProbeTests' passed at 2026-11-14 00:06:08.133.
+	 Executed 1 test, with 0 failures (0 unexpected) in 2.708 (2.725) seconds
+Test Suite 'NetworkFailureUITests.xctest' passed at 2026-11-14 00:06:08.133.
+	 Executed 1 test, with 0 failures (0 unexpected) in 2.708 (2.726) seconds
+Test Suite 'Selected tests' passed at 2026-11-14 00:06:08.134.
+	 Executed 1 test, with 0 failures (0 unexpected) in 2.708 (2.726) seconds
+2026-11-14 00:06:08.426 xcodebuild[2629:9256847] [MT] IDETestOperationsObserverDebug: 5.569 elapsed -- Testing started completed.
+2026-11-14 00:06:08.426 xcodebuild[2629:9256847] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-11-14 00:06:08.426 xcodebuild[2629:9256847] [MT] IDETestOperationsObserverDebug: 5.569 sec, +5.569 sec -- end
+
+Test session results, code coverage, and logs:
+	/tmp/net-http-suspension-probe-20261114-03.xcresult
+
+** TEST EXECUTE SUCCEEDED **
+
+Testing started

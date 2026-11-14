@@ -1,5 +1,9 @@
 # Native-controlled iPhone network-failure test results
 
+**Network topology clarification:** T1–T8 traversed a Linux box. The operator
+subsequently connected the AP directly to the switching hub, bypassing that box.
+See the [operator-reported wiring change](../../network-topology-note.md) before comparing phases.
+
 **36 automated trials completed on 2026-11-12 (14:27–15:59 JST).** This completes
 the native-controlled blackhole suite below, not the entire PR #128 specification.
 Every counted trial has an active-condition readback, an inactive-condition

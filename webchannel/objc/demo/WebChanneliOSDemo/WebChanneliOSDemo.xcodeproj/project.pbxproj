@@ -6,7 +6,47 @@
 	objectVersion = 46;
 	objects = {
 
+/* Separate opt-in UI test target for OS-reported suspension observation. */
+        D15A00000000000000000001 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuspensionProbeTests.swift; sourceTree = "<group>"; };
+        D15A00000000000000000002 = {isa = PBXBuildFile; fileRef = D15A00000000000000000001; };
+        D15A00000000000000000003 = {isa = PBXGroup; children = (D15A00000000000000000001,); path = NetworkFailureUITests; sourceTree = "<group>"; };
+        D15A00000000000000000004 = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; path = NetworkFailureUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+        D15A00000000000000000005 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (D15A00000000000000000002,); runOnlyForDeploymentPostprocessing = 0; };
+        D15A00000000000000000006 = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+        D15A00000000000000000007 = {isa = PBXContainerItemProxy; containerPortal = 05D2FFD8713AD153A1F7689D; proxyType = 1; remoteGlobalIDString = 90F4F05C594D045BE7F4A230; remoteInfo = WebChanneliOSDemo; };
+        D15A00000000000000000008 = {isa = PBXTargetDependency; target = 90F4F05C594D045BE7F4A230; targetProxy = D15A00000000000000000007; };
+        D15A00000000000000000009 = {isa = PBXNativeTarget; buildConfigurationList = D15A0000000000000000000A; buildPhases = (D15A00000000000000000005,D15A00000000000000000006,); buildRules = (); dependencies = (D15A00000000000000000008,); name = NetworkFailureUITests; productName = NetworkFailureUITests; productReference = D15A00000000000000000004; productType = "com.apple.product-type.bundle.ui-testing"; };
+        D15A0000000000000000000A = {isa = XCConfigurationList; buildConfigurations = (D15A0000000000000000000B,D15A0000000000000000000C,); defaultConfigurationIsVisible = 0; defaultConfigurationName = Debug; };
+        D15A0000000000000000000B = {isa = XCBuildConfiguration; buildSettings = {
+            CODE_SIGN_STYLE = Automatic;
+            DEVELOPMENT_TEAM = 2F5DCJ87UC;
+            GENERATE_INFOPLIST_FILE = YES;
+            IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+            PRODUCT_BUNDLE_IDENTIFIER = com.pmodular.webchannel.demo.suspensiontests;
+            PRODUCT_NAME = "$(TARGET_NAME)";
+            SDKROOT = iphoneos;
+            SWIFT_VERSION = 5.0;
+            TARGETED_DEVICE_FAMILY = "1,2";
+            TEST_TARGET_NAME = WebChanneliOSDemo;
+            LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+        }; name = Debug; };
+        D15A0000000000000000000C = {isa = XCBuildConfiguration; buildSettings = {
+            CODE_SIGN_STYLE = Automatic;
+            DEVELOPMENT_TEAM = 2F5DCJ87UC;
+            GENERATE_INFOPLIST_FILE = YES;
+            IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+            PRODUCT_BUNDLE_IDENTIFIER = com.pmodular.webchannel.demo.suspensiontests;
+            PRODUCT_NAME = "$(TARGET_NAME)";
+            SDKROOT = iphoneos;
+            SWIFT_VERSION = 5.0;
+            TARGETED_DEVICE_FAMILY = "1,2";
+            TEST_TARGET_NAME = WebChanneliOSDemo;
+            LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+        }; name = Release; };
+
+
 /* Begin PBXBuildFile section */
+        D13A00000000000000000001 /* InterfaceConnectivityProbe.swift in Sources */ = {isa = PBXBuildFile; fileRef = D13A00000000000000000002; };
 		167C867B84AA7061CF7D47AD /* WebChannelService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03D53FE8A943ED22AF07D667 /* WebChannelService.swift */; };
 		350F1034A24EB925ED6BC9C5 /* WebChanneliOSDemoApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EE251467C72995B654A474E /* WebChanneliOSDemoApp.swift */; };
 		4D13900A0C3CFB034605E37C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 152BAEFBEDE86A570BB66C15 /* Assets.xcassets */; };
@@ -20,6 +60,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+        D13A00000000000000000002 /* InterfaceConnectivityProbe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InterfaceConnectivityProbe.swift; sourceTree = "<group>"; };
 		03D53FE8A943ED22AF07D667 /* WebChannelService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WebChannelService.swift; sourceTree = "<group>"; };
 		0F5C62F6A743A23D4146F43D /* Pods_WebChanneliOSDemo.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_WebChanneliOSDemo.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		152BAEFBEDE86A570BB66C15 /* Assets.xcassets */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -60,6 +101,7 @@
 				152BAEFBEDE86A570BB66C15 /* Assets.xcassets */,
 				03D53FE8A943ED22AF07D667 /* WebChannelService.swift */,
 				24417D84F1A188631A33CB45 /* TestAppSupport.swift */,
+                D13A00000000000000000002 /* InterfaceConnectivityProbe.swift */,
 				A6A2BA3B42DA77BBE97BBEFC /* DESIGN.md */,
 			);
 			path = WebChanneliOSDemo;
@@ -108,6 +150,7 @@
 				96F8E0C6D8E232D38E21D335 /* Frameworks */,
 				068E20DCC5AD7477709B3425 /* WebChanneliOSDemo */,
 				A11111111111111111111114 /* WebChanneliOSDemoTests */,
+                D15A00000000000000000003 /* NetworkFailureUITests */,
 				13044A65B4FA152ADDD94B44 /* Pods */,
 			);
 			sourceTree = "<group>";
@@ -117,6 +160,7 @@
 			children = (
 				E39C53259617AC0BF5841CFF /* WebChanneliOSDemo.app */,
 				A11111111111111111111113 /* WebChanneliOSDemoTests.xctest */,
+                D15A00000000000000000004 /* NetworkFailureUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -168,6 +212,7 @@
 				LastSwiftUpdateCheck = 1600;
 				LastUpgradeCheck = 1600;
 				TargetAttributes = {
+                    D15A00000000000000000009 = {TestTargetID = 90F4F05C594D045BE7F4A230; ProvisioningStyle = Automatic; };
 					90F4F05C594D045BE7F4A230 = {
 						DevelopmentTeam = 2F5DCJ87UC;
 						ProvisioningStyle = Automatic;
@@ -192,6 +237,7 @@
 			targets = (
 				90F4F05C594D045BE7F4A230 /* WebChanneliOSDemo */,
 				A11111111111111111111115 /* WebChanneliOSDemoTests */,
+                D15A00000000000000000009 /* NetworkFailureUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -289,6 +335,7 @@
 				6BE6FC6ED6078BAEEF76CE53 /* ContentView.swift in Sources */,
 				167C867B84AA7061CF7D47AD /* WebChannelService.swift in Sources */,
 				E0EA756B6E07F67CC6417D68 /* TestAppSupport.swift in Sources */,
+                D13A00000000000000000001 /* InterfaceConnectivityProbe.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

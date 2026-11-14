@@ -96,6 +96,10 @@ final class WebChannelService: NSObject, @unchecked Sendable {
     guard NetworkFailureLog.enabled, !networkFailureStarted else { return }
     networkFailureStarted = true
     networkFailureControl = NetworkFailureControl(service: self)
+    if ProcessInfo.processInfo.environment["NETTEST_INTERFACE_ONLY"] == "1" {
+      NetworkFailureLog.emit("interface_only_start")
+      return
+    }
     connect(to: "https://webchannel.sandbox.google.com/staging/channel/generator")
   }
 

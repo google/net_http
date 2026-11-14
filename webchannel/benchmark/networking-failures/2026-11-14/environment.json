@@ -1,0 +1,34 @@
+{
+  "measurementDateJST": "2026-11-14",
+  "baseCommit": "01f4f7435fd045058c0735c1400ba618888db3f8",
+  "sdkModified": false,
+  "demoNetworkingCodeModified": false,
+  "newUIObserverTarget": "NetworkFailureUITests",
+  "xcode": "26.6 (17F113)",
+  "appVersions": [
+    {
+      "model": "iPhone",
+      "os": "27.2.1",
+      "controlProtocolVersion": 2
+    }
+  ],
+  "endpoint": "https://webchannel.sandbox.google.com/staging/channel/generator",
+  "traffic": "idle; one probe after resume if channel not already terminal",
+  "transport": "wired devicectl console, normally launched app; external UI-test state observer",
+  "failFast": false,
+  "holdsSeconds": [
+    30,
+    90,
+    150
+  ],
+  "repetitionsPerHold": 3,
+  "operatorNetworkChanges": "none requested by the suite",
+  "controllerRevisions": {
+    "short": "first measured recovery-required revision",
+    "mediumAndLong": "outcome-aware revision; errors are measurements, not infrastructure failures"
+  },
+  "observerRevision": "same compiled/source observer for all nine trials",
+  "wifiSSID": "not recorded",
+  "cellularCarrier": "not recorded",
+  "note": "Per-request task metrics and path records are retained; no Wi-Fi-only attribution is inferred from buttons."
+}

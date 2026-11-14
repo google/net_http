@@ -1,0 +1,350 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -workspace webchannel/objc/demo/WebChanneliOSDemo/WebChanneliOSDemo.xcworkspace -scheme NetworkFailureSuspension -configuration Debug -destination platform=iOS,id=TEST_DEVICE_UDID -destination-timeout 20 -derivedDataPath /private/tmp/net-http-suspension-build -resultBundlePath /private/tmp/net-http-suspension-probe-20261114-02.xcresult -parallel-testing-enabled NO "-only-testing:NetworkFailureUITests/SuspensionProbeTests/testOSReportedSuspensionAndResume" test
+
+Writing result bundle at path:
+	/private/tmp/net-http-suspension-probe-20261114-02.xcresult
+
+ComputePackagePrebuildTargetDependencyGraph
+
+Prepare packages
+
+CreateBuildRequest
+
+SendProjectDescription
+
+CreateBuildOperation
+
+ComputeTargetDependencyGraph
+note: Building targets in dependency order
+note: Target dependency graph (7 targets)
+    Target 'NetworkFailureUITests' in project 'WebChanneliOSDemo'
+        ➜ Explicit dependency on target 'WebChanneliOSDemo' in project 'WebChanneliOSDemo'
+    Target 'WebChanneliOSDemo' in project 'WebChanneliOSDemo'
+        ➜ Implicit dependency on target 'Pods-WebChanneliOSDemo' in project 'Pods' via file 'Pods_WebChanneliOSDemo.framework' in build phase 'Link Binary'
+        ➜ Implicit dependency on target 'GTMSessionFetcher' in project 'Pods' via options '-framework GTMSessionFetcher' in build setting 'OTHER_LDFLAGS'
+        ➜ Implicit dependency on target 'WebChannel' in project 'Pods' via options '-framework WebChannel' in build setting 'OTHER_LDFLAGS'
+    Target 'Pods-WebChanneliOSDemo' in project 'Pods'
+        ➜ Explicit dependency on target 'GTMSessionFetcher' in project 'Pods'
+        ➜ Explicit dependency on target 'WebChannel' in project 'Pods'
+    Target 'WebChannel' in project 'Pods'
+        ➜ Explicit dependency on target 'GTMSessionFetcher' in project 'Pods'
+    Target 'GTMSessionFetcher' in project 'Pods'
+        ➜ Explicit dependency on target 'GTMSessionFetcher-GTMSessionFetcher_Core_Privacy' in project 'Pods'
+        ➜ Explicit dependency on target 'GTMSessionFetcher-GTMSessionFetcher_Full_Privacy' in project 'Pods'
+    Target 'GTMSessionFetcher-GTMSessionFetcher_Full_Privacy' in project 'Pods' (no dependencies)
+    Target 'GTMSessionFetcher-GTMSessionFetcher_Core_Privacy' in project 'Pods' (no dependencies)
+
+GatherProvisioningInputs
+
+CreateBuildDescription
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -v -E -dM -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk -x c -c /dev/null
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -v -E -dM -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk -x c -c /dev/null
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/usr/bin/actool --print-asset-tag-combinations --output-format xml1 TEST_WORKSPACE_HOME/net_http/webchannel/objc/demo/WebChanneliOSDemo/WebChanneliOSDemo/Assets.xcassets
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc --version
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -v -E -dM -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk -x objective-c -c /dev/null
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/libtool -V
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ld -version_details
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/usr/bin/actool --version --output-format xml1
+
+Build description signature: 4faea05f43bf79699aac201c22d3339e
+Build description path: /tmp/net-http-suspension-build/Build/Intermediates.noindex/XCBuildData/4faea05f43bf79699aac201c22d3339e.xcbuilddata
+ClangStatCache /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk /tmp/net-http-suspension-build/SDKStatCaches.noindex/iphoneos26.5-23F81a-32daed1954a7d5dd0789fcaf2a9bb78b.sdkstatcache
+    cd TEST_WORKSPACE_HOME/net_http/webchannel/objc/demo/WebChanneliOSDemo
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk -o /tmp/net-http-suspension-build/SDKStatCaches.noindex/iphoneos26.5-23F81a-32daed1954a7d5dd0789fcaf2a9bb78b.sdkstatcache
+
+TEST_WORKSPACE_HOME/net_http/webchannel/objc/demo/WebChanneliOSDemo/Pods/Pods.xcodeproj: warning: The iOS deployment target 'IPHONEOS_DEPLOYMENT_TARGET' is set to 10.0, but the range of supported deployment target versions is 12.0 to 26.5.99. (in target 'GTMSessionFetcher-GTMSessionFetcher_Core_Privacy' from project 'Pods')
+ProcessInfoPlistFile /tmp/net-http-suspension-build/Build/Products/Debug-iphoneos/GTMSessionFetcher/GTMSessionFetcher_Core_Privacy.bundle/Info.plist TEST_WORKSPACE_HOME/net_http/webchannel/objc/demo/WebChanneliOSDemo/Pods/Target\ Support\ Files/GTMSessionFetcher/ResourceBundle-GTMSessionFetcher_Core_Privacy-GTMSessionFetcher-Info.plist (in target 'GTMSessionFetcher-GTMSessionFetcher_Core_Privacy' from project 'Pods')
+    cd TEST_WORKSPACE_HOME/net_http/webchannel/objc/demo/WebChanneliOSDemo/Pods
+    builtin-infoPlistUtility TEST_WORKSPACE_HOME/net_http/webchannel/objc/demo/WebChanneliOSDemo/Pods/Target\ Support\ Files/GTMSessionFetcher/ResourceBundle-GTMSessionFetcher_Core_Privacy-GTMSessionFetcher-Info.plist -producttype com.apple.product-type.bundle -expandbuildsettings -format binary -platform iphoneos -requiredArchitecture arm64 -o /tmp/net-http-suspension-build/Build/Products/Debug-iphoneos/GTMSessionFetcher/GTMSessionFetcher_Core_Privacy.bundle/Info.plist
+
+TEST_WORKSPACE_HOME/net_http/webchannel/objc/demo/WebChanneliOSDemo/Pods/Pods.xcodeproj: warning: The iOS deployment target 'IPHONEOS_DEPLOYMENT_TARGET' is set to 10.0, but the range of supported deployment target versions is 12.0 to 26.5.99. (in target 'GTMSessionFetcher-GTMSessionFetcher_Full_Privacy' from project 'Pods')
+ProcessInfoPlistFile /tmp/net-http-suspension-build/Build/Products/Debug-iphoneos/GTMSessionFetcher/GTMSessionFetcher_Full_Privacy.bundle/Info.plist TEST_WORKSPACE_HOME/net_http/webchannel/objc/demo/WebChanneliOSDemo/Pods/Target\ Support\ Files/GTMSessionFetcher/ResourceBundle-GTMSessionFetcher_Full_Privacy-GTMSessionFetcher-Info.plist (in target 'GTMSessionFetcher-GTMSessionFetcher_Full_Privacy' from project 'Pods')
+    cd TEST_WORKSPACE_HOME/net_http/webchannel/objc/demo/WebChanneliOSDemo/Pods
+    builtin-infoPlistUtility TEST_WORKSPACE_HOME/net_http/webchannel/objc/demo/WebChanneliOSDemo/Pods/Target\ Support\ Files/GTMSessionFetcher/ResourceBundle-GTMSessionFetcher_Full_Privacy-GTMSessionFetcher-Info.plist -producttype com.apple.product-type.bundle -expandbuildsettings -format binary -platform iphoneos -requiredArchitecture arm64 -o /tmp/net-http-suspension-build/Build/Products/Debug-iphoneos/GTMSessionFetcher/GTMSessionFetcher_Full_Privacy.bundle/Info.plist
+
+TEST_WORKSPACE_HOME/net_http/webchannel/objc/demo/WebChanneliOSDemo/Pods/Pods.xcodeproj: warning: The iOS deployment target 'IPHONEOS_DEPLOYMENT_TARGET' is set to 10.0, but the range of supported deployment target versions is 12.0 to 26.5.99. (in target 'GTMSessionFetcher' from project 'Pods')
+CpResource /tmp/net-http-suspension-build/Build/Products/Debug-iphoneos/GTMSessionFetcher/GTMSessionFetcher.framework/GTMSessionFetcher_Core_Privacy.bundle /tmp/net-http-suspension-build/Build/Products/Debug-iphoneos/GTMSessionFetcher/GTMSessionFetcher_Core_Privacy.bundle (in target 'GTMSessionFetcher' from project 'Pods')
+    cd TEST_WORKSPACE_HOME/net_http/webchannel/objc/demo/WebChanneliOSDemo/Pods
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks /tmp/net-http-suspension-build/Build/Products/Debug-iphoneos/GTMSessionFetcher/GTMSessionFetcher_Core_Privacy.bundle /tmp/net-http-suspension-build/Build/Products/Debug-iphoneos/GTMSessionFetcher/GTMSessionFetcher.framework
+
+CpResource /tmp/net-http-suspension-build/Build/Products/Debug-iphoneos/GTMSessionFetcher/GTMSessionFetcher.framework/GTMSessionFetcher_Full_Privacy.bundle /tmp/net-http-suspension-build/Build/Products/Debug-iphoneos/GTMSessionFetcher/GTMSessionFetcher_Full_Privacy.bundle (in target 'GTMSessionFetcher' from project 'Pods')
+    cd TEST_WORKSPACE_HOME/net_http/webchannel/objc/demo/WebChanneliOSDemo/Pods
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks /tmp/net-http-suspension-build/Build/Products/Debug-iphoneos/GTMSessionFetcher/GTMSessionFetcher_Full_Privacy.bundle /tmp/net-http-suspension-build/Build/Products/Debug-iphoneos/GTMSessionFetcher/GTMSessionFetcher.framework
+
+ProcessInfoPlistFile /tmp/net-http-suspension-build/Build/Products/Debug-iphoneos/GTMSessionFetcher/GTMSessionFetcher.framework/Info.plist TEST_WORKSPACE_HOME/net_http/webchannel/objc/demo/WebChanneliOSDemo/Pods/Target\ Support\ Files/GTMSessionFetcher/GTMSessionFetcher-Info.plist (in target 'GTMSessionFetcher' from project 'Pods')
+    cd TEST_WORKSPACE_HOME/net_http/webchannel/objc/demo/WebChanneliOSDemo/Pods
+    builtin-infoPlistUtility TEST_WORKSPACE_HOME/net_http/webchannel/objc/demo/WebChanneliOSDemo/Pods/Target\ Support\ Files/GTMSessionFetcher/GTMSessionFetcher-Info.plist -producttype com.apple.product-type.framework -expandbuildsettings -format binary -platform iphoneos -requiredArchitecture arm64 -o /tmp/net-http-suspension-build/Build/Products/Debug-iphoneos/GTMSessionFetcher/GTMSessionFetcher.framework/Info.plist
+
+ProcessInfoPlistFile /tmp/net-http-suspension-build/Build/Products/Debug-iphoneos/WebChannel/WebChannel.framework/Info.plist TEST_WORKSPACE_HOME/net_http/webchannel/objc/demo/WebChanneliOSDemo/Pods/Target\ Support\ Files/WebChannel/WebChannel-Info.plist (in target 'WebChannel' from project 'Pods')
+    cd TEST_WORKSPACE_HOME/net_http/webchannel/objc/demo/WebChanneliOSDemo/Pods
+    builtin-infoPlistUtility TEST_WORKSPACE_HOME/net_http/webchannel/objc/demo/WebChanneliOSDemo/Pods/Target\ Support\ Files/WebChannel/WebChannel-Info.plist -producttype com.apple.product-type.framework -expandbuildsettings -format binary -platform iphoneos -requiredArchitecture arm64 -o /tmp/net-http-suspension-build/Build/Products/Debug-iphoneos/WebChannel/WebChannel.framework/Info.plist
+
+ProcessInfoPlistFile /tmp/net-http-suspension-build/Build/Products/Debug-iphoneos/Pods_WebChanneliOSDemo.framework/Info.plist TEST_WORKSPACE_HOME/net_http/webchannel/objc/demo/WebChanneliOSDemo/Pods/Target\ Support\ Files/Pods-WebChanneliOSDemo/Pods-WebChanneliOSDemo-Info.plist (in target 'Pods-WebChanneliOSDemo' from project 'Pods')
+    cd TEST_WORKSPACE_HOME/net_http/webchannel/objc/demo/WebChanneliOSDemo/Pods
+    builtin-infoPlistUtility TEST_WORKSPACE_HOME/net_http/webchannel/objc/demo/WebChanneliOSDemo/Pods/Target\ Support\ Files/Pods-WebChanneliOSDemo/Pods-WebChanneliOSDemo-Info.plist -producttype com.apple.product-type.framework -expandbuildsettings -format binary -platform iphoneos -requiredArchitecture arm64 -o /tmp/net-http-suspension-build/Build/Products/Debug-iphoneos/Pods_WebChanneliOSDemo.framework/Info.plist
+
+ProcessInfoPlistFile /tmp/net-http-suspension-build/Build/Products/Debug-iphoneos/WebChanneliOSDemo.app/Info.plist TEST_WORKSPACE_HOME/net_http/webchannel/objc/demo/WebChanneliOSDemo/WebChanneliOSDemo/Info.plist (in target 'WebChanneliOSDemo' from project 'WebChanneliOSDemo')
+    cd TEST_WORKSPACE_HOME/net_http/webchannel/objc/demo/WebChanneliOSDemo
+    builtin-infoPlistUtility TEST_WORKSPACE_HOME/net_http/webchannel/objc/demo/WebChanneliOSDemo/WebChanneliOSDemo/Info.plist -producttype com.apple.product-type.application -genpkginfo /tmp/net-http-suspension-build/Build/Products/Debug-iphoneos/WebChanneliOSDemo.app/PkgInfo -expandbuildsettings -format binary -platform iphoneos -additionalcontentfile /tmp/net-http-suspension-build/Build/Intermediates.noindex/WebChanneliOSDemo.build/Debug-iphoneos/WebChanneliOSDemo.build/assetcatalog_generated_info.plist -requiredArchitecture arm64 -o /tmp/net-http-suspension-build/Build/Products/Debug-iphoneos/WebChanneliOSDemo.app/Info.plist
+
+PhaseScriptExecution [CP]\ Embed\ Pods\ Frameworks /tmp/net-http-suspension-build/Build/Intermediates.noindex/WebChanneliOSDemo.build/Debug-iphoneos/WebChanneliOSDemo.build/Script-495A877D44EF55DEC1E62751.sh (in target 'WebChanneliOSDemo' from project 'WebChanneliOSDemo')
+    cd TEST_WORKSPACE_HOME/net_http/webchannel/objc/demo/WebChanneliOSDemo
+    /bin/sh -c /tmp/net-http-suspension-build/Build/Intermediates.noindex/WebChanneliOSDemo.build/Debug-iphoneos/WebChanneliOSDemo.build/Script-495A877D44EF55DEC1E62751.sh
+mkdir -p /tmp/net-http-suspension-build/Build/Products/Debug-iphoneos/WebChanneliOSDemo.app/Frameworks
+rsync --delete -av --filter P .*.?????? --links --filter "- CVS/" --filter "- .svn/" --filter "- .git/" --filter "- .hg/" --filter "- Headers" --filter "- PrivateHeaders" --filter "- Modules" "/tmp/net-http-suspension-build/Build/Products/Debug-iphoneos/GTMSessionFetcher/GTMSessionFetcher.framework" "/tmp/net-http-suspension-build/Build/Products/Debug-iphoneos/WebChanneliOSDemo.app/Frameworks"
+Transfer starting: 9 files
+deleting GTMSessionFetcher.framework/_CodeSignature/CodeResources
+deleting GTMSessionFetcher.framework/_CodeSignature/
+GTMSessionFetcher.framework/GTMSessionFetcher
+GTMSessionFetcher.framework/GTMSessionFetcher_Core_Privacy.bundle/
+GTMSessionFetcher.framework/GTMSessionFetcher_Core_Privacy.bundle/Info.plist
+GTMSessionFetcher.framework/GTMSessionFetcher_Core_Privacy.bundle/PrivacyInfo.xcprivacy
+GTMSessionFetcher.framework/GTMSessionFetcher_Full_Privacy.bundle/
+GTMSessionFetcher.framework/GTMSessionFetcher_Full_Privacy.bundle/Info.plist
+GTMSessionFetcher.framework/GTMSessionFetcher_Full_Privacy.bundle/PrivacyInfo.xcprivacy
+
+sent 631208 bytes  received 142 bytes  69379120 bytes/sec
+total size is 630759  speedup is 1.00
+Code Signing /tmp/net-http-suspension-build/Build/Products/Debug-iphoneos/WebChanneliOSDemo.app/Frameworks/GTMSessionFetcher.framework with Identity Apple Development: ysnysnysn@gmail.com (WTXKPHS7SG)
+/usr/bin/codesign --force --sign 7776D5B50A3EB3BF4F7E36491788472FB42C7CC5  --preserve-metadata=identifier,entitlements '/tmp/net-http-suspension-build/Build/Products/Debug-iphoneos/WebChanneliOSDemo.app/Frameworks/GTMSessionFetcher.framework'
+rsync --delete -av --filter P .*.?????? --links --filter "- CVS/" --filter "- .svn/" --filter "- .git/" --filter "- .hg/" --filter "- Headers" --filter "- PrivateHeaders" --filter "- Modules" "/tmp/net-http-suspension-build/Build/Products/Debug-iphoneos/WebChannel/WebChannel.framework" "/tmp/net-http-suspension-build/Build/Products/Debug-iphoneos/WebChanneliOSDemo.app/Frameworks"
+Transfer starting: 3 files
+deleting WebChannel.framework/_CodeSignature/CodeResources
+deleting WebChannel.framework/_CodeSignature/
+WebChannel.framework/
+WebChannel.framework/WebChannel
+
+sent 288443 bytes  received 48 bytes  70363658 bytes/sec
+total size is 288846  speedup is 1.00
+Code Signing /tmp/net-http-suspension-build/Build/Products/Debug-iphoneos/WebChanneliOSDemo.app/Frameworks/WebChannel.framework with Identity Apple Development: ysnysnysn@gmail.com (WTXKPHS7SG)
+/usr/bin/codesign --force --sign 7776D5B50A3EB3BF4F7E36491788472FB42C7CC5  --preserve-metadata=identifier,entitlements '/tmp/net-http-suspension-build/Build/Products/Debug-iphoneos/WebChanneliOSDemo.app/Frameworks/WebChannel.framework'
+
+SwiftDriver NetworkFailureUITests normal arm64 com.apple.xcode.tools.swift.compiler (in target 'NetworkFailureUITests' from project 'WebChanneliOSDemo')
+    cd TEST_WORKSPACE_HOME/net_http/webchannel/objc/demo/WebChanneliOSDemo
+    builtin-SwiftDriver -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name NetworkFailureUITests -Onone @/tmp/net-http-suspension-build/Build/Intermediates.noindex/WebChanneliOSDemo.build/Debug-iphoneos/NetworkFailureUITests.build/Objects-normal/arm64/NetworkFailureUITests.SwiftFileList -DDEBUG -module-alias Testing\=_Testing_Unavailable -plugin-path /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing -enable-bare-slash-regex -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk -target arm64-apple-ios17.0 -g -module-cache-path /tmp/net-http-suspension-build/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -index-store-path /tmp/net-http-suspension-build/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /tmp/net-http-suspension-build/Build/Products/Debug-iphoneos -Isystem /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib -F /tmp/net-http-suspension-build/Build/Products/Debug-iphoneos -F /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/Library/Frameworks -F /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk/Developer/Library/Frameworks -parse-as-library -c -j8 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /tmp/net-http-suspension-build/SDKStatCaches.noindex/iphoneos26.5-23F81a-32daed1954a7d5dd0789fcaf2a9bb78b.sdkstatcache -output-file-map /tmp/net-http-suspension-build/Build/Intermediates.noindex/WebChanneliOSDemo.build/Debug-iphoneos/NetworkFailureUITests.build/Objects-normal/arm64/NetworkFailureUITests-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /tmp/net-http-suspension-build/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /tmp/net-http-suspension-build/ModuleCache.noindex -sdk-module-cache-path /tmp/net-http-suspension-build/ModuleCache.noindex -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /tmp/net-http-suspension-build/Build/Intermediates.noindex/WebChanneliOSDemo.build/Debug-iphoneos/NetworkFailureUITests.build/Objects-normal/arm64/NetworkFailureUITests.swiftmodule -validate-clang-modules-once -clang-build-session-file /tmp/net-http-suspension-build/ModuleCache.noindex/Session.modulevalidation -Xcc -I/tmp/net-http-suspension-build/Build/Intermediates.noindex/WebChanneliOSDemo.build/Debug-iphoneos/NetworkFailureUITests.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /tmp/net-http-suspension-build/Build/Intermediates.noindex/WebChanneliOSDemo.build/Debug-iphoneos/NetworkFailureUITests.build/Objects-normal/arm64/NetworkFailureUITests_const_extract_protocols.json -Xcc -iquote -Xcc /tmp/net-http-suspension-build/Build/Intermediates.noindex/WebChanneliOSDemo.build/Debug-iphoneos/NetworkFailureUITests.build/NetworkFailureUITests-generated-files.hmap -Xcc -I/tmp/net-http-suspension-build/Build/Intermediates.noindex/WebChanneliOSDemo.build/Debug-iphoneos/NetworkFailureUITests.build/NetworkFailureUITests-own-target-headers.hmap -Xcc -I/tmp/net-http-suspension-build/Build/Intermediates.noindex/WebChanneliOSDemo.build/Debug-iphoneos/NetworkFailureUITests.build/NetworkFailureUITests-all-non-framework-target-headers.hmap -Xcc -ivfsoverlay -Xcc /tmp/net-http-suspension-build/Build/Intermediates.noindex/WebChanneliOSDemo.build/Debug-iphoneos/WebChanneliOSDemo-6513f853a587091d3e91ff9d9602da77-VFS-iphoneos/all-product-headers.yaml -Xcc -iquote -Xcc /tmp/net-http-suspension-build/Build/Intermediates.noindex/WebChanneliOSDemo.build/Debug-iphoneos/NetworkFailureUITests.build/NetworkFailureUITests-project-headers.hmap -Xcc -I/tmp/net-http-suspension-build/Build/Products/Debug-iphoneos/include -Xcc -I/tmp/net-http-suspension-build/Build/Intermediates.noindex/WebChanneliOSDemo.build/Debug-iphoneos/NetworkFailureUITests.build/DerivedSources-normal/arm64 -Xcc -I/tmp/net-http-suspension-build/Build/Intermediates.noindex/WebChanneliOSDemo.build/Debug-iphoneos/NetworkFailureUITests.build/DerivedSources/arm64 -Xcc -I/tmp/net-http-suspension-build/Build/Intermediates.noindex/WebChanneliOSDemo.build/Debug-iphoneos/NetworkFailureUITests.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /tmp/net-http-suspension-build/Build/Intermediates.noindex/WebChanneliOSDemo.build/Debug-iphoneos/NetworkFailureUITests.build/Objects-normal/arm64/NetworkFailureUITests-Swift.h -working-directory TEST_WORKSPACE_HOME/net_http/webchannel/objc/demo/WebChanneliOSDemo -experimental-emit-module-separately -disable-cmo
+
+CopySwiftLibs /tmp/net-http-suspension-build/Build/Products/Debug-iphoneos/WebChanneliOSDemo.app (in target 'WebChanneliOSDemo' from project 'WebChanneliOSDemo')
+    cd TEST_WORKSPACE_HOME/net_http/webchannel/objc/demo/WebChanneliOSDemo
+    builtin-swiftStdLibTool --copy --verbose --sign 7776D5B50A3EB3BF4F7E36491788472FB42C7CC5 --scan-executable /tmp/net-http-suspension-build/Build/Products/Debug-iphoneos/WebChanneliOSDemo.app/WebChanneliOSDemo.debug.dylib --scan-folder /tmp/net-http-suspension-build/Build/Products/Debug-iphoneos/WebChanneliOSDemo.app/Frameworks --scan-folder /tmp/net-http-suspension-build/Build/Products/Debug-iphoneos/WebChanneliOSDemo.app/PlugIns --scan-folder /tmp/net-http-suspension-build/Build/Products/Debug-iphoneos/WebChanneliOSDemo.app/SystemExtensions --scan-folder /tmp/net-http-suspension-build/Build/Products/Debug-iphoneos/WebChanneliOSDemo.app/Extensions --scan-folder /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.0.sdk/System/Library/Frameworks/Foundation.framework --scan-folder /tmp/net-http-suspension-build/Build/Products/Debug-iphoneos/Pods_WebChanneliOSDemo.framework --platform iphoneos --toolchain /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain --destination /tmp/net-http-suspension-build/Build/Products/Debug-iphoneos/WebChanneliOSDemo.app/Frameworks --strip-bitcode --strip-bitcode-tool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/bitcode_strip --emit-dependency-info /tmp/net-http-suspension-build/Build/Intermediates.noindex/WebChanneliOSDemo.build/Debug-iphoneos/WebChanneliOSDemo.build/SwiftStdLibToolInputDependencies.dep --filter-for-swift-os
+
+CodeSign /tmp/net-http-suspension-build/Build/Products/Debug-iphoneos/WebChanneliOSDemo.app/WebChanneliOSDemo.debug.dylib (in target 'WebChanneliOSDemo' from project 'WebChanneliOSDemo')
+    cd TEST_WORKSPACE_HOME/net_http/webchannel/objc/demo/WebChanneliOSDemo
+
+    Signing Identity:     "Apple Development: ysnysnysn@gmail.com (WTXKPHS7SG)"
+    Provisioning Profile: "iOS Team Provisioning Profile: com.pmodular.webchannel.demo"
+                          (4148d474-166b-4c18-a04e-00994cfcbe29)
+
+    /usr/bin/codesign --force --sign 7776D5B50A3EB3BF4F7E36491788472FB42C7CC5 --timestamp\=none --generate-entitlement-der /tmp/net-http-suspension-build/Build/Products/Debug-iphoneos/WebChanneliOSDemo.app/WebChanneliOSDemo.debug.dylib
+/tmp/net-http-suspension-build/Build/Products/Debug-iphoneos/WebChanneliOSDemo.app/WebChanneliOSDemo.debug.dylib: replacing existing signature
+
+CodeSign /tmp/net-http-suspension-build/Build/Products/Debug-iphoneos/WebChanneliOSDemo.app/__preview.dylib (in target 'WebChanneliOSDemo' from project 'WebChanneliOSDemo')
+    cd TEST_WORKSPACE_HOME/net_http/webchannel/objc/demo/WebChanneliOSDemo
+
+    Signing Identity:     "Apple Development: ysnysnysn@gmail.com (WTXKPHS7SG)"
+    Provisioning Profile: "iOS Team Provisioning Profile: com.pmodular.webchannel.demo"
+                          (4148d474-166b-4c18-a04e-00994cfcbe29)
+
+    /usr/bin/codesign --force --sign 7776D5B50A3EB3BF4F7E36491788472FB42C7CC5 --timestamp\=none --generate-entitlement-der /tmp/net-http-suspension-build/Build/Products/Debug-iphoneos/WebChanneliOSDemo.app/__preview.dylib
+/tmp/net-http-suspension-build/Build/Products/Debug-iphoneos/WebChanneliOSDemo.app/__preview.dylib: replacing existing signature
+
+CodeSign /tmp/net-http-suspension-build/Build/Products/Debug-iphoneos/WebChanneliOSDemo.app (in target 'WebChanneliOSDemo' from project 'WebChanneliOSDemo')
+    cd TEST_WORKSPACE_HOME/net_http/webchannel/objc/demo/WebChanneliOSDemo
+
+    Signing Identity:     "Apple Development: ysnysnysn@gmail.com (WTXKPHS7SG)"
+    Provisioning Profile: "iOS Team Provisioning Profile: com.pmodular.webchannel.demo"
+                          (4148d474-166b-4c18-a04e-00994cfcbe29)
+
+    /usr/bin/codesign --force --sign 7776D5B50A3EB3BF4F7E36491788472FB42C7CC5 --entitlements /tmp/net-http-suspension-build/Build/Intermediates.noindex/WebChanneliOSDemo.build/Debug-iphoneos/WebChanneliOSDemo.build/WebChanneliOSDemo.app.xcent --timestamp\=none --generate-entitlement-der /tmp/net-http-suspension-build/Build/Products/Debug-iphoneos/WebChanneliOSDemo.app
+/tmp/net-http-suspension-build/Build/Products/Debug-iphoneos/WebChanneliOSDemo.app: replacing existing signature
+
+Validate /tmp/net-http-suspension-build/Build/Products/Debug-iphoneos/WebChanneliOSDemo.app (in target 'WebChanneliOSDemo' from project 'WebChanneliOSDemo')
+    cd TEST_WORKSPACE_HOME/net_http/webchannel/objc/demo/WebChanneliOSDemo
+    builtin-validationUtility /tmp/net-http-suspension-build/Build/Products/Debug-iphoneos/WebChanneliOSDemo.app -shallow-bundle -infoplist-subpath Info.plist
+warning: All interface orientations must be supported unless the app requires full screen. (in target 'WebChanneliOSDemo' from project 'WebChanneliOSDemo')
+
+SwiftCompile normal arm64 Compiling\ SuspensionProbeTests.swift TEST_WORKSPACE_HOME/net_http/webchannel/objc/demo/WebChanneliOSDemo/NetworkFailureUITests/SuspensionProbeTests.swift (in target 'NetworkFailureUITests' from project 'WebChanneliOSDemo')
+
+SwiftCompile normal arm64 TEST_WORKSPACE_HOME/net_http/webchannel/objc/demo/WebChanneliOSDemo/NetworkFailureUITests/SuspensionProbeTests.swift (in target 'NetworkFailureUITests' from project 'WebChanneliOSDemo')
+    cd TEST_WORKSPACE_HOME/net_http/webchannel/objc/demo/WebChanneliOSDemo
+
+
+SwiftEmitModule normal arm64 Emitting\ module\ for\ NetworkFailureUITests (in target 'NetworkFailureUITests' from project 'WebChanneliOSDemo')
+
+SwiftCompile normal arm64 TEST_WORKSPACE_HOME/net_http/webchannel/objc/demo/WebChanneliOSDemo/NetworkFailureUITests/SuspensionProbeTests.swift (in target 'NetworkFailureUITests' from project 'WebChanneliOSDemo')
+    cd TEST_WORKSPACE_HOME/net_http/webchannel/objc/demo/WebChanneliOSDemo
+
+
+SwiftDriverJobDiscovery normal arm64 Compiling SuspensionProbeTests.swift (in target 'NetworkFailureUITests' from project 'WebChanneliOSDemo')
+
+SwiftDriver\ Compilation NetworkFailureUITests normal arm64 com.apple.xcode.tools.swift.compiler (in target 'NetworkFailureUITests' from project 'WebChanneliOSDemo')
+    cd TEST_WORKSPACE_HOME/net_http/webchannel/objc/demo/WebChanneliOSDemo
+    builtin-Swift-Compilation -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name NetworkFailureUITests -Onone @/tmp/net-http-suspension-build/Build/Intermediates.noindex/WebChanneliOSDemo.build/Debug-iphoneos/NetworkFailureUITests.build/Objects-normal/arm64/NetworkFailureUITests.SwiftFileList -DDEBUG -module-alias Testing\=_Testing_Unavailable -plugin-path /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing -enable-bare-slash-regex -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk -target arm64-apple-ios17.0 -g -module-cache-path /tmp/net-http-suspension-build/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -index-store-path /tmp/net-http-suspension-build/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /tmp/net-http-suspension-build/Build/Products/Debug-iphoneos -Isystem /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib -F /tmp/net-http-suspension-build/Build/Products/Debug-iphoneos -F /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/Library/Frameworks -F /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk/Developer/Library/Frameworks -parse-as-library -c -j8 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /tmp/net-http-suspension-build/SDKStatCaches.noindex/iphoneos26.5-23F81a-32daed1954a7d5dd0789fcaf2a9bb78b.sdkstatcache -output-file-map /tmp/net-http-suspension-build/Build/Intermediates.noindex/WebChanneliOSDemo.build/Debug-iphoneos/NetworkFailureUITests.build/Objects-normal/arm64/NetworkFailureUITests-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /tmp/net-http-suspension-build/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /tmp/net-http-suspension-build/ModuleCache.noindex -sdk-module-cache-path /tmp/net-http-suspension-build/ModuleCache.noindex -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /tmp/net-http-suspension-build/Build/Intermediates.noindex/WebChanneliOSDemo.build/Debug-iphoneos/NetworkFailureUITests.build/Objects-normal/arm64/NetworkFailureUITests.swiftmodule -validate-clang-modules-once -clang-build-session-file /tmp/net-http-suspension-build/ModuleCache.noindex/Session.modulevalidation -Xcc -I/tmp/net-http-suspension-build/Build/Intermediates.noindex/WebChanneliOSDemo.build/Debug-iphoneos/NetworkFailureUITests.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /tmp/net-http-suspension-build/Build/Intermediates.noindex/WebChanneliOSDemo.build/Debug-iphoneos/NetworkFailureUITests.build/Objects-normal/arm64/NetworkFailureUITests_const_extract_protocols.json -Xcc -iquote -Xcc /tmp/net-http-suspension-build/Build/Intermediates.noindex/WebChanneliOSDemo.build/Debug-iphoneos/NetworkFailureUITests.build/NetworkFailureUITests-generated-files.hmap -Xcc -I/tmp/net-http-suspension-build/Build/Intermediates.noindex/WebChanneliOSDemo.build/Debug-iphoneos/NetworkFailureUITests.build/NetworkFailureUITests-own-target-headers.hmap -Xcc -I/tmp/net-http-suspension-build/Build/Intermediates.noindex/WebChanneliOSDemo.build/Debug-iphoneos/NetworkFailureUITests.build/NetworkFailureUITests-all-non-framework-target-headers.hmap -Xcc -ivfsoverlay -Xcc /tmp/net-http-suspension-build/Build/Intermediates.noindex/WebChanneliOSDemo.build/Debug-iphoneos/WebChanneliOSDemo-6513f853a587091d3e91ff9d9602da77-VFS-iphoneos/all-product-headers.yaml -Xcc -iquote -Xcc /tmp/net-http-suspension-build/Build/Intermediates.noindex/WebChanneliOSDemo.build/Debug-iphoneos/NetworkFailureUITests.build/NetworkFailureUITests-project-headers.hmap -Xcc -I/tmp/net-http-suspension-build/Build/Products/Debug-iphoneos/include -Xcc -I/tmp/net-http-suspension-build/Build/Intermediates.noindex/WebChanneliOSDemo.build/Debug-iphoneos/NetworkFailureUITests.build/DerivedSources-normal/arm64 -Xcc -I/tmp/net-http-suspension-build/Build/Intermediates.noindex/WebChanneliOSDemo.build/Debug-iphoneos/NetworkFailureUITests.build/DerivedSources/arm64 -Xcc -I/tmp/net-http-suspension-build/Build/Intermediates.noindex/WebChanneliOSDemo.build/Debug-iphoneos/NetworkFailureUITests.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /tmp/net-http-suspension-build/Build/Intermediates.noindex/WebChanneliOSDemo.build/Debug-iphoneos/NetworkFailureUITests.build/Objects-normal/arm64/NetworkFailureUITests-Swift.h -working-directory TEST_WORKSPACE_HOME/net_http/webchannel/objc/demo/WebChanneliOSDemo -experimental-emit-module-separately -disable-cmo
+
+SwiftDriverJobDiscovery normal arm64 Emitting module for NetworkFailureUITests (in target 'NetworkFailureUITests' from project 'WebChanneliOSDemo')
+
+SwiftDriver\ Compilation\ Requirements NetworkFailureUITests normal arm64 com.apple.xcode.tools.swift.compiler (in target 'NetworkFailureUITests' from project 'WebChanneliOSDemo')
+    cd TEST_WORKSPACE_HOME/net_http/webchannel/objc/demo/WebChanneliOSDemo
+    builtin-Swift-Compilation-Requirements -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name NetworkFailureUITests -Onone @/tmp/net-http-suspension-build/Build/Intermediates.noindex/WebChanneliOSDemo.build/Debug-iphoneos/NetworkFailureUITests.build/Objects-normal/arm64/NetworkFailureUITests.SwiftFileList -DDEBUG -module-alias Testing\=_Testing_Unavailable -plugin-path /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing -enable-bare-slash-regex -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk -target arm64-apple-ios17.0 -g -module-cache-path /tmp/net-http-suspension-build/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -index-store-path /tmp/net-http-suspension-build/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /tmp/net-http-suspension-build/Build/Products/Debug-iphoneos -Isystem /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib -F /tmp/net-http-suspension-build/Build/Products/Debug-iphoneos -F /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/Library/Frameworks -F /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk/Developer/Library/Frameworks -parse-as-library -c -j8 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /tmp/net-http-suspension-build/SDKStatCaches.noindex/iphoneos26.5-23F81a-32daed1954a7d5dd0789fcaf2a9bb78b.sdkstatcache -output-file-map /tmp/net-http-suspension-build/Build/Intermediates.noindex/WebChanneliOSDemo.build/Debug-iphoneos/NetworkFailureUITests.build/Objects-normal/arm64/NetworkFailureUITests-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /tmp/net-http-suspension-build/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /tmp/net-http-suspension-build/ModuleCache.noindex -sdk-module-cache-path /tmp/net-http-suspension-build/ModuleCache.noindex -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /tmp/net-http-suspension-build/Build/Intermediates.noindex/WebChanneliOSDemo.build/Debug-iphoneos/NetworkFailureUITests.build/Objects-normal/arm64/NetworkFailureUITests.swiftmodule -validate-clang-modules-once -clang-build-session-file /tmp/net-http-suspension-build/ModuleCache.noindex/Session.modulevalidation -Xcc -I/tmp/net-http-suspension-build/Build/Intermediates.noindex/WebChanneliOSDemo.build/Debug-iphoneos/NetworkFailureUITests.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /tmp/net-http-suspension-build/Build/Intermediates.noindex/WebChanneliOSDemo.build/Debug-iphoneos/NetworkFailureUITests.build/Objects-normal/arm64/NetworkFailureUITests_const_extract_protocols.json -Xcc -iquote -Xcc /tmp/net-http-suspension-build/Build/Intermediates.noindex/WebChanneliOSDemo.build/Debug-iphoneos/NetworkFailureUITests.build/NetworkFailureUITests-generated-files.hmap -Xcc -I/tmp/net-http-suspension-build/Build/Intermediates.noindex/WebChanneliOSDemo.build/Debug-iphoneos/NetworkFailureUITests.build/NetworkFailureUITests-own-target-headers.hmap -Xcc -I/tmp/net-http-suspension-build/Build/Intermediates.noindex/WebChanneliOSDemo.build/Debug-iphoneos/NetworkFailureUITests.build/NetworkFailureUITests-all-non-framework-target-headers.hmap -Xcc -ivfsoverlay -Xcc /tmp/net-http-suspension-build/Build/Intermediates.noindex/WebChanneliOSDemo.build/Debug-iphoneos/WebChanneliOSDemo-6513f853a587091d3e91ff9d9602da77-VFS-iphoneos/all-product-headers.yaml -Xcc -iquote -Xcc /tmp/net-http-suspension-build/Build/Intermediates.noindex/WebChanneliOSDemo.build/Debug-iphoneos/NetworkFailureUITests.build/NetworkFailureUITests-project-headers.hmap -Xcc -I/tmp/net-http-suspension-build/Build/Products/Debug-iphoneos/include -Xcc -I/tmp/net-http-suspension-build/Build/Intermediates.noindex/WebChanneliOSDemo.build/Debug-iphoneos/NetworkFailureUITests.build/DerivedSources-normal/arm64 -Xcc -I/tmp/net-http-suspension-build/Build/Intermediates.noindex/WebChanneliOSDemo.build/Debug-iphoneos/NetworkFailureUITests.build/DerivedSources/arm64 -Xcc -I/tmp/net-http-suspension-build/Build/Intermediates.noindex/WebChanneliOSDemo.build/Debug-iphoneos/NetworkFailureUITests.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /tmp/net-http-suspension-build/Build/Intermediates.noindex/WebChanneliOSDemo.build/Debug-iphoneos/NetworkFailureUITests.build/Objects-normal/arm64/NetworkFailureUITests-Swift.h -working-directory TEST_WORKSPACE_HOME/net_http/webchannel/objc/demo/WebChanneliOSDemo -experimental-emit-module-separately -disable-cmo
+
+Copy /tmp/net-http-suspension-build/Build/Products/Debug-iphoneos/NetworkFailureUITests.swiftmodule/arm64-apple-ios.abi.json /tmp/net-http-suspension-build/Build/Intermediates.noindex/WebChanneliOSDemo.build/Debug-iphoneos/NetworkFailureUITests.build/Objects-normal/arm64/NetworkFailureUITests.abi.json (in target 'NetworkFailureUITests' from project 'WebChanneliOSDemo')
+    cd TEST_WORKSPACE_HOME/net_http/webchannel/objc/demo/WebChanneliOSDemo
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /tmp/net-http-suspension-build/Build/Intermediates.noindex/WebChanneliOSDemo.build/Debug-iphoneos/NetworkFailureUITests.build/Objects-normal/arm64/NetworkFailureUITests.abi.json /tmp/net-http-suspension-build/Build/Products/Debug-iphoneos/NetworkFailureUITests.swiftmodule/arm64-apple-ios.abi.json
+
+Copy /tmp/net-http-suspension-build/Build/Products/Debug-iphoneos/NetworkFailureUITests.swiftmodule/Project/arm64-apple-ios.swiftsourceinfo /tmp/net-http-suspension-build/Build/Intermediates.noindex/WebChanneliOSDemo.build/Debug-iphoneos/NetworkFailureUITests.build/Objects-normal/arm64/NetworkFailureUITests.swiftsourceinfo (in target 'NetworkFailureUITests' from project 'WebChanneliOSDemo')
+    cd TEST_WORKSPACE_HOME/net_http/webchannel/objc/demo/WebChanneliOSDemo
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /tmp/net-http-suspension-build/Build/Intermediates.noindex/WebChanneliOSDemo.build/Debug-iphoneos/NetworkFailureUITests.build/Objects-normal/arm64/NetworkFailureUITests.swiftsourceinfo /tmp/net-http-suspension-build/Build/Products/Debug-iphoneos/NetworkFailureUITests.swiftmodule/Project/arm64-apple-ios.swiftsourceinfo
+
+Ld /tmp/net-http-suspension-build/Build/Products/Debug-iphoneos/NetworkFailureUITests-Runner.app/PlugIns/NetworkFailureUITests.xctest/NetworkFailureUITests normal (in target 'NetworkFailureUITests' from project 'WebChanneliOSDemo')
+    cd TEST_WORKSPACE_HOME/net_http/webchannel/objc/demo/WebChanneliOSDemo
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Xlinker -reproducible -target arm64-apple-ios17.0 -bundle -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk -O0 -L/tmp/net-http-suspension-build/Build/Intermediates.noindex/EagerLinkingTBDs/Debug-iphoneos -L/tmp/net-http-suspension-build/Build/Products/Debug-iphoneos -L/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib -F/tmp/net-http-suspension-build/Build/Intermediates.noindex/EagerLinkingTBDs/Debug-iphoneos -F/tmp/net-http-suspension-build/Build/Products/Debug-iphoneos -iframework /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/Library/Frameworks -iframework /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk/Developer/Library/Frameworks -filelist /tmp/net-http-suspension-build/Build/Intermediates.noindex/WebChanneliOSDemo.build/Debug-iphoneos/NetworkFailureUITests.build/Objects-normal/arm64/NetworkFailureUITests.LinkFileList -Xlinker -rpath -Xlinker /usr/lib/swift -Xlinker -rpath -Xlinker @loader_path/Frameworks -Xlinker -rpath -Xlinker @executable_path/Frameworks -Xlinker -dead_strip -Xlinker -object_path_lto -Xlinker /tmp/net-http-suspension-build/Build/Intermediates.noindex/WebChanneliOSDemo.build/Debug-iphoneos/NetworkFailureUITests.build/Objects-normal/arm64/NetworkFailureUITests_lto.o -rdynamic -Xlinker -no_deduplicate -Xlinker -dependency_info -Xlinker /tmp/net-http-suspension-build/Build/Intermediates.noindex/WebChanneliOSDemo.build/Debug-iphoneos/NetworkFailureUITests.build/Objects-normal/arm64/NetworkFailureUITests_dependency_info.dat -fobjc-link-runtime -L/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos -L/usr/lib/swift -Xlinker -add_ast_path -Xlinker /tmp/net-http-suspension-build/Build/Intermediates.noindex/WebChanneliOSDemo.build/Debug-iphoneos/NetworkFailureUITests.build/Objects-normal/arm64/NetworkFailureUITests.swiftmodule @/tmp/net-http-suspension-build/Build/Intermediates.noindex/WebChanneliOSDemo.build/Debug-iphoneos/NetworkFailureUITests.build/Objects-normal/arm64/NetworkFailureUITests-linker-args.resp -Xlinker -needed_framework -Xlinker XCTest -framework XCTest -Xlinker -needed-lXCTestSwiftSupport -lXCTestSwiftSupport -Xlinker -no_adhoc_codesign -o /tmp/net-http-suspension-build/Build/Products/Debug-iphoneos/NetworkFailureUITests-Runner.app/PlugIns/NetworkFailureUITests.xctest/NetworkFailureUITests
+
+ExtractAppIntentsMetadata (in target 'NetworkFailureUITests' from project 'WebChanneliOSDemo')
+    cd TEST_WORKSPACE_HOME/net_http/webchannel/objc/demo/WebChanneliOSDemo
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/appintentsmetadataprocessor --toolchain-dir /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain --module-name NetworkFailureUITests --sdk-root /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk --xcode-version 17F113 --platform-family iOS --deployment-target 17.0 --bundle-identifier com.pmodular.webchannel.demo.suspensiontests --output /tmp/net-http-suspension-build/Build/Products/Debug-iphoneos/NetworkFailureUITests-Runner.app/PlugIns/NetworkFailureUITests.xctest --target-triple arm64-apple-ios17.0 --binary-file /tmp/net-http-suspension-build/Build/Products/Debug-iphoneos/NetworkFailureUITests-Runner.app/PlugIns/NetworkFailureUITests.xctest/NetworkFailureUITests --dependency-file /tmp/net-http-suspension-build/Build/Intermediates.noindex/WebChanneliOSDemo.build/Debug-iphoneos/NetworkFailureUITests.build/Objects-normal/arm64/NetworkFailureUITests_dependency_info.dat --stringsdata-file /tmp/net-http-suspension-build/Build/Intermediates.noindex/WebChanneliOSDemo.build/Debug-iphoneos/NetworkFailureUITests.build/Objects-normal/arm64/ExtractedAppShortcutsMetadata.stringsdata --source-file-list /tmp/net-http-suspension-build/Build/Intermediates.noindex/WebChanneliOSDemo.build/Debug-iphoneos/NetworkFailureUITests.build/Objects-normal/arm64/NetworkFailureUITests.SwiftFileList --metadata-file-list /tmp/net-http-suspension-build/Build/Intermediates.noindex/WebChanneliOSDemo.build/Debug-iphoneos/NetworkFailureUITests.build/NetworkFailureUITests.DependencyMetadataFileList --static-metadata-file-list /tmp/net-http-suspension-build/Build/Intermediates.noindex/WebChanneliOSDemo.build/Debug-iphoneos/NetworkFailureUITests.build/NetworkFailureUITests.DependencyStaticMetadataFileList --swift-const-vals-list /tmp/net-http-suspension-build/Build/Intermediates.noindex/WebChanneliOSDemo.build/Debug-iphoneos/NetworkFailureUITests.build/Objects-normal/arm64/NetworkFailureUITests.SwiftConstValuesFileList --compile-time-extraction --deployment-aware-processing --validate-assistant-intents --no-app-shortcuts-localization
+2026-11-14 00:02:37.610 appintentsmetadataprocessor[2417:9254061] Starting appintentsmetadataprocessor export
+2026-11-14 00:02:37.611 appintentsmetadataprocessor[2417:9254061] warning: Metadata extraction skipped. No AppIntents.framework dependency found.
+
+ProcessInfoPlistFile /tmp/net-http-suspension-build/Build/Products/Debug-iphoneos/NetworkFailureUITests-Runner.app/PlugIns/NetworkFailureUITests.xctest/Info.plist /tmp/net-http-suspension-build/Build/Intermediates.noindex/WebChanneliOSDemo.build/Debug-iphoneos/NetworkFailureUITests.build/empty-NetworkFailureUITests.plist (in target 'NetworkFailureUITests' from project 'WebChanneliOSDemo')
+    cd TEST_WORKSPACE_HOME/net_http/webchannel/objc/demo/WebChanneliOSDemo
+    builtin-infoPlistUtility /tmp/net-http-suspension-build/Build/Intermediates.noindex/WebChanneliOSDemo.build/Debug-iphoneos/NetworkFailureUITests.build/empty-NetworkFailureUITests.plist -producttype com.apple.product-type.bundle.ui-testing -expandbuildsettings -format binary -platform iphoneos -additionalcontentfile /tmp/net-http-suspension-build/Build/Intermediates.noindex/WebChanneliOSDemo.build/Debug-iphoneos/NetworkFailureUITests.build/ProductTypeInfoPlistAdditions.plist -requiredArchitecture arm64 -o /tmp/net-http-suspension-build/Build/Products/Debug-iphoneos/NetworkFailureUITests-Runner.app/PlugIns/NetworkFailureUITests.xctest/Info.plist
+
+CopySwiftLibs /tmp/net-http-suspension-build/Build/Products/Debug-iphoneos/NetworkFailureUITests-Runner.app/PlugIns/NetworkFailureUITests.xctest (in target 'NetworkFailureUITests' from project 'WebChanneliOSDemo')
+    cd TEST_WORKSPACE_HOME/net_http/webchannel/objc/demo/WebChanneliOSDemo
+    builtin-swiftStdLibTool --copy --verbose --sign 7776D5B50A3EB3BF4F7E36491788472FB42C7CC5 --scan-executable /tmp/net-http-suspension-build/Build/Products/Debug-iphoneos/NetworkFailureUITests-Runner.app/PlugIns/NetworkFailureUITests.xctest/NetworkFailureUITests --scan-folder /tmp/net-http-suspension-build/Build/Products/Debug-iphoneos/NetworkFailureUITests-Runner.app/PlugIns/NetworkFailureUITests.xctest/Frameworks --scan-folder /tmp/net-http-suspension-build/Build/Products/Debug-iphoneos/NetworkFailureUITests-Runner.app/PlugIns/NetworkFailureUITests.xctest/PlugIns --scan-folder /tmp/net-http-suspension-build/Build/Products/Debug-iphoneos/NetworkFailureUITests-Runner.app/PlugIns/NetworkFailureUITests.xctest/SystemExtensions --scan-folder /tmp/net-http-suspension-build/Build/Products/Debug-iphoneos/NetworkFailureUITests-Runner.app/PlugIns/NetworkFailureUITests.xctest/Extensions --platform iphoneos --toolchain /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain --destination /tmp/net-http-suspension-build/Build/Products/Debug-iphoneos/NetworkFailureUITests-Runner.app/PlugIns/NetworkFailureUITests.xctest/Frameworks --strip-bitcode --scan-executable /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib/libXCTestSwiftSupport.dylib --strip-bitcode-tool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/bitcode_strip --emit-dependency-info /tmp/net-http-suspension-build/Build/Intermediates.noindex/WebChanneliOSDemo.build/Debug-iphoneos/NetworkFailureUITests.build/SwiftStdLibToolInputDependencies.dep --filter-for-swift-os
+
+GenerateDSYMFile /tmp/net-http-suspension-build/Build/Products/Debug-iphoneos/NetworkFailureUITests-Runner.app/PlugIns/NetworkFailureUITests.xctest.dSYM /tmp/net-http-suspension-build/Build/Products/Debug-iphoneos/NetworkFailureUITests-Runner.app/PlugIns/NetworkFailureUITests.xctest/NetworkFailureUITests (in target 'NetworkFailureUITests' from project 'WebChanneliOSDemo')
+    cd TEST_WORKSPACE_HOME/net_http/webchannel/objc/demo/WebChanneliOSDemo
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/dsymutil /tmp/net-http-suspension-build/Build/Products/Debug-iphoneos/NetworkFailureUITests-Runner.app/PlugIns/NetworkFailureUITests.xctest/NetworkFailureUITests -o /tmp/net-http-suspension-build/Build/Products/Debug-iphoneos/NetworkFailureUITests-Runner.app/PlugIns/NetworkFailureUITests.xctest.dSYM
+
+CodeSign /tmp/net-http-suspension-build/Build/Products/Debug-iphoneos/NetworkFailureUITests-Runner.app/PlugIns/NetworkFailureUITests.xctest (in target 'NetworkFailureUITests' from project 'WebChanneliOSDemo')
+    cd TEST_WORKSPACE_HOME/net_http/webchannel/objc/demo/WebChanneliOSDemo
+
+    Signing Identity:     "Apple Development: ysnysnysn@gmail.com (WTXKPHS7SG)"
+    Provisioning Profile: "iOS Team Provisioning Profile: com.pmodular.webchannel.demo.suspensiontests.xctrunner"
+                          (e10b10fa-7fa0-444b-b597-a8c5cbd5ded3)
+
+    /usr/bin/codesign --force --sign 7776D5B50A3EB3BF4F7E36491788472FB42C7CC5 --entitlements /tmp/net-http-suspension-build/Build/Intermediates.noindex/WebChanneliOSDemo.build/Debug-iphoneos/NetworkFailureUITests.build/NetworkFailureUITests.xctest.xcent --timestamp\=none --generate-entitlement-der /tmp/net-http-suspension-build/Build/Products/Debug-iphoneos/NetworkFailureUITests-Runner.app/PlugIns/NetworkFailureUITests.xctest
+
+CodeSign /tmp/net-http-suspension-build/Build/Products/Debug-iphoneos/NetworkFailureUITests-Runner.app (in target 'NetworkFailureUITests' from project 'WebChanneliOSDemo')
+    cd TEST_WORKSPACE_HOME/net_http/webchannel/objc/demo/WebChanneliOSDemo
+
+    Signing Identity:     "Apple Development: ysnysnysn@gmail.com (WTXKPHS7SG)"
+    Provisioning Profile: "iOS Team Provisioning Profile: com.pmodular.webchannel.demo.suspensiontests.xctrunner"
+                          (e10b10fa-7fa0-444b-b597-a8c5cbd5ded3)
+
+    /usr/bin/codesign --force --sign 7776D5B50A3EB3BF4F7E36491788472FB42C7CC5 --entitlements /tmp/net-http-suspension-build/Build/Intermediates.noindex/WebChanneliOSDemo.build/Debug-iphoneos/NetworkFailureUITests.build/NetworkFailureUITests.xctest.xcent --timestamp\=none --generate-entitlement-der /tmp/net-http-suspension-build/Build/Products/Debug-iphoneos/NetworkFailureUITests-Runner.app
+/tmp/net-http-suspension-build/Build/Products/Debug-iphoneos/NetworkFailureUITests-Runner.app: replacing existing signature
+
+2026-11-14 00:02:40.049476+0900 NetworkFailureUITests-Runner[32332:1642009] [Default] Running tests...
+    t =      nans Interface orientation changed to Portrait
+Test Suite 'Selected tests' started at 2026-11-14 00:02:40.407.
+Test Suite 'NetworkFailureUITests.xctest' started at 2026-11-14 00:02:40.408.
+Test Suite 'SuspensionProbeTests' started at 2026-11-14 00:02:40.408.
+Test Case '-[NetworkFailureUITests.SuspensionProbeTests testOSReportedSuspensionAndResume]' started.
+    t =     0.00s Start Test at 2026-11-14 00:02:40.408
+    t =     0.01s Set Up
+    t =     0.01s Open com.pmodular.webchannel.demo
+    t =     0.01s     Launch com.pmodular.webchannel.demo
+2026-11-14 00:02:40.476 xcodebuild[2353:9253739] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-11-14 00:02:40.476 xcodebuild[2353:9253739] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     3.35s         Setting up automation session
+    t =     3.47s         Wait for com.pmodular.webchannel.demo to idle
+    t =     4.60s Wait for com.pmodular.webchannel.demo to become Running Foreground
+SUSPENSION_PROBE {"applicationState":4,"deviceUnixSeconds":1794582165.003931,"deviceUptimeSeconds":215988.18569462502,"event":"foreground","isMainThread":true,"stateName":"runningForeground"}
+    t =     4.60s Pressing Home button
+SUSPENSION_PROBE {"applicationState":4,"deviceUnixSeconds":1794582165.475451,"deviceUptimeSeconds":215988.65722329167,"event":"home_returned","isMainThread":true,"stateName":"runningForeground"}
+SUSPENSION_PROBE {"applicationState":4,"deviceUnixSeconds":1794582165.4756629,"deviceUptimeSeconds":215988.65743508335,"event":"state_observed","isMainThread":true,"stateName":"runningForeground"}
+SUSPENSION_PROBE {"applicationState":3,"deviceUnixSeconds":1794582166.5262408,"deviceUptimeSeconds":215989.708101375,"event":"state_observed","isMainThread":true,"stateName":"runningBackground"}
+SUSPENSION_PROBE {"applicationState":3,"deviceUnixSeconds":1794582167.543957,"deviceUptimeSeconds":215990.72590316669,"event":"state_observed","isMainThread":true,"stateName":"runningBackground"}
+SUSPENSION_PROBE {"applicationState":3,"deviceUnixSeconds":1794582168.5502801,"deviceUptimeSeconds":215991.73230687503,"event":"state_observed","isMainThread":true,"stateName":"runningBackground"}
+SUSPENSION_PROBE {"applicationState":3,"deviceUnixSeconds":1794582169.5675581,"deviceUptimeSeconds":215992.74966195834,"event":"state_observed","isMainThread":true,"stateName":"runningBackground"}
+SUSPENSION_PROBE {"applicationState":3,"deviceUnixSeconds":1794582170.586309,"deviceUptimeSeconds":215993.76848683335,"event":"state_observed","isMainThread":true,"stateName":"runningBackground"}
+SUSPENSION_PROBE {"applicationState":3,"deviceUnixSeconds":1794582171.5990481,"deviceUptimeSeconds":215994.78129558335,"event":"state_observed","isMainThread":true,"stateName":"runningBackground"}
+SUSPENSION_PROBE {"applicationState":3,"deviceUnixSeconds":1794582172.6022129,"deviceUptimeSeconds":215995.78452666668,"event":"state_observed","isMainThread":true,"stateName":"runningBackground"}
+SUSPENSION_PROBE {"applicationState":3,"deviceUnixSeconds":1794582173.6145201,"deviceUptimeSeconds":215996.79689700002,"event":"state_observed","isMainThread":true,"stateName":"runningBackground"}
+SUSPENSION_PROBE {"applicationState":3,"deviceUnixSeconds":1794582174.6321449,"deviceUptimeSeconds":215997.81458329168,"event":"state_observed","isMainThread":true,"stateName":"runningBackground"}
+SUSPENSION_PROBE {"applicationState":3,"deviceUnixSeconds":1794582175.666013,"deviceUptimeSeconds":215998.84851025001,"event":"state_observed","isMainThread":true,"stateName":"runningBackground"}
+SUSPENSION_PROBE {"applicationState":3,"deviceUnixSeconds":1794582176.682842,"deviceUptimeSeconds":215999.86539425002,"event":"state_observed","isMainThread":true,"stateName":"runningBackground"}
+SUSPENSION_PROBE {"applicationState":3,"deviceUnixSeconds":1794582177.6952701,"deviceUptimeSeconds":216000.87787504168,"event":"state_observed","isMainThread":true,"stateName":"runningBackground"}
+SUSPENSION_PROBE {"applicationState":3,"deviceUnixSeconds":1794582178.7126689,"deviceUptimeSeconds":216001.89532470834,"event":"state_observed","isMainThread":true,"stateName":"runningBackground"}
+SUSPENSION_PROBE {"applicationState":3,"deviceUnixSeconds":1794582179.723717,"deviceUptimeSeconds":216002.90642141667,"event":"state_observed","isMainThread":true,"stateName":"runningBackground"}
+SUSPENSION_PROBE {"applicationState":3,"deviceUnixSeconds":1794582180.7505732,"deviceUptimeSeconds":216003.93332475002,"event":"state_observed","isMainThread":true,"stateName":"runningBackground"}
+SUSPENSION_PROBE {"applicationState":3,"deviceUnixSeconds":1794582181.7524261,"deviceUptimeSeconds":216004.93522204168,"event":"state_observed","isMainThread":true,"stateName":"runningBackground"}
+SUSPENSION_PROBE {"applicationState":3,"deviceUnixSeconds":1794582182.7648911,"deviceUptimeSeconds":216005.94772958333,"event":"state_observed","isMainThread":true,"stateName":"runningBackground"}
+SUSPENSION_PROBE {"applicationState":3,"deviceUnixSeconds":1794582183.773145,"deviceUptimeSeconds":216006.95602554167,"event":"state_observed","isMainThread":true,"stateName":"runningBackground"}
+SUSPENSION_PROBE {"applicationState":3,"deviceUnixSeconds":1794582184.7783761,"deviceUptimeSeconds":216007.96129516669,"event":"state_observed","isMainThread":true,"stateName":"runningBackground"}
+SUSPENSION_PROBE {"applicationState":3,"deviceUnixSeconds":1794582185.7801681,"deviceUptimeSeconds":216008.96312616667,"event":"state_observed","isMainThread":true,"stateName":"runningBackground"}
+SUSPENSION_PROBE {"applicationState":3,"deviceUnixSeconds":1794582186.7925792,"deviceUptimeSeconds":216009.97557420834,"event":"state_observed","isMainThread":true,"stateName":"runningBackground"}
+SUSPENSION_PROBE {"applicationState":3,"deviceUnixSeconds":1794582187.805166,"deviceUptimeSeconds":216010.988197125,"event":"state_observed","isMainThread":true,"stateName":"runningBackground"}
+SUSPENSION_PROBE {"applicationState":3,"deviceUnixSeconds":1794582188.8163571,"deviceUptimeSeconds":216011.99942241667,"event":"state_observed","isMainThread":true,"stateName":"runningBackground"}
+SUSPENSION_PROBE {"applicationState":3,"deviceUnixSeconds":1794582189.8338079,"deviceUptimeSeconds":216013.01690791667,"event":"state_observed","isMainThread":true,"stateName":"runningBackground"}
+SUSPENSION_PROBE {"applicationState":3,"deviceUnixSeconds":1794582190.8562999,"deviceUptimeSeconds":216014.03943220834,"event":"state_observed","isMainThread":true,"stateName":"runningBackground"}
+SUSPENSION_PROBE {"applicationState":3,"deviceUnixSeconds":1794582191.876622,"deviceUptimeSeconds":216015.05978679168,"event":"state_observed","isMainThread":true,"stateName":"runningBackground"}
+SUSPENSION_PROBE {"applicationState":3,"deviceUnixSeconds":1794582192.897701,"deviceUptimeSeconds":216016.08089691668,"event":"state_observed","isMainThread":true,"stateName":"runningBackground"}
+SUSPENSION_PROBE {"applicationState":3,"deviceUnixSeconds":1794582193.9168401,"deviceUptimeSeconds":216017.10006545833,"event":"state_observed","isMainThread":true,"stateName":"runningBackground"}
+SUSPENSION_PROBE {"applicationState":3,"deviceUnixSeconds":1794582194.935164,"deviceUptimeSeconds":216018.11841904168,"event":"state_observed","isMainThread":true,"stateName":"runningBackground"}
+SUSPENSION_PROBE {"applicationState":3,"deviceUnixSeconds":1794582195.9735241,"deviceUptimeSeconds":216019.15680870836,"event":"state_observed","isMainThread":true,"stateName":"runningBackground"}
+SUSPENSION_PROBE {"applicationState":3,"deviceUnixSeconds":1794582196.9859281,"deviceUptimeSeconds":216020.16924041667,"event":"state_observed","isMainThread":true,"stateName":"runningBackground"}
+SUSPENSION_PROBE {"applicationState":3,"deviceUnixSeconds":1794582198.0040359,"deviceUptimeSeconds":216021.18737550001,"event":"state_observed","isMainThread":true,"stateName":"runningBackground"}
+SUSPENSION_PROBE {"applicationState":3,"deviceUnixSeconds":1794582199.0077438,"deviceUptimeSeconds":216022.19111000001,"event":"state_observed","isMainThread":true,"stateName":"runningBackground"}
+SUSPENSION_PROBE {"applicationState":3,"deviceUnixSeconds":1794582200.026406,"deviceUptimeSeconds":216023.20979820835,"event":"state_observed","isMainThread":true,"stateName":"runningBackground"}
+SUSPENSION_PROBE {"applicationState":3,"deviceUnixSeconds":1794582201.0437911,"deviceUptimeSeconds":216024.22720875,"event":"state_observed","isMainThread":true,"stateName":"runningBackground"}
+SUSPENSION_PROBE {"applicationState":3,"deviceUnixSeconds":1794582202.056416,"deviceUptimeSeconds":216025.23985787501,"event":"state_observed","isMainThread":true,"stateName":"runningBackground"}
+SUSPENSION_PROBE {"applicationState":3,"deviceUnixSeconds":1794582203.077291,"deviceUptimeSeconds":216026.26075754169,"event":"state_observed","isMainThread":true,"stateName":"runningBackground"}
+SUSPENSION_PROBE {"applicationState":3,"deviceUnixSeconds":1794582204.095319,"deviceUptimeSeconds":216027.27880991669,"event":"state_observed","isMainThread":true,"stateName":"runningBackground"}
+SUSPENSION_PROBE {"applicationState":3,"deviceUnixSeconds":1794582205.111196,"deviceUptimeSeconds":216028.29471050002,"event":"state_observed","isMainThread":true,"stateName":"runningBackground"}
+SUSPENSION_PROBE {"applicationState":3,"deviceUnixSeconds":1794582206.1146359,"deviceUptimeSeconds":216029.29817379167,"event":"state_observed","isMainThread":true,"stateName":"runningBackground"}
+SUSPENSION_PROBE {"applicationState":3,"deviceUnixSeconds":1794582207.1180692,"deviceUptimeSeconds":216030.30162979168,"event":"state_observed","isMainThread":true,"stateName":"runningBackground"}
+SUSPENSION_PROBE {"applicationState":3,"deviceUnixSeconds":1794582208.130939,"deviceUptimeSeconds":216031.314522,"event":"state_observed","isMainThread":true,"stateName":"runningBackground"}
+SUSPENSION_PROBE {"applicationState":3,"deviceUnixSeconds":1794582209.1514559,"deviceUptimeSeconds":216032.33506191667,"event":"state_observed","isMainThread":true,"stateName":"runningBackground"}
+SUSPENSION_PROBE {"applicationState":3,"deviceUnixSeconds":1794582210.1712241,"deviceUptimeSeconds":216033.35485129169,"event":"state_observed","isMainThread":true,"stateName":"runningBackground"}
+TEST_WORKSPACE_HOME/net_http/webchannel/objc/demo/WebChanneliOSDemo/NetworkFailureUITests/SuspensionProbeTests.swift:68: error: -[NetworkFailureUITests.SuspensionProbeTests testOSReportedSuspensionAndResume] : XCTAssertTrue failed - OS did not report runningBackgroundSuspended; heartbeat silence is not substituted
+    t =    50.83s Tear Down
+Test Case '-[NetworkFailureUITests.SuspensionProbeTests testOSReportedSuspensionAndResume]' failed (51.061 seconds).
+Test Suite 'SuspensionProbeTests' failed at 2026-11-14 00:03:31.472.
+	 Executed 1 test, with 1 failure (0 unexpected) in 51.061 (51.064) seconds
+Test Suite 'NetworkFailureUITests.xctest' failed at 2026-11-14 00:03:31.475.
+	 Executed 1 test, with 1 failure (0 unexpected) in 51.061 (51.067) seconds
+Test Suite 'Selected tests' failed at 2026-11-14 00:03:31.477.
+	 Executed 1 test, with 1 failure (0 unexpected) in 51.061 (51.070) seconds
+2026-11-14 00:03:33.113 xcodebuild[2353:9253741]  IDETestOperationsObserverDebug: Failure collecting diagnostics from devices: Process exited with error 1:
+ ERROR: The operation couldn?t be completed. (CoreDeviceCLISupport.DiagnoseError error 0.)
+This tool generates files that allow Apple to investigate issues with your
+computer and help improve Apple products. The files might contain personal
+information found on your device or associated with your Apple Account(s),
+including but not limited to your name, serial numbers of your device,
+your device name, your device's location over the last one to two days,
+your attached peripheral devices, your user name, your email address and
+email settings, file paths, file names, Siri suggestions, your computer's
+IP addresses, and network connection information.
+
+This information is used by Apple in accordance with its privacy policy
+(www.apple.com/privacy) and is not shared with any other company. By using
+this tool and sending the results to Apple, you consent to Apple using the
+contents of these files to improve Apple products.
+
+An error occurred while running devicectl diagnose. Will archive the diagnostics collected thus far.
+Wrote file to /tmp/net-http-suspension-probe-20261114-02.xcresult/Staging/1_Test/Diagnostics/devicectl_diagnostics.zip
+Partial devicectl diagnose bundle located here: /tmp/net-http-suspension-probe-20261114-02.xcresult/Staging/1_Test/Diagnostics/devicectl_diagnostics.zip
+
+2026-11-14 00:03:33.117 xcodebuild[2353:9253739] [MT] IDETestOperationsObserverDebug: 55.234 elapsed -- Testing started completed.
+2026-11-14 00:03:33.117 xcodebuild[2353:9253739] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-11-14 00:03:33.117 xcodebuild[2353:9253739] [MT] IDETestOperationsObserverDebug: 55.234 sec, +55.234 sec -- end
+
+Test session results, code coverage, and logs:
+	/tmp/net-http-suspension-probe-20261114-02.xcresult
+
+Failing tests:
+	SuspensionProbeTests.testOSReportedSuspensionAndResume()
+
+** TEST FAILED **
+
+Testing started

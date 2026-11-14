@@ -1,5 +1,9 @@
 # Human-operated iPhone networking measurements — 2026-11-13
 
+**Network topology clarification:** T1–T8 traversed a Linux box. The operator
+subsequently connected the AP directly to the switching hub, bypassing that box.
+See the [operator-reported wiring change](../network-topology-note.md) before comparing phases.
+
 **21 measurements in seven groups of three repetitions**, extending the
 [36 blackhole trials](../2026-11-12/automatic-native/summary.md) from PR #129.
 An earlier handoff is reference-only, and an interrupted T9 attempt is excluded.

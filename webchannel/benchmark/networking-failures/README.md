@@ -1,5 +1,21 @@
 # iOS networking-failure experiments
 
+**Network topology clarification:** T1–T8 traversed a Linux box. The operator
+subsequently connected the AP directly to the switching hub, bypassing that box.
+See the [operator-reported wiring change](network-topology-note.md) before comparing phases.
+
+The [2026-11-14 T13 report](2026-11-14/t13-summary.md) adds nine idle handoffs
+to cellular with operator-configured cellular-only 100% packet loss. All three
+50 s and all three 90 s requested holds resumed their original sessions; all
+three 150 s requested holds ended after Wi-Fi restoration with HTTP 400 /
+UnknownSessionID. Separate interface-bound preflight verified fault selectivity.
+
+The [2026-11-14 suspension report](2026-11-14/suspension-summary.md) adds nine
+T15 observations: 30 / 90 / 150 s OS-reported suspension holds, each repeated
+three times. Short holds resumed the original session; medium/long holds ended
+with HTTP 400 / UnknownSessionID after resume. The app is launched normally,
+while a separate Apple UI-test target observes OS state and controls Home/resume.
+
 The [2026-11-13 report](2026-11-13/report.md) adds 21 measurements in seven
 three-repetition groups: T9 short/long network outages, T10 pending writes,
 T11 flapping, idle and streaming Wi-Fi/cellular handoffs, and M1 idle baselines.
@@ -15,8 +31,8 @@ from the expected behavior, raw evidence, cleanup verification, and limitations.
 That earlier suite covers T1–T8, three streaming-loss durations, periodic sends
 (M5), and optional fail-fast (T16), each repeated three times. The later
 human-operated runner covers real network outages and interface changes.
-T13 (broken cellular during handoff) and T15 (verified OS suspension) remain
-unexecuted. Exact physical outage timing and underlying NSError details remain
+The later T13 handoff and T15 OS-observed suspension measurements are linked
+above. Exact physical outage timing and underlying NSError details remain
 limited; an observed control sequence is not an automatic test-case pass.
 Earlier manual attempts remain separate in the [dated report](2026-11-12/report.md).
 
