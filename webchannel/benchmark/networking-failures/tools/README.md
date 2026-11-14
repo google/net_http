@@ -337,3 +337,66 @@ and GET request starts from the retained raw log; do not assume the spec's
 expected rotation interval before measuring it. Record the actual path and
 per-request interfaces, which may differ. `--traffic`/`--observe-after` are not
 supported in this mode.
+
+## Experimental T15 suspension controller
+
+`run-suspension.py` uses the separate `NetworkFailureSuspension` UI-test scheme
+as an OS-state observer. The app is launched normally through devicectl with USB
+console; the UI test never launches it. Build the observer first as described in
+`objc/demo/WebChanneliOSDemo/NetworkFailureUITests/README.md` (relative to
+`webchannel/`). The UI-test Runner needs its own development signing profile.
+
+```sh
+python3 -u webchannel/benchmark/networking-failures/tools/run-suspension.py \
+  --device TEST_DEVICE_UDID \
+  --xctestrun /path/to/build/Products/NetworkFailureSuspension_iphoneosSDK-arm64.xctestrun \
+  --output /private/tmp/net-http-t15-short-01 --hold 30
+```
+
+No phone operations are required. The UI observer presses Home, positively
+observes `runningBackgroundSuspended`, holds from that observation for the
+requested device-clock interval, then activates the existing app. The controller
+sends one post-resume matched probe and verifies the original PID. It records
+both the app and observer clocks (device uptime), state samples, raw logs and
+an xcresult. No network settings are changed. Background-entry waiting time is
+separate from the observed suspension hold.
+
+The initial controller used for the first three 30 s trials required a resumed
+echo. The current revision records `channelObservation` as `echo-resumed`,
+`channel-failed`, `echo-resumed-then-channel-failed`, or `no-recovery-observed`;
+these are measurements after a valid OS-state hold, not infrastructure failures.
+`outcome=suspension-observed` requires a successful observer, exactly one hold,
+suspended-state samples throughout the observed hold, sufficient duration, sample
+gaps at most 3 s, and the original PID after resume. This does not prove no brief
+wakeups between samples. UI errors/termination/missing state evidence remain
+interrupted attempts. Schema versions differ between the short and longer
+controller revisions; measured source copies identify each.
+
+UI state changes are asynchronous; they do not identify exact kernel transition
+times. Full xcresults, device snapshots and process lists can contain personal
+device information; keep originals local and publish selected sanitized evidence
+as in the dated report. The later T13 series is described below.
+
+## Cellular-only loss handoff (T13)
+
+The operator creates a Network Link Conditioner profile selecting cellular and
+100% input/output packet loss. Keep both mobile data and Wi-Fi enabled initially,
+and maintain this profile throughout the sequence. Do not use the native helper
+to overwrite or clear this profile. First verify selective loss with opt-in
+`NETTEST_INTERFACE_ONLY=1` and the `.interfaces` control notification: Wi-Fi-bound
+HTTPS must respond, while cellular-bound traffic times out with a satisfied
+cellular path. The preflight result must include operator condition metadata
+and both probe results; it is validated by `--cellular-proof`.
+
+```sh
+python3 -u webchannel/benchmark/networking-failures/tools/run-handoff.py \
+  --scenario broken-cellular --device TEST_COREDEVICE_ID \
+  --cellular-proof /path/to/cellular-preflight/result.json \
+  --output /private/tmp/net-http-t13-trial --hold 150
+```
+
+The local runner cues Wi-Fi-only OFF/ON, with no app sends during the hold.
+It keeps observing after SDK errors and never reconnects the app. A matching
+post-restoration echo or terminal error is recorded, not treated as an automatic
+SDK pass. The operator must disable the condition profile when finished. See
+[the nine-trial report](../2026-11-14/t13-summary.md) for provenance and limits.

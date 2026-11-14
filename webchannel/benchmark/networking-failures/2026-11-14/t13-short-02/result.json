@@ -1,0 +1,352 @@
+{
+  "run": "handoff-ccfb5b8f7ece",
+  "scenario": "T13-broken-cellular",
+  "requestedHoldSeconds": 50.0,
+  "outcome": "l3-observed",
+  "milestones": {
+    "baselinePath": {
+      "cellular": false,
+      "constrained": false,
+      "deviceUnixSeconds": 1794619361.1631951,
+      "deviceUptimeSeconds": 253184.96898325003,
+      "expensive": false,
+      "kind": "path",
+      "run": "handoff-ccfb5b8f7ece",
+      "status": "satisfied",
+      "wifi": true,
+      "wired": false,
+      "hostReceivedMonotonic": 586769.79536425,
+      "hostReceivedUTC": "2026-11-14T01:22:41.172Z"
+    },
+    "baselineEcho": {
+      "deviceUnixSeconds": 1794619362.827852,
+      "deviceUptimeSeconds": 253186.6336695,
+      "kind": "echo_reply",
+      "run": "handoff-ccfb5b8f7ece",
+      "token": "req_1794619362645",
+      "hostReceivedMonotonic": 586771.461273708,
+      "hostReceivedUTC": "2026-11-14T01:22:42.838Z"
+    },
+    "cellularFaultPath": {
+      "cellular": true,
+      "constrained": false,
+      "deviceUnixSeconds": 1794619368.183392,
+      "deviceUptimeSeconds": 253191.98930183335,
+      "expensive": true,
+      "kind": "path",
+      "run": "handoff-ccfb5b8f7ece",
+      "status": "satisfied",
+      "wifi": false,
+      "wired": false,
+      "hostReceivedMonotonic": 586776.815738958,
+      "hostReceivedUTC": "2026-11-14T01:22:48.192Z"
+    },
+    "holdComplete": {
+      "applicationState": 0,
+      "deviceUnixSeconds": 1794619419.16271,
+      "deviceUptimeSeconds": 253242.969496,
+      "kind": "heartbeat",
+      "run": "handoff-ccfb5b8f7ece",
+      "hostReceivedMonotonic": 586827.796688541,
+      "hostReceivedUTC": "2026-11-14T01:23:39.173Z"
+    },
+    "restoredPath": {
+      "cellular": false,
+      "constrained": false,
+      "deviceUnixSeconds": 1794619431.721448,
+      "deviceUptimeSeconds": 253255.52841758335,
+      "expensive": false,
+      "kind": "path",
+      "run": "handoff-ccfb5b8f7ece",
+      "status": "satisfied",
+      "wifi": true,
+      "wired": false,
+      "hostReceivedMonotonic": 586840.355309708,
+      "hostReceivedUTC": "2026-11-14T01:23:51.731Z"
+    },
+    "restoredEcho": {
+      "deviceUnixSeconds": 1794619432.784721,
+      "deviceUptimeSeconds": 253256.59170429167,
+      "kind": "echo_reply",
+      "run": "handoff-ccfb5b8f7ece",
+      "token": "req_1794619432637",
+      "hostReceivedMonotonic": 586841.4189635,
+      "hostReceivedUTC": "2026-11-14T01:23:52.795Z"
+    }
+  },
+  "timingNotes": [
+    "Device intervals use deviceUptimeSeconds; no host/device UTC subtraction.",
+    "Path callbacks describe observed routing, not physical switch timestamps.",
+    "Cue times are host times; human response is measured, not assumed instantaneous.",
+    "No SDK test-case pass/fail or real OS suspension is inferred."
+  ],
+  "traffic": "idle",
+  "requestedPostRestoreObservationSeconds": 0,
+  "selectiveFaultPreflight": {
+    "operatorCondition": {
+      "profile": "Mobile 100% Loss",
+      "interface": "cellular",
+      "uplinkLossPercent": 100,
+      "downlinkLossPercent": 100,
+      "enabledReportedByOperator": true
+    },
+    "wifiHTTPStatus": 400,
+    "cellularOutcome": "timeout",
+    "cellularPath": {
+      "cellular": true,
+      "expensive": true,
+      "interfaces": [
+        {
+          "name": "pdp_ip0",
+          "type": "cellular"
+        }
+      ],
+      "pathAvailable": true,
+      "status": "satisfied",
+      "wifi": false,
+      "wired": false
+    },
+    "cellularTimeoutSeconds": 8.46263420835021,
+    "preflightHostUTC": "2026-11-14T01:08:41.468Z"
+  },
+  "operatorCondition": "Mobile 100% Loss; cellular only; both loss directions 100%; maintained manually",
+  "observedSecondsAtRestoreCue": 50.98019416665193,
+  "observedBrokenCellularPathSeconds": 63.53911574999802,
+  "channelObservation": "echo-resumed",
+  "observedRestoreToEchoSeconds": 1.0632867083186284,
+  "finishedUTC": "2026-11-14T01:23:55.464Z",
+  "errorCodes": [],
+  "openCount": 1,
+  "lifecycleEvents": [
+    {
+      "deviceUnixSeconds": 1794619361.4156032,
+      "deviceUptimeSeconds": 253185.22139508335,
+      "kind": "lifecycle",
+      "notification": "UIApplicationDidBecomeActiveNotification",
+      "run": "handoff-ccfb5b8f7ece",
+      "hostReceivedMonotonic": 586770.048137958,
+      "hostReceivedUTC": "2026-11-14T01:22:41.425Z"
+    },
+    {
+      "deviceUnixSeconds": 1794619366.623214,
+      "deviceUptimeSeconds": 253190.4290970417,
+      "kind": "lifecycle",
+      "notification": "UIApplicationWillResignActiveNotification",
+      "run": "handoff-ccfb5b8f7ece",
+      "hostReceivedMonotonic": 586775.256964458,
+      "hostReceivedUTC": "2026-11-14T01:22:46.634Z"
+    },
+    {
+      "deviceUnixSeconds": 1794619369.7497392,
+      "deviceUptimeSeconds": 253193.55567441668,
+      "kind": "lifecycle",
+      "notification": "UIApplicationDidBecomeActiveNotification",
+      "run": "handoff-ccfb5b8f7ece",
+      "hostReceivedMonotonic": 586778.385929,
+      "hostReceivedUTC": "2026-11-14T01:22:49.762Z"
+    },
+    {
+      "deviceUnixSeconds": 1794619420.6108608,
+      "deviceUptimeSeconds": 253244.41766937502,
+      "kind": "lifecycle",
+      "notification": "UIApplicationWillResignActiveNotification",
+      "run": "handoff-ccfb5b8f7ece",
+      "hostReceivedMonotonic": 586829.250348083,
+      "hostReceivedUTC": "2026-11-14T01:23:40.626Z"
+    },
+    {
+      "deviceUnixSeconds": 1794619423.525988,
+      "deviceUptimeSeconds": 253247.33284616668,
+      "kind": "lifecycle",
+      "notification": "UIApplicationDidBecomeActiveNotification",
+      "run": "handoff-ccfb5b8f7ece",
+      "hostReceivedMonotonic": 586832.161067458,
+      "hostReceivedUTC": "2026-11-14T01:23:43.537Z"
+    }
+  ],
+  "taskMetrics": [
+    {
+      "deviceUnixSeconds": 1794619361.365152,
+      "deviceUptimeSeconds": 253185.17094245835,
+      "kind": "task_metrics",
+      "run": "handoff-ccfb5b8f7ece",
+      "transactions": [
+        {
+          "fetchStart": 1794619361.174417,
+          "isCellular": false,
+          "localAddress": "192.168.10.21",
+          "localPort": 63090,
+          "method": "POST",
+          "protocol": "h2",
+          "remoteAddress": "192.178.230.81",
+          "remotePort": 443,
+          "requestEnd": 1794619361.2200031,
+          "requestStart": 1794619361.2199268,
+          "responseEnd": 1794619361.363926,
+          "responseStart": 1794619361.363606,
+          "reusedConnection": false,
+          "rid": "82487",
+          "tcpConnectMs": 36.99994087219238,
+          "tlsMs": 19.999980926513672,
+          "url": "https://webchannel.sandbox.google.com/staging/channel/generator?VER=8&RID=82487&CVER=25&X-HTTP-Session-Id=gsessionid&t=1"
+        }
+      ],
+      "hostReceivedMonotonic": 586769.998799291,
+      "hostReceivedUTC": "2026-11-14T01:22:41.375Z"
+    },
+    {
+      "deviceUnixSeconds": 1794619362.8300462,
+      "deviceUptimeSeconds": 253186.63586316668,
+      "kind": "task_metrics",
+      "run": "handoff-ccfb5b8f7ece",
+      "transactions": [
+        {
+          "fetchStart": 1794619362.648728,
+          "isCellular": false,
+          "localAddress": "192.168.10.21",
+          "localPort": 63090,
+          "method": "POST",
+          "protocol": "h2",
+          "remoteAddress": "192.178.230.81",
+          "remotePort": 443,
+          "requestEnd": 1794619362.6499162,
+          "requestStart": 1794619362.649372,
+          "responseEnd": 1794619362.82603,
+          "responseStart": 1794619362.825295,
+          "reusedConnection": true,
+          "rid": "82488",
+          "url": "https://webchannel.sandbox.google.com/staging/channel/generator?VER=8&gsessionid=0GmXPGRU1Smy3UT5XdcTaYcO5v5JOSxBlgPQbjqholU&SID=h_SfD6vKCErq-8vPgr6F8w&RID=82488&AID=1&t=1"
+        }
+      ],
+      "hostReceivedMonotonic": 586771.462943666,
+      "hostReceivedUTC": "2026-11-14T01:22:42.840Z"
+    },
+    {
+      "deviceUnixSeconds": 1794619368.0403728,
+      "deviceUptimeSeconds": 253191.8462790417,
+      "kind": "task_metrics",
+      "run": "handoff-ccfb5b8f7ece",
+      "transactions": [
+        {
+          "fetchStart": 1794619361.367634,
+          "isCellular": false,
+          "localAddress": "192.168.10.21",
+          "localPort": 63090,
+          "method": "GET",
+          "protocol": "h2",
+          "remoteAddress": "192.178.230.81",
+          "remotePort": 443,
+          "requestEnd": 1794619361.368083,
+          "requestStart": 1794619361.367981,
+          "responseStart": 1794619361.5001059,
+          "reusedConnection": true,
+          "rid": "rpc",
+          "url": "https://webchannel.sandbox.google.com/staging/channel/generator?gsessionid=0GmXPGRU1Smy3UT5XdcTaYcO5v5JOSxBlgPQbjqholU&VER=8&RID=rpc&SID=h_SfD6vKCErq-8vPgr6F8w&CI=0&AID=0&TYPE=xmlhttp&t=1"
+        }
+      ],
+      "hostReceivedMonotonic": 586776.677134791,
+      "hostReceivedUTC": "2026-11-14T01:22:48.054Z"
+    },
+    {
+      "deviceUnixSeconds": 1794619413.048584,
+      "deviceUptimeSeconds": 253236.85526270836,
+      "kind": "task_metrics",
+      "run": "handoff-ccfb5b8f7ece",
+      "transactions": [
+        {
+          "fetchStart": 1794619368.0465899,
+          "isCellular": false,
+          "method": "GET",
+          "protocol": "unknown",
+          "reusedConnection": false,
+          "rid": "rpc",
+          "url": "https://webchannel.sandbox.google.com/staging/channel/generator?gsessionid=0GmXPGRU1Smy3UT5XdcTaYcO5v5JOSxBlgPQbjqholU&VER=8&RID=rpc&SID=h_SfD6vKCErq-8vPgr6F8w&CI=0&AID=2&TYPE=xmlhttp&t=1"
+        }
+      ],
+      "hostReceivedMonotonic": 586821.683334958,
+      "hostReceivedUTC": "2026-11-14T01:23:33.059Z"
+    },
+    {
+      "deviceUnixSeconds": 1794619432.789277,
+      "deviceUptimeSeconds": 253256.59626025002,
+      "kind": "task_metrics",
+      "run": "handoff-ccfb5b8f7ece",
+      "transactions": [
+        {
+          "fetchStart": 1794619432.640058,
+          "isCellular": false,
+          "localAddress": "2400:4050:b781:4c00:1446:9b39:4b51:c062",
+          "localPort": 63097,
+          "method": "POST",
+          "protocol": "h2",
+          "remoteAddress": "2404:6800:400b:c01b::451",
+          "remotePort": 443,
+          "requestEnd": 1794619432.641343,
+          "requestStart": 1794619432.640717,
+          "responseEnd": 1794619432.787389,
+          "responseStart": 1794619432.7861218,
+          "reusedConnection": true,
+          "rid": "82489",
+          "url": "https://webchannel.sandbox.google.com/staging/channel/generator?VER=8&gsessionid=0GmXPGRU1Smy3UT5XdcTaYcO5v5JOSxBlgPQbjqholU&SID=h_SfD6vKCErq-8vPgr6F8w&RID=82489&AID=4&t=1"
+        }
+      ],
+      "hostReceivedMonotonic": 586841.423644541,
+      "hostReceivedUTC": "2026-11-14T01:23:52.799Z"
+    },
+    {
+      "deviceUnixSeconds": 1794619433.892885,
+      "deviceUptimeSeconds": 253257.69988300002,
+      "kind": "task_metrics",
+      "run": "handoff-ccfb5b8f7ece",
+      "transactions": [
+        {
+          "fetchStart": 1794619413.053103,
+          "isCellular": false,
+          "localAddress": "2400:4050:b781:4c00:1446:9b39:4b51:c062",
+          "localPort": 63097,
+          "method": "GET",
+          "protocol": "h2",
+          "remoteAddress": "2404:6800:400b:c01b::451",
+          "remotePort": 443,
+          "requestEnd": 1794619431.567943,
+          "requestStart": 1794619431.567782,
+          "responseStart": 1794619431.703371,
+          "reusedConnection": false,
+          "rid": "rpc",
+          "tcpConnectMs": 54.9999475479126,
+          "tlsMs": 13.99993896484375,
+          "url": "https://webchannel.sandbox.google.com/staging/channel/generator?gsessionid=0GmXPGRU1Smy3UT5XdcTaYcO5v5JOSxBlgPQbjqholU&VER=8&RID=rpc&SID=h_SfD6vKCErq-8vPgr6F8w&CI=0&AID=2&TYPE=xmlhttp&t=2"
+        }
+      ],
+      "hostReceivedMonotonic": 586842.526028666,
+      "hostReceivedUTC": "2026-11-14T01:23:53.902Z"
+    },
+    {
+      "deviceUnixSeconds": 1794619434.040578,
+      "deviceUptimeSeconds": 253257.84757958335,
+      "kind": "task_metrics",
+      "run": "handoff-ccfb5b8f7ece",
+      "transactions": [
+        {
+          "fetchStart": 1794619433.892826,
+          "isCellular": false,
+          "localAddress": "2400:4050:b781:4c00:1446:9b39:4b51:c062",
+          "localPort": 63097,
+          "method": "GET",
+          "protocol": "h2",
+          "remoteAddress": "2404:6800:400b:c01b::451",
+          "remotePort": 443,
+          "requestEnd": 1794619433.893914,
+          "requestStart": 1794619433.893691,
+          "responseEnd": 1794619434.039325,
+          "responseStart": 1794619434.0386171,
+          "reusedConnection": true,
+          "rid": "82490",
+          "url": "https://webchannel.sandbox.google.com/staging/channel/generator?VER=8&gsessionid=0GmXPGRU1Smy3UT5XdcTaYcO5v5JOSxBlgPQbjqholU&SID=h_SfD6vKCErq-8vPgr6F8w&RID=82490&TYPE=terminate"
+        }
+      ],
+      "hostReceivedMonotonic": 586842.67447,
+      "hostReceivedUTC": "2026-11-14T01:23:54.050Z"
+    }
+  ]
+}

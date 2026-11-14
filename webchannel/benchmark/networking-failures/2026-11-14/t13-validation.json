@@ -1,0 +1,68 @@
+{
+  "validTrials": 9,
+  "checks": [
+    "sequence completion",
+    "one open and SID",
+    "device hold duration",
+    "satisfied cellular-only hold path callbacks",
+    "no hold app sends",
+    "expected observed error/echo",
+    "source hashes"
+  ],
+  "trials": [
+    {
+      "trial": "t13-short-01",
+      "requestedHoldSeconds": 50,
+      "observation": "echo-resumed",
+      "checksPassed": true
+    },
+    {
+      "trial": "t13-short-02",
+      "requestedHoldSeconds": 50,
+      "observation": "echo-resumed",
+      "checksPassed": true
+    },
+    {
+      "trial": "t13-short-03",
+      "requestedHoldSeconds": 50,
+      "observation": "echo-resumed",
+      "checksPassed": true
+    },
+    {
+      "trial": "t13-medium-01",
+      "requestedHoldSeconds": 90,
+      "observation": "echo-resumed",
+      "checksPassed": true
+    },
+    {
+      "trial": "t13-medium-02",
+      "requestedHoldSeconds": 90,
+      "observation": "echo-resumed",
+      "checksPassed": true
+    },
+    {
+      "trial": "t13-medium-03",
+      "requestedHoldSeconds": 90,
+      "observation": "echo-resumed",
+      "checksPassed": true
+    },
+    {
+      "trial": "t13-long-01",
+      "requestedHoldSeconds": 150,
+      "observation": "channel-failed",
+      "checksPassed": true
+    },
+    {
+      "trial": "t13-long-02",
+      "requestedHoldSeconds": 150,
+      "observation": "channel-failed",
+      "checksPassed": true
+    },
+    {
+      "trial": "t13-long-03",
+      "requestedHoldSeconds": 150,
+      "observation": "channel-failed",
+      "checksPassed": true
+    }
+  ]
+}

@@ -1,0 +1,69 @@
+{
+  "phase": "operator-Mobile-100%-Loss",
+  "networkSettingsChanged": false,
+  "operatorCondition": {
+    "profile": "Mobile 100% Loss",
+    "interface": "cellular",
+    "uplinkLossPercent": 100,
+    "downlinkLossPercent": 100,
+    "enabledReportedByOperator": true
+  },
+  "probes": [
+    {
+      "batch": "3513FDB3-0FFE-44B0-AC35-8BC4E593CECE",
+      "deviceUnixSeconds": 1794618514.361846,
+      "deviceUptimeSeconds": 252338.15300337502,
+      "elapsedSeconds": 1.356055041687796,
+      "kind": "interface_probe_result",
+      "outcome": "http-response",
+      "path": {
+        "cellular": false,
+        "expensive": false,
+        "interfaces": [
+          {
+            "name": "en0",
+            "type": "wifi"
+          }
+        ],
+        "pathAvailable": true,
+        "status": "satisfied",
+        "wifi": true,
+        "wired": false
+      },
+      "requiredInterface": "wifi",
+      "run": "T13-interface-mobile-loss-01",
+      "statusCode": 400,
+      "statusLine": "HTTP/1.1 400 Bad Request\r\nContent-Type: text/plain; charset=utf-8\r\nX-Content-Type-Options: nosniff\r\nDate: Sat, 14 Nov 2026 01:08:34 GMT\r\nServer: Example HTTPServer2 (non-blocking)\r\nX-XSS-Protection: 0\r\nX-Frame-Options: SAMEORIGIN\r\nTransfer-Encoding: chunked\r\nAccept-Ranges: none\r\nVary: Accept-Encoding\r\nConnection: close",
+      "hostReceivedMonotonic": 585922.97475775,
+      "hostReceivedUTC": "2026-11-14T01:08:34.361Z"
+    },
+    {
+      "batch": "3513FDB3-0FFE-44B0-AC35-8BC4E593CECE",
+      "deviceUnixSeconds": 1794618521.468776,
+      "deviceUptimeSeconds": 252345.26005887502,
+      "elapsedSeconds": 8.46263420835021,
+      "kind": "interface_probe_result",
+      "outcome": "timeout",
+      "path": {
+        "cellular": true,
+        "expensive": true,
+        "interfaces": [
+          {
+            "name": "pdp_ip0",
+            "type": "cellular"
+          }
+        ],
+        "pathAvailable": true,
+        "status": "satisfied",
+        "wifi": false,
+        "wired": false
+      },
+      "requiredInterface": "cellular",
+      "run": "T13-interface-mobile-loss-01",
+      "hostReceivedMonotonic": 585930.081635416,
+      "hostReceivedUTC": "2026-11-14T01:08:41.468Z"
+    }
+  ],
+  "bothResponded": false,
+  "openCount": 0
+}

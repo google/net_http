@@ -114,6 +114,17 @@ class WorkflowTests(unittest.TestCase):
         args = SimpleNamespace(output=Path(folder), device="fake", hold=2,
                                transition_timeout=5, probe_timeout=2, silent=True, scenario=scenario,
                                traffic=traffic, observe_after=observe_after)
+        if scenario == "broken-cellular":
+            args.cellular_proof = Path(folder) / "preflight-input.json"
+            args.cellular_proof.write_text(json.dumps({
+                "operatorCondition": {"interface": "cellular", "uplinkLossPercent": 100,
+                                      "downlinkLossPercent": 100, "enabledReportedByOperator": True},
+                "probes": [
+                    {"requiredInterface": "wifi", "outcome": "http-response", "statusCode": 400,
+                     "path": {"wifi": True, "cellular": False}},
+                    {"requiredInterface": "cellular", "outcome": "timeout", "elapsedSeconds": 8,
+                     "path": {"status": "satisfied", "wifi": False, "cellular": True}},
+                ]}))
         runner = handoff.Runner(args)
         runner.run_id = "test"
         capture = FakeCapture(clock)
@@ -154,7 +165,7 @@ class WorkflowTests(unittest.TestCase):
                 if failure == "background" and interface == "cellular":
                     capture.records.append(clock.record("lifecycle", clock.now + 1.5,
                         notification="UIApplicationDidEnterBackgroundNotification"))
-                if failure == "channel-error" and interface == "offline":
+                if failure == "channel-error" and (interface == "offline" or scenario == "broken-cellular"):
                     capture.records.append(clock.record("error", clock.now + 2, code=1))
             return after
 
@@ -309,6 +320,23 @@ class WorkflowTests(unittest.TestCase):
             self.assertFalse(any(e.get("kind") == "echo_sent" for e in events))
             journal = [json.loads(line) for line in (Path(folder) / "runner-events.jsonl").read_text().splitlines()]
             self.assertEqual([e["sound"] for e in journal if e["event"] == "cue"], ["Funk"])
+
+    def test_t13_accepts_available_cellular_loss_and_records_channel_failure(self):
+        with TemporaryDirectory() as folder:
+            result = self.workflow(folder, scenario="broken-cellular", failure="channel-error")
+            self.assertEqual(result["scenario"], "T13-broken-cellular")
+            self.assertEqual(result["outcome"], "l3-observed")
+            self.assertEqual(result["channelObservation"], "channel-failed")
+            self.assertEqual(result["milestones"]["cellularFaultPath"]["status"], "satisfied")
+            self.assertIn("observedBrokenCellularPathSeconds", result)
+            self.assertNotIn("observedOfflinePathSeconds", result)
+
+    def test_t13_rejects_a_cellular_path_that_is_down_in_preflight(self):
+        with self.assertRaises(ValueError):
+            handoff.validate_cellular_proof({"probes": [
+                {"requiredInterface": "wifi", "outcome": "http-response", "path": {"wifi": True}},
+                {"requiredInterface": "cellular", "outcome": "timeout", "path": {"status": "unsatisfied"}},
+            ]})
 
 
 if __name__ == "__main__":

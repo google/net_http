@@ -25,6 +25,11 @@ class WaitTimeout(RuntimeError):
 def matches_path(record, interface):
     if interface == "offline":
         return record.get("kind") == "path" and record.get("status") == "unsatisfied"
+    if interface == "wifi-present":
+        return record.get("kind") == "path" and record.get("status") == "satisfied" and record.get("wifi") is True
+    if interface == "broken-cellular":
+        return (record.get("kind") == "path" and record.get("wifi") is False
+                and (record.get("cellular") is True or record.get("status") == "unsatisfied"))
     other = "cellular" if interface == "wifi" else "wifi"
     return (record.get("kind") == "path" and record.get("status") == "satisfied"
             and record.get(interface) is True and record.get(other) is False
@@ -36,6 +41,28 @@ def device_interval(start, end):
     if not math.isfinite(elapsed) or elapsed < 0:
         raise RuntimeError("Device clock regressed or is invalid")
     return elapsed
+
+
+def validate_cellular_proof(proof):
+    probes = proof.get("probes", [])
+    by_interface = {r.get("requiredInterface"): r for r in probes}
+    if len(probes) != 2 or set(by_interface) != {"wifi", "cellular"}:
+        raise ValueError("T13 needs exactly one Wi-Fi and one cellular-bound probe")
+    wifi, cell = by_interface["wifi"], by_interface["cellular"]
+    condition = proof.get("operatorCondition", {})
+    if not (condition.get("interface") == "cellular" and condition.get("uplinkLossPercent") == 100
+            and condition.get("downlinkLossPercent") == 100 and condition.get("enabledReportedByOperator")):
+        raise ValueError("T13 needs the operator-reported cellular-only 100% loss configuration")
+    if not (wifi.get("outcome") == "http-response" and wifi.get("path", {}).get("wifi") is True
+            and wifi.get("path", {}).get("cellular") is False):
+        raise ValueError("Wi-Fi-bound preflight did not receive an HTTP response")
+    if not (cell.get("outcome") == "timeout" and cell.get("path", {}).get("status") == "satisfied"
+            and cell.get("path", {}).get("cellular") is True and cell.get("path", {}).get("wifi") is False):
+        raise ValueError("Cellular-bound preflight did not show available-but-unresponsive cellular")
+    return {"operatorCondition": condition, "wifiHTTPStatus": wifi.get("statusCode"),
+            "cellularOutcome": cell["outcome"], "cellularPath": cell["path"],
+            "cellularTimeoutSeconds": cell.get("elapsedSeconds"),
+            "preflightHostUTC": cell.get("hostReceivedUTC")}
 
 
 class Observer:
@@ -110,6 +137,7 @@ class Runner:
         self.args = args
         self.folder = args.output
         self.scenario = getattr(args, "scenario", "handoff")
+        self.baseline_interface = "wifi-present" if self.scenario == "broken-cellular" else "wifi"
         self.traffic = getattr(args, "traffic", "idle")
         self.observe_after = getattr(args, "observe_after", 0)
         self.run_id = "handoff-" + uuid.uuid4().hex[:12]
@@ -130,6 +158,12 @@ class Runner:
                                        "l3-flap": "T11-l3-flap"}[self.scenario]
         elif self.scenario == "idle":
             self.result["scenario"] = "M1-idle"
+        elif self.scenario == "broken-cellular":
+            self.result["scenario"] = "T13-broken-cellular"
+            self.result["selectiveFaultPreflight"] = validate_cellular_proof(
+                json.loads(args.cellular_proof.read_text()))
+            self.result["operatorCondition"] = "Mobile 100% Loss; cellular only; both loss directions 100%; maintained manually"
+            (self.folder / "cellular-preflight.json").write_text(args.cellular_proof.read_text())
         self.journal = (self.folder / "runner-events.jsonl").open("w", buffering=1)
         self.device_stream = (self.folder / "device-events.jsonl").open("w", buffering=1)
 
@@ -165,6 +199,18 @@ class Runner:
         return record["hostMonotonic"]
 
     def instructions(self):
+        if self.scenario == "broken-cellular":
+            text = (
+                "T13: Wi-Fi とモバイルデータ通信を ON、Mobile 100% Loss を有効にして準備してください。\n"
+                "Cellular の損失プロファイルは切り替えず、そのまま維持してください。\n"
+                "切断音＋『Wi-Fi を切断してください』: Wi-Fi だけを切断し、すぐアプリへ戻る。\n"
+                f"Wi-Fi 切断の経路観測から約 {self.args.hold:g} 秒後の復旧音＋『Wi-Fi を戻してください』:\n"
+                "Wi-Fi を ON に戻し、すぐアプリへ戻る。終了音まで待ってください。\n"
+                "エラー表示になっても再接続ボタンは押さず、復旧音に従ってください。\n"
+                "最初の確認音ではまだ設定を変えません。3・2・1 の後の切断音を待ってください。")
+            self.event("instructions", text=text)
+            print("\n" + text, flush=True)
+            return
         if self.scenario.startswith("l3-"):
             text = (
                 f"{self.result['scenario'].split('-')[0]}: Wi-Fi を ON、モバイルデータ通信を OFF にして準備してください。\n"
@@ -205,12 +251,12 @@ class Runner:
         self.status("countdown")
         for remaining in (3, 2, 1):
             self.observer.poll()
-            self.observer.healthy(time.monotonic(), "wifi")
+            self.observer.healthy(time.monotonic(), self.baseline_interface)
             self.event("countdown", remaining=remaining)
             print(f"切断の操作音まで {remaining}…", flush=True)
             time.sleep(1)
         self.observer.poll()
-        self.observer.healthy(time.monotonic(), "wifi")
+        self.observer.healthy(time.monotonic(), self.baseline_interface)
 
     def command(self, parts, name):
         with (self.folder / (name + ".log")).open("w") as log:
@@ -270,7 +316,10 @@ class Runner:
         setup = ("Wi-Fi を ON、モバイルデータ通信を OFF にしてください。"
                  if self.scenario.startswith("l3-") else "Wi-Fi とモバイルデータ通信を ON にしてください。")
         self.cue("音の確認です。iPhone を USB 接続し、" + setup, "Tink")
-        print("Network Link Conditioner / Xcode の通信障害設定を解除してください。\n"
+        condition_setup = ("Mobile 100% Loss を有効のまま維持してください。\n"
+                           if self.scenario == "broken-cellular" else
+                           "Network Link Conditioner / Xcode の通信障害設定を解除してください。\n")
+        print(condition_setup +
               "試験中は案内された切り替えだけを行い、その後すぐ試験アプリへ戻ってください。\n"
               "中断・終了時も通信設定は自動復元しません。最後に手動で復元してください。\n"
               "操作と音の対応を読み、確認音が聞こえ、準備できたら Enter: ", end="", flush=True)
@@ -289,8 +338,8 @@ class Runner:
         if start.get("controlProtocolVersion", 0) < 2:
             raise RuntimeError("Rebuild and install the demo from this checkout (control protocol 2 required)")
         self.wait(lambda: self.observer.latest("open"), 60, "channel open")
-        self.milestone("baselinePath", self.path("wifi", 0))
-        self.milestone("baselineEcho", self.probe("wifi"))
+        self.milestone("baselinePath", self.path(self.baseline_interface, 0))
+        self.milestone("baselineEcho", self.probe(self.baseline_interface))
         if self.traffic == "streaming":
             self.milestone("baselineStream", self.wait(
                 lambda: next((r for r in self.observer.records if r.get("kind") == "app_log"
@@ -299,7 +348,7 @@ class Runner:
                 20, "baseline streaming delivery"))
         if self.scenario == "l3-flap":
             return self.flapping()
-        if self.scenario.startswith("l3-"):
+        if self.scenario.startswith("l3-") or self.scenario == "broken-cellular":
             return self.l3()
         self.countdown()
         self.status("awaiting-cellular")
@@ -458,13 +507,16 @@ class Runner:
         self.result["outcome"] = "l3-observed"
 
     def l3(self):
+        t13 = self.scenario == "broken-cellular"
+        fault_interface = "broken-cellular" if t13 else "offline"
         self.countdown()
-        self.status("awaiting-offline")
-        after = self.cue("Wi-Fi を切断してください。モバイルデータ通信は OFF のまま、すぐ試験アプリへ戻ってください。",
+        self.status("awaiting-cellular" if t13 else "awaiting-offline")
+        mobile = "ON、Mobile 100% Loss は有効" if t13 else "OFF"
+        after = self.cue(f"Wi-Fi を切断してください。モバイルデータ通信は {mobile} のまま、すぐ試験アプリへ戻ってください。",
                          "Glass", speech="Wi-Fi を切断してください")
-        offline = self.milestone("offlinePath", self.path("offline", after))
+        offline = self.milestone("cellularFaultPath" if t13 else "offlinePath", self.path(fault_interface, after))
         self.guard_cursor = len(self.observer.records)
-        self.status("holding-offline")
+        self.status("holding-cellular-loss" if t13 else "holding-offline")
         if self.scenario == "l3-pending":
             if self.observer.latest("error") or self.observer.latest("closed"):
                 raise RuntimeError("Channel terminated before the pending write; not a valid T10 trial")
@@ -487,7 +539,7 @@ class Runner:
             self.result["observedOfflineToPendingWriteSeconds"] = device_interval(offline, pending)
 
         def held():
-            self.observer.healthy(time.monotonic(), "offline", self.guard_cursor,
+            self.observer.healthy(time.monotonic(), fault_interface, self.guard_cursor,
                                   allow_channel_failure=True)
             heartbeat = self.observer.latest("heartbeat")
             return heartbeat if device_interval(offline, heartbeat) >= self.args.hold else None
@@ -499,8 +551,8 @@ class Runner:
         self.status("awaiting-wifi")
         after = self.cue("Wi-Fi を ON に戻してください。接続後、すぐ試験アプリへ戻ってください。",
                          "Hero", speech="Wi-Fi を戻してください")
-        restored = self.milestone("restoredPath", self.path("wifi", after))
-        self.result["observedOfflinePathSeconds"] = device_interval(offline, restored)
+        restored = self.milestone("restoredPath", self.path(self.baseline_interface, after))
+        self.result["observedBrokenCellularPathSeconds" if t13 else "observedOfflinePathSeconds"] = device_interval(offline, restored)
         self.status("checking-recovery")
         self.observer.poll()
 
@@ -517,7 +569,7 @@ class Runner:
                           "--name", "com.pmodular.webchannel.nettest.probe"], "recovery-probe")
 
             def recovered():
-                self.observer.healthy(time.monotonic(), "wifi", allow_channel_failure=True)
+                self.observer.healthy(time.monotonic(), self.baseline_interface, allow_channel_failure=True)
                 return terminal() or self.observer.probe_reply(probe_after)
 
             try:
@@ -532,7 +584,7 @@ class Runner:
                 self.result["channelObservation"] = "no-recovery-observed"
         if terminal():
             self.milestone("channelTerminal", terminal())
-            self.result["observedOfflineToTerminalSeconds"] = (
+            self.result["observedFaultToTerminalSeconds" if t13 else "observedOfflineToTerminalSeconds"] = (
                 terminal()["deviceUptimeSeconds"] - offline["deviceUptimeSeconds"])
             pending = self.result["milestones"].get("pendingWrite")
             if pending:
@@ -599,12 +651,14 @@ class Runner:
                   "Interface use reported by NWPathMonitor is not per-request proof; correlate task metrics.",
                   "Human setting changes are never automatically reverted. Restore settings manually.", ""]
         (self.folder / "report.md").write_text("\n".join(lines))
-        if self.scenario.startswith("l3-"):
+        if self.scenario.startswith("l3-") or self.scenario == "broken-cellular":
             case = self.result["scenario"].split("-")[0]
             lines[0] = f"# {case}: human-operated network off / on"
-            lines[4:6] = [f"Requested hold: {self.args.hold:g} s from the observed unsatisfied path.",
+            lines[4:6] = [f"Requested hold: {self.args.hold:g} s from the observed fault path.",
                           f"Observed offline interval: {self.result.get('observedOfflinePathSeconds', 'unavailable')} s.",
                           f"Channel observation: {self.result.get('channelObservation', 'unavailable')}."]
+            if self.scenario == "broken-cellular":
+                lines[5] = f"Observed broken-cellular interval: {self.result.get('observedBrokenCellularPathSeconds', 'unavailable')} s."
             if self.scenario == "l3-flap":
                 lines[5] = "Observed per-cycle intervals are recorded in result.json under cycles."
             (self.folder / "report.md").write_text("\n".join(lines))
@@ -637,8 +691,9 @@ def positive(value):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--device", required=True, help="UDID or CoreDevice ID; wired transport required")
-    parser.add_argument("--scenario", choices=("handoff", "l3-idle", "l3-pending", "l3-flap", "idle"), default="handoff",
-                        help="Handoff, T9/T10/T11, or M1 idle observation without faults or app sends")
+    parser.add_argument("--scenario", choices=("handoff", "l3-idle", "l3-pending", "l3-flap", "idle", "broken-cellular"), default="handoff",
+                        help="Handoff, T9/T10/T11/T13, or M1 idle observation")
+    parser.add_argument("--cellular-proof", type=Path, help="Required T13 interface-bound preflight result.json")
     parser.add_argument("--output", required=True, type=Path, help="New output directory")
     parser.add_argument("--traffic", choices=("idle", "streaming"), default="idle",
                         help="Handoff traffic; streaming sends one server message per second")
@@ -650,6 +705,13 @@ def main():
     parser.add_argument("--silent", action="store_true", help="Visual cues only")
     parser.add_argument("--no-speech", action="store_true", help="Play sounds without spoken instructions")
     args = parser.parse_args()
+    if args.scenario == "broken-cellular":
+        if not args.cellular_proof:
+            parser.error("T13 requires --cellular-proof and the manual cellular-only loss profile")
+        try:
+            validate_cellular_proof(json.loads(args.cellular_proof.read_text()))
+        except (OSError, ValueError, TypeError) as error:
+            parser.error(str(error))
     if args.scenario != "handoff" and (args.traffic != "idle" or args.observe_after):
         parser.error("--traffic streaming and --observe-after are supported only for handoff")
     if not sys.stdin.isatty():

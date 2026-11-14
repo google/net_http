@@ -1,0 +1,112 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -workspace webchannel/objc/demo/WebChanneliOSDemo/WebChanneliOSDemo.xcworkspace -scheme NetworkFailureSuspension -configuration Debug -destination platform=iOS,id=TEST_DEVICE_UDID -destination-timeout 20 -derivedDataPath /private/tmp/net-http-suspension-build -resultBundlePath /private/tmp/net-http-suspension-probe-20261114-01.xcresult -parallel-testing-enabled NO "-only-testing:NetworkFailureUITests/SuspensionProbeTests/testOSReportedSuspensionAndResume" test-without-building
+
+Writing result bundle at path:
+	/private/tmp/net-http-suspension-probe-20261114-01.xcresult
+
+2026-11-14 00:00:35.914059+0900 NetworkFailureUITests-Runner[32309:1640390] [Default] Running tests...
+    t =      nans Interface orientation changed to Portrait
+Test Suite 'Selected tests' started at 2026-11-14 00:00:41.452.
+Test Suite 'NetworkFailureUITests.xctest' started at 2026-11-14 00:00:41.453.
+Test Suite 'SuspensionProbeTests' started at 2026-11-14 00:00:41.453.
+Test Case '-[NetworkFailureUITests.SuspensionProbeTests testOSReportedSuspensionAndResume]' started.
+    t =     0.00s Start Test at 2026-11-14 00:00:41.454
+    t =     0.08s Set Up
+    t =     0.09s Open com.pmodular.webchannel.demo
+    t =     0.09s     Launch com.pmodular.webchannel.demo
+    t =     0.09s         Terminate com.pmodular.webchannel.demo:28605
+2026-11-14 00:00:42.814 xcodebuild[2183:9252040] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-11-14 00:00:42.814 xcodebuild[2183:9252040] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     3.05s         Setting up automation session
+    t =     3.34s         Wait for com.pmodular.webchannel.demo to idle
+    t =     4.53s Wait for com.pmodular.webchannel.demo to become Running Foreground
+SUSPENSION_PROBE {"applicationState":4,"deviceUnixSeconds":1794582045.9898,"deviceUptimeSeconds":215869.16954275002,"event":"foreground"}
+    t =     4.54s Pressing Home button
+SUSPENSION_PROBE {"applicationState":4,"deviceUnixSeconds":1794582046.5693741,"deviceUptimeSeconds":215869.74912666669,"event":"home_returned"}
+SUSPENSION_PROBE {"applicationState":4,"deviceUnixSeconds":1794582046.5697451,"deviceUptimeSeconds":215869.74949433334,"event":"state_observed"}
+SUSPENSION_PROBE {"applicationState":4,"deviceUnixSeconds":1794582047.5749211,"deviceUptimeSeconds":215870.75469104169,"event":"state_observed"}
+SUSPENSION_PROBE {"applicationState":4,"deviceUnixSeconds":1794582048.5801501,"deviceUptimeSeconds":215871.75993729167,"event":"state_observed"}
+SUSPENSION_PROBE {"applicationState":4,"deviceUnixSeconds":1794582049.582303,"deviceUptimeSeconds":215872.76210695834,"event":"state_observed"}
+SUSPENSION_PROBE {"applicationState":4,"deviceUnixSeconds":1794582050.5853992,"deviceUptimeSeconds":215873.76521641668,"event":"state_observed"}
+SUSPENSION_PROBE {"applicationState":4,"deviceUnixSeconds":1794582051.586396,"deviceUptimeSeconds":215874.76623358336,"event":"state_observed"}
+SUSPENSION_PROBE {"applicationState":4,"deviceUnixSeconds":1794582052.587419,"deviceUptimeSeconds":215875.76727450002,"event":"state_observed"}
+SUSPENSION_PROBE {"applicationState":4,"deviceUnixSeconds":1794582053.5884991,"deviceUptimeSeconds":215876.76837075001,"event":"state_observed"}
+SUSPENSION_PROBE {"applicationState":4,"deviceUnixSeconds":1794582054.593765,"deviceUptimeSeconds":215877.77365408334,"event":"state_observed"}
+SUSPENSION_PROBE {"applicationState":4,"deviceUnixSeconds":1794582055.5967889,"deviceUptimeSeconds":215878.77669458336,"event":"state_observed"}
+SUSPENSION_PROBE {"applicationState":4,"deviceUnixSeconds":1794582056.602021,"deviceUptimeSeconds":215879.78194391669,"event":"state_observed"}
+SUSPENSION_PROBE {"applicationState":4,"deviceUnixSeconds":1794582057.607244,"deviceUptimeSeconds":215880.78718391669,"event":"state_observed"}
+SUSPENSION_PROBE {"applicationState":4,"deviceUnixSeconds":1794582058.6125431,"deviceUptimeSeconds":215881.79249979169,"event":"state_observed"}
+SUSPENSION_PROBE {"applicationState":4,"deviceUnixSeconds":1794582059.6177869,"deviceUptimeSeconds":215882.79776095835,"event":"state_observed"}
+SUSPENSION_PROBE {"applicationState":4,"deviceUnixSeconds":1794582060.6209021,"deviceUptimeSeconds":215883.80089316668,"event":"state_observed"}
+SUSPENSION_PROBE {"applicationState":4,"deviceUnixSeconds":1794582061.6261759,"deviceUptimeSeconds":215884.80618491667,"event":"state_observed"}
+SUSPENSION_PROBE {"applicationState":4,"deviceUnixSeconds":1794582062.631433,"deviceUptimeSeconds":215885.81145812501,"event":"state_observed"}
+SUSPENSION_PROBE {"applicationState":4,"deviceUnixSeconds":1794582063.633251,"deviceUptimeSeconds":215886.81329391667,"event":"state_observed"}
+SUSPENSION_PROBE {"applicationState":4,"deviceUnixSeconds":1794582064.6350031,"deviceUptimeSeconds":215887.81506237501,"event":"state_observed"}
+SUSPENSION_PROBE {"applicationState":4,"deviceUnixSeconds":1794582065.636883,"deviceUptimeSeconds":215888.81695941667,"event":"state_observed"}
+SUSPENSION_PROBE {"applicationState":4,"deviceUnixSeconds":1794582066.638823,"deviceUptimeSeconds":215889.81891679167,"event":"state_observed"}
+SUSPENSION_PROBE {"applicationState":4,"deviceUnixSeconds":1794582067.641253,"deviceUptimeSeconds":215890.82136366668,"event":"state_observed"}
+SUSPENSION_PROBE {"applicationState":4,"deviceUnixSeconds":1794582068.646471,"deviceUptimeSeconds":215891.82659900002,"event":"state_observed"}
+SUSPENSION_PROBE {"applicationState":4,"deviceUnixSeconds":1794582069.6517,"deviceUptimeSeconds":215892.83184441668,"event":"state_observed"}
+SUSPENSION_PROBE {"applicationState":4,"deviceUnixSeconds":1794582070.6570048,"deviceUptimeSeconds":215893.83716683334,"event":"state_observed"}
+SUSPENSION_PROBE {"applicationState":4,"deviceUnixSeconds":1794582071.6623449,"deviceUptimeSeconds":215894.84252370836,"event":"state_observed"}
+SUSPENSION_PROBE {"applicationState":4,"deviceUnixSeconds":1794582072.6676731,"deviceUptimeSeconds":215895.84786912502,"event":"state_observed"}
+SUSPENSION_PROBE {"applicationState":4,"deviceUnixSeconds":1794582073.6729209,"deviceUptimeSeconds":215896.85313437501,"event":"state_observed"}
+SUSPENSION_PROBE {"applicationState":4,"deviceUnixSeconds":1794582074.678185,"deviceUptimeSeconds":215897.85841333334,"event":"state_observed"}
+SUSPENSION_PROBE {"applicationState":4,"deviceUnixSeconds":1794582075.683408,"deviceUptimeSeconds":215898.86365570835,"event":"state_observed"}
+SUSPENSION_PROBE {"applicationState":4,"deviceUnixSeconds":1794582076.688628,"deviceUptimeSeconds":215899.86889245835,"event":"state_observed"}
+SUSPENSION_PROBE {"applicationState":4,"deviceUnixSeconds":1794582077.693851,"deviceUptimeSeconds":215900.874132375,"event":"state_observed"}
+SUSPENSION_PROBE {"applicationState":4,"deviceUnixSeconds":1794582078.6990929,"deviceUptimeSeconds":215901.87939154168,"event":"state_observed"}
+SUSPENSION_PROBE {"applicationState":4,"deviceUnixSeconds":1794582079.704319,"deviceUptimeSeconds":215902.88463466667,"event":"state_observed"}
+SUSPENSION_PROBE {"applicationState":4,"deviceUnixSeconds":1794582080.70961,"deviceUptimeSeconds":215903.88994233334,"event":"state_observed"}
+SUSPENSION_PROBE {"applicationState":4,"deviceUnixSeconds":1794582081.714839,"deviceUptimeSeconds":215904.89518854168,"event":"state_observed"}
+SUSPENSION_PROBE {"applicationState":4,"deviceUnixSeconds":1794582082.7201691,"deviceUptimeSeconds":215905.90053541667,"event":"state_observed"}
+SUSPENSION_PROBE {"applicationState":4,"deviceUnixSeconds":1794582083.7222362,"deviceUptimeSeconds":215906.90262037501,"event":"state_observed"}
+SUSPENSION_PROBE {"applicationState":4,"deviceUnixSeconds":1794582084.7274561,"deviceUptimeSeconds":215907.90785650001,"event":"state_observed"}
+SUSPENSION_PROBE {"applicationState":4,"deviceUnixSeconds":1794582085.731858,"deviceUptimeSeconds":215908.91227562501,"event":"state_observed"}
+SUSPENSION_PROBE {"applicationState":4,"deviceUnixSeconds":1794582086.733654,"deviceUptimeSeconds":215909.91408941668,"event":"state_observed"}
+SUSPENSION_PROBE {"applicationState":4,"deviceUnixSeconds":1794582087.735635,"deviceUptimeSeconds":215910.91608683334,"event":"state_observed"}
+SUSPENSION_PROBE {"applicationState":4,"deviceUnixSeconds":1794582088.7393489,"deviceUptimeSeconds":215911.91981808335,"event":"state_observed"}
+SUSPENSION_PROBE {"applicationState":4,"deviceUnixSeconds":1794582089.740418,"deviceUptimeSeconds":215912.92090366667,"event":"state_observed"}
+SUSPENSION_PROBE {"applicationState":4,"deviceUnixSeconds":1794582090.7449989,"deviceUptimeSeconds":215913.92550170835,"event":"state_observed"}
+TEST_WORKSPACE_HOME/net_http/webchannel/objc/demo/WebChanneliOSDemo/NetworkFailureUITests/SuspensionProbeTests.swift:53: error: -[NetworkFailureUITests.SuspensionProbeTests testOSReportedSuspensionAndResume] : XCTAssertTrue failed - OS did not report runningBackgroundSuspended; heartbeat silence is not substituted
+    t =    50.42s Tear Down
+Test Case '-[NetworkFailureUITests.SuspensionProbeTests testOSReportedSuspensionAndResume]' failed (50.677 seconds).
+Test Suite 'SuspensionProbeTests' failed at 2026-11-14 00:01:32.133.
+	 Executed 1 test, with 1 failure (0 unexpected) in 50.677 (50.680) seconds
+Test Suite 'NetworkFailureUITests.xctest' failed at 2026-11-14 00:01:32.136.
+	 Executed 1 test, with 1 failure (0 unexpected) in 50.677 (50.684) seconds
+Test Suite 'Selected tests' failed at 2026-11-14 00:01:32.138.
+	 Executed 1 test, with 1 failure (0 unexpected) in 50.677 (50.686) seconds
+2026-11-14 00:01:33.523 xcodebuild[2183:9252076]  IDETestOperationsObserverDebug: Failure collecting diagnostics from devices: Process exited with error 1:
+ ERROR: The operation couldn?t be completed. (CoreDeviceCLISupport.DiagnoseError error 0.)
+This tool generates files that allow Apple to investigate issues with your
+computer and help improve Apple products. The files might contain personal
+information found on your device or associated with your Apple Account(s),
+including but not limited to your name, serial numbers of your device,
+your device name, your device's location over the last one to two days,
+your attached peripheral devices, your user name, your email address and
+email settings, file paths, file names, Siri suggestions, your computer's
+IP addresses, and network connection information.
+
+This information is used by Apple in accordance with its privacy policy
+(www.apple.com/privacy) and is not shared with any other company. By using
+this tool and sending the results to Apple, you consent to Apple using the
+contents of these files to improve Apple products.
+
+An error occurred while running devicectl diagnose. Will archive the diagnostics collected thus far.
+Wrote file to /tmp/net-http-suspension-probe-20261114-01.xcresult/Staging/1_Test/Diagnostics/devicectl_diagnostics.zip
+Partial devicectl diagnose bundle located here: /tmp/net-http-suspension-probe-20261114-01.xcresult/Staging/1_Test/Diagnostics/devicectl_diagnostics.zip
+
+2026-11-14 00:01:33.529 xcodebuild[2183:9252040] [MT] IDETestOperationsObserverDebug: 60.807 elapsed -- Testing started completed.
+2026-11-14 00:01:33.529 xcodebuild[2183:9252040] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-11-14 00:01:33.529 xcodebuild[2183:9252040] [MT] IDETestOperationsObserverDebug: 60.807 sec, +60.807 sec -- end
+
+Test session results, code coverage, and logs:
+	/tmp/net-http-suspension-probe-20261114-01.xcresult
+
+Failing tests:
+	SuspensionProbeTests.testOSReportedSuspensionAndResume()
+
+** TEST EXECUTE FAILED **
+
+Testing started

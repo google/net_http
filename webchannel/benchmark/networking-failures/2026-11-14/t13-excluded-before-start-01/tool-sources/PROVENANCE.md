@@ -1,0 +1,1 @@
+Reference copies after correcting the condition-clear instruction. This excluded readiness attempt used earlier text preserved in its cue journal; it did not launch the app. These are not exact measured sources for that excluded attempt.
