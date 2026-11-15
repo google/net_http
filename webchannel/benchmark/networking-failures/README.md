@@ -1,5 +1,7 @@
 # iOS networking-failure experiments
 
+**Start here:** the [2026-11-15 summary and next steps](summary-2026-11-15.md).
+
 **Network topology clarification:** T1–T8 traversed a Linux box. The operator
 subsequently connected the AP directly to the switching hub, bypassing that box.
 See the [operator-reported wiring change](network-topology-note.md) before comparing phases.
