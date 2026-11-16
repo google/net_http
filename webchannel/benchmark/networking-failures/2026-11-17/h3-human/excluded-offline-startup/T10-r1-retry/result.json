@@ -1,0 +1,101 @@
+{
+  "run": "handoff-6a0bb78997b9",
+  "scenario": "T10-l3-pending",
+  "requestedHoldSeconds": 30.0,
+  "outcome": "protocol-not-confirmed",
+  "milestones": {},
+  "timingNotes": [
+    "Device intervals use deviceUptimeSeconds; no host/device UTC subtraction.",
+    "Path callbacks describe observed routing, not physical switch timestamps.",
+    "Cue times are host times; human response is measured, not assumed instantaneous.",
+    "No SDK test-case pass/fail or real OS suspension is inferred."
+  ],
+  "traffic": "idle",
+  "requestedPostRestoreObservationSeconds": 0,
+  "error": "Timed out: channel open",
+  "requestedHTTP3": true,
+  "endpoint": "https://webchannel.googleapis.com/staging/channel/generator",
+  "protocolEvidence": {
+    "coverage": "unconfirmed",
+    "h3Transactions": 0,
+    "unknownTransactions": 2,
+    "otherProtocols": [],
+    "h3ObservedWithoutKnownFallback": false,
+    "note": "Unknown transactions are not h3 evidence; baseline h3 is checked before faults."
+  },
+  "protocolCoverage": "unconfirmed",
+  "finishedUTC": "2026-11-17T13:29:31.946Z",
+  "errorCodes": [
+    1
+  ],
+  "openCount": 0,
+  "lifecycleEvents": [
+    {
+      "deviceUnixSeconds": 1794922110.519217,
+      "deviceUptimeSeconds": 369507.4947716667,
+      "kind": "lifecycle",
+      "notification": "UIApplicationDidBecomeActiveNotification",
+      "run": "handoff-6a0bb78997b9",
+      "hostReceivedMonotonic": 80869.87424775,
+      "hostReceivedUTC": "2026-11-17T13:28:30.515Z"
+    },
+    {
+      "deviceUnixSeconds": 1794922113.344993,
+      "deviceUptimeSeconds": 369510.3205944167,
+      "kind": "lifecycle",
+      "notification": "UIApplicationWillResignActiveNotification",
+      "run": "handoff-6a0bb78997b9",
+      "hostReceivedMonotonic": 80872.700056166,
+      "hostReceivedUTC": "2026-11-17T13:28:33.341Z"
+    },
+    {
+      "deviceUnixSeconds": 1794922113.391803,
+      "deviceUptimeSeconds": 369510.3674043334,
+      "kind": "lifecycle",
+      "notification": "UIApplicationDidBecomeActiveNotification",
+      "run": "handoff-6a0bb78997b9",
+      "hostReceivedMonotonic": 80872.746357625,
+      "hostReceivedUTC": "2026-11-17T13:28:33.387Z"
+    }
+  ],
+  "taskMetrics": [
+    {
+      "deviceUnixSeconds": 1794922110.316791,
+      "deviceUptimeSeconds": 369507.2923422084,
+      "kind": "task_metrics",
+      "run": "handoff-6a0bb78997b9",
+      "transactions": [
+        {
+          "fetchStart": 1794922110.3105788,
+          "isCellular": false,
+          "method": "POST",
+          "protocol": "unknown",
+          "reusedConnection": false,
+          "rid": "47261",
+          "url": "https://webchannel.googleapis.com/staging/channel/generator?VER=8&RID=47261&CVER=25&X-HTTP-Session-Id=gsessionid&t=1"
+        }
+      ],
+      "hostReceivedMonotonic": 80869.671486875,
+      "hostReceivedUTC": "2026-11-17T13:28:30.313Z"
+    },
+    {
+      "deviceUnixSeconds": 1794922110.319467,
+      "deviceUptimeSeconds": 369507.2950174167,
+      "kind": "task_metrics",
+      "run": "handoff-6a0bb78997b9",
+      "transactions": [
+        {
+          "fetchStart": 1794922110.318232,
+          "isCellular": false,
+          "method": "GET",
+          "protocol": "unknown",
+          "reusedConnection": false,
+          "rid": "",
+          "url": "https://webchannel.googleapis.com/staging/channel/generator/test?MODE=network"
+        }
+      ],
+      "hostReceivedMonotonic": 80869.673482125,
+      "hostReceivedUTC": "2026-11-17T13:28:30.315Z"
+    }
+  ]
+}

@@ -1,0 +1,112 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -xctestrun /private/tmp/net-http-h3-qlog-build-20261117/Build/Products/T15-T15-3a92464253d2.xctestrun -destination platform=iOS,id=TEST_DEVICE_UDID -destination-timeout 20 -parallel-testing-enabled NO -resultBundlePath /private/tmp/net-http-h3-suspension-20261117/T15-30s-r1/observer.xcresult "-only-testing:NetworkFailureUITests/SuspensionProbeTests/testOSReportedSuspensionAndResume" test-without-building
+
+Writing result bundle at path:
+	/private/tmp/net-http-h3-suspension-20261117/T15-30s-r1/observer.xcresult
+
+--- xcodebuild: WARNING: Using the first of multiple matching destinations:
+{ platform:iOS, arch:arm64e, id:TEST_DEVICE_UDID, name:TEST_DEVICE_NAME }
+{ platform:iOS, arch:arm64, id:TEST_DEVICE_UDID, name:TEST_DEVICE_NAME }
+2026-11-17 14:50:45.893953+0900 NetworkFailureUITests-Runner[46173:2612503] [Default] Running tests...
+    t =      nans Interface orientation changed to Portrait
+Test Suite 'Selected tests' started at 2026-11-17 14:51:43.456.
+Test Suite 'NetworkFailureUITests.xctest' started at 2026-11-17 14:51:43.457.
+Test Suite 'SuspensionProbeTests' started at 2026-11-17 14:51:43.457.
+Test Case '-[NetworkFailureUITests.SuspensionProbeTests testOSReportedSuspensionAndResume]' started.
+    t =     0.00s Start Test at 2026-11-17 14:51:43.458
+    t =     0.08s Set Up
+    t =     0.08s Wait for com.pmodular.webchannel.demo to become Running Foreground
+SUSPENSION_PROBE {"applicationState":4,"deviceUnixSeconds":1794894703.5401869,"deviceUptimeSeconds":342100.07897404168,"event":"foreground","isMainThread":true,"stateName":"runningForeground"}
+    t =     0.08s Pressing Home button
+SUSPENSION_PROBE {"applicationState":4,"deviceUnixSeconds":1794894704.0223908,"deviceUptimeSeconds":342100.56118479167,"event":"home_returned","isMainThread":true,"stateName":"runningForeground"}
+SUSPENSION_PROBE {"applicationState":4,"deviceUnixSeconds":1794894704.0228028,"deviceUptimeSeconds":342100.56159724999,"event":"state_observed","isMainThread":true,"stateName":"runningForeground"}
+SUSPENSION_PROBE {"applicationState":3,"deviceUnixSeconds":1794894705.026541,"deviceUptimeSeconds":342101.56535125,"event":"state_observed","isMainThread":true,"stateName":"runningBackground"}
+SUSPENSION_PROBE {"applicationState":3,"deviceUnixSeconds":1794894706.03356,"deviceUptimeSeconds":342102.57238750003,"event":"state_observed","isMainThread":true,"stateName":"runningBackground"}
+SUSPENSION_PROBE {"applicationState":3,"deviceUnixSeconds":1794894707.0573568,"deviceUptimeSeconds":342103.59620145836,"event":"state_observed","isMainThread":true,"stateName":"runningBackground"}
+SUSPENSION_PROBE {"applicationState":3,"deviceUnixSeconds":1794894708.0755911,"deviceUptimeSeconds":342104.61445216672,"event":"state_observed","isMainThread":true,"stateName":"runningBackground"}
+SUSPENSION_PROBE {"applicationState":3,"deviceUnixSeconds":1794894709.086623,"deviceUptimeSeconds":342105.62550154171,"event":"state_observed","isMainThread":true,"stateName":"runningBackground"}
+SUSPENSION_PROBE {"applicationState":3,"deviceUnixSeconds":1794894710.1199031,"deviceUptimeSeconds":342106.65879816667,"event":"state_observed","isMainThread":true,"stateName":"runningBackground"}
+SUSPENSION_PROBE {"applicationState":3,"deviceUnixSeconds":1794894711.1502781,"deviceUptimeSeconds":342107.68919087504,"event":"state_observed","isMainThread":true,"stateName":"runningBackground"}
+SUSPENSION_PROBE {"applicationState":3,"deviceUnixSeconds":1794894712.167701,"deviceUptimeSeconds":342108.70663045836,"event":"state_observed","isMainThread":true,"stateName":"runningBackground"}
+SUSPENSION_PROBE {"applicationState":3,"deviceUnixSeconds":1794894713.1703291,"deviceUptimeSeconds":342109.70927412499,"event":"state_observed","isMainThread":true,"stateName":"runningBackground"}
+SUSPENSION_PROBE {"applicationState":3,"deviceUnixSeconds":1794894714.182739,"deviceUptimeSeconds":342110.72170066671,"event":"state_observed","isMainThread":true,"stateName":"runningBackground"}
+SUSPENSION_PROBE {"applicationState":3,"deviceUnixSeconds":1794894715.2031331,"deviceUptimeSeconds":342111.74211187504,"event":"state_observed","isMainThread":true,"stateName":"runningBackground"}
+SUSPENSION_PROBE {"applicationState":3,"deviceUnixSeconds":1794894716.2203388,"deviceUptimeSeconds":342112.75933508336,"event":"state_observed","isMainThread":true,"stateName":"runningBackground"}
+SUSPENSION_PROBE {"applicationState":3,"deviceUnixSeconds":1794894717.2340279,"deviceUptimeSeconds":342113.77304083336,"event":"state_observed","isMainThread":true,"stateName":"runningBackground"}
+SUSPENSION_PROBE {"applicationState":3,"deviceUnixSeconds":1794894718.2549748,"deviceUptimeSeconds":342114.79400500003,"event":"state_observed","isMainThread":true,"stateName":"runningBackground"}
+SUSPENSION_PROBE {"applicationState":3,"deviceUnixSeconds":1794894719.273056,"deviceUptimeSeconds":342115.81210262503,"event":"state_observed","isMainThread":true,"stateName":"runningBackground"}
+SUSPENSION_PROBE {"applicationState":3,"deviceUnixSeconds":1794894720.297353,"deviceUptimeSeconds":342116.83641579171,"event":"state_observed","isMainThread":true,"stateName":"runningBackground"}
+SUSPENSION_PROBE {"applicationState":3,"deviceUnixSeconds":1794894721.3212671,"deviceUptimeSeconds":342117.86034762504,"event":"state_observed","isMainThread":true,"stateName":"runningBackground"}
+SUSPENSION_PROBE {"applicationState":3,"deviceUnixSeconds":1794894722.3509941,"deviceUptimeSeconds":342118.89009170834,"event":"state_observed","isMainThread":true,"stateName":"runningBackground"}
+SUSPENSION_PROBE {"applicationState":3,"deviceUnixSeconds":1794894723.3777928,"deviceUptimeSeconds":342119.91690775001,"event":"state_observed","isMainThread":true,"stateName":"runningBackground"}
+SUSPENSION_PROBE {"applicationState":3,"deviceUnixSeconds":1794894724.3967628,"deviceUptimeSeconds":342120.9358944167,"event":"state_observed","isMainThread":true,"stateName":"runningBackground"}
+SUSPENSION_PROBE {"applicationState":3,"deviceUnixSeconds":1794894725.4180079,"deviceUptimeSeconds":342121.9571560417,"event":"state_observed","isMainThread":true,"stateName":"runningBackground"}
+SUSPENSION_PROBE {"applicationState":3,"deviceUnixSeconds":1794894726.4359789,"deviceUptimeSeconds":342122.97514333337,"event":"state_observed","isMainThread":true,"stateName":"runningBackground"}
+SUSPENSION_PROBE {"applicationState":3,"deviceUnixSeconds":1794894727.451226,"deviceUptimeSeconds":342123.99040716671,"event":"state_observed","isMainThread":true,"stateName":"runningBackground"}
+SUSPENSION_PROBE {"applicationState":3,"deviceUnixSeconds":1794894728.4687638,"deviceUptimeSeconds":342125.00796208333,"event":"state_observed","isMainThread":true,"stateName":"runningBackground"}
+SUSPENSION_PROBE {"applicationState":3,"deviceUnixSeconds":1794894729.489783,"deviceUptimeSeconds":342126.02899800002,"event":"state_observed","isMainThread":true,"stateName":"runningBackground"}
+SUSPENSION_PROBE {"applicationState":3,"deviceUnixSeconds":1794894730.4978042,"deviceUptimeSeconds":342127.03703608335,"event":"state_observed","isMainThread":true,"stateName":"runningBackground"}
+SUSPENSION_PROBE {"applicationState":3,"deviceUnixSeconds":1794894731.5210838,"deviceUptimeSeconds":342128.06033308333,"event":"state_observed","isMainThread":true,"stateName":"runningBackground"}
+SUSPENSION_PROBE {"applicationState":3,"deviceUnixSeconds":1794894732.537302,"deviceUptimeSeconds":342129.07656866667,"event":"state_observed","isMainThread":true,"stateName":"runningBackground"}
+SUSPENSION_PROBE {"applicationState":3,"deviceUnixSeconds":1794894733.5514359,"deviceUptimeSeconds":342130.09071866667,"event":"state_observed","isMainThread":true,"stateName":"runningBackground"}
+SUSPENSION_PROBE {"applicationState":3,"deviceUnixSeconds":1794894734.568435,"deviceUptimeSeconds":342131.1077345417,"event":"state_observed","isMainThread":true,"stateName":"runningBackground"}
+SUSPENSION_PROBE {"applicationState":3,"deviceUnixSeconds":1794894735.583817,"deviceUptimeSeconds":342132.12313374999,"event":"state_observed","isMainThread":true,"stateName":"runningBackground"}
+SUSPENSION_PROBE {"applicationState":2,"deviceUnixSeconds":1794894736.5978179,"deviceUptimeSeconds":342133.13715145836,"event":"state_observed","isMainThread":true,"stateName":"runningBackgroundSuspended"}
+SUSPENSION_PROBE {"applicationState":2,"deviceUnixSeconds":1794894736.5980859,"deviceUptimeSeconds":342133.13741962501,"event":"suspended_confirmed","isMainThread":true,"stateName":"runningBackgroundSuspended"}
+SUSPENSION_PROBE {"applicationState":2,"deviceUnixSeconds":1794894736.6010871,"deviceUptimeSeconds":342133.14041991672,"event":"suspension_hold_started","isMainThread":true,"stateName":"runningBackgroundSuspended"}
+SUSPENSION_PROBE {"applicationState":2,"deviceUnixSeconds":1794894737.62113,"deviceUptimeSeconds":342134.16048016667,"event":"suspension_hold_observed","isMainThread":true,"stateName":"runningBackgroundSuspended"}
+SUSPENSION_PROBE {"applicationState":2,"deviceUnixSeconds":1794894738.652041,"deviceUptimeSeconds":342135.19140775001,"event":"suspension_hold_observed","isMainThread":true,"stateName":"runningBackgroundSuspended"}
+SUSPENSION_PROBE {"applicationState":2,"deviceUnixSeconds":1794894739.669827,"deviceUptimeSeconds":342136.20921020833,"event":"suspension_hold_observed","isMainThread":true,"stateName":"runningBackgroundSuspended"}
+SUSPENSION_PROBE {"applicationState":2,"deviceUnixSeconds":1794894740.698401,"deviceUptimeSeconds":342137.23780187505,"event":"suspension_hold_observed","isMainThread":true,"stateName":"runningBackgroundSuspended"}
+SUSPENSION_PROBE {"applicationState":2,"deviceUnixSeconds":1794894741.7221611,"deviceUptimeSeconds":342138.26157879166,"event":"suspension_hold_observed","isMainThread":true,"stateName":"runningBackgroundSuspended"}
+SUSPENSION_PROBE {"applicationState":2,"deviceUnixSeconds":1794894742.7353811,"deviceUptimeSeconds":342139.27481625002,"event":"suspension_hold_observed","isMainThread":true,"stateName":"runningBackgroundSuspended"}
+SUSPENSION_PROBE {"applicationState":2,"deviceUnixSeconds":1794894743.7691278,"deviceUptimeSeconds":342140.30857912503,"event":"suspension_hold_observed","isMainThread":true,"stateName":"runningBackgroundSuspended"}
+SUSPENSION_PROBE {"applicationState":2,"deviceUnixSeconds":1794894744.779433,"deviceUptimeSeconds":342141.31890141667,"event":"suspension_hold_observed","isMainThread":true,"stateName":"runningBackgroundSuspended"}
+SUSPENSION_PROBE {"applicationState":2,"deviceUnixSeconds":1794894745.7987289,"deviceUptimeSeconds":342142.33821183338,"event":"suspension_hold_observed","isMainThread":true,"stateName":"runningBackgroundSuspended"}
+SUSPENSION_PROBE {"applicationState":2,"deviceUnixSeconds":1794894746.8192759,"deviceUptimeSeconds":342143.35877774999,"event":"suspension_hold_observed","isMainThread":true,"stateName":"runningBackgroundSuspended"}
+SUSPENSION_PROBE {"applicationState":2,"deviceUnixSeconds":1794894747.8363252,"deviceUptimeSeconds":342144.3758440417,"event":"suspension_hold_observed","isMainThread":true,"stateName":"runningBackgroundSuspended"}
+SUSPENSION_PROBE {"applicationState":2,"deviceUnixSeconds":1794894748.8691411,"deviceUptimeSeconds":342145.40867708338,"event":"suspension_hold_observed","isMainThread":true,"stateName":"runningBackgroundSuspended"}
+SUSPENSION_PROBE {"applicationState":2,"deviceUnixSeconds":1794894749.889307,"deviceUptimeSeconds":342146.42885979166,"event":"suspension_hold_observed","isMainThread":true,"stateName":"runningBackgroundSuspended"}
+SUSPENSION_PROBE {"applicationState":2,"deviceUnixSeconds":1794894750.9219241,"deviceUptimeSeconds":342147.46149375004,"event":"suspension_hold_observed","isMainThread":true,"stateName":"runningBackgroundSuspended"}
+SUSPENSION_PROBE {"applicationState":2,"deviceUnixSeconds":1794894751.9354949,"deviceUptimeSeconds":342148.47508245835,"event":"suspension_hold_observed","isMainThread":true,"stateName":"runningBackgroundSuspended"}
+SUSPENSION_PROBE {"applicationState":2,"deviceUnixSeconds":1794894752.9534931,"deviceUptimeSeconds":342149.49309620837,"event":"suspension_hold_observed","isMainThread":true,"stateName":"runningBackgroundSuspended"}
+SUSPENSION_PROBE {"applicationState":2,"deviceUnixSeconds":1794894753.9746099,"deviceUptimeSeconds":342150.51423070836,"event":"suspension_hold_observed","isMainThread":true,"stateName":"runningBackgroundSuspended"}
+SUSPENSION_PROBE {"applicationState":2,"deviceUnixSeconds":1794894754.988961,"deviceUptimeSeconds":342151.52859862504,"event":"suspension_hold_observed","isMainThread":true,"stateName":"runningBackgroundSuspended"}
+SUSPENSION_PROBE {"applicationState":2,"deviceUnixSeconds":1794894756.0052261,"deviceUptimeSeconds":342152.54487987503,"event":"suspension_hold_observed","isMainThread":true,"stateName":"runningBackgroundSuspended"}
+SUSPENSION_PROBE {"applicationState":2,"deviceUnixSeconds":1794894757.0357552,"deviceUptimeSeconds":342153.57542670838,"event":"suspension_hold_observed","isMainThread":true,"stateName":"runningBackgroundSuspended"}
+SUSPENSION_PROBE {"applicationState":2,"deviceUnixSeconds":1794894758.0531931,"deviceUptimeSeconds":342154.59288100002,"event":"suspension_hold_observed","isMainThread":true,"stateName":"runningBackgroundSuspended"}
+SUSPENSION_PROBE {"applicationState":2,"deviceUnixSeconds":1794894759.086329,"deviceUptimeSeconds":342155.62603425002,"event":"suspension_hold_observed","isMainThread":true,"stateName":"runningBackgroundSuspended"}
+SUSPENSION_PROBE {"applicationState":2,"deviceUnixSeconds":1794894760.1197071,"deviceUptimeSeconds":342156.65942633338,"event":"suspension_hold_observed","isMainThread":true,"stateName":"runningBackgroundSuspended"}
+SUSPENSION_PROBE {"applicationState":2,"deviceUnixSeconds":1794894761.1372519,"deviceUptimeSeconds":342157.67699087504,"event":"suspension_hold_observed","isMainThread":true,"stateName":"runningBackgroundSuspended"}
+SUSPENSION_PROBE {"applicationState":2,"deviceUnixSeconds":1794894762.1699171,"deviceUptimeSeconds":342158.70967320836,"event":"suspension_hold_observed","isMainThread":true,"stateName":"runningBackgroundSuspended"}
+SUSPENSION_PROBE {"applicationState":2,"deviceUnixSeconds":1794894763.1873679,"deviceUptimeSeconds":342159.72714112501,"event":"suspension_hold_observed","isMainThread":true,"stateName":"runningBackgroundSuspended"}
+SUSPENSION_PROBE {"applicationState":2,"deviceUnixSeconds":1794894764.2068419,"deviceUptimeSeconds":342160.74663233338,"event":"suspension_hold_observed","isMainThread":true,"stateName":"runningBackgroundSuspended"}
+SUSPENSION_PROBE {"applicationState":2,"deviceUnixSeconds":1794894765.2224789,"deviceUptimeSeconds":342161.76228600001,"event":"suspension_hold_observed","isMainThread":true,"stateName":"runningBackgroundSuspended"}
+SUSPENSION_PROBE {"applicationState":2,"deviceUnixSeconds":1794894766.238167,"deviceUptimeSeconds":342162.77799066668,"event":"suspension_hold_observed","isMainThread":true,"stateName":"runningBackgroundSuspended"}
+SUSPENSION_PROBE {"applicationState":2,"deviceUnixSeconds":1794894767.2548289,"deviceUptimeSeconds":342163.7946690417,"event":"suspension_hold_observed","isMainThread":true,"stateName":"runningBackgroundSuspended"}
+SUSPENSION_PROBE {"applicationState":2,"deviceUnixSeconds":1794894767.255271,"deviceUptimeSeconds":342163.79511208337,"event":"suspension_hold_complete","isMainThread":true,"stateName":"runningBackgroundSuspended"}
+    t =    63.80s Open com.pmodular.webchannel.demo
+    t =    63.80s     Activate com.pmodular.webchannel.demo
+    t =    63.90s         Wait for com.pmodular.webchannel.demo to idle
+    t =    63.93s Wait for com.pmodular.webchannel.demo to become Running Foreground
+SUSPENSION_PROBE {"applicationState":4,"deviceUnixSeconds":1794894767.3876939,"deviceUptimeSeconds":342163.92753770837,"event":"foreground_after_resume","isMainThread":true,"stateName":"runningForeground"}
+SUSPENSION_PROBE {"applicationState":4,"deviceUnixSeconds":1794894777.4613261,"deviceUptimeSeconds":342174.00133537501,"event":"cleanup","isMainThread":true,"stateName":"runningForeground"}
+    t =    74.01s Added attachment named 'os-suspension-state-observations'
+    t =    74.02s Tear Down
+Test Case '-[NetworkFailureUITests.SuspensionProbeTests testOSReportedSuspensionAndResume]' passed (74.296 seconds).
+Test Suite 'SuspensionProbeTests' passed at 2026-11-17 14:52:57.756.
+	 Executed 1 test, with 0 failures (0 unexpected) in 74.296 (74.299) seconds
+Test Suite 'NetworkFailureUITests.xctest' passed at 2026-11-17 14:52:57.759.
+	 Executed 1 test, with 0 failures (0 unexpected) in 74.296 (74.301) seconds
+Test Suite 'Selected tests' passed at 2026-11-17 14:52:57.760.
+	 Executed 1 test, with 0 failures (0 unexpected) in 74.296 (74.304) seconds
+2026-11-17 14:52:58.053 xcodebuild[13726:564853] [MT] IDETestOperationsObserverDebug: 133.900 elapsed -- Testing started completed.
+2026-11-17 14:52:58.053 xcodebuild[13726:564853] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-11-17 14:52:58.053 xcodebuild[13726:564853] [MT] IDETestOperationsObserverDebug: 133.900 sec, +133.900 sec -- end
+
+Test session results, code coverage, and logs:
+	/tmp/net-http-h3-suspension-20261117/T15-30s-r1/observer.xcresult
+
+** TEST EXECUTE SUCCEEDED **
+
+Testing started

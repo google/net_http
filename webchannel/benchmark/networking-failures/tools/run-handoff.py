@@ -26,7 +26,8 @@ def matches_path(record, interface):
     if interface == "offline":
         return record.get("kind") == "path" and record.get("status") == "unsatisfied"
     if interface == "wifi-present":
-        return record.get("kind") == "path" and record.get("status") == "satisfied" and record.get("wifi") is True
+        return (record.get("kind") == "path" and record.get("status") == "satisfied"
+                and record.get("wifi") is True and record.get("wired") is False)
     if interface == "broken-cellular":
         return (record.get("kind") == "path" and record.get("wifi") is False
                 and (record.get("cellular") is True or record.get("status") == "unsatisfied"))
@@ -137,11 +138,13 @@ class Runner:
         self.args = args
         self.folder = args.output
         self.scenario = getattr(args, "scenario", "handoff")
-        self.baseline_interface = "wifi-present" if self.scenario == "broken-cellular" else "wifi"
+        self.baseline_interface = "wifi-present" if self.scenario in ("broken-cellular", "handoff") else "wifi"
         self.traffic = getattr(args, "traffic", "idle")
         self.observe_after = getattr(args, "observe_after", 0)
         self.run_id = "handoff-" + uuid.uuid4().hex[:12]
         self.app = self.observer = None
+        self.debugger = self.debugger_log = None
+        self.debugger_pid = None
         self.guard_cursor = None
         self.phase = "preparing"
         self.audio = []
@@ -329,6 +332,8 @@ class Runner:
         self.status("starting-app")
         env = {"NETTEST_AUTORUN": "1", "NETTEST_RUN": self.run_id,
                "NETTEST_TRAFFIC": "pending" if self.scenario == "l3-pending" else self.traffic, "NETTEST_FAILFAST": "0"}
+        env.update(_support.experiment_environment(getattr(self.args, "http3", False), getattr(self.args, "endpoint", None),
+                                                   getattr(self.args, "qlog_directory", None)))
         self.app = Capture(["xcrun", "devicectl", "device", "process", "launch", "--device",
                             self.args.device, "--terminate-existing", "--console",
                             "--environment-variables", json.dumps(env), "com.pmodular.webchannel.demo"],
@@ -338,6 +343,8 @@ class Runner:
         if start.get("controlProtocolVersion", 0) < 2:
             raise RuntimeError("Rebuild and install the demo from this checkout (control protocol 2 required)")
         self.wait(lambda: self.observer.latest("open"), 60, "channel open")
+        if getattr(self.args, "http3", False):
+            _support.require_h3_baseline(self.app)
         self.milestone("baselinePath", self.path(self.baseline_interface, 0))
         self.milestone("baselineEcho", self.probe(self.baseline_interface))
         if self.traffic == "streaming":
@@ -380,10 +387,10 @@ class Runner:
         self.guard_cursor = None
         after = self.cue("Wi-Fi を ON に戻してください。接続後、すぐ試験アプリへ戻ってください。",
                          "Hero", speech="Wi-Fi を戻してください")
-        restored = self.milestone("restoredPath", self.path("wifi", after))
+        restored = self.milestone("restoredPath", self.path(self.baseline_interface, after))
         self.result["observedCellularPathSeconds"] = device_interval(cellular, restored)
         self.status("checking-recovery")
-        self.milestone("restoredEcho", self.probe("wifi"))
+        self.milestone("restoredEcho", self.probe(self.baseline_interface))
         if self.observe_after:
             self.observe_restored()
         self.wired("device-after")
@@ -394,13 +401,22 @@ class Runner:
         self.status("starting-app")
         env = {"NETTEST_AUTORUN": "1", "NETTEST_RUN": self.run_id,
                "NETTEST_TRAFFIC": "idle", "NETTEST_FAILFAST": "0"}
-        self.app = Capture(["xcrun", "devicectl", "device", "process", "launch", "--device",
+        env.update(_support.experiment_environment(getattr(self.args, "http3", False), getattr(self.args, "endpoint", None),
+                                                   getattr(self.args, "qlog_directory", None)))
+        launch = ["xcrun", "devicectl", "device", "process", "launch", "--device",
                             self.args.device, "--terminate-existing", "--console",
-                            "--environment-variables", json.dumps(env), "com.pmodular.webchannel.demo"],
-                           self.folder / "device-console.log")
+                            "--environment-variables", json.dumps(env)]
+        if getattr(self.args, "debugger", False):
+            launch.append("--start-stopped")
+        launch.append("com.pmodular.webchannel.demo")
+        self.app = Capture(launch, self.folder / "device-console.log")
         self.observer = Observer(self.app, self.run_id, self.device_stream)
+        if getattr(self.args, "debugger", False):
+            self.attach_idle_debugger()
         self.wait(lambda: self.observer.latest("autorun_start"), 30, "autorun_start")
         self.wait(lambda: self.observer.latest("open"), 60, "channel open")
+        if getattr(self.args, "http3", False):
+            _support.require_h3_baseline(self.app)
         start = self.wait(lambda: self.observer.latest("heartbeat")
                           if self.observer.active(time.monotonic()) else None, 15, "active heartbeat")
         self.milestone("idleStart", start)
@@ -426,6 +442,57 @@ class Runner:
         self.wired("device-after")
         self.result["outcome"] = "idle-observed"
 
+    def attach_idle_debugger(self):
+        # Diagnostic idle runs only: never use this method for OS suspension.
+        path = self.folder / "debugger-processes.json"
+        for _ in range(10):
+            self.command(["device", "info", "processes", "--device", self.args.device,
+                          "--json-output", str(path)], "debugger-processes")
+            matches = [p for p in json.loads(path.read_text())["result"]["runningProcesses"]
+                       if p.get("executable", "").endswith("/WebChanneliOSDemo.app/WebChanneliOSDemo")]
+            if len(matches) == 1:
+                self.debugger_pid = matches[0]["processIdentifier"]
+                break
+            time.sleep(1)
+        if not self.debugger_pid:
+            raise RuntimeError("Cannot identify exactly one stopped demo process")
+        self.debugger_log = (self.folder / "debugger.log").open("w")
+        self.debugger = subprocess.Popen(["xcrun", "lldb", "--no-lldbinit"], stdin=subprocess.PIPE,
+                                        stdout=self.debugger_log, stderr=subprocess.STDOUT, text=True)
+        # JSON quoting is also valid LLDB double-quoted argument syntax.
+        commands = (f"device select {json.dumps(self.args.device)}\n"
+                    "script lldb.debugger.SetAsync(True)\n"
+                    f"device process attach -p {self.debugger_pid}\n")
+        self.debugger.stdin.write(commands)
+        self.debugger.stdin.flush()
+        deadline = time.monotonic() + 30
+        while time.monotonic() < deadline:
+            transcript = (self.folder / "debugger.log").read_text()
+            if f"Process {self.debugger_pid} stopped" in transcript and "Target 0:" in transcript:
+                break
+            if self.debugger.poll() is not None:
+                raise RuntimeError("LLDB exited before attaching")
+            time.sleep(.1)
+        else:
+            raise RuntimeError("LLDB did not report the stopped demo target")
+        self.debugger.stdin.write("process continue\n")
+        self.debugger.stdin.flush()
+        self.result["debuggerRequested"] = True
+        self.result["debuggerPID"] = self.debugger_pid
+        self.event("debugger_attach_requested", pid=self.debugger_pid)
+
+    def detach_idle_debugger(self):
+        if self.debugger and self.debugger.poll() is None:
+            try:
+                self.debugger.stdin.write("process detach -s false\nquit\n")
+                self.debugger.stdin.flush()
+                self.debugger.wait(timeout=10)
+            except (BrokenPipeError, subprocess.TimeoutExpired):
+                self.debugger.kill()
+                self.debugger.wait(timeout=5)
+        if self.debugger_log:
+            self.debugger_log.close()
+
     def observe_restored(self):
         self.status("observing-restored-wifi")
         started = time.monotonic()
@@ -439,9 +506,9 @@ class Runner:
             if self.observer.latest("error") or self.observer.latest("closed"):
                 self.result["postRestoreObservation"] = "channel-failed"
                 break
-            if time.monotonic() >= next_probe and self.observer.on_path("wifi", 0):
+            if time.monotonic() >= next_probe and self.observer.on_path(self.baseline_interface, 0):
                 count += 1
-                self.milestone(f"postRestoreProbe{count}", self.probe("wifi", tag=f"postrestore-{count}"))
+                self.milestone(f"postRestoreProbe{count}", self.probe(self.baseline_interface, tag=f"postrestore-{count}"))
                 next_probe = time.monotonic() + 5
             time.sleep(.1)
         self.result["observedPostRestoreHostSeconds"] = time.monotonic() - started
@@ -606,9 +673,11 @@ class Runner:
                 self.command(["device", "notification", "post", "--device", self.args.device,
                               "--name", "com.pmodular.webchannel.nettest.close"], "close")
                 time.sleep(1)
-                if start and start.get("pid"):
+                self.detach_idle_debugger()
+                pid = start.get("pid") if start else self.debugger_pid
+                if pid:
                     self.command(["device", "process", "terminate", "--device", self.args.device,
-                                  "--pid", str(start["pid"])], "terminate")
+                                  "--pid", str(pid)], "terminate")
                 else:
                     raise RuntimeError("App PID was not received")
             except Exception as error:
@@ -629,7 +698,15 @@ class Runner:
                 self.observer.poll()
             except RuntimeError:
                 pass
+        self.detach_idle_debugger()
         records = self.observer.records if self.observer else []
+        if getattr(self.args, "http3", False):
+            self.result["requestedHTTP3"] = True
+            self.result["endpoint"] = self.args.endpoint or _support.HTTP3_ENDPOINT
+            self.result["protocolEvidence"] = _support.protocol_evidence(records)
+            self.result["protocolCoverage"] = self.result["protocolEvidence"]["coverage"]
+            if not self.result["protocolEvidence"]["h3Transactions"]:
+                self.result["outcome"] = "protocol-not-confirmed"
         self.result.update({"finishedUTC": utc(), "errorCodes": sorted(
             {r["code"] for r in records if r.get("kind") == "error"}),
             "openCount": sum(r.get("kind") == "open" for r in records),
@@ -704,7 +781,13 @@ def main():
     parser.add_argument("--probe-timeout", type=positive, default=30)
     parser.add_argument("--silent", action="store_true", help="Visual cues only")
     parser.add_argument("--no-speech", action="store_true", help="Play sounds without spoken instructions")
+    parser.add_argument("--http3", action="store_true", help="Require baseline h3; use PR #133 endpoint")
+    parser.add_argument("--endpoint", help="Opt-in demo endpoint override")
+    parser.add_argument("--qlog-directory", help="Device-side directory already prepared for Apple's QUIC qlog")
+    parser.add_argument("--debugger", action="store_true", help="Diagnostic idle only: start stopped, attach Apple LLDB, then continue")
     args = parser.parse_args()
+    if args.debugger and args.scenario != "idle":
+        parser.error("--debugger is supported only for idle diagnostics, never suspension or handoff")
     if args.scenario == "broken-cellular":
         if not args.cellular_proof:
             parser.error("T13 requires --cellular-proof and the manual cellular-only loss profile")
@@ -714,7 +797,7 @@ def main():
             parser.error(str(error))
     if args.scenario != "handoff" and (args.traffic != "idle" or args.observe_after):
         parser.error("--traffic streaming and --observe-after are supported only for handoff")
-    if not sys.stdin.isatty():
+    if args.scenario != "idle" and not sys.stdin.isatty():
         parser.error("Run in an interactive terminal for the readiness confirmation")
     args.output = args.output.resolve()
     args.output.mkdir(parents=True, exist_ok=False)
@@ -738,6 +821,8 @@ def main():
         finally:
             signal.signal(signal.SIGTERM, previous)
     print("結果: " + str(args.output / "result.json"))
+    if runner.result["outcome"] == "protocol-not-confirmed":
+        exit_code = 1
     return exit_code
 
 

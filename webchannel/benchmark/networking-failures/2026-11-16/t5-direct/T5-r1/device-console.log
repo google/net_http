@@ -1,0 +1,384 @@
+2026-11-16T12:59:00.576Z Launched application with com.pmodular.webchannel.demo bundle identifier.
+2026-11-16T12:59:00.579Z Waiting for the application to terminate…
+2026-11-16T12:59:00.637Z [NETTEST] {"controlProtocolVersion":3,"deviceUnixSeconds":1794833940.6449041,"deviceUptimeSeconds":281336.16041966667,"kind":"autorun_start","model":"iPhone","os":"27.2.1","pid":39683,"run":"T5-r1","traffic":"idle"}
+2026-11-16T12:59:00.638Z [NETTEST] {"cellular":false,"constrained":false,"deviceUnixSeconds":1794833940.6451221,"deviceUptimeSeconds":281336.16063679167,"expensive":false,"kind":"path","run":"T5-r1","status":"satisfied","wifi":true,"wired":false}
+2026-11-16T12:59:00.638Z [NETTEST] {"deviceUnixSeconds":1794833940.6452179,"deviceUptimeSeconds":281336.160732875,"kind":"app_log","run":"T5-r1","text":">>> [1. Handshake Request] Opening WebChannel connection to: https:\/\/webchannel.sandbox.google.com\/staging\/channel\/generator"}
+2026-11-16T12:59:00.639Z [NETTEST] {"deviceUnixSeconds":1794833940.6452599,"deviceUptimeSeconds":281336.16077479167,"kind":"app_log","run":"T5-r1","text":">>> Options: enableBinaryEncoding=false, nonBlockingSend=false, blockingHandshake=false, sendRawJson=true, fastHandshake=false, fastHandshake2=false"}
+2026-11-16T12:59:00.639Z [SDK Debug] Opening Forward Channel.
+2026-11-16T12:59:00.639Z [NETTEST] {"deviceUnixSeconds":1794833940.64557,"deviceUptimeSeconds":281336.16108450003,"kind":"sdk_debug","run":"T5-r1","text":"Opening Forward Channel."}
+2026-11-16T12:59:00.640Z 🌐 [HTTP Req] (30447) [attempt 1] POST https://webchannel.sandbox.google.com/staging/channel/generator?VER=8&RID=30447&CVER=25&X-HTTP-Session-Id=gsessionid&t=1 | PostData: {length = 7, bytes = 0x636f756e743d30}
+2026-11-16T12:59:00.640Z [NETTEST] {"deviceUnixSeconds":1794833940.6481981,"deviceUptimeSeconds":281336.16371262504,"kind":"http_log","run":"T5-r1","text":"🌐 [HTTP Req] (30447) [attempt 1] POST https:\/\/webchannel.sandbox.google.com\/staging\/channel\/generator?VER=8&RID=30447&CVER=25&X-HTTP-Session-Id=gsessionid&t=1 | PostData: {length = 7, bytes = 0x636f756e743d30}"}
+2026-11-16T12:59:00.641Z 2026-11-16 21:59:00.648 WebChanneliOSDemo[39683:2194679] GTMSessionFetcher 0x103a85900 (https://webchannel.sandbox.google.com/staging/channel/generator?VER=8&RID=30447&CVER=25&X-HTTP-Session-Id=gsessionid&t=1) was already running
+2026-11-16T12:59:00.705Z [NETTEST] {"deviceUnixSeconds":1794833940.7120981,"deviceUptimeSeconds":281336.22761391668,"kind":"app_log","run":"T5-r1","text":"🌐 [HTTP Req] (30447) [attempt 1] POST https:\/\/webchannel.sandbox.google.com\/staging\/channel\/generator?VER=8&RID=30447&CVER=25&X-HTTP-Session-Id=gsessionid&t=1 | PostData: {length = 7, bytes = 0x636f756e743d30}"}
+2026-11-16T12:59:00.818Z [NETTEST] {"attempt":1,"deviceUnixSeconds":1794833940.824388,"deviceUptimeSeconds":281336.33990579168,"kind":"http_state","method":"POST","readyState":2,"rid":"30447","run":"T5-r1","status":200,"url":"https:\/\/webchannel.sandbox.google.com\/staging\/channel\/generator?VER=8&RID=30447&CVER=25&X-HTTP-Session-Id=gsessionid&t=1"}
+2026-11-16T12:59:00.818Z 🌐 [HTTP Resp Meta] (30447) [attempt 1] POST https://webchannel.sandbox.google.com/staging/channel/generator?VER=8&RID=30447&CVER=25&X-HTTP-Session-Id=gsessionid&t=1 status: 200
+2026-11-16T12:59:00.818Z 🌐 [HTTP Resp Body] (30447): [[0,["c","wf8VsFJox9tpf3NxZsBOmw","",8,15,30000]]]
+2026-11-16T12:59:00.818Z
+2026-11-16T12:59:00.818Z [NETTEST] {"deviceUnixSeconds":1794833940.824532,"deviceUptimeSeconds":281336.3400496667,"kind":"http_log","run":"T5-r1","text":"🌐 [HTTP Resp Body] (30447): [[0,[\"c\",\"wf8VsFJox9tpf3NxZsBOmw\",\"\",8,15,30000]]]\n"}
+2026-11-16T12:59:00.818Z [NETTEST] {"deviceUnixSeconds":1794833940.8245921,"deviceUptimeSeconds":281336.34010933334,"kind":"app_log","run":"T5-r1","text":"🌐 [HTTP Resp Body] (30447): [[0,[\"c\",\"wf8VsFJox9tpf3NxZsBOmw\",\"\",8,15,30000]]]\n"}
+2026-11-16T12:59:00.819Z [SDK Info] WebChannel opened on https://webchannel.sandbox.google.com/staging/channel/generator
+2026-11-16T12:59:00.819Z [NETTEST] {"deviceUnixSeconds":1794833940.824688,"deviceUptimeSeconds":281336.34020533337,"kind":"sdk_info","run":"T5-r1","text":"WebChannel opened on https:\/\/webchannel.sandbox.google.com\/staging\/channel\/generator"}
+2026-11-16T12:59:00.819Z [NETTEST] {"deviceUnixSeconds":1794833940.82476,"deviceUptimeSeconds":281336.34027775005,"kind":"handshake_rtt","rtt":0.17909801006317139,"run":"T5-r1"}
+2026-11-16T12:59:00.819Z [NETTEST] {"deviceUnixSeconds":1794833940.8248339,"deviceUptimeSeconds":281336.34035112499,"headers":{"Content-Encoding":"gzip","Content-Length":"71","Content-Type":"text\/plain; charset=utf-8","Date":"Mon, 16 Nov 2026 12:59:00 GMT","Server":"Example HTTPServer2 (non-blocking)","x-client-wire-protocol":"h2","x-frame-options":"SAMEORIGIN","x-http-session-id":"wcD6TGVxlefq8toQCGjsUFZZjZ6213Pmd1SbW9p1BjE","x-xss-protection":"0"},"kind":"handshake_headers","run":"T5-r1"}
+2026-11-16T12:59:00.819Z 🌐 [HTTP Req] (rpc) [attempt 1] GET https://webchannel.sandbox.google.com/staging/channel/generator?gsessionid=wcD6TGVxlefq8toQCGjsUFZZjZ6213Pmd1SbW9p1BjE&VER=8&RID=rpc&SID=wf8VsFJox9tpf3NxZsBOmw&CI=0&AID=0&TYPE=xmlhttp&t=1
+2026-11-16T12:59:00.819Z [NETTEST] {"deviceUnixSeconds":1794833940.8262482,"deviceUptimeSeconds":281336.34176595835,"kind":"http_log","run":"T5-r1","text":"🌐 [HTTP Req] (rpc) [attempt 1] GET https:\/\/webchannel.sandbox.google.com\/staging\/channel\/generator?gsessionid=wcD6TGVxlefq8toQCGjsUFZZjZ6213Pmd1SbW9p1BjE&VER=8&RID=rpc&SID=wf8VsFJox9tpf3NxZsBOmw&CI=0&AID=0&TYPE=xmlhttp&t=1"}
+2026-11-16T12:59:00.819Z [NETTEST] {"deviceUnixSeconds":1794833940.8264999,"deviceUptimeSeconds":281336.34201762499,"kind":"task_metrics","run":"T5-r1","transactions":[{"fetchStart":1794833940.6521511,"isCellular":false,"localAddress":"2400:4050:b781:4c00:7527:4ac7:dc6f:f0aa","localPort":64374,"method":"POST","protocol":"h2","remoteAddress":"2404:6800:400b:c019::451","remotePort":443,"requestEnd":1794833940.6880631,"requestStart":1794833940.6879981,"responseEnd":1794833940.8241482,"responseStart":1794833940.823945,"reusedConnection":false,"rid":"30447","tcpConnectMs":29.999971389770508,"tlsMs":18.999934196472168,"url":"https:\/\/webchannel.sandbox.google.com\/staging\/channel\/generator?VER=8&RID=30447&CVER=25&X-HTTP-Session-Id=gsessionid&t=1"}]}
+2026-11-16T12:59:00.819Z [NETTEST] {"attempt":1,"deviceUnixSeconds":1794833940.8266339,"deviceUptimeSeconds":281336.34215108334,"kind":"http_state","method":"POST","readyState":3,"rid":"30447","run":"T5-r1","status":200,"url":"https:\/\/webchannel.sandbox.google.com\/staging\/channel\/generator?VER=8&RID=30447&CVER=25&X-HTTP-Session-Id=gsessionid&t=1"}
+2026-11-16T12:59:00.819Z 🌐 [HTTP Resp Meta] (30447) [attempt 1] POST https://webchannel.sandbox.google.com/staging/channel/generator?VER=8&RID=30447&CVER=25&X-HTTP-Session-Id=gsessionid&t=1 status: 200
+2026-11-16T12:59:00.819Z [SDK Debug] Request Complete.
+2026-11-16T12:59:00.819Z [NETTEST] {"deviceUnixSeconds":1794833940.826714,"deviceUptimeSeconds":281336.34223133337,"kind":"sdk_debug","run":"T5-r1","text":"Request Complete."}
+2026-11-16T12:59:00.819Z [SDK Debug] Nothing to send.
+2026-11-16T12:59:00.819Z [NETTEST] {"deviceUnixSeconds":1794833940.8267679,"deviceUptimeSeconds":281336.34228537499,"kind":"sdk_debug","run":"T5-r1","text":"Nothing to send."}
+2026-11-16T12:59:00.822Z [NETTEST] {"deviceUnixSeconds":1794833940.829864,"deviceUptimeSeconds":281336.34538225003,"kind":"open","run":"T5-r1"}
+2026-11-16T12:59:00.823Z [NETTEST] {"deviceUnixSeconds":1794833940.8300161,"deviceUptimeSeconds":281336.34553320834,"kind":"app_log","run":"T5-r1","text":"🤝 ✅ [Handshake Latency] Handshake completed in 179.5 ms (T+179.5ms) -> State: Connected (Opened) [Binary Encoding: Inactive]"}
+2026-11-16T12:59:00.824Z [NETTEST] {"deviceUnixSeconds":1794833940.83006,"deviceUptimeSeconds":281336.34557758336,"kind":"app_log","run":"T5-r1","text":"🌐 [HTTP Req] (rpc) [attempt 1] GET https:\/\/webchannel.sandbox.google.com\/staging\/channel\/generator?gsessionid=wcD6TGVxlefq8toQCGjsUFZZjZ6213Pmd1SbW9p1BjE&VER=8&RID=rpc&SID=wf8VsFJox9tpf3NxZsBOmw&CI=0&AID=0&TYPE=xmlhttp&t=1"}
+2026-11-16T12:59:00.888Z [NETTEST] {"deviceUnixSeconds":1794833940.8947148,"deviceUptimeSeconds":281336.41023433337,"kind":"lifecycle","notification":"UIApplicationDidBecomeActiveNotification","run":"T5-r1"}
+2026-11-16T12:59:00.957Z [NETTEST] {"attempt":1,"deviceUnixSeconds":1794833940.96422,"deviceUptimeSeconds":281336.47974037501,"kind":"http_state","method":"GET","readyState":2,"rid":"rpc","run":"T5-r1","status":200,"url":"https:\/\/webchannel.sandbox.google.com\/staging\/channel\/generator?gsessionid=wcD6TGVxlefq8toQCGjsUFZZjZ6213Pmd1SbW9p1BjE&VER=8&RID=rpc&SID=wf8VsFJox9tpf3NxZsBOmw&CI=0&AID=0&TYPE=xmlhttp&t=1"}
+2026-11-16T12:59:00.957Z 🌐 [HTTP Resp Meta] (rpc) [attempt 1] GET https://webchannel.sandbox.google.com/staging/channel/generator?gsessionid=wcD6TGVxlefq8toQCGjsUFZZjZ6213Pmd1SbW9p1BjE&VER=8&RID=rpc&SID=wf8VsFJox9tpf3NxZsBOmw&CI=0&AID=0&TYPE=xmlhttp&t=1 status: 200
+2026-11-16T12:59:00.957Z 🌐 [HTTP Resp Body] (rpc): [[1,["noop"]]]
+2026-11-16T12:59:00.957Z [NETTEST] {"deviceUnixSeconds":1794833940.9643569,"deviceUptimeSeconds":281336.47987595835,"kind":"http_log","run":"T5-r1","text":"🌐 [HTTP Resp Body] (rpc): [[1,[\"noop\"]]]"}
+2026-11-16T12:59:00.958Z [NETTEST] {"deviceUnixSeconds":1794833940.9644251,"deviceUptimeSeconds":281336.47994466667,"kind":"app_log","run":"T5-r1","text":"🌐 [HTTP Resp Body] (rpc): [[1,[\"noop\"]]]"}
+2026-11-16T12:59:01.638Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794833941.644757,"deviceUptimeSeconds":281337.16029208334,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T12:59:02.638Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794833942.645705,"deviceUptimeSeconds":281338.16125370836,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T12:59:03.639Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794833943.645602,"deviceUptimeSeconds":281339.16116608336,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T12:59:04.638Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794833944.644871,"deviceUptimeSeconds":281340.16045095836,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T12:59:05.638Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794833945.6449261,"deviceUptimeSeconds":281341.16052287503,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T12:59:06.638Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794833946.64505,"deviceUptimeSeconds":281342.16066116671,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T12:59:07.638Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794833947.6450491,"deviceUptimeSeconds":281343.16067250003,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T12:59:08.638Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794833948.6455269,"deviceUptimeSeconds":281344.16116554168,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T12:59:09.639Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794833949.6455069,"deviceUptimeSeconds":281345.16116308334,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T12:59:10.638Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794833950.6451988,"deviceUptimeSeconds":281346.16086800001,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T12:59:11.637Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794833951.6446209,"deviceUptimeSeconds":281347.16030529171,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T12:59:12.637Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794833952.644712,"deviceUptimeSeconds":281348.16041116667,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T12:59:13.638Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794833953.644748,"deviceUptimeSeconds":281349.16046162503,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T12:59:14.638Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794833954.6448541,"deviceUptimeSeconds":281350.160588625,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T12:59:15.638Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794833955.6448889,"deviceUptimeSeconds":281351.16063358338,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T12:59:16.638Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794833956.6448689,"deviceUptimeSeconds":281352.16062808334,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T12:59:17.638Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794833957.644949,"deviceUptimeSeconds":281353.16072308336,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T12:59:18.638Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794833958.6449871,"deviceUptimeSeconds":281354.16077645833,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T12:59:19.638Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794833959.645061,"deviceUptimeSeconds":281355.16086533334,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T12:59:20.637Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794833960.6451678,"deviceUptimeSeconds":281356.16098766669,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T12:59:21.638Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794833961.645191,"deviceUptimeSeconds":281357.16102479171,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T12:59:22.638Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794833962.6452398,"deviceUptimeSeconds":281358.16108920833,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T12:59:23.638Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794833963.645314,"deviceUptimeSeconds":281359.16117854166,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T12:59:24.638Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794833964.6453881,"deviceUptimeSeconds":281360.16126866668,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T12:59:25.638Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794833965.6454,"deviceUptimeSeconds":281361.16129462502,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T12:59:26.638Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794833966.64534,"deviceUptimeSeconds":281362.16124870838,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T12:59:27.638Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794833967.6453249,"deviceUptimeSeconds":281363.161249,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T12:59:28.638Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794833968.6452551,"deviceUptimeSeconds":281364.16119441669,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T12:59:29.638Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794833969.6452661,"deviceUptimeSeconds":281365.16122083337,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T12:59:30.638Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794833970.6452689,"deviceUptimeSeconds":281366.16123875004,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T12:59:31.638Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794833971.645236,"deviceUptimeSeconds":281367.16122029169,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T12:59:32.638Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794833972.645169,"deviceUptimeSeconds":281368.16116891667,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T12:59:33.637Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794833973.645155,"deviceUptimeSeconds":281369.16116945836,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T12:59:34.638Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794833974.6452022,"deviceUptimeSeconds":281370.16123545833,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T12:59:35.638Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794833975.6452,"deviceUptimeSeconds":281371.16124500002,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T12:59:36.638Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794833976.6451001,"deviceUptimeSeconds":281372.16115991666,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T12:59:37.637Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794833977.6447859,"deviceUptimeSeconds":281373.16086029168,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T12:59:38.637Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794833978.645076,"deviceUptimeSeconds":281374.16116541671,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T12:59:39.638Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794833979.645124,"deviceUptimeSeconds":281375.16122887499,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T12:59:40.638Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794833980.6451201,"deviceUptimeSeconds":281376.16124024999,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T12:59:41.638Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794833981.6450272,"deviceUptimeSeconds":281377.16116191668,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T12:59:42.638Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794833982.64505,"deviceUptimeSeconds":281378.1611992917,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T12:59:43.638Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794833983.64502,"deviceUptimeSeconds":281379.16118529171,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T12:59:44.637Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794833984.645107,"deviceUptimeSeconds":281380.16129116667,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T12:59:45.637Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794833985.6449831,"deviceUptimeSeconds":281381.16117833334,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T12:59:45.957Z [SDK Info] TIMEOUT: https://webchannel.sandbox.google.com/staging/channel/generator?gsessionid=wcD6TGVxlefq8toQCGjsUFZZjZ6213Pmd1SbW9p1BjE&VER=8&RID=rpc&SID=wf8VsFJox9tpf3NxZsBOmw&CI=0&AID=0&TYPE=xmlhttp&t=1
+2026-11-16T12:59:45.959Z [NETTEST] {"deviceUnixSeconds":1794833985.9651361,"deviceUptimeSeconds":281381.48133716668,"kind":"sdk_info","run":"T5-r1","text":"TIMEOUT: https:\/\/webchannel.sandbox.google.com\/staging\/channel\/generator?gsessionid=wcD6TGVxlefq8toQCGjsUFZZjZ6213Pmd1SbW9p1BjE&VER=8&RID=rpc&SID=wf8VsFJox9tpf3NxZsBOmw&CI=0&AID=0&TYPE=xmlhttp&t=1"}
+2026-11-16T12:59:45.959Z [SDK Debug] Request Complete.
+2026-11-16T12:59:45.959Z [NETTEST] {"deviceUnixSeconds":1794833985.9662399,"deviceUptimeSeconds":281381.48243866669,"kind":"sdk_debug","run":"T5-r1","text":"Request Complete."}
+2026-11-16T12:59:45.959Z [SDK Debug] Maybe retrying, last error: WCChannelRequestError Timeout
+2026-11-16T12:59:45.959Z [NETTEST] {"deviceUnixSeconds":1794833985.9664741,"deviceUptimeSeconds":281381.48267120833,"kind":"sdk_debug","run":"T5-r1","text":"Maybe retrying, last error: WCChannelRequestError Timeout"}
+2026-11-16T12:59:45.959Z [SDK Debug] Going to retry GET.
+2026-11-16T12:59:45.959Z [NETTEST] {"deviceUnixSeconds":1794833985.9666829,"deviceUptimeSeconds":281381.48288008338,"kind":"sdk_debug","run":"T5-r1","text":"Going to retry GET."}
+2026-11-16T12:59:45.962Z 🌐 [HTTP Req] (rpc) [attempt 2] GET https://webchannel.sandbox.google.com/staging/channel/generator?gsessionid=wcD6TGVxlefq8toQCGjsUFZZjZ6213Pmd1SbW9p1BjE&VER=8&RID=rpc&SID=wf8VsFJox9tpf3NxZsBOmw&CI=0&AID=1&TYPE=xmlhttp&t=2
+2026-11-16T12:59:45.963Z [NETTEST] {"deviceUnixSeconds":1794833985.9709411,"deviceUptimeSeconds":281381.48714050004,"kind":"http_log","run":"T5-r1","text":"🌐 [HTTP Req] (rpc) [attempt 2] GET https:\/\/webchannel.sandbox.google.com\/staging\/channel\/generator?gsessionid=wcD6TGVxlefq8toQCGjsUFZZjZ6213Pmd1SbW9p1BjE&VER=8&RID=rpc&SID=wf8VsFJox9tpf3NxZsBOmw&CI=0&AID=1&TYPE=xmlhttp&t=2"}
+2026-11-16T12:59:45.963Z [NETTEST] {"deviceUnixSeconds":1794833985.971257,"deviceUptimeSeconds":281381.4874554167,"kind":"app_log","run":"T5-r1","text":"🌐 [HTTP Req] (rpc) [attempt 2] GET https:\/\/webchannel.sandbox.google.com\/staging\/channel\/generator?gsessionid=wcD6TGVxlefq8toQCGjsUFZZjZ6213Pmd1SbW9p1BjE&VER=8&RID=rpc&SID=wf8VsFJox9tpf3NxZsBOmw&CI=0&AID=1&TYPE=xmlhttp&t=2"}
+2026-11-16T12:59:45.965Z [NETTEST] {"deviceUnixSeconds":1794833985.973851,"deviceUptimeSeconds":281381.49004900001,"kind":"task_metrics","run":"T5-r1","transactions":[{"fetchStart":1794833940.827415,"isCellular":false,"localAddress":"2400:4050:b781:4c00:7527:4ac7:dc6f:f0aa","localPort":64374,"method":"GET","protocol":"h2","remoteAddress":"2404:6800:400b:c019::451","remotePort":443,"requestEnd":1794833940.8278642,"requestStart":1794833940.8276858,"responseStart":1794833940.9638681,"reusedConnection":true,"rid":"rpc","url":"https:\/\/webchannel.sandbox.google.com\/staging\/channel\/generator?gsessionid=wcD6TGVxlefq8toQCGjsUFZZjZ6213Pmd1SbW9p1BjE&VER=8&RID=rpc&SID=wf8VsFJox9tpf3NxZsBOmw&CI=0&AID=0&TYPE=xmlhttp&t=1"}]}
+2026-11-16T12:59:46.637Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794833986.6449928,"deviceUptimeSeconds":281382.16120287502,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T12:59:47.637Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794833987.6449361,"deviceUptimeSeconds":281383.16116141668,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T12:59:48.638Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794833988.6450028,"deviceUptimeSeconds":281384.16124283336,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T12:59:49.637Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794833989.644978,"deviceUptimeSeconds":281385.16123358335,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T12:59:50.637Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794833990.644944,"deviceUptimeSeconds":281386.16121408337,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T12:59:51.321Z [NETTEST] {"cellular":false,"constrained":false,"deviceUnixSeconds":1794833991.328238,"deviceUptimeSeconds":281386.84451970836,"expensive":false,"kind":"path","run":"T5-r1","status":"satisfied","wifi":true,"wired":false}
+2026-11-16T12:59:51.638Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794833991.64499,"deviceUptimeSeconds":281387.16127750004,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T12:59:52.637Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794833992.644891,"deviceUptimeSeconds":281388.16119125002,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T12:59:53.637Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794833993.6448789,"deviceUptimeSeconds":281389.16119474999,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T12:59:54.637Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794833994.644901,"deviceUptimeSeconds":281390.16123404168,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T12:59:55.637Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794833995.6448379,"deviceUptimeSeconds":281391.16118395835,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T12:59:56.637Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794833996.6448832,"deviceUptimeSeconds":281392.16124366666,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T12:59:57.637Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794833997.644834,"deviceUptimeSeconds":281393.16121054167,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T12:59:58.636Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794833998.644768,"deviceUptimeSeconds":281394.16115770832,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T12:59:59.636Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794833999.6447821,"deviceUptimeSeconds":281395.16118866671,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:00:00.637Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834000.6448522,"deviceUptimeSeconds":281396.16127708333,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:00:01.637Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834001.644819,"deviceUptimeSeconds":281397.16125629167,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:00:02.637Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834002.6447821,"deviceUptimeSeconds":281398.16123379167,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:00:03.637Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834003.6447182,"deviceUptimeSeconds":281399.16118337499,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:00:04.032Z [NETTEST] {"deviceUnixSeconds":1794834004.0392981,"deviceUptimeSeconds":281399.55576866667,"kind":"task_metrics","run":"T5-r1","transactions":[{"fetchStart":1794833985.9742079,"isCellular":false,"localAddress":"2400:4050:b781:4c00:7527:4ac7:dc6f:f0aa","localPort":64374,"method":"GET","protocol":"h2","remoteAddress":"2404:6800:400b:c019::451","remotePort":443,"requestEnd":1794833985.9756699,"requestStart":1794833985.9755421,"reusedConnection":true,"rid":"rpc","url":"https:\/\/webchannel.sandbox.google.com\/staging\/channel\/generator?gsessionid=wcD6TGVxlefq8toQCGjsUFZZjZ6213Pmd1SbW9p1BjE&VER=8&RID=rpc&SID=wf8VsFJox9tpf3NxZsBOmw&CI=0&AID=1&TYPE=xmlhttp&t=2"}]}
+2026-11-16T13:00:04.033Z [SDK Debug] No response text for uri https://webchannel.sandbox.google.com/staging/channel/generator?gsessionid=wcD6TGVxlefq8toQCGjsUFZZjZ6213Pmd1SbW9p1BjE&VER=8&RID=rpc&SID=wf8VsFJox9tpf3NxZsBOmw&CI=0&AID=1&TYPE=xmlhttp&t=2 status 0.
+2026-11-16T13:00:04.033Z [NETTEST] {"deviceUnixSeconds":1794834004.040036,"deviceUptimeSeconds":281399.55650620838,"kind":"sdk_debug","run":"T5-r1","text":"No response text for uri https:\/\/webchannel.sandbox.google.com\/staging\/channel\/generator?gsessionid=wcD6TGVxlefq8toQCGjsUFZZjZ6213Pmd1SbW9p1BjE&VER=8&RID=rpc&SID=wf8VsFJox9tpf3NxZsBOmw&CI=0&AID=1&TYPE=xmlhttp&t=2 status 0."}
+2026-11-16T13:00:04.033Z [NETTEST] {"attempt":2,"deviceUnixSeconds":1794834004.0403218,"deviceUptimeSeconds":281399.55679191666,"kind":"http_state","method":"GET","readyState":3,"rid":"rpc","run":"T5-r1","status":0,"url":"https:\/\/webchannel.sandbox.google.com\/staging\/channel\/generator?gsessionid=wcD6TGVxlefq8toQCGjsUFZZjZ6213Pmd1SbW9p1BjE&VER=8&RID=rpc&SID=wf8VsFJox9tpf3NxZsBOmw&CI=0&AID=1&TYPE=xmlhttp&t=2"}
+2026-11-16T13:00:04.033Z 🌐 [HTTP Resp Meta] (rpc) [attempt 2] GET https://webchannel.sandbox.google.com/staging/channel/generator?gsessionid=wcD6TGVxlefq8toQCGjsUFZZjZ6213Pmd1SbW9p1BjE&VER=8&RID=rpc&SID=wf8VsFJox9tpf3NxZsBOmw&CI=0&AID=1&TYPE=xmlhttp&t=2 status: 0
+2026-11-16T13:00:04.034Z [SDK Debug] Request Complete.
+2026-11-16T13:00:04.034Z [NETTEST] {"deviceUnixSeconds":1794834004.0408258,"deviceUptimeSeconds":281399.55729604169,"kind":"sdk_debug","run":"T5-r1","text":"Request Complete."}
+2026-11-16T13:00:04.034Z [SDK Debug] Maybe retrying, last error: WCChannelRequestError Status
+2026-11-16T13:00:04.034Z [NETTEST] {"deviceUnixSeconds":1794834004.0410759,"deviceUptimeSeconds":281399.55754537502,"kind":"sdk_debug","run":"T5-r1","text":"Maybe retrying, last error: WCChannelRequestError Status"}
+2026-11-16T13:00:04.034Z [SDK Debug] Going to retry GET.
+2026-11-16T13:00:04.034Z [NETTEST] {"deviceUnixSeconds":1794834004.041275,"deviceUptimeSeconds":281399.5577441667,"kind":"sdk_debug","run":"T5-r1","text":"Going to retry GET."}
+2026-11-16T13:00:04.637Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834004.6447501,"deviceUptimeSeconds":281400.16123312502,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:00:05.637Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834005.6447148,"deviceUptimeSeconds":281401.16121158336,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:00:06.637Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834006.6447511,"deviceUptimeSeconds":281402.16126233333,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:00:07.637Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834007.644676,"deviceUptimeSeconds":281403.16120283335,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:00:08.637Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834008.644655,"deviceUptimeSeconds":281404.16119570832,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:00:09.637Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834009.6446929,"deviceUptimeSeconds":281405.16125020833,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:00:09.678Z [NETTEST] {"cellular":false,"constrained":false,"deviceUnixSeconds":1794834009.6860681,"deviceUptimeSeconds":281405.20262595837,"expensive":false,"kind":"path","run":"T5-r1","status":"satisfied","wifi":true,"wired":false}
+2026-11-16T13:00:10.051Z [NETTEST] {"cellular":false,"constrained":false,"deviceUnixSeconds":1794834010.0597029,"deviceUptimeSeconds":281405.57626466668,"expensive":false,"kind":"path","run":"T5-r1","status":"satisfied","wifi":true,"wired":false}
+2026-11-16T13:00:10.191Z [NETTEST] {"cellular":false,"constrained":false,"deviceUnixSeconds":1794834010.1980171,"deviceUptimeSeconds":281405.71458025003,"expensive":false,"kind":"path","run":"T5-r1","status":"satisfied","wifi":true,"wired":false}
+2026-11-16T13:00:10.347Z [NETTEST] {"cellular":false,"constrained":false,"deviceUnixSeconds":1794834010.3545651,"deviceUptimeSeconds":281405.87113391666,"expensive":false,"kind":"path","run":"T5-r1","status":"satisfied","wifi":true,"wired":false}
+2026-11-16T13:00:10.637Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834010.644664,"deviceUptimeSeconds":281406.16123550001,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:00:11.637Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834011.644628,"deviceUptimeSeconds":281407.16121445835,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:00:12.637Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834012.6446161,"deviceUptimeSeconds":281408.16121629166,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:00:13.637Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834013.644568,"deviceUptimeSeconds":281409.1611840417,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:00:14.637Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834014.6445909,"deviceUptimeSeconds":281410.16122333333,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:00:15.242Z [NETTEST] {"cellular":false,"constrained":false,"deviceUnixSeconds":1794834015.2501531,"deviceUptimeSeconds":281410.76679845835,"expensive":false,"kind":"path","run":"T5-r1","status":"satisfied","wifi":true,"wired":false}
+2026-11-16T13:00:15.637Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834015.644592,"deviceUptimeSeconds":281411.16124241671,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:00:16.636Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834016.6445279,"deviceUptimeSeconds":281412.16118879168,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:00:17.249Z 🌐 [HTTP Req] (rpc) [attempt 3] GET https://webchannel.sandbox.google.com/staging/channel/generator?gsessionid=wcD6TGVxlefq8toQCGjsUFZZjZ6213Pmd1SbW9p1BjE&VER=8&RID=rpc&SID=wf8VsFJox9tpf3NxZsBOmw&CI=0&AID=1&TYPE=xmlhttp&t=3
+2026-11-16T13:00:17.251Z [NETTEST] {"deviceUnixSeconds":1794834017.257772,"deviceUptimeSeconds":281412.7744425417,"kind":"http_log","run":"T5-r1","text":"🌐 [HTTP Req] (rpc) [attempt 3] GET https:\/\/webchannel.sandbox.google.com\/staging\/channel\/generator?gsessionid=wcD6TGVxlefq8toQCGjsUFZZjZ6213Pmd1SbW9p1BjE&VER=8&RID=rpc&SID=wf8VsFJox9tpf3NxZsBOmw&CI=0&AID=1&TYPE=xmlhttp&t=3"}
+2026-11-16T13:00:17.251Z [NETTEST] {"deviceUnixSeconds":1794834017.2581611,"deviceUptimeSeconds":281412.77483100002,"kind":"app_log","run":"T5-r1","text":"🌐 [HTTP Req] (rpc) [attempt 3] GET https:\/\/webchannel.sandbox.google.com\/staging\/channel\/generator?gsessionid=wcD6TGVxlefq8toQCGjsUFZZjZ6213Pmd1SbW9p1BjE&VER=8&RID=rpc&SID=wf8VsFJox9tpf3NxZsBOmw&CI=0&AID=1&TYPE=xmlhttp&t=3"}
+2026-11-16T13:00:17.636Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834017.644511,"deviceUptimeSeconds":281413.16118829168,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:00:18.636Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834018.6444721,"deviceUptimeSeconds":281414.16116399999,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:00:19.636Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834019.644444,"deviceUptimeSeconds":281415.16114954167,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:00:19.669Z [NETTEST] {"deviceUnixSeconds":1794834019.677604,"deviceUptimeSeconds":281415.19430808333,"kind":"task_metrics","run":"T5-r1","transactions":[{"fetchStart":1794834017.2585192,"isCellular":false,"method":"GET","protocol":"unknown","reusedConnection":false,"rid":"rpc","url":"https:\/\/webchannel.sandbox.google.com\/staging\/channel\/generator?gsessionid=wcD6TGVxlefq8toQCGjsUFZZjZ6213Pmd1SbW9p1BjE&VER=8&RID=rpc&SID=wf8VsFJox9tpf3NxZsBOmw&CI=0&AID=1&TYPE=xmlhttp&t=3"}]}
+2026-11-16T13:00:19.671Z [SDK Debug] No response text for uri https://webchannel.sandbox.google.com/staging/channel/generator?gsessionid=wcD6TGVxlefq8toQCGjsUFZZjZ6213Pmd1SbW9p1BjE&VER=8&RID=rpc&SID=wf8VsFJox9tpf3NxZsBOmw&CI=0&AID=1&TYPE=xmlhttp&t=3 status 0.
+2026-11-16T13:00:19.671Z [NETTEST] {"deviceUnixSeconds":1794834019.6779189,"deviceUptimeSeconds":281415.19462187501,"kind":"sdk_debug","run":"T5-r1","text":"No response text for uri https:\/\/webchannel.sandbox.google.com\/staging\/channel\/generator?gsessionid=wcD6TGVxlefq8toQCGjsUFZZjZ6213Pmd1SbW9p1BjE&VER=8&RID=rpc&SID=wf8VsFJox9tpf3NxZsBOmw&CI=0&AID=1&TYPE=xmlhttp&t=3 status 0."}
+2026-11-16T13:00:19.671Z [NETTEST] {"attempt":3,"deviceUnixSeconds":1794834019.6780128,"deviceUptimeSeconds":281415.19471604167,"kind":"http_state","method":"GET","readyState":3,"rid":"rpc","run":"T5-r1","status":0,"url":"https:\/\/webchannel.sandbox.google.com\/staging\/channel\/generator?gsessionid=wcD6TGVxlefq8toQCGjsUFZZjZ6213Pmd1SbW9p1BjE&VER=8&RID=rpc&SID=wf8VsFJox9tpf3NxZsBOmw&CI=0&AID=1&TYPE=xmlhttp&t=3"}
+2026-11-16T13:00:19.671Z 🌐 [HTTP Resp Meta] (rpc) [attempt 3] GET https://webchannel.sandbox.google.com/staging/channel/generator?gsessionid=wcD6TGVxlefq8toQCGjsUFZZjZ6213Pmd1SbW9p1BjE&VER=8&RID=rpc&SID=wf8VsFJox9tpf3NxZsBOmw&CI=0&AID=1&TYPE=xmlhttp&t=3 status: 0
+2026-11-16T13:00:19.671Z [SDK Debug] Request Complete.
+2026-11-16T13:00:19.671Z [NETTEST] {"deviceUnixSeconds":1794834019.678354,"deviceUptimeSeconds":281415.19505758333,"kind":"sdk_debug","run":"T5-r1","text":"Request Complete."}
+2026-11-16T13:00:19.671Z [SDK Debug] Maybe retrying, last error: WCChannelRequestError Status
+2026-11-16T13:00:19.671Z [NETTEST] {"deviceUnixSeconds":1794834019.6785069,"deviceUptimeSeconds":281415.19520958333,"kind":"sdk_debug","run":"T5-r1","text":"Maybe retrying, last error: WCChannelRequestError Status"}
+2026-11-16T13:00:19.671Z [SDK Debug] Going to retry GET.
+2026-11-16T13:00:19.671Z [NETTEST] {"deviceUnixSeconds":1794834019.6786041,"deviceUptimeSeconds":281415.19530670834,"kind":"sdk_debug","run":"T5-r1","text":"Going to retry GET."}
+2026-11-16T13:00:19.702Z [NETTEST] {"cellular":false,"constrained":false,"deviceUnixSeconds":1794834019.711271,"deviceUptimeSeconds":281415.22797637503,"expensive":false,"kind":"path","run":"T5-r1","status":"unsatisfied","wifi":false,"wired":false}
+2026-11-16T13:00:20.637Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834020.64467,"deviceUptimeSeconds":281416.161394,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:00:21.636Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834021.6444621,"deviceUptimeSeconds":281417.16120199999,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:00:22.636Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834022.6444511,"deviceUptimeSeconds":281418.16120170837,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:00:23.636Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834023.644453,"deviceUptimeSeconds":281419.16121937503,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:00:24.637Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834024.644465,"deviceUptimeSeconds":281420.16124875,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:00:25.636Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834025.6444411,"deviceUptimeSeconds":281421.16123916669,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:00:26.636Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834026.6443748,"deviceUptimeSeconds":281422.16118641669,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:00:27.636Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834027.6443539,"deviceUptimeSeconds":281423.16118037503,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:00:28.635Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834028.644408,"deviceUptimeSeconds":281424.161249,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:00:29.636Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834029.644439,"deviceUptimeSeconds":281425.16129979171,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:00:30.636Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834030.6443958,"deviceUptimeSeconds":281426.16126833332,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:00:31.636Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834031.644295,"deviceUptimeSeconds":281427.16118141671,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:00:32.636Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834032.6442671,"deviceUptimeSeconds":281428.1611680417,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:00:33.636Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834033.6442599,"deviceUptimeSeconds":281429.16117716668,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:00:34.636Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834034.6443629,"deviceUptimeSeconds":281430.16129641666,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:00:35.636Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834035.6435142,"deviceUptimeSeconds":281431.16046325001,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:00:36.635Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834036.643399,"deviceUptimeSeconds":281432.16036066669,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:00:37.635Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834037.643492,"deviceUptimeSeconds":281433.16046904167,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:00:37.759Z 🌐 [HTTP Req] (rpc) [attempt 4] GET https://webchannel.sandbox.google.com/staging/channel/generator?gsessionid=wcD6TGVxlefq8toQCGjsUFZZjZ6213Pmd1SbW9p1BjE&VER=8&RID=rpc&SID=wf8VsFJox9tpf3NxZsBOmw&CI=0&AID=1&TYPE=xmlhttp&t=4
+2026-11-16T13:00:37.760Z [NETTEST] {"deviceUnixSeconds":1794834037.767632,"deviceUptimeSeconds":281433.28461029171,"kind":"http_log","run":"T5-r1","text":"🌐 [HTTP Req] (rpc) [attempt 4] GET https:\/\/webchannel.sandbox.google.com\/staging\/channel\/generator?gsessionid=wcD6TGVxlefq8toQCGjsUFZZjZ6213Pmd1SbW9p1BjE&VER=8&RID=rpc&SID=wf8VsFJox9tpf3NxZsBOmw&CI=0&AID=1&TYPE=xmlhttp&t=4"}
+2026-11-16T13:00:37.761Z [NETTEST] {"deviceUnixSeconds":1794834037.7679901,"deviceUptimeSeconds":281433.28497020836,"kind":"app_log","run":"T5-r1","text":"🌐 [HTTP Req] (rpc) [attempt 4] GET https:\/\/webchannel.sandbox.google.com\/staging\/channel\/generator?gsessionid=wcD6TGVxlefq8toQCGjsUFZZjZ6213Pmd1SbW9p1BjE&VER=8&RID=rpc&SID=wf8VsFJox9tpf3NxZsBOmw&CI=0&AID=1&TYPE=xmlhttp&t=4"}
+2026-11-16T13:00:37.766Z [NETTEST] {"deviceUnixSeconds":1794834037.774822,"deviceUptimeSeconds":281433.2917995,"kind":"task_metrics","run":"T5-r1","transactions":[{"fetchStart":1794834037.7684431,"isCellular":false,"method":"GET","protocol":"unknown","reusedConnection":false,"rid":"rpc","url":"https:\/\/webchannel.sandbox.google.com\/staging\/channel\/generator?gsessionid=wcD6TGVxlefq8toQCGjsUFZZjZ6213Pmd1SbW9p1BjE&VER=8&RID=rpc&SID=wf8VsFJox9tpf3NxZsBOmw&CI=0&AID=1&TYPE=xmlhttp&t=4"}]}
+2026-11-16T13:00:37.767Z [SDK Debug] No response text for uri https://webchannel.sandbox.google.com/staging/channel/generator?gsessionid=wcD6TGVxlefq8toQCGjsUFZZjZ6213Pmd1SbW9p1BjE&VER=8&RID=rpc&SID=wf8VsFJox9tpf3NxZsBOmw&CI=0&AID=1&TYPE=xmlhttp&t=4 status 0.
+2026-11-16T13:00:37.767Z [NETTEST] {"deviceUnixSeconds":1794834037.7762151,"deviceUptimeSeconds":281433.29319200001,"kind":"sdk_debug","run":"T5-r1","text":"No response text for uri https:\/\/webchannel.sandbox.google.com\/staging\/channel\/generator?gsessionid=wcD6TGVxlefq8toQCGjsUFZZjZ6213Pmd1SbW9p1BjE&VER=8&RID=rpc&SID=wf8VsFJox9tpf3NxZsBOmw&CI=0&AID=1&TYPE=xmlhttp&t=4 status 0."}
+2026-11-16T13:00:37.768Z [NETTEST] {"attempt":4,"deviceUnixSeconds":1794834037.7767859,"deviceUptimeSeconds":281433.29376237502,"kind":"http_state","method":"GET","readyState":3,"rid":"rpc","run":"T5-r1","status":0,"url":"https:\/\/webchannel.sandbox.google.com\/staging\/channel\/generator?gsessionid=wcD6TGVxlefq8toQCGjsUFZZjZ6213Pmd1SbW9p1BjE&VER=8&RID=rpc&SID=wf8VsFJox9tpf3NxZsBOmw&CI=0&AID=1&TYPE=xmlhttp&t=4"}
+2026-11-16T13:00:37.768Z 🌐 [HTTP Resp Meta] (rpc) [attempt 4] GET https://webchannel.sandbox.google.com/staging/channel/generator?gsessionid=wcD6TGVxlefq8toQCGjsUFZZjZ6213Pmd1SbW9p1BjE&VER=8&RID=rpc&SID=wf8VsFJox9tpf3NxZsBOmw&CI=0&AID=1&TYPE=xmlhttp&t=4 status: 0
+2026-11-16T13:00:37.768Z [SDK Debug] Request Complete.
+2026-11-16T13:00:37.769Z [NETTEST] {"deviceUnixSeconds":1794834037.7771611,"deviceUptimeSeconds":281433.29413712502,"kind":"sdk_debug","run":"T5-r1","text":"Request Complete."}
+2026-11-16T13:00:37.769Z [SDK Debug] Maybe retrying, last error: WCChannelRequestError Status
+2026-11-16T13:00:37.769Z [NETTEST] {"deviceUnixSeconds":1794834037.777674,"deviceUptimeSeconds":281433.29464924999,"kind":"sdk_debug","run":"T5-r1","text":"Maybe retrying, last error: WCChannelRequestError Status"}
+2026-11-16T13:00:37.769Z [SDK Debug] Error: HTTP request failed.
+2026-11-16T13:00:37.769Z [NETTEST] {"deviceUnixSeconds":1794834037.7777839,"deviceUptimeSeconds":281433.29475900001,"kind":"sdk_debug","run":"T5-r1","text":"Error: HTTP request failed."}
+2026-11-16T13:00:37.769Z [SDK Error] Error code: 1
+2026-11-16T13:00:37.769Z [NETTEST] {"deviceUnixSeconds":1794834037.7778869,"deviceUptimeSeconds":281433.29486225004,"kind":"sdk_error","run":"T5-r1","text":"Error code: 1"}
+2026-11-16T13:00:37.771Z [SDK Debug] HttpChannel: error - 1
+2026-11-16T13:00:37.772Z [NETTEST] {"deviceUnixSeconds":1794834037.7805281,"deviceUptimeSeconds":281433.29750550003,"kind":"sdk_debug","run":"T5-r1","text":"HttpChannel: error - 1"}
+2026-11-16T13:00:37.773Z [SDK Info] WebChannel aborted on https://webchannel.sandbox.google.com/staging/channel/generator due to channel error 1
+2026-11-16T13:00:37.773Z [NETTEST] {"deviceUnixSeconds":1794834037.7807112,"deviceUptimeSeconds":281433.29768704169,"kind":"sdk_info","run":"T5-r1","text":"WebChannel aborted on https:\/\/webchannel.sandbox.google.com\/staging\/channel\/generator due to channel error 1"}
+2026-11-16T13:00:37.773Z [NETTEST] {"code":1,"deviceUnixSeconds":1794834037.7810349,"deviceUptimeSeconds":281433.29801050003,"kind":"error","run":"T5-r1"}
+2026-11-16T13:00:37.773Z [SDK Info] WebChannel closed on https://webchannel.sandbox.google.com/staging/channel/generator with pending data: (
+2026-11-16T13:00:37.773Z ) and undelivered data: (
+2026-11-16T13:00:37.773Z )
+2026-11-16T13:00:37.773Z [NETTEST] {"deviceUnixSeconds":1794834037.7814231,"deviceUptimeSeconds":281433.29839837505,"kind":"sdk_info","run":"T5-r1","text":"WebChannel closed on https:\/\/webchannel.sandbox.google.com\/staging\/channel\/generator with pending data: (\n) and undelivered data: (\n)"}
+2026-11-16T13:00:37.773Z [NETTEST] {"deviceUnixSeconds":1794834037.7815461,"deviceUptimeSeconds":281433.298522875,"kind":"closed","run":"T5-r1"}
+2026-11-16T13:00:37.777Z [NETTEST] {"deviceUnixSeconds":1794834037.7853651,"deviceUptimeSeconds":281433.30234179168,"kind":"task_metrics","run":"T5-r1","transactions":[{"fetchStart":1794834037.7813129,"isCellular":false,"method":"GET","protocol":"unknown","reusedConnection":false,"rid":"","url":"https:\/\/webchannel.sandbox.google.com\/staging\/channel\/generator\/test?MODE=network"}]}
+2026-11-16T13:00:37.778Z [SDK Info] TestPingServer: server error (0)
+2026-11-16T13:00:37.778Z [NETTEST] {"deviceUnixSeconds":1794834037.786365,"deviceUptimeSeconds":281433.30334175,"kind":"sdk_info","run":"T5-r1","text":"TestPingServer: server error (0)"}
+2026-11-16T13:00:37.779Z [SDK Info] Failed to ping google.com
+2026-11-16T13:00:37.779Z [NETTEST] {"deviceUnixSeconds":1794834037.786473,"deviceUptimeSeconds":281433.30344862503,"kind":"sdk_info","run":"T5-r1","text":"Failed to ping google.com"}
+2026-11-16T13:00:37.779Z [NETTEST] {"deviceUnixSeconds":1794834037.788444,"deviceUptimeSeconds":281433.30542320834,"kind":"app_log","run":"T5-r1","text":"❌ <<< [Event: encounteredError] Error: RequestFailed (code 1)"}
+2026-11-16T13:00:37.779Z [NETTEST] {"deviceUnixSeconds":1794834037.7886081,"deviceUptimeSeconds":281433.30558341666,"kind":"app_log","run":"T5-r1","text":"<<< [Event: webChannelClosed] WebChannel connection closed."}
+2026-11-16T13:00:38.636Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834038.6433601,"deviceUptimeSeconds":281434.16035766667,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:00:39.636Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834039.643816,"deviceUptimeSeconds":281435.16082345834,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:00:40.635Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834040.64361,"deviceUptimeSeconds":281436.16063237505,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:00:41.636Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834041.6439152,"deviceUptimeSeconds":281437.16095220833,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:00:42.635Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834042.643368,"deviceUptimeSeconds":281438.16042016668,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:00:43.636Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834043.643986,"deviceUptimeSeconds":281439.16105295834,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:00:44.635Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834044.643517,"deviceUptimeSeconds":281440.16059962503,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:00:45.635Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834045.6437421,"deviceUptimeSeconds":281441.160844,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:00:46.636Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834046.644084,"deviceUptimeSeconds":281442.1611965,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:00:47.636Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834047.6440601,"deviceUptimeSeconds":281443.16118708334,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:00:48.636Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834048.644088,"deviceUptimeSeconds":281444.16123054171,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:00:49.636Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834049.644022,"deviceUptimeSeconds":281445.1611799167,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:00:50.636Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834050.643821,"deviceUptimeSeconds":281446.16099383333,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:00:51.635Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834051.6433821,"deviceUptimeSeconds":281447.160569,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:00:52.635Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834052.6440401,"deviceUptimeSeconds":281448.16124237503,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:00:53.635Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834053.644032,"deviceUptimeSeconds":281449.1612491667,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:00:54.635Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834054.6437712,"deviceUptimeSeconds":281450.16100329167,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:00:55.635Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834055.644058,"deviceUptimeSeconds":281451.16130766668,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:00:56.635Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834056.6439509,"deviceUptimeSeconds":281452.16121683334,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:00:57.635Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834057.643966,"deviceUptimeSeconds":281453.16124333336,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:00:58.635Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834058.643945,"deviceUptimeSeconds":281454.16123716667,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:00:59.635Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834059.643949,"deviceUptimeSeconds":281455.16125608335,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:01:00.635Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834060.643944,"deviceUptimeSeconds":281456.16126762499,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:01:01.635Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834061.6438708,"deviceUptimeSeconds":281457.16120891669,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:01:02.635Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834062.643841,"deviceUptimeSeconds":281458.16119325004,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:01:03.635Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834063.64381,"deviceUptimeSeconds":281459.16117829166,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:01:04.635Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834064.643836,"deviceUptimeSeconds":281460.16121933336,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:01:05.635Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834065.6438789,"deviceUptimeSeconds":281461.1612791667,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:01:06.635Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834066.6438498,"deviceUptimeSeconds":281462.16126379167,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:01:07.635Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834067.6438169,"deviceUptimeSeconds":281463.16124558332,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:01:08.635Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834068.6438022,"deviceUptimeSeconds":281464.16124491667,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:01:09.635Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834069.643796,"deviceUptimeSeconds":281465.16125408333,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:01:10.635Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834070.6437531,"deviceUptimeSeconds":281466.16122579167,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:01:11.635Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834071.643713,"deviceUptimeSeconds":281467.16120150004,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:01:12.635Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834072.6437049,"deviceUptimeSeconds":281468.161207625,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:01:13.635Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834073.643671,"deviceUptimeSeconds":281469.16118958336,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:01:14.635Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834074.643677,"deviceUptimeSeconds":281470.16121112503,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:01:15.635Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834075.6437101,"deviceUptimeSeconds":281471.16126020835,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:01:16.635Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834076.643656,"deviceUptimeSeconds":281472.16121929168,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:01:17.635Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834077.643625,"deviceUptimeSeconds":281473.16120312503,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:01:18.635Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834078.6435771,"deviceUptimeSeconds":281474.16116995836,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:01:19.634Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834079.6431201,"deviceUptimeSeconds":281475.16072795837,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:01:20.635Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834080.643585,"deviceUptimeSeconds":281476.16120833333,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:01:21.635Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834081.643573,"deviceUptimeSeconds":281477.16121187503,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:01:22.634Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834082.643553,"deviceUptimeSeconds":281478.16120683338,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:01:23.634Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834083.643569,"deviceUptimeSeconds":281479.16123766667,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:01:24.634Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834084.6435518,"deviceUptimeSeconds":281480.16123937501,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:01:25.634Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834085.6435618,"deviceUptimeSeconds":281481.16126266669,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:01:26.634Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834086.643476,"deviceUptimeSeconds":281482.16119008337,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:01:27.193Z [NETTEST] {"cellular":false,"constrained":false,"deviceUnixSeconds":1794834087.2018299,"deviceUptimeSeconds":281482.71955320833,"expensive":false,"kind":"path","run":"T5-r1","status":"satisfied","wifi":true,"wired":false}
+2026-11-16T13:01:27.635Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834087.6435399,"deviceUptimeSeconds":281483.16127816669,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:01:28.635Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834088.6435561,"deviceUptimeSeconds":281484.16130229167,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:01:29.634Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834089.6434669,"deviceUptimeSeconds":281485.16122645832,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:01:30.601Z [NETTEST] {"cellular":false,"constrained":false,"deviceUnixSeconds":1794834090.6103048,"deviceUptimeSeconds":281486.12807920837,"expensive":false,"kind":"path","run":"T5-r1","status":"satisfied","wifi":true,"wired":false}
+2026-11-16T13:01:30.634Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834090.6433849,"deviceUptimeSeconds":281486.161157,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:01:31.635Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834091.6434021,"deviceUptimeSeconds":281487.1611912917,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:01:32.635Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834092.643492,"deviceUptimeSeconds":281488.16129733337,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:01:33.634Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834093.643364,"deviceUptimeSeconds":281489.16118425003,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:01:34.635Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834094.6433611,"deviceUptimeSeconds":281490.16119504167,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:01:35.634Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834095.643333,"deviceUptimeSeconds":281491.16118408338,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:01:36.634Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834096.643347,"deviceUptimeSeconds":281492.16121108335,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:01:37.634Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834097.6433411,"deviceUptimeSeconds":281493.16122045834,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:01:38.634Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834098.643292,"deviceUptimeSeconds":281494.16118654166,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:01:39.634Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834099.6433501,"deviceUptimeSeconds":281495.16126066667,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:01:40.634Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834100.64327,"deviceUptimeSeconds":281496.16119449999,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:01:41.634Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834101.6433082,"deviceUptimeSeconds":281497.16124758334,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:01:42.634Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834102.6433249,"deviceUptimeSeconds":281498.16127862502,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:01:43.634Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834103.643271,"deviceUptimeSeconds":281499.16124137503,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:01:44.634Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834104.64324,"deviceUptimeSeconds":281500.16122366668,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:01:45.634Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834105.6432381,"deviceUptimeSeconds":281501.16123950004,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:01:46.634Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834106.6431999,"deviceUptimeSeconds":281502.1612142917,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:01:47.633Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834107.6431341,"deviceUptimeSeconds":281503.16116312501,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:01:47.799Z [NETTEST] {"cellular":false,"constrained":false,"deviceUnixSeconds":1794834107.8089709,"deviceUptimeSeconds":281503.32700237504,"expensive":false,"kind":"path","run":"T5-r1","status":"satisfied","wifi":true,"wired":false}
+2026-11-16T13:01:48.633Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834108.643219,"deviceUptimeSeconds":281504.16126533336,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:01:49.634Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834109.6431398,"deviceUptimeSeconds":281505.16119983332,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:01:50.549Z [NETTEST] {"cellular":false,"constrained":false,"deviceUnixSeconds":1794834110.5583429,"deviceUptimeSeconds":281506.07641608338,"expensive":false,"kind":"path","run":"T5-r1","status":"satisfied","wifi":true,"wired":false}
+2026-11-16T13:01:50.634Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834110.6431332,"deviceUptimeSeconds":281506.161206875,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:01:51.634Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834111.6431341,"deviceUptimeSeconds":281507.16122562502,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:01:52.634Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834112.6430731,"deviceUptimeSeconds":281508.16117708333,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:01:53.634Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834113.6430659,"deviceUptimeSeconds":281509.16118479171,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:01:54.633Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834114.6431031,"deviceUptimeSeconds":281510.161237375,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:01:55.633Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834115.6425781,"deviceUptimeSeconds":281511.16073162504,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:01:56.633Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834116.643002,"deviceUptimeSeconds":281512.16116704169,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:01:57.400Z [NETTEST] {"cellular":false,"constrained":false,"deviceUnixSeconds":1794834117.4086971,"deviceUptimeSeconds":281512.92687425,"expensive":false,"kind":"path","run":"T5-r1","status":"satisfied","wifi":true,"wired":false}
+2026-11-16T13:01:57.633Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834117.643039,"deviceUptimeSeconds":281513.16121895832,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:01:58.633Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834118.642987,"deviceUptimeSeconds":281514.16118216666,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:01:59.633Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834119.6430211,"deviceUptimeSeconds":281515.161230375,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:02:00.633Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834120.642982,"deviceUptimeSeconds":281516.16120775003,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:02:01.633Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834121.6429629,"deviceUptimeSeconds":281517.16120283335,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:02:02.633Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834122.6429272,"deviceUptimeSeconds":281518.16118216666,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:02:03.633Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834123.6429129,"deviceUptimeSeconds":281519.16118612501,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:02:04.633Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834124.6429181,"deviceUptimeSeconds":281520.16120245837,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:02:05.633Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834125.642956,"deviceUptimeSeconds":281521.16126066667,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:02:06.633Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834126.6428828,"deviceUptimeSeconds":281522.16119770834,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:02:07.632Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834127.6422238,"deviceUptimeSeconds":281523.16055375,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:02:08.633Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834128.642668,"deviceUptimeSeconds":281524.16101370833,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:02:09.633Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834129.6428618,"deviceUptimeSeconds":281525.16122458334,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:02:10.634Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834130.642838,"deviceUptimeSeconds":281526.16121341666,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:02:11.633Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834131.6427832,"deviceUptimeSeconds":281527.16117595835,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:02:12.633Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834132.6427841,"deviceUptimeSeconds":281528.16118895833,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:02:13.633Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834133.6428051,"deviceUptimeSeconds":281529.16122504167,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:02:14.633Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834134.6427479,"deviceUptimeSeconds":281530.16118279169,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:02:15.633Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834135.642796,"deviceUptimeSeconds":281531.16124775005,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:02:16.633Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834136.642746,"deviceUptimeSeconds":281532.16121170833,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:02:17.633Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834137.6427,"deviceUptimeSeconds":281533.1611801667,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:02:18.633Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834138.642736,"deviceUptimeSeconds":281534.16123162501,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:02:19.633Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834139.6427422,"deviceUptimeSeconds":281535.16125275003,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:02:20.633Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834140.642674,"deviceUptimeSeconds":281536.16119983332,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:02:21.633Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834141.6427,"deviceUptimeSeconds":281537.16124033334,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:02:22.632Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834142.6426392,"deviceUptimeSeconds":281538.16119416669,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:02:23.633Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834143.642616,"deviceUptimeSeconds":281539.16118658334,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:02:24.632Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834144.641665,"deviceUptimeSeconds":281540.16025020834,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:02:25.632Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834145.6420751,"deviceUptimeSeconds":281541.16067554167,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:02:26.633Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834146.6426001,"deviceUptimeSeconds":281542.16121575003,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:02:27.633Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834147.6426129,"deviceUptimeSeconds":281543.16124416667,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:02:28.632Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834148.6425581,"deviceUptimeSeconds":281544.16120358335,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:02:29.632Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834149.6425309,"deviceUptimeSeconds":281545.1611912917,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:02:30.632Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834150.6425309,"deviceUptimeSeconds":281546.16120670835,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:02:31.633Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834151.642566,"deviceUptimeSeconds":281547.16125779168,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:02:32.633Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834152.642488,"deviceUptimeSeconds":281548.16119375004,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:02:33.632Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834153.6424379,"deviceUptimeSeconds":281549.16115841671,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:02:34.632Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834154.6424379,"deviceUptimeSeconds":281550.16117333336,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:02:35.633Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834155.6424351,"deviceUptimeSeconds":281551.16118566669,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:02:36.632Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834156.6424541,"deviceUptimeSeconds":281552.16122512502,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:02:37.633Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834157.642422,"deviceUptimeSeconds":281553.16120333335,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:02:38.633Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834158.642391,"deviceUptimeSeconds":281554.16118979169,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:02:39.632Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834159.6423759,"deviceUptimeSeconds":281555.16118654166,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:02:40.633Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834160.642447,"deviceUptimeSeconds":281556.16127270833,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:02:41.632Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834161.6423211,"deviceUptimeSeconds":281557.16116233333,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:02:42.632Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834162.642303,"deviceUptimeSeconds":281558.16115825,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:02:43.632Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834163.642312,"deviceUptimeSeconds":281559.16118425003,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:02:44.632Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834164.642309,"deviceUptimeSeconds":281560.16119508335,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:02:45.632Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834165.6422639,"deviceUptimeSeconds":281561.16117312503,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:02:46.632Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834166.642318,"deviceUptimeSeconds":281562.16123545833,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:02:47.632Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834167.642247,"deviceUptimeSeconds":281563.16117795836,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:02:48.632Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834168.642247,"deviceUptimeSeconds":281564.16119645833,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:02:49.632Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834169.6422291,"deviceUptimeSeconds":281565.16119095834,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:02:50.632Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834170.6421862,"deviceUptimeSeconds":281566.16116229171,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:02:51.632Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834171.6421661,"deviceUptimeSeconds":281567.16115687502,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:02:52.632Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834172.6421618,"deviceUptimeSeconds":281568.161168875,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:02:53.632Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834173.642144,"deviceUptimeSeconds":281569.1611649167,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:02:54.631Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834174.642133,"deviceUptimeSeconds":281570.16116995836,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:02:55.632Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834175.642118,"deviceUptimeSeconds":281571.1611690417,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:02:56.632Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834176.6421461,"deviceUptimeSeconds":281572.16121741669,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:02:57.631Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834177.6420851,"deviceUptimeSeconds":281573.16116737504,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:02:58.630Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834178.6411672,"deviceUptimeSeconds":281574.16026312503,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:02:59.630Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834179.6411939,"deviceUptimeSeconds":281575.16030612501,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:03:00.631Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834180.6412749,"deviceUptimeSeconds":281576.16040141671,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:03:01.630Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834181.641335,"deviceUptimeSeconds":281577.16047662502,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:03:02.631Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834182.642036,"deviceUptimeSeconds":281578.16119304165,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:03:03.630Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834183.6414239,"deviceUptimeSeconds":281579.16059500002,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:03:04.631Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834184.641993,"deviceUptimeSeconds":281580.16117995838,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:03:05.632Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834185.641968,"deviceUptimeSeconds":281581.16116950003,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:03:06.632Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834186.642019,"deviceUptimeSeconds":281582.16123750003,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:03:07.631Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834187.641655,"deviceUptimeSeconds":281583.16088733333,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:03:08.631Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834188.6416979,"deviceUptimeSeconds":281584.16094516666,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:03:09.631Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834189.6410589,"deviceUptimeSeconds":281585.16032295837,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:03:10.631Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834190.641046,"deviceUptimeSeconds":281586.16032312502,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:03:11.631Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834191.6411109,"deviceUptimeSeconds":281587.16040308337,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:03:12.631Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834192.6411581,"deviceUptimeSeconds":281588.16046470834,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:03:13.631Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834193.6412559,"deviceUptimeSeconds":281589.16057800001,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:03:14.631Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834194.6417861,"deviceUptimeSeconds":281590.16112829169,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:03:15.631Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834195.6417189,"deviceUptimeSeconds":281591.16107370832,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:03:16.184Z [NETTEST] {"cellular":false,"constrained":false,"deviceUnixSeconds":1794834196.195029,"deviceUptimeSeconds":281591.714388875,"expensive":false,"kind":"path","run":"T5-r1","status":"satisfied","wifi":true,"wired":false}
+2026-11-16T13:03:16.631Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834196.641885,"deviceUptimeSeconds":281592.16125458333,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:03:17.631Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834197.6419358,"deviceUptimeSeconds":281593.16132358334,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:03:17.759Z [NETTEST] {"action":"com.pmodular.webchannel.nettest.close","deviceUnixSeconds":1794834197.7702341,"deviceUptimeSeconds":281593.28961725003,"kind":"control","run":"T5-r1"}
+2026-11-16T13:03:18.631Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834198.6418149,"deviceUptimeSeconds":281594.161211,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:03:19.630Z [NETTEST] {"applicationState":0,"deviceUnixSeconds":1794834199.6412921,"deviceUptimeSeconds":281595.16070233338,"kind":"heartbeat","run":"T5-r1"}
+2026-11-16T13:03:20.050Z App terminated due to signal 15.

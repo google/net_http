@@ -1,0 +1,23 @@
+{
+  "case": "T2",
+  "run": 2,
+  "holdSeconds": 50.006,
+  "timeouts": 1,
+  "errorCodes": [],
+  "receiveAfterRelease": true,
+  "openCount": 1,
+  "observation": "receive-resumed",
+  "folder": "T2-r2",
+  "protocolEvidence": {
+    "coverage": "mixed-after-h3-baseline",
+    "h3Transactions": 3,
+    "unknownTransactions": 0,
+    "otherProtocols": [
+      "h2"
+    ],
+    "h3ObservedWithoutKnownFallback": false,
+    "note": "Unknown transactions are not h3 evidence; baseline h3 is checked before faults."
+  },
+  "requestedHTTP3": true,
+  "endpoint": "https://webchannel.googleapis.com/staging/channel/generator"
+}

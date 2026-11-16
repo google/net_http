@@ -1,0 +1,2511 @@
+[
+  {
+    "trial": "T10-r1-retry2",
+    "scenario": "T10-l3-pending",
+    "requestedHoldSeconds": 30.0,
+    "observedSecondsAtRestoreCue": 30.521385375002865,
+    "observedOfflinePathSeconds": 37.37861824996071,
+    "channelObservation": "channel-failed",
+    "observedRestoreToEchoSeconds": null,
+    "observedOfflineToTerminalSeconds": 14.785345416632481,
+    "observedFirstOfflineToTerminalSeconds": null,
+    "observedBrokenCellularPathSeconds": null,
+    "errorCodes": [
+      1
+    ],
+    "protocolEvidence": {
+      "coverage": "h3-observed-no-known-fallback",
+      "h3Transactions": 3,
+      "unknownTransactions": 7,
+      "otherProtocols": [],
+      "h3ObservedWithoutKnownFallback": true,
+      "note": "Unknown transactions are not h3 evidence; baseline h3 is checked before faults."
+    },
+    "baselineH3Verified": true,
+    "uniqueSIDCount": 1,
+    "pendingWrite": {
+      "offlineToSubmissionSeconds": 2.835722708317917,
+      "submissionToTerminalSeconds": 11.949622708314564,
+      "postAttempts": [
+        1,
+        2,
+        3
+      ],
+      "matchingEchoReceived": false,
+      "note": "Matching app echo is observed separately; no transport-level acknowledgement count is inferred."
+    }
+  },
+  {
+    "trial": "T10-r2",
+    "scenario": "T10-l3-pending",
+    "requestedHoldSeconds": 30.0,
+    "observedSecondsAtRestoreCue": 30.315512000001036,
+    "observedOfflinePathSeconds": 34.83191745833028,
+    "channelObservation": "channel-failed",
+    "observedRestoreToEchoSeconds": null,
+    "observedOfflineToTerminalSeconds": 9.829370958381332,
+    "observedFirstOfflineToTerminalSeconds": null,
+    "observedBrokenCellularPathSeconds": null,
+    "errorCodes": [
+      1
+    ],
+    "protocolEvidence": {
+      "coverage": "h3-observed-no-known-fallback",
+      "h3Transactions": 3,
+      "unknownTransactions": 6,
+      "otherProtocols": [],
+      "h3ObservedWithoutKnownFallback": true,
+      "note": "Unknown transactions are not h3 evidence; baseline h3 is checked before faults."
+    },
+    "baselineH3Verified": true,
+    "uniqueSIDCount": 1,
+    "pendingWrite": {
+      "offlineToSubmissionSeconds": 2.5892750000348315,
+      "submissionToTerminalSeconds": 7.240095958346501,
+      "postAttempts": [
+        1,
+        2,
+        3
+      ],
+      "matchingEchoReceived": false,
+      "note": "Matching app echo is observed separately; no transport-level acknowledgement count is inferred."
+    }
+  },
+  {
+    "trial": "T10-r3",
+    "scenario": "T10-l3-pending",
+    "requestedHoldSeconds": 30.0,
+    "observedSecondsAtRestoreCue": 30.849650083342567,
+    "observedOfflinePathSeconds": 34.70564449997619,
+    "channelObservation": "channel-failed",
+    "observedRestoreToEchoSeconds": null,
+    "observedOfflineToTerminalSeconds": 13.578685124986805,
+    "observedFirstOfflineToTerminalSeconds": null,
+    "observedBrokenCellularPathSeconds": null,
+    "errorCodes": [
+      1
+    ],
+    "protocolEvidence": {
+      "coverage": "h3-observed-no-known-fallback",
+      "h3Transactions": 3,
+      "unknownTransactions": 7,
+      "otherProtocols": [],
+      "h3ObservedWithoutKnownFallback": true,
+      "note": "Unknown transactions are not h3 evidence; baseline h3 is checked before faults."
+    },
+    "baselineH3Verified": true,
+    "uniqueSIDCount": 1,
+    "pendingWrite": {
+      "offlineToSubmissionSeconds": 2.1052010416751727,
+      "submissionToTerminalSeconds": 11.473484083311632,
+      "postAttempts": [
+        1,
+        2,
+        3
+      ],
+      "matchingEchoReceived": false,
+      "note": "Matching app echo is observed separately; no transport-level acknowledgement count is inferred."
+    }
+  },
+  {
+    "trial": "T11-r1",
+    "scenario": "T11-l3-flap",
+    "requestedHoldSeconds": 5.0,
+    "observedSecondsAtRestoreCue": null,
+    "observedOfflinePathSeconds": null,
+    "channelObservation": "echo-resumed",
+    "observedRestoreToEchoSeconds": null,
+    "observedOfflineToTerminalSeconds": null,
+    "observedFirstOfflineToTerminalSeconds": null,
+    "observedBrokenCellularPathSeconds": null,
+    "errorCodes": [],
+    "protocolEvidence": {
+      "coverage": "mixed-after-h3-baseline",
+      "h3Transactions": 4,
+      "unknownTransactions": 6,
+      "otherProtocols": [
+        "h2"
+      ],
+      "h3ObservedWithoutKnownFallback": false,
+      "note": "Unknown transactions are not h3 evidence; baseline h3 is checked before faults."
+    },
+    "baselineH3Verified": true,
+    "uniqueSIDCount": 1,
+    "cycles": [
+      {
+        "cycle": 1,
+        "observedSecondsAtRestoreCue": 5.452902624965645,
+        "observedOfflinePathSeconds": 9.370638749969658
+      },
+      {
+        "cycle": 2,
+        "observedSecondsAtRestoreCue": 5.94175120833097,
+        "observedOfflinePathSeconds": 11.702284166705795
+      },
+      {
+        "cycle": 3,
+        "observedSecondsAtRestoreCue": 5.500610166636761,
+        "observedOfflinePathSeconds": 9.377889874973334
+      }
+    ]
+  },
+  {
+    "trial": "T11-r2",
+    "scenario": "T11-l3-flap",
+    "requestedHoldSeconds": 5.0,
+    "observedSecondsAtRestoreCue": null,
+    "observedOfflinePathSeconds": null,
+    "channelObservation": "channel-failed",
+    "observedRestoreToEchoSeconds": null,
+    "observedOfflineToTerminalSeconds": null,
+    "observedFirstOfflineToTerminalSeconds": 22.416073124972172,
+    "observedBrokenCellularPathSeconds": null,
+    "errorCodes": [
+      1
+    ],
+    "protocolEvidence": {
+      "coverage": "h3-observed-no-known-fallback",
+      "h3Transactions": 3,
+      "unknownTransactions": 5,
+      "otherProtocols": [],
+      "h3ObservedWithoutKnownFallback": true,
+      "note": "Unknown transactions are not h3 evidence; baseline h3 is checked before faults."
+    },
+    "baselineH3Verified": true,
+    "uniqueSIDCount": 1,
+    "cycles": [
+      {
+        "cycle": 1,
+        "observedSecondsAtRestoreCue": 5.364714625000488,
+        "observedOfflinePathSeconds": 9.401095541659743
+      },
+      {
+        "cycle": 2,
+        "observedSecondsAtRestoreCue": 5.491114541655406,
+        "observedOfflinePathSeconds": 9.501177083293442
+      },
+      {
+        "cycle": 3,
+        "observedSecondsAtRestoreCue": 5.735152624954935,
+        "observedOfflinePathSeconds": 9.335165124968626
+      }
+    ]
+  },
+  {
+    "trial": "T11-r3",
+    "scenario": "T11-l3-flap",
+    "requestedHoldSeconds": 5.0,
+    "observedSecondsAtRestoreCue": null,
+    "observedOfflinePathSeconds": null,
+    "channelObservation": "echo-resumed",
+    "observedRestoreToEchoSeconds": null,
+    "observedOfflineToTerminalSeconds": null,
+    "observedFirstOfflineToTerminalSeconds": null,
+    "observedBrokenCellularPathSeconds": null,
+    "errorCodes": [],
+    "protocolEvidence": {
+      "coverage": "h3-observed-no-known-fallback",
+      "h3Transactions": 8,
+      "unknownTransactions": 6,
+      "otherProtocols": [],
+      "h3ObservedWithoutKnownFallback": true,
+      "note": "Unknown transactions are not h3 evidence; baseline h3 is checked before faults."
+    },
+    "baselineH3Verified": true,
+    "uniqueSIDCount": 1,
+    "cycles": [
+      {
+        "cycle": 1,
+        "observedSecondsAtRestoreCue": 5.45152349997079,
+        "observedOfflinePathSeconds": 9.259435333311558
+      },
+      {
+        "cycle": 2,
+        "observedSecondsAtRestoreCue": 5.963680791668594,
+        "observedOfflinePathSeconds": 8.750722875003703
+      },
+      {
+        "cycle": 3,
+        "observedSecondsAtRestoreCue": 5.875732999993488,
+        "observedOfflinePathSeconds": 9.286088041670155
+      }
+    ]
+  },
+  {
+    "trial": "T12-T14-idle-r1",
+    "scenario": "wifi-cellular-wifi",
+    "requestedHoldSeconds": 15.0,
+    "observedSecondsAtRestoreCue": 15.586767916684039,
+    "observedOfflinePathSeconds": null,
+    "channelObservation": "both-direction-probe-echoes",
+    "observedRestoreToEchoSeconds": null,
+    "observedOfflineToTerminalSeconds": null,
+    "observedFirstOfflineToTerminalSeconds": null,
+    "observedBrokenCellularPathSeconds": null,
+    "errorCodes": [],
+    "protocolEvidence": {
+      "coverage": "h3-observed-no-known-fallback",
+      "h3Transactions": 12,
+      "unknownTransactions": 0,
+      "otherProtocols": [],
+      "h3ObservedWithoutKnownFallback": true,
+      "note": "Unknown transactions are not h3 evidence; baseline h3 is checked before faults."
+    },
+    "baselineH3Verified": true,
+    "uniqueSIDCount": 1,
+    "handoff": {
+      "traffic": "idle",
+      "restoredPathAlsoReportsCellular": false,
+      "observedCellularPathSeconds": 21.520147833332885,
+      "cellularPathToProbeEchoSeconds": 3.010875666688662,
+      "restoredPathToProbeEchoSeconds": 0.39014041668269783,
+      "observedPostRestoreHostSeconds": 30.063197750001564,
+      "postRestoreProbeCount": 5,
+      "transactions": [
+        {
+          "metricsCallbackPhase": "before-cellular-path",
+          "method": "POST",
+          "protocol": "h3",
+          "isCellular": false,
+          "reusedConnection": false,
+          "localAddress": "2400:4050:b781:4c00:86b:9dba:2bc9:1684",
+          "localPort": 49813,
+          "remoteAddress": "2001:4860:4842:400::",
+          "remotePort": 443
+        },
+        {
+          "metricsCallbackPhase": "before-cellular-path",
+          "method": "POST",
+          "protocol": "h3",
+          "isCellular": false,
+          "reusedConnection": true,
+          "localAddress": "2400:4050:b781:4c00:86b:9dba:2bc9:1684",
+          "localPort": 49813,
+          "remoteAddress": "2001:4860:4842:400::",
+          "remotePort": 443
+        },
+        {
+          "metricsCallbackPhase": "cellular-path-observed",
+          "method": "POST",
+          "protocol": "h3",
+          "isCellular": false,
+          "reusedConnection": true,
+          "localAddress": "2400:4050:b781:4c00:86b:9dba:2bc9:1684",
+          "localPort": 49813,
+          "remoteAddress": "2001:4860:4842:400::",
+          "remotePort": 443
+        },
+        {
+          "metricsCallbackPhase": "wifi-restored",
+          "method": "POST",
+          "protocol": "h3",
+          "isCellular": false,
+          "reusedConnection": true,
+          "localAddress": "2400:4050:b781:4c00:86b:9dba:2bc9:1684",
+          "localPort": 49813,
+          "remoteAddress": "2001:4860:4842:400::",
+          "remotePort": 443
+        },
+        {
+          "metricsCallbackPhase": "wifi-restored",
+          "method": "POST",
+          "protocol": "h3",
+          "isCellular": false,
+          "reusedConnection": true,
+          "localAddress": "2400:4050:b781:4c00:86b:9dba:2bc9:1684",
+          "localPort": 49813,
+          "remoteAddress": "2001:4860:4842:400::",
+          "remotePort": 443
+        },
+        {
+          "metricsCallbackPhase": "wifi-restored",
+          "method": "POST",
+          "protocol": "h3",
+          "isCellular": false,
+          "reusedConnection": true,
+          "localAddress": "2400:4050:b781:4c00:86b:9dba:2bc9:1684",
+          "localPort": 49813,
+          "remoteAddress": "2001:4860:4842:400::",
+          "remotePort": 443
+        },
+        {
+          "metricsCallbackPhase": "wifi-restored",
+          "method": "POST",
+          "protocol": "h3",
+          "isCellular": false,
+          "reusedConnection": true,
+          "localAddress": "2400:4050:b781:4c00:86b:9dba:2bc9:1684",
+          "localPort": 49813,
+          "remoteAddress": "2001:4860:4842:400::",
+          "remotePort": 443
+        },
+        {
+          "metricsCallbackPhase": "wifi-restored",
+          "method": "GET",
+          "protocol": "h3",
+          "isCellular": false,
+          "reusedConnection": true,
+          "localAddress": "2400:4050:b781:4c00:86b:9dba:2bc9:1684",
+          "localPort": 49813,
+          "remoteAddress": "2001:4860:4842:400::",
+          "remotePort": 443
+        },
+        {
+          "metricsCallbackPhase": "wifi-restored",
+          "method": "POST",
+          "protocol": "h3",
+          "isCellular": false,
+          "reusedConnection": true,
+          "localAddress": "2400:4050:b781:4c00:86b:9dba:2bc9:1684",
+          "localPort": 49813,
+          "remoteAddress": "2001:4860:4842:400::",
+          "remotePort": 443
+        },
+        {
+          "metricsCallbackPhase": "wifi-restored",
+          "method": "POST",
+          "protocol": "h3",
+          "isCellular": false,
+          "reusedConnection": true,
+          "localAddress": "2400:4050:b781:4c00:86b:9dba:2bc9:1684",
+          "localPort": 49813,
+          "remoteAddress": "2001:4860:4842:400::",
+          "remotePort": 443
+        },
+        {
+          "metricsCallbackPhase": "wifi-restored",
+          "method": "GET",
+          "protocol": "h3",
+          "isCellular": false,
+          "reusedConnection": true,
+          "localAddress": "2400:4050:b781:4c00:86b:9dba:2bc9:1684",
+          "localPort": 49813,
+          "remoteAddress": "2001:4860:4842:400::",
+          "remotePort": 443
+        },
+        {
+          "metricsCallbackPhase": "wifi-restored",
+          "method": "GET",
+          "protocol": "h3",
+          "isCellular": false,
+          "reusedConnection": true,
+          "localAddress": "2400:4050:b781:4c00:86b:9dba:2bc9:1684",
+          "localPort": 49813,
+          "remoteAddress": "2001:4860:4842:400::",
+          "remotePort": 443
+        }
+      ],
+      "note": "Metrics callback phase is not physical packet routing. Path-to-probe intervals include operator/controller/probe delays; they are not exact network recovery times or proof of QUIC migration."
+    }
+  },
+  {
+    "trial": "T12-T14-idle-r2-retry2",
+    "scenario": "wifi-cellular-wifi",
+    "requestedHoldSeconds": 15.0,
+    "observedSecondsAtRestoreCue": 15.617125625023618,
+    "observedOfflinePathSeconds": null,
+    "channelObservation": "both-direction-probe-echoes",
+    "observedRestoreToEchoSeconds": null,
+    "observedOfflineToTerminalSeconds": null,
+    "observedFirstOfflineToTerminalSeconds": null,
+    "observedBrokenCellularPathSeconds": null,
+    "errorCodes": [],
+    "protocolEvidence": {
+      "coverage": "h3-observed-no-known-fallback",
+      "h3Transactions": 12,
+      "unknownTransactions": 0,
+      "otherProtocols": [],
+      "h3ObservedWithoutKnownFallback": true,
+      "note": "Unknown transactions are not h3 evidence; baseline h3 is checked before faults."
+    },
+    "baselineH3Verified": true,
+    "uniqueSIDCount": 1,
+    "handoff": {
+      "traffic": "idle",
+      "restoredPathAlsoReportsCellular": false,
+      "observedCellularPathSeconds": 27.77370850002626,
+      "cellularPathToProbeEchoSeconds": 3.0081613333313726,
+      "restoredPathToProbeEchoSeconds": 1.33831600000849,
+      "observedPostRestoreHostSeconds": 30.05342950001068,
+      "postRestoreProbeCount": 5,
+      "transactions": [
+        {
+          "metricsCallbackPhase": "before-cellular-path",
+          "method": "POST",
+          "protocol": "h3",
+          "isCellular": false,
+          "reusedConnection": false,
+          "localAddress": "2400:4050:b781:4c00:86b:9dba:2bc9:1684",
+          "localPort": 55477,
+          "remoteAddress": "2001:4860:4843:400::",
+          "remotePort": 443
+        },
+        {
+          "metricsCallbackPhase": "before-cellular-path",
+          "method": "POST",
+          "protocol": "h3",
+          "isCellular": false,
+          "reusedConnection": true,
+          "localAddress": "2400:4050:b781:4c00:86b:9dba:2bc9:1684",
+          "localPort": 55477,
+          "remoteAddress": "2001:4860:4843:400::",
+          "remotePort": 443
+        },
+        {
+          "metricsCallbackPhase": "cellular-path-observed",
+          "method": "POST",
+          "protocol": "h3",
+          "isCellular": false,
+          "reusedConnection": true,
+          "localAddress": "2400:4050:b781:4c00:86b:9dba:2bc9:1684",
+          "localPort": 55477,
+          "remoteAddress": "2001:4860:4843:400::",
+          "remotePort": 443
+        },
+        {
+          "metricsCallbackPhase": "wifi-restored",
+          "method": "POST",
+          "protocol": "h3",
+          "isCellular": false,
+          "reusedConnection": true,
+          "localAddress": "2400:4050:b781:4c00:86b:9dba:2bc9:1684",
+          "localPort": 55477,
+          "remoteAddress": "2001:4860:4843:400::",
+          "remotePort": 443
+        },
+        {
+          "metricsCallbackPhase": "wifi-restored",
+          "method": "POST",
+          "protocol": "h3",
+          "isCellular": false,
+          "reusedConnection": true,
+          "localAddress": "2400:4050:b781:4c00:86b:9dba:2bc9:1684",
+          "localPort": 55477,
+          "remoteAddress": "2001:4860:4843:400::",
+          "remotePort": 443
+        },
+        {
+          "metricsCallbackPhase": "wifi-restored",
+          "method": "GET",
+          "protocol": "h3",
+          "isCellular": false,
+          "reusedConnection": true,
+          "localAddress": "2400:4050:b781:4c00:86b:9dba:2bc9:1684",
+          "localPort": 55477,
+          "remoteAddress": "2001:4860:4843:400::",
+          "remotePort": 443
+        },
+        {
+          "metricsCallbackPhase": "wifi-restored",
+          "method": "POST",
+          "protocol": "h3",
+          "isCellular": false,
+          "reusedConnection": true,
+          "localAddress": "2400:4050:b781:4c00:86b:9dba:2bc9:1684",
+          "localPort": 55477,
+          "remoteAddress": "2001:4860:4843:400::",
+          "remotePort": 443
+        },
+        {
+          "metricsCallbackPhase": "wifi-restored",
+          "method": "POST",
+          "protocol": "h3",
+          "isCellular": false,
+          "reusedConnection": true,
+          "localAddress": "2400:4050:b781:4c00:86b:9dba:2bc9:1684",
+          "localPort": 55477,
+          "remoteAddress": "2001:4860:4843:400::",
+          "remotePort": 443
+        },
+        {
+          "metricsCallbackPhase": "wifi-restored",
+          "method": "POST",
+          "protocol": "h3",
+          "isCellular": false,
+          "reusedConnection": true,
+          "localAddress": "2400:4050:b781:4c00:86b:9dba:2bc9:1684",
+          "localPort": 55477,
+          "remoteAddress": "2001:4860:4843:400::",
+          "remotePort": 443
+        },
+        {
+          "metricsCallbackPhase": "wifi-restored",
+          "method": "POST",
+          "protocol": "h3",
+          "isCellular": false,
+          "reusedConnection": true,
+          "localAddress": "2400:4050:b781:4c00:86b:9dba:2bc9:1684",
+          "localPort": 55477,
+          "remoteAddress": "2001:4860:4843:400::",
+          "remotePort": 443
+        },
+        {
+          "metricsCallbackPhase": "wifi-restored",
+          "method": "GET",
+          "protocol": "h3",
+          "isCellular": false,
+          "reusedConnection": true,
+          "localAddress": "2400:4050:b781:4c00:86b:9dba:2bc9:1684",
+          "localPort": 55477,
+          "remoteAddress": "2001:4860:4843:400::",
+          "remotePort": 443
+        },
+        {
+          "metricsCallbackPhase": "wifi-restored",
+          "method": "GET",
+          "protocol": "h3",
+          "isCellular": false,
+          "reusedConnection": true,
+          "localAddress": "2400:4050:b781:4c00:86b:9dba:2bc9:1684",
+          "localPort": 55477,
+          "remoteAddress": "2001:4860:4843:400::",
+          "remotePort": 443
+        }
+      ],
+      "note": "Metrics callback phase is not physical packet routing. Path-to-probe intervals include operator/controller/probe delays; they are not exact network recovery times or proof of QUIC migration."
+    }
+  },
+  {
+    "trial": "T12-T14-idle-r3",
+    "scenario": "wifi-cellular-wifi",
+    "requestedHoldSeconds": 15.0,
+    "observedSecondsAtRestoreCue": 15.878861750010401,
+    "observedOfflinePathSeconds": null,
+    "channelObservation": "both-direction-probe-echoes",
+    "observedRestoreToEchoSeconds": null,
+    "observedOfflineToTerminalSeconds": null,
+    "observedFirstOfflineToTerminalSeconds": null,
+    "observedBrokenCellularPathSeconds": null,
+    "errorCodes": [],
+    "protocolEvidence": {
+      "coverage": "h3-observed-no-known-fallback",
+      "h3Transactions": 12,
+      "unknownTransactions": 0,
+      "otherProtocols": [],
+      "h3ObservedWithoutKnownFallback": true,
+      "note": "Unknown transactions are not h3 evidence; baseline h3 is checked before faults."
+    },
+    "baselineH3Verified": true,
+    "uniqueSIDCount": 1,
+    "handoff": {
+      "traffic": "idle",
+      "restoredPathAlsoReportsCellular": false,
+      "observedCellularPathSeconds": 28.56298604165204,
+      "cellularPathToProbeEchoSeconds": 1.2626021666801535,
+      "restoredPathToProbeEchoSeconds": 0.6121076666750014,
+      "observedPostRestoreHostSeconds": 30.09044729100424,
+      "postRestoreProbeCount": 5,
+      "transactions": [
+        {
+          "metricsCallbackPhase": "before-cellular-path",
+          "method": "POST",
+          "protocol": "h3",
+          "isCellular": false,
+          "reusedConnection": false,
+          "localAddress": "192.168.10.21",
+          "localPort": 56293,
+          "remoteAddress": "172.217.119.4",
+          "remotePort": 443
+        },
+        {
+          "metricsCallbackPhase": "before-cellular-path",
+          "method": "POST",
+          "protocol": "h3",
+          "isCellular": false,
+          "reusedConnection": true,
+          "localAddress": "192.168.10.21",
+          "localPort": 56293,
+          "remoteAddress": "172.217.119.4",
+          "remotePort": 443
+        },
+        {
+          "metricsCallbackPhase": "cellular-path-observed",
+          "method": "POST",
+          "protocol": "h3",
+          "isCellular": false,
+          "reusedConnection": true,
+          "localAddress": "192.168.10.21",
+          "localPort": 56293,
+          "remoteAddress": "172.217.119.4",
+          "remotePort": 443
+        },
+        {
+          "metricsCallbackPhase": "wifi-restored",
+          "method": "POST",
+          "protocol": "h3",
+          "isCellular": false,
+          "reusedConnection": true,
+          "localAddress": "192.168.10.21",
+          "localPort": 56293,
+          "remoteAddress": "172.217.119.4",
+          "remotePort": 443
+        },
+        {
+          "metricsCallbackPhase": "wifi-restored",
+          "method": "POST",
+          "protocol": "h3",
+          "isCellular": false,
+          "reusedConnection": true,
+          "localAddress": "192.168.10.21",
+          "localPort": 56293,
+          "remoteAddress": "172.217.119.4",
+          "remotePort": 443
+        },
+        {
+          "metricsCallbackPhase": "wifi-restored",
+          "method": "POST",
+          "protocol": "h3",
+          "isCellular": false,
+          "reusedConnection": true,
+          "localAddress": "192.168.10.21",
+          "localPort": 56293,
+          "remoteAddress": "172.217.119.4",
+          "remotePort": 443
+        },
+        {
+          "metricsCallbackPhase": "wifi-restored",
+          "method": "GET",
+          "protocol": "h3",
+          "isCellular": false,
+          "reusedConnection": true,
+          "localAddress": "192.168.10.21",
+          "localPort": 56293,
+          "remoteAddress": "172.217.119.4",
+          "remotePort": 443
+        },
+        {
+          "metricsCallbackPhase": "wifi-restored",
+          "method": "POST",
+          "protocol": "h3",
+          "isCellular": false,
+          "reusedConnection": true,
+          "localAddress": "192.168.10.21",
+          "localPort": 56293,
+          "remoteAddress": "172.217.119.4",
+          "remotePort": 443
+        },
+        {
+          "metricsCallbackPhase": "wifi-restored",
+          "method": "POST",
+          "protocol": "h3",
+          "isCellular": false,
+          "reusedConnection": true,
+          "localAddress": "192.168.10.21",
+          "localPort": 56293,
+          "remoteAddress": "172.217.119.4",
+          "remotePort": 443
+        },
+        {
+          "metricsCallbackPhase": "wifi-restored",
+          "method": "POST",
+          "protocol": "h3",
+          "isCellular": false,
+          "reusedConnection": true,
+          "localAddress": "192.168.10.21",
+          "localPort": 56293,
+          "remoteAddress": "172.217.119.4",
+          "remotePort": 443
+        },
+        {
+          "metricsCallbackPhase": "wifi-restored",
+          "method": "GET",
+          "protocol": "h3",
+          "isCellular": false,
+          "reusedConnection": true,
+          "localAddress": "192.168.10.21",
+          "localPort": 56293,
+          "remoteAddress": "172.217.119.4",
+          "remotePort": 443
+        },
+        {
+          "metricsCallbackPhase": "wifi-restored",
+          "method": "GET",
+          "protocol": "h3",
+          "isCellular": false,
+          "reusedConnection": true,
+          "localAddress": "192.168.10.21",
+          "localPort": 56293,
+          "remoteAddress": "172.217.119.4",
+          "remotePort": 443
+        }
+      ],
+      "note": "Metrics callback phase is not physical packet routing. Path-to-probe intervals include operator/controller/probe delays; they are not exact network recovery times or proof of QUIC migration."
+    }
+  },
+  {
+    "trial": "T12-T14-stream-r1",
+    "scenario": "wifi-cellular-wifi",
+    "requestedHoldSeconds": 15.0,
+    "observedSecondsAtRestoreCue": 15.901419333356898,
+    "observedOfflinePathSeconds": null,
+    "channelObservation": "both-direction-probe-echoes",
+    "observedRestoreToEchoSeconds": null,
+    "observedOfflineToTerminalSeconds": null,
+    "observedFirstOfflineToTerminalSeconds": null,
+    "observedBrokenCellularPathSeconds": null,
+    "errorCodes": [],
+    "protocolEvidence": {
+      "coverage": "h3-observed-no-known-fallback",
+      "h3Transactions": 13,
+      "unknownTransactions": 0,
+      "otherProtocols": [],
+      "h3ObservedWithoutKnownFallback": true,
+      "note": "Unknown transactions are not h3 evidence; baseline h3 is checked before faults."
+    },
+    "baselineH3Verified": true,
+    "uniqueSIDCount": 1,
+    "handoff": {
+      "traffic": "streaming",
+      "restoredPathAlsoReportsCellular": false,
+      "observedCellularPathSeconds": 25.58660754171433,
+      "cellularPathToProbeEchoSeconds": 1.304260000004433,
+      "restoredPathToProbeEchoSeconds": 0.5871193333296105,
+      "observedPostRestoreHostSeconds": 30.09524799999781,
+      "postRestoreProbeCount": 5,
+      "transactions": [
+        {
+          "metricsCallbackPhase": "before-cellular-path",
+          "method": "POST",
+          "protocol": "h3",
+          "isCellular": false,
+          "reusedConnection": false,
+          "localAddress": "192.168.10.21",
+          "localPort": 65245,
+          "remoteAddress": "172.217.112.4",
+          "remotePort": 443
+        },
+        {
+          "metricsCallbackPhase": "before-cellular-path",
+          "method": "POST",
+          "protocol": "h3",
+          "isCellular": false,
+          "reusedConnection": true,
+          "localAddress": "192.168.10.21",
+          "localPort": 65245,
+          "remoteAddress": "172.217.112.4",
+          "remotePort": 443
+        },
+        {
+          "metricsCallbackPhase": "before-cellular-path",
+          "method": "POST",
+          "protocol": "h3",
+          "isCellular": false,
+          "reusedConnection": true,
+          "localAddress": "192.168.10.21",
+          "localPort": 65245,
+          "remoteAddress": "172.217.112.4",
+          "remotePort": 443
+        },
+        {
+          "metricsCallbackPhase": "cellular-path-observed",
+          "method": "POST",
+          "protocol": "h3",
+          "isCellular": false,
+          "reusedConnection": true,
+          "localAddress": "192.168.10.21",
+          "localPort": 65245,
+          "remoteAddress": "172.217.112.4",
+          "remotePort": 443
+        },
+        {
+          "metricsCallbackPhase": "wifi-restored",
+          "method": "POST",
+          "protocol": "h3",
+          "isCellular": false,
+          "reusedConnection": true,
+          "localAddress": "192.168.10.21",
+          "localPort": 65245,
+          "remoteAddress": "172.217.112.4",
+          "remotePort": 443
+        },
+        {
+          "metricsCallbackPhase": "wifi-restored",
+          "method": "POST",
+          "protocol": "h3",
+          "isCellular": false,
+          "reusedConnection": true,
+          "localAddress": "192.168.10.21",
+          "localPort": 65245,
+          "remoteAddress": "172.217.112.4",
+          "remotePort": 443
+        },
+        {
+          "metricsCallbackPhase": "wifi-restored",
+          "method": "GET",
+          "protocol": "h3",
+          "isCellular": false,
+          "reusedConnection": true,
+          "localAddress": "192.168.10.21",
+          "localPort": 65245,
+          "remoteAddress": "172.217.112.4",
+          "remotePort": 443
+        },
+        {
+          "metricsCallbackPhase": "wifi-restored",
+          "method": "POST",
+          "protocol": "h3",
+          "isCellular": false,
+          "reusedConnection": true,
+          "localAddress": "192.168.10.21",
+          "localPort": 65245,
+          "remoteAddress": "172.217.112.4",
+          "remotePort": 443
+        },
+        {
+          "metricsCallbackPhase": "wifi-restored",
+          "method": "POST",
+          "protocol": "h3",
+          "isCellular": false,
+          "reusedConnection": true,
+          "localAddress": "192.168.10.21",
+          "localPort": 65245,
+          "remoteAddress": "172.217.112.4",
+          "remotePort": 443
+        },
+        {
+          "metricsCallbackPhase": "wifi-restored",
+          "method": "POST",
+          "protocol": "h3",
+          "isCellular": false,
+          "reusedConnection": true,
+          "localAddress": "192.168.10.21",
+          "localPort": 65245,
+          "remoteAddress": "172.217.112.4",
+          "remotePort": 443
+        },
+        {
+          "metricsCallbackPhase": "wifi-restored",
+          "method": "POST",
+          "protocol": "h3",
+          "isCellular": false,
+          "reusedConnection": true,
+          "localAddress": "192.168.10.21",
+          "localPort": 65245,
+          "remoteAddress": "172.217.112.4",
+          "remotePort": 443
+        },
+        {
+          "metricsCallbackPhase": "wifi-restored",
+          "method": "GET",
+          "protocol": "h3",
+          "isCellular": false,
+          "reusedConnection": true,
+          "localAddress": "192.168.10.21",
+          "localPort": 65245,
+          "remoteAddress": "172.217.112.4",
+          "remotePort": 443
+        },
+        {
+          "metricsCallbackPhase": "wifi-restored",
+          "method": "GET",
+          "protocol": "h3",
+          "isCellular": false,
+          "reusedConnection": true,
+          "localAddress": "192.168.10.21",
+          "localPort": 65245,
+          "remoteAddress": "172.217.112.4",
+          "remotePort": 443
+        }
+      ],
+      "note": "Metrics callback phase is not physical packet routing. Path-to-probe intervals include operator/controller/probe delays; they are not exact network recovery times or proof of QUIC migration."
+    },
+    "stream": {
+      "parsedStreamFrames": 65,
+      "appDeliveredStreamMessages": 65,
+      "wireArrayIDGaps": [],
+      "duplicateWireArrayIDs": 0,
+      "unparsedBackchannelBodyRecords": 0,
+      "maximumLoggedStreamIntervalSeconds": 1.2412857083254494,
+      "frames": [
+        {
+          "arrayID": 2,
+          "deviceUptimeSeconds": 372805.5825354584
+        },
+        {
+          "arrayID": 4,
+          "deviceUptimeSeconds": 372806.5882257917
+        },
+        {
+          "arrayID": 5,
+          "deviceUptimeSeconds": 372807.7146757084
+        },
+        {
+          "arrayID": 6,
+          "deviceUptimeSeconds": 372808.63603283337
+        },
+        {
+          "arrayID": 7,
+          "deviceUptimeSeconds": 372809.65974225005
+        },
+        {
+          "arrayID": 8,
+          "deviceUptimeSeconds": 372810.68192675
+        },
+        {
+          "arrayID": 9,
+          "deviceUptimeSeconds": 372811.6057034167
+        },
+        {
+          "arrayID": 10,
+          "deviceUptimeSeconds": 372812.6772132917
+        },
+        {
+          "arrayID": 11,
+          "deviceUptimeSeconds": 372813.60435566667
+        },
+        {
+          "arrayID": 12,
+          "deviceUptimeSeconds": 372814.59351533337
+        },
+        {
+          "arrayID": 14,
+          "deviceUptimeSeconds": 372815.59759325004
+        },
+        {
+          "arrayID": 15,
+          "deviceUptimeSeconds": 372816.7043707917
+        },
+        {
+          "arrayID": 16,
+          "deviceUptimeSeconds": 372817.66093812505
+        },
+        {
+          "arrayID": 17,
+          "deviceUptimeSeconds": 372818.6066752084
+        },
+        {
+          "arrayID": 18,
+          "deviceUptimeSeconds": 372819.7310312917
+        },
+        {
+          "arrayID": 19,
+          "deviceUptimeSeconds": 372820.70077425
+        },
+        {
+          "arrayID": 20,
+          "deviceUptimeSeconds": 372821.6102197917
+        },
+        {
+          "arrayID": 21,
+          "deviceUptimeSeconds": 372822.60904920835
+        },
+        {
+          "arrayID": 22,
+          "deviceUptimeSeconds": 372823.6121460417
+        },
+        {
+          "arrayID": 23,
+          "deviceUptimeSeconds": 372824.69104812504
+        },
+        {
+          "arrayID": 24,
+          "deviceUptimeSeconds": 372825.6606312917
+        },
+        {
+          "arrayID": 25,
+          "deviceUptimeSeconds": 372826.614824625
+        },
+        {
+          "arrayID": 26,
+          "deviceUptimeSeconds": 372827.74045050004
+        },
+        {
+          "arrayID": 27,
+          "deviceUptimeSeconds": 372828.69147045835
+        },
+        {
+          "arrayID": 28,
+          "deviceUptimeSeconds": 372829.6162137917
+        },
+        {
+          "arrayID": 29,
+          "deviceUptimeSeconds": 372830.6163694167
+        },
+        {
+          "arrayID": 30,
+          "deviceUptimeSeconds": 372831.7354630417
+        },
+        {
+          "arrayID": 31,
+          "deviceUptimeSeconds": 372832.61969725
+        },
+        {
+          "arrayID": 32,
+          "deviceUptimeSeconds": 372833.60979725
+        },
+        {
+          "arrayID": 33,
+          "deviceUptimeSeconds": 372834.62028616667
+        },
+        {
+          "arrayID": 34,
+          "deviceUptimeSeconds": 372835.60978629166
+        },
+        {
+          "arrayID": 35,
+          "deviceUptimeSeconds": 372836.6215816667
+        },
+        {
+          "arrayID": 36,
+          "deviceUptimeSeconds": 372837.65156995837
+        },
+        {
+          "arrayID": 37,
+          "deviceUptimeSeconds": 372838.6216137084
+        },
+        {
+          "arrayID": 38,
+          "deviceUptimeSeconds": 372839.6918649584
+        },
+        {
+          "arrayID": 40,
+          "deviceUptimeSeconds": 372840.68831675005
+        },
+        {
+          "arrayID": 41,
+          "deviceUptimeSeconds": 372841.81541283336
+        },
+        {
+          "arrayID": 42,
+          "deviceUptimeSeconds": 372842.6349149584
+        },
+        {
+          "arrayID": 43,
+          "deviceUptimeSeconds": 372843.6563070417
+        },
+        {
+          "arrayID": 44,
+          "deviceUptimeSeconds": 372844.619962
+        },
+        {
+          "arrayID": 46,
+          "deviceUptimeSeconds": 372845.616490125
+        },
+        {
+          "arrayID": 47,
+          "deviceUptimeSeconds": 372846.6151935
+        },
+        {
+          "arrayID": 48,
+          "deviceUptimeSeconds": 372847.85647920833
+        },
+        {
+          "arrayID": 49,
+          "deviceUptimeSeconds": 372848.6755679167
+        },
+        {
+          "arrayID": 50,
+          "deviceUptimeSeconds": 372849.6243171667
+        },
+        {
+          "arrayID": 51,
+          "deviceUptimeSeconds": 372850.72156020836
+        },
+        {
+          "arrayID": 54,
+          "deviceUptimeSeconds": 372851.6445382917
+        },
+        {
+          "arrayID": 55,
+          "deviceUptimeSeconds": 372852.6690999584
+        },
+        {
+          "arrayID": 56,
+          "deviceUptimeSeconds": 372853.79568433337
+        },
+        {
+          "arrayID": 57,
+          "deviceUptimeSeconds": 372854.71518241666
+        },
+        {
+          "arrayID": 58,
+          "deviceUptimeSeconds": 372855.6394060417
+        },
+        {
+          "arrayID": 60,
+          "deviceUptimeSeconds": 372856.67333950003
+        },
+        {
+          "arrayID": 61,
+          "deviceUptimeSeconds": 372857.69193179166
+        },
+        {
+          "arrayID": 62,
+          "deviceUptimeSeconds": 372858.7119779167
+        },
+        {
+          "arrayID": 63,
+          "deviceUptimeSeconds": 372859.6443043334
+        },
+        {
+          "arrayID": 64,
+          "deviceUptimeSeconds": 372860.62705945835
+        },
+        {
+          "arrayID": 66,
+          "deviceUptimeSeconds": 372861.6257380834
+        },
+        {
+          "arrayID": 67,
+          "deviceUptimeSeconds": 372862.629974875
+        },
+        {
+          "arrayID": 68,
+          "deviceUptimeSeconds": 372863.627074625
+        },
+        {
+          "arrayID": 69,
+          "deviceUptimeSeconds": 372864.637891625
+        },
+        {
+          "arrayID": 70,
+          "deviceUptimeSeconds": 372865.6587740417
+        },
+        {
+          "arrayID": 71,
+          "deviceUptimeSeconds": 372866.68293
+        },
+        {
+          "arrayID": 73,
+          "deviceUptimeSeconds": 372867.726948875
+        },
+        {
+          "arrayID": 74,
+          "deviceUptimeSeconds": 372868.6443365417
+        },
+        {
+          "arrayID": 75,
+          "deviceUptimeSeconds": 372869.65531137504
+        }
+      ],
+      "note": "Observed delivery intervals include server/device scheduling and backgrounding; they are not exact physical outages. ID continuity is limited to successfully parsed records."
+    }
+  },
+  {
+    "trial": "T12-T14-stream-r2",
+    "scenario": "wifi-cellular-wifi",
+    "requestedHoldSeconds": 15.0,
+    "observedSecondsAtRestoreCue": 15.651571583352052,
+    "observedOfflinePathSeconds": null,
+    "channelObservation": "both-direction-probe-echoes",
+    "observedRestoreToEchoSeconds": null,
+    "observedOfflineToTerminalSeconds": null,
+    "observedFirstOfflineToTerminalSeconds": null,
+    "observedBrokenCellularPathSeconds": null,
+    "errorCodes": [],
+    "protocolEvidence": {
+      "coverage": "h3-observed-no-known-fallback",
+      "h3Transactions": 13,
+      "unknownTransactions": 0,
+      "otherProtocols": [],
+      "h3ObservedWithoutKnownFallback": true,
+      "note": "Unknown transactions are not h3 evidence; baseline h3 is checked before faults."
+    },
+    "baselineH3Verified": true,
+    "uniqueSIDCount": 1,
+    "handoff": {
+      "traffic": "streaming",
+      "restoredPathAlsoReportsCellular": false,
+      "observedCellularPathSeconds": 28.576800791721325,
+      "cellularPathToProbeEchoSeconds": 1.0383654583711177,
+      "restoredPathToProbeEchoSeconds": 0.40617383329663426,
+      "observedPostRestoreHostSeconds": 30.057425040999078,
+      "postRestoreProbeCount": 5,
+      "transactions": [
+        {
+          "metricsCallbackPhase": "before-cellular-path",
+          "method": "POST",
+          "protocol": "h3",
+          "isCellular": false,
+          "reusedConnection": false,
+          "localAddress": "2400:4050:b781:4c00:86b:9dba:2bc9:1684",
+          "localPort": 65091,
+          "remoteAddress": "2001:4860:4844:400::",
+          "remotePort": 443
+        },
+        {
+          "metricsCallbackPhase": "before-cellular-path",
+          "method": "POST",
+          "protocol": "h3",
+          "isCellular": false,
+          "reusedConnection": true,
+          "localAddress": "2400:4050:b781:4c00:86b:9dba:2bc9:1684",
+          "localPort": 65091,
+          "remoteAddress": "2001:4860:4844:400::",
+          "remotePort": 443
+        },
+        {
+          "metricsCallbackPhase": "before-cellular-path",
+          "method": "POST",
+          "protocol": "h3",
+          "isCellular": false,
+          "reusedConnection": true,
+          "localAddress": "2400:4050:b781:4c00:86b:9dba:2bc9:1684",
+          "localPort": 65091,
+          "remoteAddress": "2001:4860:4844:400::",
+          "remotePort": 443
+        },
+        {
+          "metricsCallbackPhase": "cellular-path-observed",
+          "method": "POST",
+          "protocol": "h3",
+          "isCellular": false,
+          "reusedConnection": true,
+          "localAddress": "2400:4050:b781:4c00:86b:9dba:2bc9:1684",
+          "localPort": 65091,
+          "remoteAddress": "2001:4860:4844:400::",
+          "remotePort": 443
+        },
+        {
+          "metricsCallbackPhase": "wifi-restored",
+          "method": "POST",
+          "protocol": "h3",
+          "isCellular": false,
+          "reusedConnection": true,
+          "localAddress": "2400:4050:b781:4c00:86b:9dba:2bc9:1684",
+          "localPort": 65091,
+          "remoteAddress": "2001:4860:4844:400::",
+          "remotePort": 443
+        },
+        {
+          "metricsCallbackPhase": "wifi-restored",
+          "method": "POST",
+          "protocol": "h3",
+          "isCellular": false,
+          "reusedConnection": true,
+          "localAddress": "2400:4050:b781:4c00:86b:9dba:2bc9:1684",
+          "localPort": 65091,
+          "remoteAddress": "2001:4860:4844:400::",
+          "remotePort": 443
+        },
+        {
+          "metricsCallbackPhase": "wifi-restored",
+          "method": "GET",
+          "protocol": "h3",
+          "isCellular": false,
+          "reusedConnection": true,
+          "localAddress": "2400:4050:b781:4c00:86b:9dba:2bc9:1684",
+          "localPort": 65091,
+          "remoteAddress": "2001:4860:4844:400::",
+          "remotePort": 443
+        },
+        {
+          "metricsCallbackPhase": "wifi-restored",
+          "method": "POST",
+          "protocol": "h3",
+          "isCellular": false,
+          "reusedConnection": true,
+          "localAddress": "2400:4050:b781:4c00:86b:9dba:2bc9:1684",
+          "localPort": 65091,
+          "remoteAddress": "2001:4860:4844:400::",
+          "remotePort": 443
+        },
+        {
+          "metricsCallbackPhase": "wifi-restored",
+          "method": "POST",
+          "protocol": "h3",
+          "isCellular": false,
+          "reusedConnection": true,
+          "localAddress": "2400:4050:b781:4c00:86b:9dba:2bc9:1684",
+          "localPort": 65091,
+          "remoteAddress": "2001:4860:4844:400::",
+          "remotePort": 443
+        },
+        {
+          "metricsCallbackPhase": "wifi-restored",
+          "method": "POST",
+          "protocol": "h3",
+          "isCellular": false,
+          "reusedConnection": true,
+          "localAddress": "2400:4050:b781:4c00:86b:9dba:2bc9:1684",
+          "localPort": 65091,
+          "remoteAddress": "2001:4860:4844:400::",
+          "remotePort": 443
+        },
+        {
+          "metricsCallbackPhase": "wifi-restored",
+          "method": "POST",
+          "protocol": "h3",
+          "isCellular": false,
+          "reusedConnection": true,
+          "localAddress": "2400:4050:b781:4c00:86b:9dba:2bc9:1684",
+          "localPort": 65091,
+          "remoteAddress": "2001:4860:4844:400::",
+          "remotePort": 443
+        },
+        {
+          "metricsCallbackPhase": "wifi-restored",
+          "method": "GET",
+          "protocol": "h3",
+          "isCellular": false,
+          "reusedConnection": true,
+          "localAddress": "2400:4050:b781:4c00:86b:9dba:2bc9:1684",
+          "localPort": 65091,
+          "remoteAddress": "2001:4860:4844:400::",
+          "remotePort": 443
+        },
+        {
+          "metricsCallbackPhase": "wifi-restored",
+          "method": "GET",
+          "protocol": "h3",
+          "isCellular": false,
+          "reusedConnection": true,
+          "localAddress": "2400:4050:b781:4c00:86b:9dba:2bc9:1684",
+          "localPort": 65091,
+          "remoteAddress": "2001:4860:4844:400::",
+          "remotePort": 443
+        }
+      ],
+      "note": "Metrics callback phase is not physical packet routing. Path-to-probe intervals include operator/controller/probe delays; they are not exact network recovery times or proof of QUIC migration."
+    },
+    "stream": {
+      "parsedStreamFrames": 68,
+      "appDeliveredStreamMessages": 68,
+      "wireArrayIDGaps": [],
+      "duplicateWireArrayIDs": 0,
+      "unparsedBackchannelBodyRecords": 0,
+      "maximumLoggedStreamIntervalSeconds": 1.18578612501733,
+      "frames": [
+        {
+          "arrayID": 2,
+          "deviceUptimeSeconds": 373300.6149832917
+        },
+        {
+          "arrayID": 3,
+          "deviceUptimeSeconds": 373301.65125445835
+        },
+        {
+          "arrayID": 5,
+          "deviceUptimeSeconds": 373302.63016945834
+        },
+        {
+          "arrayID": 6,
+          "deviceUptimeSeconds": 373303.653136875
+        },
+        {
+          "arrayID": 7,
+          "deviceUptimeSeconds": 373304.6750512917
+        },
+        {
+          "arrayID": 8,
+          "deviceUptimeSeconds": 373305.62093870837
+        },
+        {
+          "arrayID": 9,
+          "deviceUptimeSeconds": 373306.72076620837
+        },
+        {
+          "arrayID": 10,
+          "deviceUptimeSeconds": 373307.6226599167
+        },
+        {
+          "arrayID": 11,
+          "deviceUptimeSeconds": 373308.6769700417
+        },
+        {
+          "arrayID": 12,
+          "deviceUptimeSeconds": 373309.795862625
+        },
+        {
+          "arrayID": 14,
+          "deviceUptimeSeconds": 373310.6228411667
+        },
+        {
+          "arrayID": 15,
+          "deviceUptimeSeconds": 373311.62573625
+        },
+        {
+          "arrayID": 16,
+          "deviceUptimeSeconds": 373312.65599225
+        },
+        {
+          "arrayID": 17,
+          "deviceUptimeSeconds": 373313.6365959167
+        },
+        {
+          "arrayID": 18,
+          "deviceUptimeSeconds": 373314.6253385
+        },
+        {
+          "arrayID": 19,
+          "deviceUptimeSeconds": 373315.68674845836
+        },
+        {
+          "arrayID": 20,
+          "deviceUptimeSeconds": 373316.65048012504
+        },
+        {
+          "arrayID": 21,
+          "deviceUptimeSeconds": 373317.638543875
+        },
+        {
+          "arrayID": 22,
+          "deviceUptimeSeconds": 373318.7207403334
+        },
+        {
+          "arrayID": 23,
+          "deviceUptimeSeconds": 373319.6370560417
+        },
+        {
+          "arrayID": 24,
+          "deviceUptimeSeconds": 373320.6358325417
+        },
+        {
+          "arrayID": 25,
+          "deviceUptimeSeconds": 373321.62959691667
+        },
+        {
+          "arrayID": 26,
+          "deviceUptimeSeconds": 373322.6279802084
+        },
+        {
+          "arrayID": 27,
+          "deviceUptimeSeconds": 373323.6908900417
+        },
+        {
+          "arrayID": 28,
+          "deviceUptimeSeconds": 373324.63944133336
+        },
+        {
+          "arrayID": 29,
+          "deviceUptimeSeconds": 373325.64087775
+        },
+        {
+          "arrayID": 30,
+          "deviceUptimeSeconds": 373326.64331408334
+        },
+        {
+          "arrayID": 31,
+          "deviceUptimeSeconds": 373327.68071366666
+        },
+        {
+          "arrayID": 32,
+          "deviceUptimeSeconds": 373328.63748437504
+        },
+        {
+          "arrayID": 33,
+          "deviceUptimeSeconds": 373329.77096808335
+        },
+        {
+          "arrayID": 34,
+          "deviceUptimeSeconds": 373330.6364173333
+        },
+        {
+          "arrayID": 35,
+          "deviceUptimeSeconds": 373331.691037875
+        },
+        {
+          "arrayID": 36,
+          "deviceUptimeSeconds": 373332.6340815417
+        },
+        {
+          "arrayID": 37,
+          "deviceUptimeSeconds": 373333.64236783335
+        },
+        {
+          "arrayID": 38,
+          "deviceUptimeSeconds": 373334.64498100005
+        },
+        {
+          "arrayID": 39,
+          "deviceUptimeSeconds": 373335.647854125
+        },
+        {
+          "arrayID": 40,
+          "deviceUptimeSeconds": 373336.83364025
+        },
+        {
+          "arrayID": 41,
+          "deviceUptimeSeconds": 373337.64966470835
+        },
+        {
+          "arrayID": 43,
+          "deviceUptimeSeconds": 373338.6349659167
+        },
+        {
+          "arrayID": 44,
+          "deviceUptimeSeconds": 373339.63406425004
+        },
+        {
+          "arrayID": 45,
+          "deviceUptimeSeconds": 373340.63572425
+        },
+        {
+          "arrayID": 46,
+          "deviceUptimeSeconds": 373341.74475875
+        },
+        {
+          "arrayID": 47,
+          "deviceUptimeSeconds": 373342.768469
+        },
+        {
+          "arrayID": 49,
+          "deviceUptimeSeconds": 373343.63538362505
+        },
+        {
+          "arrayID": 50,
+          "deviceUptimeSeconds": 373344.7166559583
+        },
+        {
+          "arrayID": 51,
+          "deviceUptimeSeconds": 373345.83871833334
+        },
+        {
+          "arrayID": 53,
+          "deviceUptimeSeconds": 373346.659406125
+        },
+        {
+          "arrayID": 54,
+          "deviceUptimeSeconds": 373347.69045629166
+        },
+        {
+          "arrayID": 56,
+          "deviceUptimeSeconds": 373348.64398220833
+        },
+        {
+          "arrayID": 57,
+          "deviceUptimeSeconds": 373349.7330609167
+        },
+        {
+          "arrayID": 58,
+          "deviceUptimeSeconds": 373350.6531397917
+        },
+        {
+          "arrayID": 59,
+          "deviceUptimeSeconds": 373351.6794915
+        },
+        {
+          "arrayID": 60,
+          "deviceUptimeSeconds": 373352.6995285834
+        },
+        {
+          "arrayID": 61,
+          "deviceUptimeSeconds": 373353.72452295834
+        },
+        {
+          "arrayID": 63,
+          "deviceUptimeSeconds": 373354.6496992917
+        },
+        {
+          "arrayID": 64,
+          "deviceUptimeSeconds": 373355.67043520836
+        },
+        {
+          "arrayID": 65,
+          "deviceUptimeSeconds": 373356.7971412084
+        },
+        {
+          "arrayID": 66,
+          "deviceUptimeSeconds": 373357.7180027917
+        },
+        {
+          "arrayID": 67,
+          "deviceUptimeSeconds": 373358.7425700417
+        },
+        {
+          "arrayID": 69,
+          "deviceUptimeSeconds": 373359.66267133335
+        },
+        {
+          "arrayID": 70,
+          "deviceUptimeSeconds": 373360.69146070833
+        },
+        {
+          "arrayID": 71,
+          "deviceUptimeSeconds": 373361.71875675005
+        },
+        {
+          "arrayID": 72,
+          "deviceUptimeSeconds": 373362.73616612505
+        },
+        {
+          "arrayID": 73,
+          "deviceUptimeSeconds": 373363.76036795834
+        },
+        {
+          "arrayID": 75,
+          "deviceUptimeSeconds": 373364.64375233336
+        },
+        {
+          "arrayID": 76,
+          "deviceUptimeSeconds": 373365.708442125
+        },
+        {
+          "arrayID": 77,
+          "deviceUptimeSeconds": 373366.72792612505
+        },
+        {
+          "arrayID": 78,
+          "deviceUptimeSeconds": 373367.6549049167
+        }
+      ],
+      "note": "Observed delivery intervals include server/device scheduling and backgrounding; they are not exact physical outages. ID continuity is limited to successfully parsed records."
+    }
+  },
+  {
+    "trial": "T12-T14-stream-r3",
+    "scenario": "wifi-cellular-wifi",
+    "requestedHoldSeconds": 15.0,
+    "observedSecondsAtRestoreCue": 15.545754624996334,
+    "observedOfflinePathSeconds": null,
+    "channelObservation": "both-direction-probe-echoes",
+    "observedRestoreToEchoSeconds": null,
+    "observedOfflineToTerminalSeconds": null,
+    "observedFirstOfflineToTerminalSeconds": null,
+    "observedBrokenCellularPathSeconds": null,
+    "errorCodes": [],
+    "protocolEvidence": {
+      "coverage": "h3-observed-no-known-fallback",
+      "h3Transactions": 13,
+      "unknownTransactions": 0,
+      "otherProtocols": [],
+      "h3ObservedWithoutKnownFallback": true,
+      "note": "Unknown transactions are not h3 evidence; baseline h3 is checked before faults."
+    },
+    "baselineH3Verified": true,
+    "uniqueSIDCount": 1,
+    "handoff": {
+      "traffic": "streaming",
+      "restoredPathAlsoReportsCellular": false,
+      "observedCellularPathSeconds": 31.04065450001508,
+      "cellularPathToProbeEchoSeconds": 0.9183703750022687,
+      "restoredPathToProbeEchoSeconds": 0.9051285833120346,
+      "observedPostRestoreHostSeconds": 30.08597012500104,
+      "postRestoreProbeCount": 5,
+      "transactions": [
+        {
+          "metricsCallbackPhase": "before-cellular-path",
+          "method": "POST",
+          "protocol": "h3",
+          "isCellular": false,
+          "reusedConnection": false,
+          "localAddress": "2400:4050:b781:4c00:86b:9dba:2bc9:1684",
+          "localPort": 52600,
+          "remoteAddress": "2001:4860:4844:400::",
+          "remotePort": 443
+        },
+        {
+          "metricsCallbackPhase": "before-cellular-path",
+          "method": "POST",
+          "protocol": "h3",
+          "isCellular": false,
+          "reusedConnection": true,
+          "localAddress": "2400:4050:b781:4c00:86b:9dba:2bc9:1684",
+          "localPort": 52600,
+          "remoteAddress": "2001:4860:4844:400::",
+          "remotePort": 443
+        },
+        {
+          "metricsCallbackPhase": "before-cellular-path",
+          "method": "POST",
+          "protocol": "h3",
+          "isCellular": false,
+          "reusedConnection": true,
+          "localAddress": "2400:4050:b781:4c00:86b:9dba:2bc9:1684",
+          "localPort": 52600,
+          "remoteAddress": "2001:4860:4844:400::",
+          "remotePort": 443
+        },
+        {
+          "metricsCallbackPhase": "cellular-path-observed",
+          "method": "POST",
+          "protocol": "h3",
+          "isCellular": false,
+          "reusedConnection": true,
+          "localAddress": "2400:4050:b781:4c00:86b:9dba:2bc9:1684",
+          "localPort": 52600,
+          "remoteAddress": "2001:4860:4844:400::",
+          "remotePort": 443
+        },
+        {
+          "metricsCallbackPhase": "wifi-restored",
+          "method": "POST",
+          "protocol": "h3",
+          "isCellular": false,
+          "reusedConnection": true,
+          "localAddress": "2400:4050:b781:4c00:86b:9dba:2bc9:1684",
+          "localPort": 52600,
+          "remoteAddress": "2001:4860:4844:400::",
+          "remotePort": 443
+        },
+        {
+          "metricsCallbackPhase": "wifi-restored",
+          "method": "GET",
+          "protocol": "h3",
+          "isCellular": false,
+          "reusedConnection": true,
+          "localAddress": "2400:4050:b781:4c00:86b:9dba:2bc9:1684",
+          "localPort": 52600,
+          "remoteAddress": "2001:4860:4844:400::",
+          "remotePort": 443
+        },
+        {
+          "metricsCallbackPhase": "wifi-restored",
+          "method": "POST",
+          "protocol": "h3",
+          "isCellular": false,
+          "reusedConnection": true,
+          "localAddress": "2400:4050:b781:4c00:86b:9dba:2bc9:1684",
+          "localPort": 52600,
+          "remoteAddress": "2001:4860:4844:400::",
+          "remotePort": 443
+        },
+        {
+          "metricsCallbackPhase": "wifi-restored",
+          "method": "POST",
+          "protocol": "h3",
+          "isCellular": false,
+          "reusedConnection": true,
+          "localAddress": "2400:4050:b781:4c00:86b:9dba:2bc9:1684",
+          "localPort": 52600,
+          "remoteAddress": "2001:4860:4844:400::",
+          "remotePort": 443
+        },
+        {
+          "metricsCallbackPhase": "wifi-restored",
+          "method": "POST",
+          "protocol": "h3",
+          "isCellular": false,
+          "reusedConnection": true,
+          "localAddress": "2400:4050:b781:4c00:86b:9dba:2bc9:1684",
+          "localPort": 52600,
+          "remoteAddress": "2001:4860:4844:400::",
+          "remotePort": 443
+        },
+        {
+          "metricsCallbackPhase": "wifi-restored",
+          "method": "POST",
+          "protocol": "h3",
+          "isCellular": false,
+          "reusedConnection": true,
+          "localAddress": "2400:4050:b781:4c00:86b:9dba:2bc9:1684",
+          "localPort": 52600,
+          "remoteAddress": "2001:4860:4844:400::",
+          "remotePort": 443
+        },
+        {
+          "metricsCallbackPhase": "wifi-restored",
+          "method": "POST",
+          "protocol": "h3",
+          "isCellular": false,
+          "reusedConnection": true,
+          "localAddress": "2400:4050:b781:4c00:86b:9dba:2bc9:1684",
+          "localPort": 52600,
+          "remoteAddress": "2001:4860:4844:400::",
+          "remotePort": 443
+        },
+        {
+          "metricsCallbackPhase": "wifi-restored",
+          "method": "GET",
+          "protocol": "h3",
+          "isCellular": false,
+          "reusedConnection": true,
+          "localAddress": "2400:4050:b781:4c00:86b:9dba:2bc9:1684",
+          "localPort": 52600,
+          "remoteAddress": "2001:4860:4844:400::",
+          "remotePort": 443
+        },
+        {
+          "metricsCallbackPhase": "wifi-restored",
+          "method": "GET",
+          "protocol": "h3",
+          "isCellular": false,
+          "reusedConnection": true,
+          "localAddress": "2400:4050:b781:4c00:86b:9dba:2bc9:1684",
+          "localPort": 52600,
+          "remoteAddress": "2001:4860:4844:400::",
+          "remotePort": 443
+        }
+      ],
+      "note": "Metrics callback phase is not physical packet routing. Path-to-probe intervals include operator/controller/probe delays; they are not exact network recovery times or proof of QUIC migration."
+    },
+    "stream": {
+      "parsedStreamFrames": 71,
+      "appDeliveredStreamMessages": 71,
+      "wireArrayIDGaps": [],
+      "duplicateWireArrayIDs": 0,
+      "unparsedBackchannelBodyRecords": 0,
+      "maximumLoggedStreamIntervalSeconds": 1.1414250416564755,
+      "frames": [
+        {
+          "arrayID": 2,
+          "deviceUptimeSeconds": 373443.3677412917
+        },
+        {
+          "arrayID": 3,
+          "deviceUptimeSeconds": 373444.36864145834
+        },
+        {
+          "arrayID": 5,
+          "deviceUptimeSeconds": 373445.49626133335
+        },
+        {
+          "arrayID": 6,
+          "deviceUptimeSeconds": 373446.5057701667
+        },
+        {
+          "arrayID": 7,
+          "deviceUptimeSeconds": 373447.424196625
+        },
+        {
+          "arrayID": 8,
+          "deviceUptimeSeconds": 373448.44824245834
+        },
+        {
+          "arrayID": 9,
+          "deviceUptimeSeconds": 373449.48230587505
+        },
+        {
+          "arrayID": 10,
+          "deviceUptimeSeconds": 373450.3859165
+        },
+        {
+          "arrayID": 11,
+          "deviceUptimeSeconds": 373451.3846160417
+        },
+        {
+          "arrayID": 12,
+          "deviceUptimeSeconds": 373452.37414283335
+        },
+        {
+          "arrayID": 14,
+          "deviceUptimeSeconds": 373453.37390212505
+        },
+        {
+          "arrayID": 15,
+          "deviceUptimeSeconds": 373454.440002875
+        },
+        {
+          "arrayID": 16,
+          "deviceUptimeSeconds": 373455.3750185
+        },
+        {
+          "arrayID": 17,
+          "deviceUptimeSeconds": 373456.3875054167
+        },
+        {
+          "arrayID": 18,
+          "deviceUptimeSeconds": 373457.48115383333
+        },
+        {
+          "arrayID": 19,
+          "deviceUptimeSeconds": 373458.4497542917
+        },
+        {
+          "arrayID": 20,
+          "deviceUptimeSeconds": 373459.40977100004
+        },
+        {
+          "arrayID": 21,
+          "deviceUptimeSeconds": 373460.38983445836
+        },
+        {
+          "arrayID": 22,
+          "deviceUptimeSeconds": 373461.3988147917
+        },
+        {
+          "arrayID": 23,
+          "deviceUptimeSeconds": 373462.439926625
+        },
+        {
+          "arrayID": 24,
+          "deviceUptimeSeconds": 373463.40978750004
+        },
+        {
+          "arrayID": 25,
+          "deviceUptimeSeconds": 373464.5300472917
+        },
+        {
+          "arrayID": 26,
+          "deviceUptimeSeconds": 373465.48994475004
+        },
+        {
+          "arrayID": 27,
+          "deviceUptimeSeconds": 373466.3934175
+        },
+        {
+          "arrayID": 28,
+          "deviceUptimeSeconds": 373467.40761112503
+        },
+        {
+          "arrayID": 29,
+          "deviceUptimeSeconds": 373468.3961752917
+        },
+        {
+          "arrayID": 30,
+          "deviceUptimeSeconds": 373469.4806876667
+        },
+        {
+          "arrayID": 31,
+          "deviceUptimeSeconds": 373470.38825620833
+        },
+        {
+          "arrayID": 32,
+          "deviceUptimeSeconds": 373471.39986295835
+        },
+        {
+          "arrayID": 33,
+          "deviceUptimeSeconds": 373472.5296281667
+        },
+        {
+          "arrayID": 34,
+          "deviceUptimeSeconds": 373473.3956727917
+        },
+        {
+          "arrayID": 35,
+          "deviceUptimeSeconds": 373474.39668395836
+        },
+        {
+          "arrayID": 36,
+          "deviceUptimeSeconds": 373475.3883199167
+        },
+        {
+          "arrayID": 37,
+          "deviceUptimeSeconds": 373476.52974495833
+        },
+        {
+          "arrayID": 38,
+          "deviceUptimeSeconds": 373477.490135375
+        },
+        {
+          "arrayID": 39,
+          "deviceUptimeSeconds": 373478.45006166666
+        },
+        {
+          "arrayID": 40,
+          "deviceUptimeSeconds": 373479.396315875
+        },
+        {
+          "arrayID": 41,
+          "deviceUptimeSeconds": 373480.520377625
+        },
+        {
+          "arrayID": 42,
+          "deviceUptimeSeconds": 373481.39906095836
+        },
+        {
+          "arrayID": 43,
+          "deviceUptimeSeconds": 373482.40204200003
+        },
+        {
+          "arrayID": 44,
+          "deviceUptimeSeconds": 373483.43193795835
+        },
+        {
+          "arrayID": 46,
+          "deviceUptimeSeconds": 373484.4954408333
+        },
+        {
+          "arrayID": 47,
+          "deviceUptimeSeconds": 373485.41427820834
+        },
+        {
+          "arrayID": 48,
+          "deviceUptimeSeconds": 373486.4398539584
+        },
+        {
+          "arrayID": 49,
+          "deviceUptimeSeconds": 373487.3965143334
+        },
+        {
+          "arrayID": 50,
+          "deviceUptimeSeconds": 373488.48686625
+        },
+        {
+          "arrayID": 53,
+          "deviceUptimeSeconds": 373489.4117948334
+        },
+        {
+          "arrayID": 54,
+          "deviceUptimeSeconds": 373490.4317254167
+        },
+        {
+          "arrayID": 55,
+          "deviceUptimeSeconds": 373491.4645524584
+        },
+        {
+          "arrayID": 56,
+          "deviceUptimeSeconds": 373492.39433108334
+        },
+        {
+          "arrayID": 57,
+          "deviceUptimeSeconds": 373493.392771375
+        },
+        {
+          "arrayID": 59,
+          "deviceUptimeSeconds": 373494.3948567917
+        },
+        {
+          "arrayID": 60,
+          "deviceUptimeSeconds": 373495.40679975
+        },
+        {
+          "arrayID": 61,
+          "deviceUptimeSeconds": 373496.42669008335
+        },
+        {
+          "arrayID": 62,
+          "deviceUptimeSeconds": 373497.39659195836
+        },
+        {
+          "arrayID": 63,
+          "deviceUptimeSeconds": 373498.40740583336
+        },
+        {
+          "arrayID": 64,
+          "deviceUptimeSeconds": 373499.39707425004
+        },
+        {
+          "arrayID": 66,
+          "deviceUptimeSeconds": 373500.4680654167
+        },
+        {
+          "arrayID": 67,
+          "deviceUptimeSeconds": 373501.4917442084
+        },
+        {
+          "arrayID": 68,
+          "deviceUptimeSeconds": 373502.51519525005
+        },
+        {
+          "arrayID": 69,
+          "deviceUptimeSeconds": 373503.43866658333
+        },
+        {
+          "arrayID": 70,
+          "deviceUptimeSeconds": 373504.45076775004
+        },
+        {
+          "arrayID": 72,
+          "deviceUptimeSeconds": 373505.402977375
+        },
+        {
+          "arrayID": 73,
+          "deviceUptimeSeconds": 373506.40946550004
+        },
+        {
+          "arrayID": 74,
+          "deviceUptimeSeconds": 373507.41949475004
+        },
+        {
+          "arrayID": 75,
+          "deviceUptimeSeconds": 373508.45731045835
+        },
+        {
+          "arrayID": 76,
+          "deviceUptimeSeconds": 373509.47895354166
+        },
+        {
+          "arrayID": 77,
+          "deviceUptimeSeconds": 373510.490031
+        },
+        {
+          "arrayID": 79,
+          "deviceUptimeSeconds": 373511.4250704167
+        },
+        {
+          "arrayID": 80,
+          "deviceUptimeSeconds": 373512.43593883334
+        },
+        {
+          "arrayID": 81,
+          "deviceUptimeSeconds": 373513.447518625
+        }
+      ],
+      "note": "Observed delivery intervals include server/device scheduling and backgrounding; they are not exact physical outages. ID continuity is limited to successfully parsed records."
+    }
+  },
+  {
+    "trial": "T13-long-r1",
+    "scenario": "T13-broken-cellular",
+    "requestedHoldSeconds": 150.0,
+    "observedSecondsAtRestoreCue": 150.13396883331006,
+    "observedOfflinePathSeconds": null,
+    "channelObservation": "channel-failed",
+    "observedRestoreToEchoSeconds": null,
+    "observedOfflineToTerminalSeconds": null,
+    "observedFirstOfflineToTerminalSeconds": null,
+    "observedBrokenCellularPathSeconds": 162.82240424997872,
+    "errorCodes": [
+      4
+    ],
+    "protocolEvidence": {
+      "coverage": "mixed-after-h3-baseline",
+      "h3Transactions": 4,
+      "unknownTransactions": 2,
+      "otherProtocols": [
+        "h2"
+      ],
+      "h3ObservedWithoutKnownFallback": false,
+      "note": "Unknown transactions are not h3 evidence; baseline h3 is checked before faults."
+    },
+    "baselineH3Verified": true,
+    "uniqueSIDCount": 1,
+    "selectiveLossPreflightVerified": true,
+    "http400Observed": true
+  },
+  {
+    "trial": "T13-long-r2",
+    "scenario": "T13-broken-cellular",
+    "requestedHoldSeconds": 150.0,
+    "observedSecondsAtRestoreCue": 150.1287034166744,
+    "observedOfflinePathSeconds": null,
+    "channelObservation": "channel-failed",
+    "observedRestoreToEchoSeconds": null,
+    "observedOfflineToTerminalSeconds": null,
+    "observedFirstOfflineToTerminalSeconds": null,
+    "observedBrokenCellularPathSeconds": 157.50610658334335,
+    "errorCodes": [
+      4
+    ],
+    "protocolEvidence": {
+      "coverage": "mixed-after-h3-baseline",
+      "h3Transactions": 4,
+      "unknownTransactions": 2,
+      "otherProtocols": [
+        "h2"
+      ],
+      "h3ObservedWithoutKnownFallback": false,
+      "note": "Unknown transactions are not h3 evidence; baseline h3 is checked before faults."
+    },
+    "baselineH3Verified": true,
+    "uniqueSIDCount": 1,
+    "selectiveLossPreflightVerified": true,
+    "http400Observed": true
+  },
+  {
+    "trial": "T13-long-r3",
+    "scenario": "T13-broken-cellular",
+    "requestedHoldSeconds": 150.0,
+    "observedSecondsAtRestoreCue": 150.14394150004955,
+    "observedOfflinePathSeconds": null,
+    "channelObservation": "channel-failed",
+    "observedRestoreToEchoSeconds": null,
+    "observedOfflineToTerminalSeconds": null,
+    "observedFirstOfflineToTerminalSeconds": null,
+    "observedBrokenCellularPathSeconds": 162.06876958336215,
+    "errorCodes": [
+      4
+    ],
+    "protocolEvidence": {
+      "coverage": "mixed-after-h3-baseline",
+      "h3Transactions": 4,
+      "unknownTransactions": 2,
+      "otherProtocols": [
+        "h2"
+      ],
+      "h3ObservedWithoutKnownFallback": false,
+      "note": "Unknown transactions are not h3 evidence; baseline h3 is checked before faults."
+    },
+    "baselineH3Verified": true,
+    "uniqueSIDCount": 1,
+    "selectiveLossPreflightVerified": true,
+    "http400Observed": true
+  },
+  {
+    "trial": "T13-medium-r1",
+    "scenario": "T13-broken-cellular",
+    "requestedHoldSeconds": 90.0,
+    "observedSecondsAtRestoreCue": 90.31770833331393,
+    "observedOfflinePathSeconds": null,
+    "channelObservation": "echo-resumed",
+    "observedRestoreToEchoSeconds": 1.0079283749801107,
+    "observedOfflineToTerminalSeconds": null,
+    "observedFirstOfflineToTerminalSeconds": null,
+    "observedBrokenCellularPathSeconds": 107.67184108332731,
+    "errorCodes": [],
+    "protocolEvidence": {
+      "coverage": "mixed-after-h3-baseline",
+      "h3Transactions": 4,
+      "unknownTransactions": 1,
+      "otherProtocols": [
+        "h2"
+      ],
+      "h3ObservedWithoutKnownFallback": false,
+      "note": "Unknown transactions are not h3 evidence; baseline h3 is checked before faults."
+    },
+    "baselineH3Verified": true,
+    "uniqueSIDCount": 1,
+    "selectiveLossPreflightVerified": true,
+    "http400Observed": false
+  },
+  {
+    "trial": "T13-medium-r2",
+    "scenario": "T13-broken-cellular",
+    "requestedHoldSeconds": 90.0,
+    "observedSecondsAtRestoreCue": 90.19173941668123,
+    "observedOfflinePathSeconds": null,
+    "channelObservation": "echo-resumed",
+    "observedRestoreToEchoSeconds": 1.1314442500006407,
+    "observedOfflineToTerminalSeconds": null,
+    "observedFirstOfflineToTerminalSeconds": null,
+    "observedBrokenCellularPathSeconds": 102.49572266667383,
+    "errorCodes": [],
+    "protocolEvidence": {
+      "coverage": "mixed-after-h3-baseline",
+      "h3Transactions": 4,
+      "unknownTransactions": 1,
+      "otherProtocols": [
+        "h2"
+      ],
+      "h3ObservedWithoutKnownFallback": false,
+      "note": "Unknown transactions are not h3 evidence; baseline h3 is checked before faults."
+    },
+    "baselineH3Verified": true,
+    "uniqueSIDCount": 1,
+    "selectiveLossPreflightVerified": true,
+    "http400Observed": false
+  },
+  {
+    "trial": "T13-medium-r3",
+    "scenario": "T13-broken-cellular",
+    "requestedHoldSeconds": 90.0,
+    "observedSecondsAtRestoreCue": 90.57934545830358,
+    "observedOfflinePathSeconds": null,
+    "channelObservation": "echo-resumed",
+    "observedRestoreToEchoSeconds": 0.9431096249609254,
+    "observedOfflineToTerminalSeconds": null,
+    "observedFirstOfflineToTerminalSeconds": null,
+    "observedBrokenCellularPathSeconds": 103.0305848333519,
+    "errorCodes": [],
+    "protocolEvidence": {
+      "coverage": "mixed-after-h3-baseline",
+      "h3Transactions": 4,
+      "unknownTransactions": 1,
+      "otherProtocols": [
+        "h2"
+      ],
+      "h3ObservedWithoutKnownFallback": false,
+      "note": "Unknown transactions are not h3 evidence; baseline h3 is checked before faults."
+    },
+    "baselineH3Verified": true,
+    "uniqueSIDCount": 1,
+    "selectiveLossPreflightVerified": true,
+    "http400Observed": false
+  },
+  {
+    "trial": "T13-short-r1",
+    "scenario": "T13-broken-cellular",
+    "requestedHoldSeconds": 50.0,
+    "observedSecondsAtRestoreCue": 50.20102149999002,
+    "observedOfflinePathSeconds": null,
+    "channelObservation": "echo-resumed",
+    "observedRestoreToEchoSeconds": 0.46037933335173875,
+    "observedOfflineToTerminalSeconds": null,
+    "observedFirstOfflineToTerminalSeconds": null,
+    "observedBrokenCellularPathSeconds": 62.12000804167474,
+    "errorCodes": [],
+    "protocolEvidence": {
+      "coverage": "mixed-after-h3-baseline",
+      "h3Transactions": 4,
+      "unknownTransactions": 0,
+      "otherProtocols": [
+        "h2"
+      ],
+      "h3ObservedWithoutKnownFallback": false,
+      "note": "Unknown transactions are not h3 evidence; baseline h3 is checked before faults."
+    },
+    "baselineH3Verified": true,
+    "uniqueSIDCount": 1,
+    "selectiveLossPreflightVerified": true,
+    "http400Observed": false
+  },
+  {
+    "trial": "T13-short-r2",
+    "scenario": "T13-broken-cellular",
+    "requestedHoldSeconds": 50.0,
+    "observedSecondsAtRestoreCue": 50.01455679163337,
+    "observedOfflinePathSeconds": null,
+    "channelObservation": "echo-resumed",
+    "observedRestoreToEchoSeconds": 1.0208917083218694,
+    "observedOfflineToTerminalSeconds": null,
+    "observedFirstOfflineToTerminalSeconds": null,
+    "observedBrokenCellularPathSeconds": 56.304429458337836,
+    "errorCodes": [],
+    "protocolEvidence": {
+      "coverage": "mixed-after-h3-baseline",
+      "h3Transactions": 4,
+      "unknownTransactions": 0,
+      "otherProtocols": [
+        "h2"
+      ],
+      "h3ObservedWithoutKnownFallback": false,
+      "note": "Unknown transactions are not h3 evidence; baseline h3 is checked before faults."
+    },
+    "baselineH3Verified": true,
+    "uniqueSIDCount": 1,
+    "selectiveLossPreflightVerified": true,
+    "http400Observed": false
+  },
+  {
+    "trial": "T13-short-r3",
+    "scenario": "T13-broken-cellular",
+    "requestedHoldSeconds": 50.0,
+    "observedSecondsAtRestoreCue": 50.328715416661,
+    "observedOfflinePathSeconds": null,
+    "channelObservation": "echo-resumed",
+    "observedRestoreToEchoSeconds": 1.4910704583744518,
+    "observedOfflineToTerminalSeconds": null,
+    "observedFirstOfflineToTerminalSeconds": null,
+    "observedBrokenCellularPathSeconds": 63.67718754167436,
+    "errorCodes": [],
+    "protocolEvidence": {
+      "coverage": "mixed-after-h3-baseline",
+      "h3Transactions": 4,
+      "unknownTransactions": 0,
+      "otherProtocols": [
+        "h2"
+      ],
+      "h3ObservedWithoutKnownFallback": false,
+      "note": "Unknown transactions are not h3 evidence; baseline h3 is checked before faults."
+    },
+    "baselineH3Verified": true,
+    "uniqueSIDCount": 1,
+    "selectiveLossPreflightVerified": true,
+    "http400Observed": false
+  },
+  {
+    "trial": "T9-long-r1",
+    "scenario": "T9-l3-idle",
+    "requestedHoldSeconds": 60.0,
+    "observedSecondsAtRestoreCue": 60.340196750010364,
+    "observedOfflinePathSeconds": 64.96282399998745,
+    "channelObservation": "channel-failed",
+    "observedRestoreToEchoSeconds": null,
+    "observedOfflineToTerminalSeconds": 35.20641425001668,
+    "observedFirstOfflineToTerminalSeconds": null,
+    "observedBrokenCellularPathSeconds": null,
+    "errorCodes": [
+      1
+    ],
+    "protocolEvidence": {
+      "coverage": "h3-observed-no-known-fallback",
+      "h3Transactions": 3,
+      "unknownTransactions": 5,
+      "otherProtocols": [],
+      "h3ObservedWithoutKnownFallback": true,
+      "note": "Unknown transactions are not h3 evidence; baseline h3 is checked before faults."
+    },
+    "baselineH3Verified": true,
+    "uniqueSIDCount": 1
+  },
+  {
+    "trial": "T9-long-r2",
+    "scenario": "T9-l3-idle",
+    "requestedHoldSeconds": 60.0,
+    "observedSecondsAtRestoreCue": 60.81360195833258,
+    "observedOfflinePathSeconds": 64.66528787498828,
+    "channelObservation": "channel-failed",
+    "observedRestoreToEchoSeconds": null,
+    "observedOfflineToTerminalSeconds": 35.573242666665465,
+    "observedFirstOfflineToTerminalSeconds": null,
+    "observedBrokenCellularPathSeconds": null,
+    "errorCodes": [
+      1
+    ],
+    "protocolEvidence": {
+      "coverage": "h3-observed-no-known-fallback",
+      "h3Transactions": 3,
+      "unknownTransactions": 5,
+      "otherProtocols": [],
+      "h3ObservedWithoutKnownFallback": true,
+      "note": "Unknown transactions are not h3 evidence; baseline h3 is checked before faults."
+    },
+    "baselineH3Verified": true,
+    "uniqueSIDCount": 1
+  },
+  {
+    "trial": "T9-long-r3",
+    "scenario": "T9-l3-idle",
+    "requestedHoldSeconds": 60.0,
+    "observedSecondsAtRestoreCue": 60.221937958325725,
+    "observedOfflinePathSeconds": 64.71205166669097,
+    "channelObservation": "channel-failed",
+    "observedRestoreToEchoSeconds": null,
+    "observedOfflineToTerminalSeconds": 22.134054916677997,
+    "observedFirstOfflineToTerminalSeconds": null,
+    "observedBrokenCellularPathSeconds": null,
+    "errorCodes": [
+      1
+    ],
+    "protocolEvidence": {
+      "coverage": "h3-observed-no-known-fallback",
+      "h3Transactions": 3,
+      "unknownTransactions": 5,
+      "otherProtocols": [],
+      "h3ObservedWithoutKnownFallback": true,
+      "note": "Unknown transactions are not h3 evidence; baseline h3 is checked before faults."
+    },
+    "baselineH3Verified": true,
+    "uniqueSIDCount": 1
+  },
+  {
+    "trial": "T9-short-r1-retry",
+    "scenario": "T9-l3-idle",
+    "requestedHoldSeconds": 10.0,
+    "observedSecondsAtRestoreCue": 10.688259041693527,
+    "observedOfflinePathSeconds": 16.466363375016954,
+    "channelObservation": "echo-resumed",
+    "observedRestoreToEchoSeconds": 16.338968124997336,
+    "observedOfflineToTerminalSeconds": null,
+    "observedFirstOfflineToTerminalSeconds": null,
+    "observedBrokenCellularPathSeconds": null,
+    "errorCodes": [],
+    "protocolEvidence": {
+      "coverage": "h3-observed-no-known-fallback",
+      "h3Transactions": 6,
+      "unknownTransactions": 3,
+      "otherProtocols": [],
+      "h3ObservedWithoutKnownFallback": true,
+      "note": "Unknown transactions are not h3 evidence; baseline h3 is checked before faults."
+    },
+    "baselineH3Verified": true,
+    "uniqueSIDCount": 1
+  },
+  {
+    "trial": "T9-short-r2",
+    "scenario": "T9-l3-idle",
+    "requestedHoldSeconds": 10.0,
+    "observedSecondsAtRestoreCue": 10.236015999980737,
+    "observedOfflinePathSeconds": 14.123244833317585,
+    "channelObservation": "echo-resumed",
+    "observedRestoreToEchoSeconds": 19.749506124993786,
+    "observedOfflineToTerminalSeconds": null,
+    "observedFirstOfflineToTerminalSeconds": null,
+    "observedBrokenCellularPathSeconds": null,
+    "errorCodes": [],
+    "protocolEvidence": {
+      "coverage": "h3-observed-no-known-fallback",
+      "h3Transactions": 6,
+      "unknownTransactions": 3,
+      "otherProtocols": [],
+      "h3ObservedWithoutKnownFallback": true,
+      "note": "Unknown transactions are not h3 evidence; baseline h3 is checked before faults."
+    },
+    "baselineH3Verified": true,
+    "uniqueSIDCount": 1
+  },
+  {
+    "trial": "T9-short-r3",
+    "scenario": "T9-l3-idle",
+    "requestedHoldSeconds": 10.0,
+    "observedSecondsAtRestoreCue": 10.280521249980666,
+    "observedOfflinePathSeconds": 14.371431750012562,
+    "channelObservation": "echo-resumed",
+    "observedRestoreToEchoSeconds": 17.058851916634012,
+    "observedOfflineToTerminalSeconds": null,
+    "observedFirstOfflineToTerminalSeconds": null,
+    "observedBrokenCellularPathSeconds": null,
+    "errorCodes": [],
+    "protocolEvidence": {
+      "coverage": "h3-observed-no-known-fallback",
+      "h3Transactions": 6,
+      "unknownTransactions": 3,
+      "otherProtocols": [],
+      "h3ObservedWithoutKnownFallback": true,
+      "note": "Unknown transactions are not h3 evidence; baseline h3 is checked before faults."
+    },
+    "baselineH3Verified": true,
+    "uniqueSIDCount": 1
+  }
+]

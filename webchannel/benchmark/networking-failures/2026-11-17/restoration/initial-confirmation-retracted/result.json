@@ -1,0 +1,66 @@
+{
+  "scenario": "post-test-restoration-check",
+  "diagnosticOnly": true,
+  "endpoint": "https://webchannel.googleapis.com/staging/channel/generator",
+  "operatorReportedMobile100PercentLossDisabled": true,
+  "SDKChannelOpened": false,
+  "probes": [
+    {
+      "batch": "74DD28E8-140B-49F3-9730-956084E15057",
+      "deviceUnixSeconds": 1794934849.9059691,
+      "deviceUptimeSeconds": 382247.07207645837,
+      "elapsedSeconds": 0.13247220835182816,
+      "kind": "interface_probe_result",
+      "outcome": "http-response",
+      "path": {
+        "cellular": false,
+        "expensive": false,
+        "interfaces": [
+          {
+            "name": "en0",
+            "type": "wifi"
+          }
+        ],
+        "pathAvailable": true,
+        "status": "satisfied",
+        "wifi": true,
+        "wired": false
+      },
+      "requiredInterface": "wifi",
+      "run": "h3-post-test-restoration-check",
+      "statusCode": 400,
+      "statusLine": "HTTP/1.1 400 Bad Request\r\nContent-Type: text/plain; charset=utf-8\r\nX-Content-Type-Options: nosniff\r\nDate: Tue, 17 Nov 2026 17:00:49 GMT\r\nServer: Example HTTPServer2 (non-blocking)\r\nX-XSS-Protection: 0\r\nX-Frame-Options: SAMEORIGIN\r\nTransfer-Encoding: chunked\r\nAlt-Svc: h3=\":443\"; ma=2592000,h3-29=\":443\"; ma=2592000\r\nAccept-Ranges: none\r\nVary: Accept-Encoding\r\nConnection: close",
+      "hostReceivedMonotonic": 93609.598704375,
+      "hostReceivedUTC": "2026-11-17T17:00:49.903Z"
+    },
+    {
+      "batch": "74DD28E8-140B-49F3-9730-956084E15057",
+      "deviceUnixSeconds": 1794934858.226221,
+      "deviceUptimeSeconds": 382255.3924589584,
+      "elapsedSeconds": 8.451812583312858,
+      "kind": "interface_probe_result",
+      "outcome": "timeout",
+      "path": {
+        "cellular": true,
+        "expensive": true,
+        "interfaces": [
+          {
+            "name": "pdp_ip0",
+            "type": "cellular"
+          }
+        ],
+        "pathAvailable": true,
+        "status": "satisfied",
+        "wifi": false,
+        "wired": false
+      },
+      "requiredInterface": "cellular",
+      "run": "h3-post-test-restoration-check",
+      "hostReceivedMonotonic": 93617.919783458,
+      "hostReceivedUTC": "2026-11-17T17:00:58.224Z"
+    }
+  ],
+  "error": null,
+  "outcome": "restoration-not-confirmed",
+  "validationError": "AssertionError()"
+}

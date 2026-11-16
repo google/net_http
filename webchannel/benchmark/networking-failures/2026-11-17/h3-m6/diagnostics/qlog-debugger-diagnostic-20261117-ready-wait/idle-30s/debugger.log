@@ -1,0 +1,17 @@
+(lldb) device select "TEST_DEVICE_UDID"
+(lldb) script lldb.debugger.SetAsync(True)
+(lldb) device process attach -p 46381
+Process 46381 stopped
+* thread #1, stop reason = signal SIGSTOP
+       frame #0: 0x00000001005019f0 dyld`_dyld_start
+dyld`_dyld_start:
+->  0x1005019f0 <+0>:  mov    x0, sp
+    0x1005019f4 <+4>:  and    sp, x0, #0xfffffffffffffff0
+    0x1005019f8 <+8>:  mov    x29, #0x0                 ; =0
+    0x1005019fc <+12>: mov    x30, #0x0                 ; =0
+Target 0: (WebChanneliOSDemo) stopped.
+(lldb) process continue
+Process 46381 resuming
+(lldb) process detach -s false
+Process 46381 detached
+(lldb) quit

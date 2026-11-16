@@ -1,0 +1,2033 @@
+{
+  "run": "T15-ee0a794cdb27",
+  "scenario": "T15-idle-suspension",
+  "requestedSuspendSeconds": 150.0,
+  "outcome": "suspension-observed",
+  "milestones": {
+    "initialOpen": {
+      "deviceUnixSeconds": 1794895366.619386,
+      "deviceUptimeSeconds": 342763.16827616666,
+      "kind": "open",
+      "run": "T15-ee0a794cdb27",
+      "hostReceivedMonotonic": 54125.222388166,
+      "hostReceivedUTC": "2026-11-17T06:02:46.614Z"
+    },
+    "channelTerminal": {
+      "code": 4,
+      "deviceUnixSeconds": 1794895553.937958,
+      "deviceUptimeSeconds": 342950.4899128334,
+      "kind": "error",
+      "run": "T15-ee0a794cdb27",
+      "hostReceivedMonotonic": 54312.545807041,
+      "hostReceivedUTC": "2026-11-17T06:05:53.932Z"
+    },
+    "suspensionStart": {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895403.5883741,
+      "deviceUptimeSeconds": 342800.13786825,
+      "event": "suspension_hold_started",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54162.194809625,
+      "hostReceivedUTC": "2026-11-17T06:03:23.585Z"
+    },
+    "suspensionEnd": {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895553.7146158,
+      "deviceUptimeSeconds": 342950.26656662504,
+      "event": "suspension_hold_complete",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54312.324059583,
+      "hostReceivedUTC": "2026-11-17T06:05:53.711Z"
+    }
+  },
+  "notes": [
+    "UI observer reports OS state asynchronously; observed state brackets are not exact kernel timestamps.",
+    "Application and UI observer both record device system uptime; host/device UTC is not subtracted.",
+    "No force-suspend, debugger pause, network condition, or UI-test app launch is used."
+  ],
+  "initialPID": 46268,
+  "channelObservation": "channel-failed",
+  "samePIDAfterResume": true,
+  "uiTestExitCode": 0,
+  "observedSuspendedSeconds": 150.12869837501785,
+  "maxOSObserverSampleGapSeconds": 1.0365209166775458,
+  "terminalRelativeForegroundSeconds": 0.0714281250257045,
+  "terminalRelativeSuspensionStartSeconds": 150.35204458335647,
+  "errorCodes": [
+    4
+  ],
+  "openCount": 1,
+  "autorunStartCount": 1,
+  "taskMetrics": [
+    {
+      "deviceUnixSeconds": 1794895366.615244,
+      "deviceUptimeSeconds": 342763.164134125,
+      "kind": "task_metrics",
+      "run": "T15-ee0a794cdb27",
+      "transactions": [
+        {
+          "fetchStart": 1794895366.457499,
+          "isCellular": false,
+          "localAddress": "2400:4050:b781:4c00:7527:4ac7:dc6f:f0aa",
+          "localPort": 50951,
+          "method": "POST",
+          "protocol": "h3",
+          "remoteAddress": "2001:4860:4842:400::",
+          "remotePort": 443,
+          "requestEnd": 1794895366.5225182,
+          "requestStart": 1794895366.521955,
+          "responseEnd": 1794895366.6139932,
+          "responseStart": 1794895366.6109939,
+          "reusedConnection": false,
+          "rid": "34366",
+          "tcpConnectMs": 57.99996852874756,
+          "tlsMs": 56.999921798706055,
+          "url": "https://webchannel.googleapis.com/staging/channel/generator?VER=8&RID=34366&CVER=25&X-HTTP-Session-Id=gsessionid&t=1"
+        }
+      ],
+      "hostReceivedMonotonic": 54125.21892575,
+      "hostReceivedUTC": "2026-11-17T06:02:46.610Z"
+    },
+    {
+      "deviceUnixSeconds": 1794895553.81736,
+      "deviceUptimeSeconds": 342950.3693130417,
+      "kind": "task_metrics",
+      "run": "T15-ee0a794cdb27",
+      "transactions": [
+        {
+          "fetchStart": 1794895366.617368,
+          "isCellular": false,
+          "localAddress": "2400:4050:b781:4c00:7527:4ac7:dc6f:f0aa",
+          "localPort": 50951,
+          "method": "GET",
+          "protocol": "h3",
+          "remoteAddress": "2001:4860:4842:400::",
+          "remotePort": 443,
+          "requestEnd": 1794895366.617735,
+          "requestStart": 1794895366.6176229,
+          "responseStart": 1794895366.677223,
+          "reusedConnection": true,
+          "rid": "rpc",
+          "url": "https://webchannel.googleapis.com/staging/channel/generator?gsessionid=cYar1MbtdGi2AkQVJ-n0IbGsFVK-vU1kj716w6DN8JA&VER=8&RID=rpc&SID=2yOHn2pvubUms_y386YY5w&CI=0&AID=0&TYPE=xmlhttp&t=1"
+        }
+      ],
+      "hostReceivedMonotonic": 54312.426940291,
+      "hostReceivedUTC": "2026-11-17T06:05:53.813Z"
+    },
+    {
+      "deviceUnixSeconds": 1794895553.938253,
+      "deviceUptimeSeconds": 342950.49020812503,
+      "kind": "task_metrics",
+      "run": "T15-ee0a794cdb27",
+      "transactions": [
+        {
+          "fetchStart": 1794895553.816813,
+          "isCellular": false,
+          "localAddress": "2400:4050:b781:4c00:7527:4ac7:dc6f:f0aa",
+          "localPort": 64334,
+          "method": "GET",
+          "protocol": "h3",
+          "remoteAddress": "2001:4860:4842:400::",
+          "remotePort": 443,
+          "requestEnd": 1794895553.868816,
+          "requestStart": 1794895553.868682,
+          "responseEnd": 1794895553.937035,
+          "responseStart": 1794895553.933754,
+          "reusedConnection": false,
+          "rid": "rpc",
+          "tcpConnectMs": 44.00002956390381,
+          "tlsMs": 42.999982833862305,
+          "url": "https://webchannel.googleapis.com/staging/channel/generator?gsessionid=cYar1MbtdGi2AkQVJ-n0IbGsFVK-vU1kj716w6DN8JA&VER=8&RID=rpc&SID=2yOHn2pvubUms_y386YY5w&CI=0&AID=2&TYPE=xmlhttp&t=2"
+        }
+      ],
+      "hostReceivedMonotonic": 54312.545887708,
+      "hostReceivedUTC": "2026-11-17T06:05:53.932Z"
+    }
+  ],
+  "requestedHTTP3": true,
+  "endpoint": "https://webchannel.googleapis.com/staging/channel/generator",
+  "protocolEvidence": {
+    "coverage": "h3-observed-no-known-fallback",
+    "h3Transactions": 3,
+    "unknownTransactions": 0,
+    "otherProtocols": [],
+    "h3ObservedWithoutKnownFallback": true,
+    "note": "Unknown transactions are not h3 evidence; baseline h3 is checked before faults."
+  },
+  "protocolCoverage": "h3-observed-no-known-fallback",
+  "uiEvents": [
+    {
+      "applicationState": 4,
+      "deviceUnixSeconds": 1794895370.549305,
+      "deviceUptimeSeconds": 342767.09825908334,
+      "event": "foreground",
+      "isMainThread": true,
+      "stateName": "runningForeground",
+      "hostReceivedMonotonic": 54129.152891,
+      "hostReceivedUTC": "2026-11-17T06:02:50.544Z"
+    },
+    {
+      "applicationState": 4,
+      "deviceUnixSeconds": 1794895371.021095,
+      "deviceUptimeSeconds": 342767.5700562917,
+      "event": "home_returned",
+      "isMainThread": true,
+      "stateName": "runningForeground",
+      "hostReceivedMonotonic": 54129.624626,
+      "hostReceivedUTC": "2026-11-17T06:02:51.016Z"
+    },
+    {
+      "applicationState": 4,
+      "deviceUnixSeconds": 1794895371.021295,
+      "deviceUptimeSeconds": 342767.57025670836,
+      "event": "state_observed",
+      "isMainThread": true,
+      "stateName": "runningForeground",
+      "hostReceivedMonotonic": 54129.625130666,
+      "hostReceivedUTC": "2026-11-17T06:02:51.017Z"
+    },
+    {
+      "applicationState": 3,
+      "deviceUnixSeconds": 1794895372.0401568,
+      "deviceUptimeSeconds": 342768.58913470834,
+      "event": "state_observed",
+      "isMainThread": true,
+      "stateName": "runningBackground",
+      "hostReceivedMonotonic": 54130.644317583,
+      "hostReceivedUTC": "2026-11-17T06:02:52.036Z"
+    },
+    {
+      "applicationState": 3,
+      "deviceUnixSeconds": 1794895373.0546088,
+      "deviceUptimeSeconds": 342769.6035985834,
+      "event": "state_observed",
+      "isMainThread": true,
+      "stateName": "runningBackground",
+      "hostReceivedMonotonic": 54131.659222583,
+      "hostReceivedUTC": "2026-11-17T06:02:53.051Z"
+    },
+    {
+      "applicationState": 3,
+      "deviceUnixSeconds": 1794895374.085291,
+      "deviceUptimeSeconds": 342770.6343025,
+      "event": "state_observed",
+      "isMainThread": true,
+      "stateName": "runningBackground",
+      "hostReceivedMonotonic": 54132.689111458,
+      "hostReceivedUTC": "2026-11-17T06:02:54.080Z"
+    },
+    {
+      "applicationState": 3,
+      "deviceUnixSeconds": 1794895375.102236,
+      "deviceUptimeSeconds": 342771.6512634167,
+      "event": "state_observed",
+      "isMainThread": true,
+      "stateName": "runningBackground",
+      "hostReceivedMonotonic": 54133.706657875,
+      "hostReceivedUTC": "2026-11-17T06:02:55.098Z"
+    },
+    {
+      "applicationState": 3,
+      "deviceUnixSeconds": 1794895376.107606,
+      "deviceUptimeSeconds": 342772.65664945834,
+      "event": "state_observed",
+      "isMainThread": true,
+      "stateName": "runningBackground",
+      "hostReceivedMonotonic": 54134.712061958,
+      "hostReceivedUTC": "2026-11-17T06:02:56.103Z"
+    },
+    {
+      "applicationState": 3,
+      "deviceUnixSeconds": 1794895377.121348,
+      "deviceUptimeSeconds": 342773.67040825,
+      "event": "state_observed",
+      "isMainThread": true,
+      "stateName": "runningBackground",
+      "hostReceivedMonotonic": 54135.725590791,
+      "hostReceivedUTC": "2026-11-17T06:02:57.117Z"
+    },
+    {
+      "applicationState": 3,
+      "deviceUnixSeconds": 1794895378.1326032,
+      "deviceUptimeSeconds": 342774.6816802917,
+      "event": "state_observed",
+      "isMainThread": true,
+      "stateName": "runningBackground",
+      "hostReceivedMonotonic": 54136.73679075,
+      "hostReceivedUTC": "2026-11-17T06:02:58.128Z"
+    },
+    {
+      "applicationState": 3,
+      "deviceUnixSeconds": 1794895379.1556358,
+      "deviceUptimeSeconds": 342775.704730125,
+      "event": "state_observed",
+      "isMainThread": true,
+      "stateName": "runningBackground",
+      "hostReceivedMonotonic": 54137.759773708,
+      "hostReceivedUTC": "2026-11-17T06:02:59.151Z"
+    },
+    {
+      "applicationState": 3,
+      "deviceUnixSeconds": 1794895380.169557,
+      "deviceUptimeSeconds": 342776.71866775,
+      "event": "state_observed",
+      "isMainThread": true,
+      "stateName": "runningBackground",
+      "hostReceivedMonotonic": 54138.773513833,
+      "hostReceivedUTC": "2026-11-17T06:03:00.165Z"
+    },
+    {
+      "applicationState": 3,
+      "deviceUnixSeconds": 1794895381.1871638,
+      "deviceUptimeSeconds": 342777.7362907917,
+      "event": "state_observed",
+      "isMainThread": true,
+      "stateName": "runningBackground",
+      "hostReceivedMonotonic": 54139.79112625,
+      "hostReceivedUTC": "2026-11-17T06:03:01.182Z"
+    },
+    {
+      "applicationState": 3,
+      "deviceUnixSeconds": 1794895382.207155,
+      "deviceUptimeSeconds": 342778.7562981667,
+      "event": "state_observed",
+      "isMainThread": true,
+      "stateName": "runningBackground",
+      "hostReceivedMonotonic": 54140.811336,
+      "hostReceivedUTC": "2026-11-17T06:03:02.202Z"
+    },
+    {
+      "applicationState": 3,
+      "deviceUnixSeconds": 1794895383.210844,
+      "deviceUptimeSeconds": 342779.760003875,
+      "event": "state_observed",
+      "isMainThread": true,
+      "stateName": "runningBackground",
+      "hostReceivedMonotonic": 54141.815778708,
+      "hostReceivedUTC": "2026-11-17T06:03:03.207Z"
+    },
+    {
+      "applicationState": 3,
+      "deviceUnixSeconds": 1794895384.220056,
+      "deviceUptimeSeconds": 342780.7692322084,
+      "event": "state_observed",
+      "isMainThread": true,
+      "stateName": "runningBackground",
+      "hostReceivedMonotonic": 54142.824931291,
+      "hostReceivedUTC": "2026-11-17T06:03:04.216Z"
+    },
+    {
+      "applicationState": 3,
+      "deviceUnixSeconds": 1794895385.248276,
+      "deviceUptimeSeconds": 342781.797469375,
+      "event": "state_observed",
+      "isMainThread": true,
+      "stateName": "runningBackground",
+      "hostReceivedMonotonic": 54143.852187625,
+      "hostReceivedUTC": "2026-11-17T06:03:05.243Z"
+    },
+    {
+      "applicationState": 3,
+      "deviceUnixSeconds": 1794895386.256146,
+      "deviceUptimeSeconds": 342782.8053560417,
+      "event": "state_observed",
+      "isMainThread": true,
+      "stateName": "runningBackground",
+      "hostReceivedMonotonic": 54144.860138666,
+      "hostReceivedUTC": "2026-11-17T06:03:06.251Z"
+    },
+    {
+      "applicationState": 3,
+      "deviceUnixSeconds": 1794895387.286803,
+      "deviceUptimeSeconds": 342783.83603020833,
+      "event": "state_observed",
+      "isMainThread": true,
+      "stateName": "runningBackground",
+      "hostReceivedMonotonic": 54145.891206,
+      "hostReceivedUTC": "2026-11-17T06:03:07.282Z"
+    },
+    {
+      "applicationState": 3,
+      "deviceUnixSeconds": 1794895388.303952,
+      "deviceUptimeSeconds": 342784.8531951667,
+      "event": "state_observed",
+      "isMainThread": true,
+      "stateName": "runningBackground",
+      "hostReceivedMonotonic": 54146.908160333,
+      "hostReceivedUTC": "2026-11-17T06:03:08.299Z"
+    },
+    {
+      "applicationState": 3,
+      "deviceUnixSeconds": 1794895389.307747,
+      "deviceUptimeSeconds": 342785.85700725,
+      "event": "state_observed",
+      "isMainThread": true,
+      "stateName": "runningBackground",
+      "hostReceivedMonotonic": 54147.912103208,
+      "hostReceivedUTC": "2026-11-17T06:03:09.303Z"
+    },
+    {
+      "applicationState": 3,
+      "deviceUnixSeconds": 1794895390.324716,
+      "deviceUptimeSeconds": 342786.8739925,
+      "event": "state_observed",
+      "isMainThread": true,
+      "stateName": "runningBackground",
+      "hostReceivedMonotonic": 54148.929204458,
+      "hostReceivedUTC": "2026-11-17T06:03:10.320Z"
+    },
+    {
+      "applicationState": 3,
+      "deviceUnixSeconds": 1794895391.354066,
+      "deviceUptimeSeconds": 342787.9033596667,
+      "event": "state_observed",
+      "isMainThread": true,
+      "stateName": "runningBackground",
+      "hostReceivedMonotonic": 54149.958980541,
+      "hostReceivedUTC": "2026-11-17T06:03:11.350Z"
+    },
+    {
+      "applicationState": 3,
+      "deviceUnixSeconds": 1794895392.371135,
+      "deviceUptimeSeconds": 342788.9204444167,
+      "event": "state_observed",
+      "isMainThread": true,
+      "stateName": "runningBackground",
+      "hostReceivedMonotonic": 54150.97555525,
+      "hostReceivedUTC": "2026-11-17T06:03:12.366Z"
+    },
+    {
+      "applicationState": 3,
+      "deviceUnixSeconds": 1794895393.38711,
+      "deviceUptimeSeconds": 342789.936437,
+      "event": "state_observed",
+      "isMainThread": true,
+      "stateName": "runningBackground",
+      "hostReceivedMonotonic": 54151.991337958,
+      "hostReceivedUTC": "2026-11-17T06:03:13.382Z"
+    },
+    {
+      "applicationState": 3,
+      "deviceUnixSeconds": 1794895394.410918,
+      "deviceUptimeSeconds": 342790.9602610417,
+      "event": "state_observed",
+      "isMainThread": true,
+      "stateName": "runningBackground",
+      "hostReceivedMonotonic": 54153.016143375,
+      "hostReceivedUTC": "2026-11-17T06:03:14.407Z"
+    },
+    {
+      "applicationState": 3,
+      "deviceUnixSeconds": 1794895395.434143,
+      "deviceUptimeSeconds": 342791.98350283335,
+      "event": "state_observed",
+      "isMainThread": true,
+      "stateName": "runningBackground",
+      "hostReceivedMonotonic": 54154.039256083,
+      "hostReceivedUTC": "2026-11-17T06:03:15.430Z"
+    },
+    {
+      "applicationState": 3,
+      "deviceUnixSeconds": 1794895396.4568,
+      "deviceUptimeSeconds": 342793.0061762917,
+      "event": "state_observed",
+      "isMainThread": true,
+      "stateName": "runningBackground",
+      "hostReceivedMonotonic": 54155.061300416,
+      "hostReceivedUTC": "2026-11-17T06:03:16.452Z"
+    },
+    {
+      "applicationState": 3,
+      "deviceUnixSeconds": 1794895397.47069,
+      "deviceUptimeSeconds": 342794.02008362504,
+      "event": "state_observed",
+      "isMainThread": true,
+      "stateName": "runningBackground",
+      "hostReceivedMonotonic": 54156.074848208,
+      "hostReceivedUTC": "2026-11-17T06:03:17.466Z"
+    },
+    {
+      "applicationState": 3,
+      "deviceUnixSeconds": 1794895398.488488,
+      "deviceUptimeSeconds": 342795.03789375,
+      "event": "state_observed",
+      "isMainThread": true,
+      "stateName": "runningBackground",
+      "hostReceivedMonotonic": 54157.092994583,
+      "hostReceivedUTC": "2026-11-17T06:03:18.484Z"
+    },
+    {
+      "applicationState": 3,
+      "deviceUnixSeconds": 1794895399.5046,
+      "deviceUptimeSeconds": 342796.05402625,
+      "event": "state_observed",
+      "isMainThread": true,
+      "stateName": "runningBackground",
+      "hostReceivedMonotonic": 54158.109121041,
+      "hostReceivedUTC": "2026-11-17T06:03:19.500Z"
+    },
+    {
+      "applicationState": 3,
+      "deviceUnixSeconds": 1794895400.52111,
+      "deviceUptimeSeconds": 342797.070553875,
+      "event": "state_observed",
+      "isMainThread": true,
+      "stateName": "runningBackground",
+      "hostReceivedMonotonic": 54159.12570925,
+      "hostReceivedUTC": "2026-11-17T06:03:20.516Z"
+    },
+    {
+      "applicationState": 3,
+      "deviceUnixSeconds": 1794895401.5341148,
+      "deviceUptimeSeconds": 342798.08357454167,
+      "event": "state_observed",
+      "isMainThread": true,
+      "stateName": "runningBackground",
+      "hostReceivedMonotonic": 54160.139229166,
+      "hostReceivedUTC": "2026-11-17T06:03:21.530Z"
+    },
+    {
+      "applicationState": 3,
+      "deviceUnixSeconds": 1794895402.5546331,
+      "deviceUptimeSeconds": 342799.10411016666,
+      "event": "state_observed",
+      "isMainThread": true,
+      "stateName": "runningBackground",
+      "hostReceivedMonotonic": 54161.159299708,
+      "hostReceivedUTC": "2026-11-17T06:03:22.550Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895403.587656,
+      "deviceUptimeSeconds": 342800.1371490417,
+      "event": "state_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54162.193131958,
+      "hostReceivedUTC": "2026-11-17T06:03:23.584Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895403.587891,
+      "deviceUptimeSeconds": 342800.1373855,
+      "event": "suspended_confirmed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54162.194645625,
+      "hostReceivedUTC": "2026-11-17T06:03:23.585Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895403.5883741,
+      "deviceUptimeSeconds": 342800.13786825,
+      "event": "suspension_hold_started",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54162.194809625,
+      "hostReceivedUTC": "2026-11-17T06:03:23.585Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895404.60564,
+      "deviceUptimeSeconds": 342801.15515070833,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54163.210436666,
+      "hostReceivedUTC": "2026-11-17T06:03:24.601Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895405.627347,
+      "deviceUptimeSeconds": 342802.176873875,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54164.232097,
+      "hostReceivedUTC": "2026-11-17T06:03:25.623Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895406.634389,
+      "deviceUptimeSeconds": 342803.18393175,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54165.239545083,
+      "hostReceivedUTC": "2026-11-17T06:03:26.630Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895407.65751,
+      "deviceUptimeSeconds": 342804.20707025,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54166.26218925,
+      "hostReceivedUTC": "2026-11-17T06:03:27.653Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895408.671062,
+      "deviceUptimeSeconds": 342805.22063908336,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54167.27637625,
+      "hostReceivedUTC": "2026-11-17T06:03:28.667Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895409.704953,
+      "deviceUptimeSeconds": 342806.25454625004,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54168.309606541,
+      "hostReceivedUTC": "2026-11-17T06:03:29.700Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895410.708496,
+      "deviceUptimeSeconds": 342807.258106125,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54169.313840291,
+      "hostReceivedUTC": "2026-11-17T06:03:30.704Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895411.734489,
+      "deviceUptimeSeconds": 342808.2841130833,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54170.339111125,
+      "hostReceivedUTC": "2026-11-17T06:03:31.729Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895412.757895,
+      "deviceUptimeSeconds": 342809.3075385417,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54171.362882041,
+      "hostReceivedUTC": "2026-11-17T06:03:32.753Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895413.772215,
+      "deviceUptimeSeconds": 342810.32187312504,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54172.377338458,
+      "hostReceivedUTC": "2026-11-17T06:03:33.768Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895414.788394,
+      "deviceUptimeSeconds": 342811.33807062503,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54173.392905916,
+      "hostReceivedUTC": "2026-11-17T06:03:34.783Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895415.805439,
+      "deviceUptimeSeconds": 342812.3551325417,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54174.411162125,
+      "hostReceivedUTC": "2026-11-17T06:03:35.801Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895416.834961,
+      "deviceUptimeSeconds": 342813.38467162504,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54175.440066083,
+      "hostReceivedUTC": "2026-11-17T06:03:36.830Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895417.855238,
+      "deviceUptimeSeconds": 342814.4049608334,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54176.459936625,
+      "hostReceivedUTC": "2026-11-17T06:03:37.850Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895418.8721108,
+      "deviceUptimeSeconds": 342815.42185412504,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54177.477683958,
+      "hostReceivedUTC": "2026-11-17T06:03:38.868Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895419.905363,
+      "deviceUptimeSeconds": 342816.4551233334,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54178.510522333,
+      "hostReceivedUTC": "2026-11-17T06:03:39.901Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895420.923077,
+      "deviceUptimeSeconds": 342817.472854125,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54179.528004125,
+      "hostReceivedUTC": "2026-11-17T06:03:40.918Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895421.9435449,
+      "deviceUptimeSeconds": 342818.4933386667,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54180.548553458,
+      "hostReceivedUTC": "2026-11-17T06:03:41.939Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895422.95828,
+      "deviceUptimeSeconds": 342819.508090625,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54181.564047583,
+      "hostReceivedUTC": "2026-11-17T06:03:42.954Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895423.978117,
+      "deviceUptimeSeconds": 342820.52794450003,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54182.583296041,
+      "hostReceivedUTC": "2026-11-17T06:03:43.973Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895425.005727,
+      "deviceUptimeSeconds": 342821.55557100003,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54183.612142,
+      "hostReceivedUTC": "2026-11-17T06:03:45.002Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895426.0093,
+      "deviceUptimeSeconds": 342822.5591599583,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54184.615053375,
+      "hostReceivedUTC": "2026-11-17T06:03:46.005Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895427.0354629,
+      "deviceUptimeSeconds": 342823.58533970837,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54185.641089333,
+      "hostReceivedUTC": "2026-11-17T06:03:47.031Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895428.058291,
+      "deviceUptimeSeconds": 342824.60818483337,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54186.663775833,
+      "hostReceivedUTC": "2026-11-17T06:03:48.054Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895429.0890632,
+      "deviceUptimeSeconds": 342825.63897387503,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54187.694400416,
+      "hostReceivedUTC": "2026-11-17T06:03:49.084Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895430.106986,
+      "deviceUptimeSeconds": 342826.656913125,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54188.712615833,
+      "hostReceivedUTC": "2026-11-17T06:03:50.102Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895431.129262,
+      "deviceUptimeSeconds": 342827.67920583335,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54189.734326041,
+      "hostReceivedUTC": "2026-11-17T06:03:51.124Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895432.158786,
+      "deviceUptimeSeconds": 342828.70874516666,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54190.76419325,
+      "hostReceivedUTC": "2026-11-17T06:03:52.154Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895433.1890059,
+      "deviceUptimeSeconds": 342829.7389839584,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54191.794519875,
+      "hostReceivedUTC": "2026-11-17T06:03:53.184Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895434.208418,
+      "deviceUptimeSeconds": 342830.7584129167,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54192.814319958,
+      "hostReceivedUTC": "2026-11-17T06:03:54.204Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895435.223696,
+      "deviceUptimeSeconds": 342831.7737072917,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54193.829067625,
+      "hostReceivedUTC": "2026-11-17T06:03:55.219Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895436.241259,
+      "deviceUptimeSeconds": 342832.7912874583,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54194.846755041,
+      "hostReceivedUTC": "2026-11-17T06:03:56.236Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895437.2604,
+      "deviceUptimeSeconds": 342833.8104444167,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54195.866542958,
+      "hostReceivedUTC": "2026-11-17T06:03:57.256Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895438.2894912,
+      "deviceUptimeSeconds": 342834.839552625,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54196.895052083,
+      "hostReceivedUTC": "2026-11-17T06:03:58.285Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895439.306737,
+      "deviceUptimeSeconds": 342835.85681512504,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54197.926602375,
+      "hostReceivedUTC": "2026-11-17T06:03:59.316Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895440.33623,
+      "deviceUptimeSeconds": 342836.8863249167,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54198.942215583,
+      "hostReceivedUTC": "2026-11-17T06:04:00.332Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895441.3593779,
+      "deviceUptimeSeconds": 342837.90948933334,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54199.964945875,
+      "hostReceivedUTC": "2026-11-17T06:04:01.354Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895442.37284,
+      "deviceUptimeSeconds": 342838.9229684583,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54200.978811541,
+      "hostReceivedUTC": "2026-11-17T06:04:02.368Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895443.390188,
+      "deviceUptimeSeconds": 342839.94033270836,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54201.996015916,
+      "hostReceivedUTC": "2026-11-17T06:04:03.385Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895444.411211,
+      "deviceUptimeSeconds": 342840.96137233335,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54203.016642041,
+      "hostReceivedUTC": "2026-11-17T06:04:04.406Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895445.436516,
+      "deviceUptimeSeconds": 342841.9866943334,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54204.042310791,
+      "hostReceivedUTC": "2026-11-17T06:04:05.432Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895446.459495,
+      "deviceUptimeSeconds": 342843.00969020836,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54205.065166458,
+      "hostReceivedUTC": "2026-11-17T06:04:06.455Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895447.489943,
+      "deviceUptimeSeconds": 342844.040154375,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54206.095703083,
+      "hostReceivedUTC": "2026-11-17T06:04:07.485Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895448.511703,
+      "deviceUptimeSeconds": 342845.0619306667,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54207.117245458,
+      "hostReceivedUTC": "2026-11-17T06:04:08.507Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895449.526295,
+      "deviceUptimeSeconds": 342846.0765401667,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54208.133284125,
+      "hostReceivedUTC": "2026-11-17T06:04:09.523Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895450.5588288,
+      "deviceUptimeSeconds": 342847.10909125,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54209.165184833,
+      "hostReceivedUTC": "2026-11-17T06:04:10.554Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895451.5731711,
+      "deviceUptimeSeconds": 342848.1234476667,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54210.178298833,
+      "hostReceivedUTC": "2026-11-17T06:04:11.568Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895452.607191,
+      "deviceUptimeSeconds": 342849.15748620837,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54211.213018791,
+      "hostReceivedUTC": "2026-11-17T06:04:12.602Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895453.61125,
+      "deviceUptimeSeconds": 342850.161562375,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54212.217060208,
+      "hostReceivedUTC": "2026-11-17T06:04:13.606Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895454.643039,
+      "deviceUptimeSeconds": 342851.19336750003,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54213.249130041,
+      "hostReceivedUTC": "2026-11-17T06:04:14.638Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895455.66077,
+      "deviceUptimeSeconds": 342852.21111533337,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54214.266673083,
+      "hostReceivedUTC": "2026-11-17T06:04:15.656Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895456.674011,
+      "deviceUptimeSeconds": 342853.22437270836,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54215.279798208,
+      "hostReceivedUTC": "2026-11-17T06:04:16.669Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895457.691817,
+      "deviceUptimeSeconds": 342854.242192125,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54216.29750925,
+      "hostReceivedUTC": "2026-11-17T06:04:17.687Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895458.709172,
+      "deviceUptimeSeconds": 342855.25956745836,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54217.31520975,
+      "hostReceivedUTC": "2026-11-17T06:04:18.704Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895459.7119699,
+      "deviceUptimeSeconds": 342856.26238200004,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54218.317949583,
+      "hostReceivedUTC": "2026-11-17T06:04:19.707Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895460.7238898,
+      "deviceUptimeSeconds": 342857.27431862504,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54219.330022916,
+      "hostReceivedUTC": "2026-11-17T06:04:20.719Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895461.752284,
+      "deviceUptimeSeconds": 342858.302729125,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54220.358117416,
+      "hostReceivedUTC": "2026-11-17T06:04:21.747Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895462.768405,
+      "deviceUptimeSeconds": 342859.31886654167,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54221.374514208,
+      "hostReceivedUTC": "2026-11-17T06:04:22.763Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895463.792026,
+      "deviceUptimeSeconds": 342860.34250437503,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54222.398329125,
+      "hostReceivedUTC": "2026-11-17T06:04:23.787Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895464.8100672,
+      "deviceUptimeSeconds": 342861.3605617917,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54223.416231333,
+      "hostReceivedUTC": "2026-11-17T06:04:24.805Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895465.83751,
+      "deviceUptimeSeconds": 342862.38802245836,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54224.443758708,
+      "hostReceivedUTC": "2026-11-17T06:04:25.833Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895466.860495,
+      "deviceUptimeSeconds": 342863.411023375,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54225.467161875,
+      "hostReceivedUTC": "2026-11-17T06:04:26.856Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895467.877888,
+      "deviceUptimeSeconds": 342864.428433,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54226.484597416,
+      "hostReceivedUTC": "2026-11-17T06:04:27.873Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895468.899549,
+      "deviceUptimeSeconds": 342865.45011120837,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54227.506612958,
+      "hostReceivedUTC": "2026-11-17T06:04:28.895Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895469.908011,
+      "deviceUptimeSeconds": 342866.45858975,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54228.514963833,
+      "hostReceivedUTC": "2026-11-17T06:04:29.904Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895470.937943,
+      "deviceUptimeSeconds": 342867.48853858333,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54229.544291541,
+      "hostReceivedUTC": "2026-11-17T06:04:30.933Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895471.960789,
+      "deviceUptimeSeconds": 342868.511400875,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54230.566894333,
+      "hostReceivedUTC": "2026-11-17T06:04:31.956Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895472.991353,
+      "deviceUptimeSeconds": 342869.54198020836,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54231.598152916,
+      "hostReceivedUTC": "2026-11-17T06:04:32.987Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895474.008806,
+      "deviceUptimeSeconds": 342870.5594517917,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54232.615716125,
+      "hostReceivedUTC": "2026-11-17T06:04:34.004Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895475.026128,
+      "deviceUptimeSeconds": 342871.5767900417,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54233.632871583,
+      "hostReceivedUTC": "2026-11-17T06:04:35.022Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895476.060954,
+      "deviceUptimeSeconds": 342872.61163370835,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54234.667692416,
+      "hostReceivedUTC": "2026-11-17T06:04:36.056Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895477.091816,
+      "deviceUptimeSeconds": 342873.64251208334,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54235.69767975,
+      "hostReceivedUTC": "2026-11-17T06:04:37.086Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895478.1087031,
+      "deviceUptimeSeconds": 342874.6594155,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54236.71491075,
+      "hostReceivedUTC": "2026-11-17T06:04:38.103Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895479.124984,
+      "deviceUptimeSeconds": 342875.675713,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54237.731756375,
+      "hostReceivedUTC": "2026-11-17T06:04:39.120Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895480.1533608,
+      "deviceUptimeSeconds": 342876.7041067917,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54238.759870333,
+      "hostReceivedUTC": "2026-11-17T06:04:40.148Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895481.160832,
+      "deviceUptimeSeconds": 342877.7115944167,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54239.767380791,
+      "hostReceivedUTC": "2026-11-17T06:04:41.156Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895482.180018,
+      "deviceUptimeSeconds": 342878.730797,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54240.786255208,
+      "hostReceivedUTC": "2026-11-17T06:04:42.175Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895483.208798,
+      "deviceUptimeSeconds": 342879.75958970835,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54241.815297291,
+      "hostReceivedUTC": "2026-11-17T06:04:43.204Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895484.238552,
+      "deviceUptimeSeconds": 342880.7893654167,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54242.845193208,
+      "hostReceivedUTC": "2026-11-17T06:04:44.234Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895485.2622771,
+      "deviceUptimeSeconds": 342881.8131032917,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54243.8689685,
+      "hostReceivedUTC": "2026-11-17T06:04:45.257Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895486.27984,
+      "deviceUptimeSeconds": 342882.83068658336,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54244.886179583,
+      "hostReceivedUTC": "2026-11-17T06:04:46.275Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895487.309173,
+      "deviceUptimeSeconds": 342883.86003650003,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54245.915692583,
+      "hostReceivedUTC": "2026-11-17T06:04:47.304Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895488.3206592,
+      "deviceUptimeSeconds": 342884.8715390417,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54246.927798875,
+      "hostReceivedUTC": "2026-11-17T06:04:48.316Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895489.338958,
+      "deviceUptimeSeconds": 342885.88985445834,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54247.945768166,
+      "hostReceivedUTC": "2026-11-17T06:04:49.334Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895490.375462,
+      "deviceUptimeSeconds": 342886.926375375,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54248.98264275,
+      "hostReceivedUTC": "2026-11-17T06:04:50.371Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895491.392175,
+      "deviceUptimeSeconds": 342887.94310595834,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54249.998901458,
+      "hostReceivedUTC": "2026-11-17T06:04:51.387Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895492.411547,
+      "deviceUptimeSeconds": 342888.962493375,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54251.018413583,
+      "hostReceivedUTC": "2026-11-17T06:04:52.407Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895493.4248939,
+      "deviceUptimeSeconds": 342889.97585729166,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54252.032574333,
+      "hostReceivedUTC": "2026-11-17T06:04:53.421Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895494.4391642,
+      "deviceUptimeSeconds": 342890.990143625,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54253.045529208,
+      "hostReceivedUTC": "2026-11-17T06:04:54.434Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895495.459914,
+      "deviceUptimeSeconds": 342892.01091025,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54254.067194833,
+      "hostReceivedUTC": "2026-11-17T06:04:55.455Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895496.49284,
+      "deviceUptimeSeconds": 342893.04385350004,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54255.099778625,
+      "hostReceivedUTC": "2026-11-17T06:04:56.488Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895497.510406,
+      "deviceUptimeSeconds": 342894.06143633334,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54256.117266958,
+      "hostReceivedUTC": "2026-11-17T06:04:57.505Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895498.524751,
+      "deviceUptimeSeconds": 342895.07579770836,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54257.132655,
+      "hostReceivedUTC": "2026-11-17T06:04:58.521Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895499.549145,
+      "deviceUptimeSeconds": 342896.10020883335,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54258.156186291,
+      "hostReceivedUTC": "2026-11-17T06:04:59.544Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895500.57646,
+      "deviceUptimeSeconds": 342897.12754016666,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54259.183236375,
+      "hostReceivedUTC": "2026-11-17T06:05:00.571Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895501.593365,
+      "deviceUptimeSeconds": 342898.1444620417,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54260.200797541,
+      "hostReceivedUTC": "2026-11-17T06:05:01.589Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895502.610043,
+      "deviceUptimeSeconds": 342899.1611547917,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54261.217762833,
+      "hostReceivedUTC": "2026-11-17T06:05:02.606Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895503.639058,
+      "deviceUptimeSeconds": 342900.19018620835,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54262.246362,
+      "hostReceivedUTC": "2026-11-17T06:05:03.634Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895504.666194,
+      "deviceUptimeSeconds": 342901.21734133334,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54263.273265583,
+      "hostReceivedUTC": "2026-11-17T06:05:04.661Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895505.677105,
+      "deviceUptimeSeconds": 342902.22826866666,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54264.284286333,
+      "hostReceivedUTC": "2026-11-17T06:05:05.672Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895506.6959429,
+      "deviceUptimeSeconds": 342903.24712333333,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54265.302707166,
+      "hostReceivedUTC": "2026-11-17T06:05:06.690Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895507.716187,
+      "deviceUptimeSeconds": 342904.2673840417,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54266.323584458,
+      "hostReceivedUTC": "2026-11-17T06:05:07.711Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895508.718827,
+      "deviceUptimeSeconds": 342905.27004058333,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54267.326154541,
+      "hostReceivedUTC": "2026-11-17T06:05:08.714Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895509.739958,
+      "deviceUptimeSeconds": 342906.2911849167,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54268.347131416,
+      "hostReceivedUTC": "2026-11-17T06:05:09.735Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895510.763156,
+      "deviceUptimeSeconds": 342907.31440333335,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54269.370113833,
+      "hostReceivedUTC": "2026-11-17T06:05:10.758Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895511.777059,
+      "deviceUptimeSeconds": 342908.32832254167,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54270.384915416,
+      "hostReceivedUTC": "2026-11-17T06:05:11.773Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895512.7949219,
+      "deviceUptimeSeconds": 342909.34620250005,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54271.401997125,
+      "hostReceivedUTC": "2026-11-17T06:05:12.790Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895513.815126,
+      "deviceUptimeSeconds": 342910.3664229584,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54272.422262458,
+      "hostReceivedUTC": "2026-11-17T06:05:13.810Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895514.837641,
+      "deviceUptimeSeconds": 342911.3889543334,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54273.445335791,
+      "hostReceivedUTC": "2026-11-17T06:05:14.833Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895515.863435,
+      "deviceUptimeSeconds": 342912.41476558335,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54274.470440791,
+      "hostReceivedUTC": "2026-11-17T06:05:15.858Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895516.893649,
+      "deviceUptimeSeconds": 342913.4449964167,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54275.501054166,
+      "hostReceivedUTC": "2026-11-17T06:05:16.889Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895517.9114509,
+      "deviceUptimeSeconds": 342914.4628148333,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54276.5193285,
+      "hostReceivedUTC": "2026-11-17T06:05:17.907Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895518.940413,
+      "deviceUptimeSeconds": 342915.49179395835,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54277.547893416,
+      "hostReceivedUTC": "2026-11-17T06:05:18.935Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895519.9648871,
+      "deviceUptimeSeconds": 342916.51628512505,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54278.571879958,
+      "hostReceivedUTC": "2026-11-17T06:05:19.959Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895520.983787,
+      "deviceUptimeSeconds": 342917.53520158335,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54279.592648666,
+      "hostReceivedUTC": "2026-11-17T06:05:20.980Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895522,
+      "deviceUptimeSeconds": 342918.5514311667,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54280.609106708,
+      "hostReceivedUTC": "2026-11-17T06:05:21.996Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895523.010957,
+      "deviceUptimeSeconds": 342919.5624047917,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54281.618605541,
+      "hostReceivedUTC": "2026-11-17T06:05:23.006Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895524.040597,
+      "deviceUptimeSeconds": 342920.5920609167,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54282.647619791,
+      "hostReceivedUTC": "2026-11-17T06:05:24.035Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895525.063994,
+      "deviceUptimeSeconds": 342921.61547150003,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54283.671158625,
+      "hostReceivedUTC": "2026-11-17T06:05:25.058Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895526.0916228,
+      "deviceUptimeSeconds": 342922.6431211667,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54284.698554,
+      "hostReceivedUTC": "2026-11-17T06:05:26.086Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895527.111227,
+      "deviceUptimeSeconds": 342923.6627415,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54285.7187795,
+      "hostReceivedUTC": "2026-11-17T06:05:27.106Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895528.131232,
+      "deviceUptimeSeconds": 342924.6827627917,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54286.738912875,
+      "hostReceivedUTC": "2026-11-17T06:05:28.126Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895529.141011,
+      "deviceUptimeSeconds": 342925.6925586667,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54287.748866625,
+      "hostReceivedUTC": "2026-11-17T06:05:29.136Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895530.1639562,
+      "deviceUptimeSeconds": 342926.71551658335,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54288.771472041,
+      "hostReceivedUTC": "2026-11-17T06:05:30.159Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895531.1824641,
+      "deviceUptimeSeconds": 342927.734044625,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54289.79023875,
+      "hostReceivedUTC": "2026-11-17T06:05:31.177Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895532.211523,
+      "deviceUptimeSeconds": 342928.763118,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54290.819101,
+      "hostReceivedUTC": "2026-11-17T06:05:32.206Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895533.22639,
+      "deviceUptimeSeconds": 342929.778004875,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54291.834654208,
+      "hostReceivedUTC": "2026-11-17T06:05:33.222Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895534.261697,
+      "deviceUptimeSeconds": 342930.81332866667,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54292.869715,
+      "hostReceivedUTC": "2026-11-17T06:05:34.257Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895535.278799,
+      "deviceUptimeSeconds": 342931.8304464167,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54293.886878541,
+      "hostReceivedUTC": "2026-11-17T06:05:35.274Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895536.2996511,
+      "deviceUptimeSeconds": 342932.8513151667,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54294.907288208,
+      "hostReceivedUTC": "2026-11-17T06:05:36.294Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895537.31149,
+      "deviceUptimeSeconds": 342933.8631717917,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54295.920026291,
+      "hostReceivedUTC": "2026-11-17T06:05:37.307Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895538.3333812,
+      "deviceUptimeSeconds": 342934.88507920835,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54296.940790041,
+      "hostReceivedUTC": "2026-11-17T06:05:38.328Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895539.3644462,
+      "deviceUptimeSeconds": 342935.9161620417,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54297.971807708,
+      "hostReceivedUTC": "2026-11-17T06:05:39.359Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895540.398363,
+      "deviceUptimeSeconds": 342936.95009533333,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54299.0065665,
+      "hostReceivedUTC": "2026-11-17T06:05:40.393Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895541.4274158,
+      "deviceUptimeSeconds": 342937.9791652917,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54300.03565075,
+      "hostReceivedUTC": "2026-11-17T06:05:41.423Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895542.46155,
+      "deviceUptimeSeconds": 342939.01331583335,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54301.069731208,
+      "hostReceivedUTC": "2026-11-17T06:05:42.457Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895543.490938,
+      "deviceUptimeSeconds": 342940.042720125,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54302.09934575,
+      "hostReceivedUTC": "2026-11-17T06:05:43.486Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895544.512131,
+      "deviceUptimeSeconds": 342941.0639305,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54303.120063083,
+      "hostReceivedUTC": "2026-11-17T06:05:44.507Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895545.524126,
+      "deviceUptimeSeconds": 342942.0759419167,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54304.131852166,
+      "hostReceivedUTC": "2026-11-17T06:05:45.519Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895546.541809,
+      "deviceUptimeSeconds": 342943.093641875,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54305.1503735,
+      "hostReceivedUTC": "2026-11-17T06:05:46.537Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895547.56457,
+      "deviceUptimeSeconds": 342944.11641925003,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54306.1721615,
+      "hostReceivedUTC": "2026-11-17T06:05:47.559Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895548.595581,
+      "deviceUptimeSeconds": 342945.14744725,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54307.203680708,
+      "hostReceivedUTC": "2026-11-17T06:05:48.590Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895549.6143432,
+      "deviceUptimeSeconds": 342946.1662264167,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54308.222460541,
+      "hostReceivedUTC": "2026-11-17T06:05:49.609Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895550.633249,
+      "deviceUptimeSeconds": 342947.185148375,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54309.242087791,
+      "hostReceivedUTC": "2026-11-17T06:05:50.629Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895551.664326,
+      "deviceUptimeSeconds": 342948.2162425417,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54310.272293708,
+      "hostReceivedUTC": "2026-11-17T06:05:51.659Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895552.6955261,
+      "deviceUptimeSeconds": 342949.2474589167,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54311.304060541,
+      "hostReceivedUTC": "2026-11-17T06:05:52.691Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895553.714109,
+      "deviceUptimeSeconds": 342950.26605925005,
+      "event": "suspension_hold_observed",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54312.322058083,
+      "hostReceivedUTC": "2026-11-17T06:05:53.709Z"
+    },
+    {
+      "applicationState": 2,
+      "deviceUnixSeconds": 1794895553.7146158,
+      "deviceUptimeSeconds": 342950.26656662504,
+      "event": "suspension_hold_complete",
+      "isMainThread": true,
+      "stateName": "runningBackgroundSuspended",
+      "hostReceivedMonotonic": 54312.324059583,
+      "hostReceivedUTC": "2026-11-17T06:05:53.711Z"
+    },
+    {
+      "applicationState": 4,
+      "deviceUnixSeconds": 1794895553.8665318,
+      "deviceUptimeSeconds": 342950.41848470835,
+      "event": "foreground_after_resume",
+      "isMainThread": true,
+      "stateName": "runningForeground",
+      "hostReceivedMonotonic": 54312.473686291,
+      "hostReceivedUTC": "2026-11-17T06:05:53.860Z"
+    },
+    {
+      "applicationState": 4,
+      "deviceUnixSeconds": 1794895563.9369888,
+      "deviceUptimeSeconds": 342960.48910558334,
+      "event": "cleanup",
+      "isMainThread": true,
+      "stateName": "runningForeground",
+      "hostReceivedMonotonic": 54322.545730291,
+      "hostReceivedUTC": "2026-11-17T06:06:03.932Z"
+    }
+  ],
+  "finishedUTC": "2026-11-17T06:06:06.798Z"
+}

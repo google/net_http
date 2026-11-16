@@ -1,0 +1,74 @@
+{
+  "run": "handoff-b9a3c0f85102",
+  "scenario": "M1-idle",
+  "requestedHoldSeconds": 30.0,
+  "outcome": "interrupted",
+  "milestones": {},
+  "timingNotes": [
+    "Device intervals use deviceUptimeSeconds; no host/device UTC subtraction.",
+    "Path callbacks describe observed routing, not physical switch timestamps.",
+    "Cue times are host times; human response is measured, not assumed instantaneous.",
+    "No SDK test-case pass/fail or real OS suspension is inferred."
+  ],
+  "traffic": "idle",
+  "requestedPostRestoreObservationSeconds": 0,
+  "debuggerRequested": true,
+  "debuggerPID": 46354,
+  "error": "Timed out: autorun_start",
+  "requestedHTTP3": true,
+  "endpoint": "https://webchannel.googleapis.com/staging/channel/generator",
+  "protocolEvidence": {
+    "coverage": "h3-observed-no-known-fallback",
+    "h3Transactions": 1,
+    "unknownTransactions": 0,
+    "otherProtocols": [],
+    "h3ObservedWithoutKnownFallback": true,
+    "note": "Unknown transactions are not h3 evidence; baseline h3 is checked before faults."
+  },
+  "protocolCoverage": "h3-observed-no-known-fallback",
+  "finishedUTC": "2026-11-17T06:14:03.970Z",
+  "errorCodes": [],
+  "openCount": 1,
+  "lifecycleEvents": [
+    {
+      "deviceUnixSeconds": 1794896043.855505,
+      "deviceUptimeSeconds": 343440.41547633335,
+      "kind": "lifecycle",
+      "notification": "UIApplicationDidBecomeActiveNotification",
+      "run": "handoff-b9a3c0f85102",
+      "hostReceivedMonotonic": 54802.474296083,
+      "hostReceivedUTC": "2026-11-17T06:14:03.856Z"
+    }
+  ],
+  "taskMetrics": [
+    {
+      "deviceUnixSeconds": 1794896043.895843,
+      "deviceUptimeSeconds": 343440.455814875,
+      "kind": "task_metrics",
+      "run": "handoff-b9a3c0f85102",
+      "transactions": [
+        {
+          "fetchStart": 1794896043.7886581,
+          "isCellular": false,
+          "localAddress": "2400:4050:b781:4c00:7527:4ac7:dc6f:f0aa",
+          "localPort": 60020,
+          "method": "POST",
+          "protocol": "h3",
+          "remoteAddress": "2001:4860:4841:400::",
+          "remotePort": 443,
+          "requestEnd": 1794896043.8402538,
+          "requestStart": 1794896043.83986,
+          "responseEnd": 1794896043.894593,
+          "responseStart": 1794896043.892465,
+          "reusedConnection": false,
+          "rid": "57312",
+          "tcpConnectMs": 47.99997806549072,
+          "tlsMs": 46.99993133544922,
+          "url": "https://webchannel.googleapis.com/staging/channel/generator?VER=8&RID=57312&CVER=25&X-HTTP-Session-Id=gsessionid&t=1"
+        }
+      ],
+      "hostReceivedMonotonic": 54802.514842833,
+      "hostReceivedUTC": "2026-11-17T06:14:03.897Z"
+    }
+  ]
+}
