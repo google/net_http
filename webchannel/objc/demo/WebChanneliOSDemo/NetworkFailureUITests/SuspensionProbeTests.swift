@@ -95,4 +95,23 @@ final class SuspensionProbeTests: XCTestCase {
       allowStateUpdates(for: 10)
     }
   }
+
+  func testDismissKnownCellularNotice() throws {
+    let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+    let alert = springboard.alerts.firstMatch
+    guard alert.waitForExistence(timeout: 5) else {
+      print("NOTICE_DISMISS no-alert")
+      return
+    }
+    let text = alert.staticTexts.allElementsBoundByIndex.map(\.label).joined(separator: "\n")
+    let known = text.contains("モバイルデータ通信がオフ")
+      || text.contains("Cellular Data is Turned Off")
+    XCTAssertTrue(known, "Unrecognized system alert: \(text)")
+    guard known else { return }
+    let ok = alert.buttons["OK"]
+    XCTAssertTrue(ok.exists, "Known cellular notice has no OK button")
+    guard ok.exists else { return }
+    ok.tap()
+    print("NOTICE_DISMISS dismissed-cellular-data-off")
+  }
 }

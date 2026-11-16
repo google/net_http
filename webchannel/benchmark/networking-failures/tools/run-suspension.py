@@ -59,6 +59,8 @@ def main():
     parser.add_argument('--xctestrun', required=True, type=Path)
     parser.add_argument('--output', required=True, type=Path)
     parser.add_argument('--hold', type=float, default=30)
+    parser.add_argument('--http3', action='store_true', help='Require baseline h3; use PR #133 endpoint')
+    parser.add_argument('--endpoint', help='Opt-in demo endpoint override')
     args = parser.parse_args()
     if not 0 < args.hold <= 300:
         parser.error('--hold must be finite and in (0, 300]')
@@ -111,11 +113,14 @@ def main():
     try:
         wired('device-before')
         env = {'NETTEST_AUTORUN': '1', 'NETTEST_RUN': run, 'NETTEST_TRAFFIC': 'idle', 'NETTEST_FAILFAST': '0'}
+        env.update(support.experiment_environment(args.http3, args.endpoint))
         app = support.Capture(['xcrun', 'devicectl', 'device', 'process', 'launch', '--device', args.device,
                                '--terminate-existing', '--console', '--environment-variables', json.dumps(env),
                                'com.pmodular.webchannel.demo'], folder / 'device-console.log')
         start = app.wait_for(lambda r: r.get('kind') == 'autorun_start', 30)
         app.wait_for(lambda r: r.get('kind') == 'open', 60)
+        if args.http3:
+            support.require_h3_baseline(app)
         app.wait_for(lambda r: r.get('kind') == 'heartbeat' and r.get('applicationState') == 0, 15)
         result['milestones']['initialOpen'] = next(r for r in app.snapshot() if r.get('kind') == 'open')
         result['initialPID'] = start['pid']
@@ -218,6 +223,13 @@ def main():
             result['openCount'] = sum(r.get('kind') == 'open' for r in records)
             result['autorunStartCount'] = sum(r.get('kind') == 'autorun_start' for r in records)
             result['taskMetrics'] = [r for r in records if r.get('kind') == 'task_metrics']
+            if args.http3:
+                result['requestedHTTP3'] = True
+                result['endpoint'] = args.endpoint or support.HTTP3_ENDPOINT
+                result['protocolEvidence'] = support.protocol_evidence(records)
+                result['protocolCoverage'] = result['protocolEvidence']['coverage']
+                if not result['protocolEvidence']['h3Transactions']:
+                    result['outcome'] = 'protocol-not-confirmed'
         result['uiEvents'] = ui_records
         result['finishedUTC'] = support.utc()
         (folder / 'result.json').write_text(json.dumps(result, indent=2) + '\n')

@@ -1,5 +1,19 @@
 # iOS networking-failure experiments
 
+[2026-11-17 h3 follow-up](2026-11-17/report.md): legacy-host retries used h2,
+then PR #133 identified the Google APIs endpoint. Actual WebChannel h3 is now
+confirmed there. Fifty-one h3-started observations and final restoration checks
+are recorded; 18 include h2 afterward. M6 PING cadence remains unmeasured.
+Control Center operation, packet-interface evidence and task metrics are
+reported separately; no blanket specification pass is claimed.
+
+The [2026-11-16 follow-up](2026-11-16/report.md) adds 12 measurements: three T5
+runs with the AP directly connected to the switching hub, and three OS-observed
+suspension holds each at 45/60/75 s. All nine suspension trials resumed their
+original sessions. HTTP/3 setup is recorded separately: the same iPhone uses h3
+for a control host while the old sandbox endpoint used h2. That historical
+endpoint blocker was resolved by PR #133; see the November 17 follow-up above.
+
 **Start here:** the [2026-11-15 summary and next steps](summary-2026-11-15.md).
 
 **Network topology clarification:** T1–T8 traversed a Linux box. The operator

@@ -1,0 +1,17 @@
+(lldb) device select "TEST_DEVICE_UDID"
+(lldb) device process attach -p 46354
+(lldb) script lldb.debugger.SetAsync(True)
+(lldb) process continue
+error: Process must be launched.
+Process 46354 stopped
+* thread #1, stop reason = signal SIGSTOP
+       frame #0: 0x0000000100d159f0 dyld`_dyld_start
+dyld`_dyld_start:
+->  0x100d159f0 <+0>:  mov    x0, sp
+    0x100d159f4 <+4>:  and    sp, x0, #0xfffffffffffffff0
+    0x100d159f8 <+8>:  mov    x29, #0x0                 ; =0
+    0x100d159fc <+12>: mov    x30, #0x0                 ; =0
+Target 0: (WebChanneliOSDemo) stopped.
+(lldb) process detach -s false
+Process 46354 detached
+(lldb) quit

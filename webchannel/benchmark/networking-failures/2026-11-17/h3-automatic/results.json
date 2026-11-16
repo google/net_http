@@ -1,0 +1,369 @@
+[
+  {
+    "case": "T2",
+    "run": 1,
+    "holdSeconds": 50.005,
+    "timeouts": 1,
+    "errorCodes": [],
+    "receiveAfterRelease": true,
+    "openCount": 1,
+    "observation": "receive-resumed",
+    "folder": "T2-r1",
+    "protocolEvidence": {
+      "h3Transactions": 3,
+      "unknownTransactions": 2,
+      "otherProtocols": [
+        "h2"
+      ],
+      "h3ObservedWithoutKnownFallback": false,
+      "note": "Unknown transactions are not h3 evidence; baseline h3 is checked before faults."
+    },
+    "requestedHTTP3": true,
+    "endpoint": "https://webchannel.googleapis.com/staging/channel/generator",
+    "protocolCoverage": "mixed-after-h3-baseline",
+    "controllerInitiallyStoppedOnFallback": true,
+    "reclassificationNote": "Existing fault/recovery evidence retained as a mixed-protocol observation, not a pure h3 trial or an infrastructure failure."
+  },
+  {
+    "case": "T2",
+    "run": 2,
+    "holdSeconds": 50.006,
+    "timeouts": 1,
+    "errorCodes": [],
+    "receiveAfterRelease": true,
+    "openCount": 1,
+    "observation": "receive-resumed",
+    "folder": "T2-r2",
+    "protocolEvidence": {
+      "coverage": "mixed-after-h3-baseline",
+      "h3Transactions": 3,
+      "unknownTransactions": 0,
+      "otherProtocols": [
+        "h2"
+      ],
+      "h3ObservedWithoutKnownFallback": false,
+      "note": "Unknown transactions are not h3 evidence; baseline h3 is checked before faults."
+    },
+    "requestedHTTP3": true,
+    "endpoint": "https://webchannel.googleapis.com/staging/channel/generator",
+    "protocolCoverage": "mixed-after-h3-baseline"
+  },
+  {
+    "case": "T2",
+    "run": 3,
+    "holdSeconds": 50.013,
+    "timeouts": 1,
+    "errorCodes": [],
+    "receiveAfterRelease": true,
+    "openCount": 1,
+    "observation": "receive-resumed",
+    "folder": "T2-r3",
+    "protocolEvidence": {
+      "coverage": "mixed-after-h3-baseline",
+      "h3Transactions": 3,
+      "unknownTransactions": 0,
+      "otherProtocols": [
+        "h2"
+      ],
+      "h3ObservedWithoutKnownFallback": false,
+      "note": "Unknown transactions are not h3 evidence; baseline h3 is checked before faults."
+    },
+    "requestedHTTP3": true,
+    "endpoint": "https://webchannel.googleapis.com/staging/channel/generator",
+    "protocolCoverage": "mixed-after-h3-baseline"
+  },
+  {
+    "case": "T3",
+    "run": 1,
+    "holdSeconds": 90.008,
+    "timeouts": 2,
+    "errorCodes": [],
+    "receiveAfterRelease": true,
+    "openCount": 1,
+    "observation": "receive-resumed",
+    "folder": "T3-r1",
+    "protocolEvidence": {
+      "coverage": "mixed-after-h3-baseline",
+      "h3Transactions": 3,
+      "unknownTransactions": 1,
+      "otherProtocols": [
+        "h2"
+      ],
+      "h3ObservedWithoutKnownFallback": false,
+      "note": "Unknown transactions are not h3 evidence; baseline h3 is checked before faults."
+    },
+    "requestedHTTP3": true,
+    "endpoint": "https://webchannel.googleapis.com/staging/channel/generator",
+    "protocolCoverage": "mixed-after-h3-baseline"
+  },
+  {
+    "case": "T3",
+    "run": 2,
+    "holdSeconds": 90.005,
+    "timeouts": 2,
+    "errorCodes": [],
+    "receiveAfterRelease": true,
+    "openCount": 1,
+    "observation": "receive-resumed",
+    "folder": "T3-r2",
+    "protocolEvidence": {
+      "coverage": "mixed-after-h3-baseline",
+      "h3Transactions": 3,
+      "unknownTransactions": 1,
+      "otherProtocols": [
+        "h2"
+      ],
+      "h3ObservedWithoutKnownFallback": false,
+      "note": "Unknown transactions are not h3 evidence; baseline h3 is checked before faults."
+    },
+    "requestedHTTP3": true,
+    "endpoint": "https://webchannel.googleapis.com/staging/channel/generator",
+    "protocolCoverage": "mixed-after-h3-baseline"
+  },
+  {
+    "case": "T3",
+    "run": 3,
+    "holdSeconds": 90.004,
+    "timeouts": 1,
+    "errorCodes": [
+      1
+    ],
+    "receiveAfterRelease": false,
+    "openCount": 1,
+    "observation": "channel-error",
+    "folder": "T3-r3",
+    "protocolEvidence": {
+      "coverage": "h3-observed-no-known-fallback",
+      "h3Transactions": 3,
+      "unknownTransactions": 4,
+      "otherProtocols": [],
+      "h3ObservedWithoutKnownFallback": true,
+      "note": "Unknown transactions are not h3 evidence; baseline h3 is checked before faults."
+    },
+    "requestedHTTP3": true,
+    "endpoint": "https://webchannel.googleapis.com/staging/channel/generator",
+    "protocolCoverage": "h3-observed-no-known-fallback"
+  },
+  {
+    "case": "T4",
+    "run": 1,
+    "holdSeconds": 150.015,
+    "timeouts": 3,
+    "errorCodes": [
+      4
+    ],
+    "receiveAfterRelease": false,
+    "openCount": 1,
+    "observation": "channel-error",
+    "folder": "T4-r1",
+    "protocolEvidence": {
+      "coverage": "mixed-after-h3-baseline",
+      "h3Transactions": 3,
+      "unknownTransactions": 2,
+      "otherProtocols": [
+        "h2"
+      ],
+      "h3ObservedWithoutKnownFallback": false,
+      "note": "Unknown transactions are not h3 evidence; baseline h3 is checked before faults."
+    },
+    "requestedHTTP3": true,
+    "endpoint": "https://webchannel.googleapis.com/staging/channel/generator",
+    "protocolCoverage": "mixed-after-h3-baseline"
+  },
+  {
+    "case": "T4",
+    "run": 2,
+    "holdSeconds": 150.01,
+    "timeouts": 3,
+    "errorCodes": [
+      4
+    ],
+    "receiveAfterRelease": false,
+    "openCount": 1,
+    "observation": "channel-error",
+    "folder": "T4-r2",
+    "protocolEvidence": {
+      "coverage": "mixed-after-h3-baseline",
+      "h3Transactions": 3,
+      "unknownTransactions": 2,
+      "otherProtocols": [
+        "h2"
+      ],
+      "h3ObservedWithoutKnownFallback": false,
+      "note": "Unknown transactions are not h3 evidence; baseline h3 is checked before faults."
+    },
+    "requestedHTTP3": true,
+    "endpoint": "https://webchannel.googleapis.com/staging/channel/generator",
+    "protocolCoverage": "mixed-after-h3-baseline"
+  },
+  {
+    "case": "T4",
+    "run": 3,
+    "holdSeconds": 150.008,
+    "timeouts": 3,
+    "errorCodes": [
+      4
+    ],
+    "receiveAfterRelease": false,
+    "openCount": 1,
+    "observation": "channel-error",
+    "folder": "T4-r3",
+    "protocolEvidence": {
+      "coverage": "mixed-after-h3-baseline",
+      "h3Transactions": 4,
+      "unknownTransactions": 1,
+      "otherProtocols": [
+        "h2"
+      ],
+      "h3ObservedWithoutKnownFallback": false,
+      "note": "Unknown transactions are not h3 evidence; baseline h3 is checked before faults."
+    },
+    "requestedHTTP3": true,
+    "endpoint": "https://webchannel.googleapis.com/staging/channel/generator",
+    "protocolCoverage": "mixed-after-h3-baseline"
+  },
+  {
+    "case": "T5",
+    "run": 1,
+    "holdSeconds": 250.002,
+    "timeouts": 4,
+    "errorCodes": [
+      1
+    ],
+    "receiveAfterRelease": false,
+    "openCount": 1,
+    "observation": "channel-error",
+    "folder": "T5-r1",
+    "protocolEvidence": {
+      "coverage": "h3-observed-no-known-fallback",
+      "h3Transactions": 3,
+      "unknownTransactions": 4,
+      "otherProtocols": [],
+      "h3ObservedWithoutKnownFallback": true,
+      "note": "Unknown transactions are not h3 evidence; baseline h3 is checked before faults."
+    },
+    "requestedHTTP3": true,
+    "endpoint": "https://webchannel.googleapis.com/staging/channel/generator",
+    "protocolCoverage": "h3-observed-no-known-fallback"
+  },
+  {
+    "case": "T5",
+    "run": 2,
+    "holdSeconds": 250.006,
+    "timeouts": 3,
+    "errorCodes": [
+      1
+    ],
+    "receiveAfterRelease": false,
+    "openCount": 1,
+    "observation": "channel-error",
+    "folder": "T5-r2",
+    "protocolEvidence": {
+      "coverage": "h3-observed-no-known-fallback",
+      "h3Transactions": 3,
+      "unknownTransactions": 4,
+      "otherProtocols": [],
+      "h3ObservedWithoutKnownFallback": true,
+      "note": "Unknown transactions are not h3 evidence; baseline h3 is checked before faults."
+    },
+    "requestedHTTP3": true,
+    "endpoint": "https://webchannel.googleapis.com/staging/channel/generator",
+    "protocolCoverage": "h3-observed-no-known-fallback"
+  },
+  {
+    "case": "T5",
+    "run": 3,
+    "holdSeconds": 250.003,
+    "timeouts": 4,
+    "errorCodes": [
+      1
+    ],
+    "receiveAfterRelease": false,
+    "openCount": 1,
+    "observation": "channel-error",
+    "folder": "T5-r3",
+    "protocolEvidence": {
+      "coverage": "h3-observed-no-known-fallback",
+      "h3Transactions": 6,
+      "unknownTransactions": 0,
+      "otherProtocols": [],
+      "h3ObservedWithoutKnownFallback": true,
+      "note": "Unknown transactions are not h3 evidence; baseline h3 is checked before faults."
+    },
+    "requestedHTTP3": true,
+    "endpoint": "https://webchannel.googleapis.com/staging/channel/generator",
+    "protocolCoverage": "h3-observed-no-known-fallback"
+  },
+  {
+    "case": "T7",
+    "run": 1,
+    "holdSeconds": 90.014,
+    "timeouts": 2,
+    "errorCodes": [
+      1
+    ],
+    "receiveAfterRelease": false,
+    "openCount": 1,
+    "observation": "channel-error",
+    "folder": "T7-r1",
+    "protocolEvidence": {
+      "coverage": "h3-observed-no-known-fallback",
+      "h3Transactions": 3,
+      "unknownTransactions": 4,
+      "otherProtocols": [],
+      "h3ObservedWithoutKnownFallback": true,
+      "note": "Unknown transactions are not h3 evidence; baseline h3 is checked before faults."
+    },
+    "requestedHTTP3": true,
+    "endpoint": "https://webchannel.googleapis.com/staging/channel/generator",
+    "protocolCoverage": "h3-observed-no-known-fallback"
+  },
+  {
+    "case": "T7",
+    "run": 2,
+    "holdSeconds": 90.011,
+    "timeouts": 2,
+    "errorCodes": [
+      1
+    ],
+    "receiveAfterRelease": false,
+    "openCount": 1,
+    "observation": "channel-error",
+    "folder": "T7-r2",
+    "protocolEvidence": {
+      "coverage": "h3-observed-no-known-fallback",
+      "h3Transactions": 3,
+      "unknownTransactions": 4,
+      "otherProtocols": [],
+      "h3ObservedWithoutKnownFallback": true,
+      "note": "Unknown transactions are not h3 evidence; baseline h3 is checked before faults."
+    },
+    "requestedHTTP3": true,
+    "endpoint": "https://webchannel.googleapis.com/staging/channel/generator",
+    "protocolCoverage": "h3-observed-no-known-fallback"
+  },
+  {
+    "case": "T7",
+    "run": 3,
+    "holdSeconds": 90.006,
+    "timeouts": 3,
+    "errorCodes": [
+      1
+    ],
+    "receiveAfterRelease": false,
+    "openCount": 1,
+    "observation": "channel-error",
+    "folder": "T7-r3",
+    "protocolEvidence": {
+      "coverage": "h3-observed-no-known-fallback",
+      "h3Transactions": 3,
+      "unknownTransactions": 5,
+      "otherProtocols": [],
+      "h3ObservedWithoutKnownFallback": true,
+      "note": "Unknown transactions are not h3 evidence; baseline h3 is checked before faults."
+    },
+    "requestedHTTP3": true,
+    "endpoint": "https://webchannel.googleapis.com/staging/channel/generator",
+    "protocolCoverage": "h3-observed-no-known-fallback"
+  }
+]

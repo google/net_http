@@ -68,6 +68,20 @@ class ObservationTests(unittest.TestCase):
         self.observer.poll()
         self.assertFalse(self.observer.active(100))
 
+    def test_wifi_return_may_keep_cellular_available(self):
+        both = {**path(self.clock, "wifi", 99), "cellular": True}
+        self.capture.records = [both, self.clock.record("heartbeat", 99, applicationState=0)]
+        self.observer.poll()
+        self.observer.healthy(100, "wifi-present")
+        self.assertIsNotNone(self.observer.on_path("wifi-present", 98))
+        with self.assertRaises(RuntimeError):
+            self.observer.healthy(100, "wifi")  # L3-only tests keep their stricter condition.
+        self.capture.records.append(path(self.clock, "cellular", 100))
+        self.observer.poll()
+        with self.assertRaises(RuntimeError):
+            self.observer.healthy(100, "wifi-present")
+        self.assertFalse(handoff.matches_path({**both, "wired": True}, "wifi-present"))
+
     def test_probe_requires_new_send_and_matching_reply(self):
         self.capture.records = [self.clock.record("echo_sent", 98, token="old", message="NETTEST_PROBE"),
                                 self.clock.record("echo_reply", 99, token="old"),

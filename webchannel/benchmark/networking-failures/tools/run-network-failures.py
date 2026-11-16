@@ -20,6 +20,41 @@ CASES = [
     ("M5-periodic", 250, "periodic", False), ("T16", 30, "pending", False),
 ]
 
+HTTP3_ENDPOINT = "https://webchannel.googleapis.com/staging/channel/generator"
+
+
+def experiment_environment(http3=False, endpoint=None, qlog_directory=None):
+    env = {}
+    if http3:
+        env["NETTEST_HTTP3"] = "1"
+    if endpoint or http3:
+        env["NETTEST_ENDPOINT"] = endpoint or HTTP3_ENDPOINT
+    if qlog_directory:
+        env["QUIC_LOG_DIRECTORY"] = qlog_directory
+    return env
+
+
+def protocol_evidence(records):
+    transactions = [t for r in records if r.get("kind") == "task_metrics"
+                    for t in r.get("transactions", [])]
+    protocols = [t.get("protocol") or "unknown" for t in transactions]
+    other = sorted(set(protocols) - {"h3", "unknown"})
+    coverage = "mixed-after-h3-baseline" if "h3" in protocols and other else "h3-observed-no-known-fallback" if "h3" in protocols else "unconfirmed"
+    return {"coverage": coverage, "h3Transactions": protocols.count("h3"),
+            "unknownTransactions": protocols.count("unknown"), "otherProtocols": other,
+            "h3ObservedWithoutKnownFallback": "h3" in protocols and not other,
+            "note": "Unknown transactions are not h3 evidence; baseline h3 is checked before faults."}
+
+
+def require_h3_baseline(capture):
+    event = capture.wait_for(lambda r: r.get("kind") == "task_metrics" and any(
+        t.get("method") == "POST" and t.get("protocol") not in (None, "", "unknown")
+        for t in r.get("transactions", [])), 20)
+    if (not any(t.get("method") == "POST" and t.get("protocol") == "h3"
+                for t in event.get("transactions", []))
+            or protocol_evidence([event])["otherProtocols"]):
+        raise RuntimeError("Baseline WebChannel POST did not negotiate h3; no fault applied")
+
 
 def utc():
     return datetime.now(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z")
@@ -85,6 +120,10 @@ def main():
     parser.add_argument("--cases", default="all")
     parser.add_argument("--repetitions", type=int, default=3)
     parser.add_argument("--resume", action="store_true", help="Skip completed trials and preserve interrupted-attempt directories")
+    parser.add_argument("--http3", action="store_true", help="Require baseline h3; default to the PR #133 endpoint")
+    parser.add_argument("--endpoint", help="Opt-in demo endpoint override")
+    parser.add_argument("--notice-xctestrun", type=Path,
+                        help="Optional UI observer build for a known cellular-data-off startup notice")
     args = parser.parse_args()
     if not 1 <= args.repetitions <= 10:
         parser.error("repetitions must be 1..10")
@@ -92,6 +131,8 @@ def main():
     cases = CASES if args.cases == "all" else [c for c in CASES if c[0] in chosen]
     if not cases or (args.cases != "all" and chosen - {c[0] for c in CASES}):
         parser.error("Unknown case")
+    if args.http3 and any(c[3] for c in cases):
+        parser.error("Handshake-loss cases cannot verify h3 before the fault")
     args.output.mkdir(parents=True, exist_ok=args.resume)
     results_path = args.output / "results.json"
     results = json.loads(results_path.read_text()) if args.resume and results_path.exists() else []
@@ -132,7 +173,9 @@ def main():
             # If no PID is available, the next --terminate-existing ends this console.
         app.thread.join(timeout=3)
         (folder / "device-events.jsonl").write_text("".join(json.dumps(r) + "\n" for r in app.snapshot()))
+        records = app.snapshot()
         app = None
+        return records
 
     def write_report():
         (args.output / "results.json").write_text(json.dumps(results, indent=2))
@@ -183,13 +226,26 @@ def main():
                         active_helper.wait_for(lambda r: r.get("event") == "active_verified", 25)
                     env = {"NETTEST_AUTORUN": "1", "NETTEST_RUN": label,
                            "NETTEST_TRAFFIC": traffic, "NETTEST_FAILFAST": "1" if case == "T16" else "0"}
+                    env.update(experiment_environment(args.http3, args.endpoint))
                     app = Capture(["xcrun", "devicectl", "device", "process", "launch", "--device", args.device,
                                    "--terminate-existing", "--console", "--environment-variables", json.dumps(env),
                                    "com.pmodular.webchannel.demo"], folder / "device-console.log")
                     app.wait_for(lambda r: r.get("kind") == "autorun_start", 25)
-                    app.wait_for(lambda r: r.get("kind") == "heartbeat" and r.get("applicationState") == 0, 10)
+                    try:
+                        app.wait_for(lambda r: r.get("kind") == "heartbeat" and r.get("applicationState") == 0, 10)
+                    except RuntimeError:
+                        if not args.notice_xctestrun:
+                            raise
+                        command(["xcodebuild", "-xctestrun", str(args.notice_xctestrun.resolve()),
+                                 "-destination", "platform=iOS,id=" + args.device,
+                                 "-parallel-testing-enabled", "NO",
+                                 "-only-testing:NetworkFailureUITests/SuspensionProbeTests/testDismissKnownCellularNotice",
+                                 "test-without-building"], folder / "notice-dismiss.log", timeout=90)
+                        app.wait_for(lambda r: r.get("kind") == "heartbeat" and r.get("applicationState") == 0, 15)
                     if not handshake:
                         app.wait_for(lambda r: r.get("kind") == "open", 50)
+                        if args.http3:
+                            require_h3_baseline(app)
                         if traffic == "streaming":
                             app.wait_for(lambda r: r.get("kind") == "app_log" and "didReceiveMessage" in r.get("text", ""), 20)
                         time.sleep(2)
@@ -240,13 +296,21 @@ def main():
                               "observation": "channel-error" if errors else "receive-resumed" if receive_after else "no-terminal-result",
                               "folder": label}
                     (folder / "device-events.jsonl").write_text("".join(json.dumps(r) + "\n" for r in records))
+                    final_records = stop_app(folder)
+                    if args.http3:
+                        result["protocolEvidence"] = protocol_evidence(final_records)
+                        result["requestedHTTP3"] = True
+                        result["endpoint"] = args.endpoint or HTTP3_ENDPOINT
+                        (folder / "protocol-evidence.json").write_text(json.dumps(result, indent=2) + "\n")
+                        result["protocolCoverage"] = result["protocolEvidence"]["coverage"]
+                        if not result["protocolEvidence"]["h3Transactions"]:
+                            raise RuntimeError("No final h3 evidence despite required baseline; excluded")
+                    active_helper = None
                     results = [r for r in results if (r["case"], r["run"]) != (case, number)]
                     results.append(result)
                     completed_keys.add((case, number))
                     write_report()
                     print(f"{utc()} DONE {label} {result['observation']} errors={errors}", flush=True)
-                    stop_app(folder)
-                    active_helper = None
                 except Exception as error:
                     results.append({"case": case, "run": number, "observation": "infrastructure-error: " + str(error)})
                     write_report()

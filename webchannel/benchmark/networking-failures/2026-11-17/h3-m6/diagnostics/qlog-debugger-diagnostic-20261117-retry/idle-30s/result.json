@@ -1,0 +1,44 @@
+{
+  "run": "handoff-f2a934602b67",
+  "scenario": "M1-idle",
+  "requestedHoldSeconds": 30.0,
+  "outcome": "protocol-not-confirmed",
+  "milestones": {},
+  "timingNotes": [
+    "Device intervals use deviceUptimeSeconds; no host/device UTC subtraction.",
+    "Path callbacks describe observed routing, not physical switch timestamps.",
+    "Cue times are host times; human response is measured, not assumed instantaneous.",
+    "No SDK test-case pass/fail or real OS suspension is inferred."
+  ],
+  "traffic": "idle",
+  "requestedPostRestoreObservationSeconds": 0,
+  "debuggerRequested": true,
+  "debuggerPID": 46363,
+  "error": "Timed out: autorun_start",
+  "requestedHTTP3": true,
+  "endpoint": "https://webchannel.googleapis.com/staging/channel/generator",
+  "protocolEvidence": {
+    "coverage": "unconfirmed",
+    "h3Transactions": 0,
+    "unknownTransactions": 0,
+    "otherProtocols": [],
+    "h3ObservedWithoutKnownFallback": false,
+    "note": "Unknown transactions are not h3 evidence; baseline h3 is checked before faults."
+  },
+  "protocolCoverage": "unconfirmed",
+  "finishedUTC": "2026-11-17T06:15:05.930Z",
+  "errorCodes": [],
+  "openCount": 0,
+  "lifecycleEvents": [
+    {
+      "deviceUnixSeconds": 1794896105.835853,
+      "deviceUptimeSeconds": 343502.39683875,
+      "kind": "lifecycle",
+      "notification": "UIApplicationDidBecomeActiveNotification",
+      "run": "handoff-f2a934602b67",
+      "hostReceivedMonotonic": 54864.455762416,
+      "hostReceivedUTC": "2026-11-17T06:15:05.836Z"
+    }
+  ],
+  "taskMetrics": []
+}

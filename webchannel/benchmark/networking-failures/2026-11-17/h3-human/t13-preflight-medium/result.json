@@ -1,0 +1,99 @@
+{
+  "scenario": "T13-selective-loss-preflight",
+  "endpoint": "https://webchannel.googleapis.com/staging/channel/generator",
+  "diagnosticOnly": true,
+  "SDKChannelOpened": false,
+  "operatorCondition": {
+    "profile": "Mobile 100% Loss",
+    "interface": "cellular",
+    "uplinkLossPercent": 100,
+    "downlinkLossPercent": 100,
+    "enabledReportedByOperator": true
+  },
+  "probes": [
+    {
+      "batch": "BE59B673-A1BA-4556-8A6A-AD788C04AF30",
+      "deviceUnixSeconds": 1794927341.603194,
+      "deviceUptimeSeconds": 374738.66251033335,
+      "elapsedSeconds": 0.17253816669108346,
+      "kind": "interface_probe_result",
+      "outcome": "http-response",
+      "path": {
+        "cellular": false,
+        "expensive": false,
+        "interfaces": [
+          {
+            "name": "en0",
+            "type": "wifi"
+          }
+        ],
+        "pathAvailable": true,
+        "status": "satisfied",
+        "wifi": true,
+        "wired": false
+      },
+      "requiredInterface": "wifi",
+      "run": "h3-t13-selective-loss-preflight",
+      "statusCode": 400,
+      "statusLine": "HTTP/1.1 400 Bad Request\r\nContent-Type: text/plain; charset=utf-8\r\nX-Content-Type-Options: nosniff\r\nDate: Tue, 17 Nov 2026 14:55:41 GMT\r\nServer: Example HTTPServer2 (non-blocking)\r\nX-XSS-Protection: 0\r\nX-Frame-Options: SAMEORIGIN\r\nTransfer-Encoding: chunked\r\nAlt-Svc: h3=\":443\"; ma=2592000,h3-29=\":443\"; ma=2592000\r\nAccept-Ranges: none\r\nVary: Accept-Encoding\r\nConnection: close",
+      "hostReceivedMonotonic": 86101.098108791,
+      "hostReceivedUTC": "2026-11-17T14:55:41.611Z"
+    },
+    {
+      "batch": "BE59B673-A1BA-4556-8A6A-AD788C04AF30",
+      "deviceUnixSeconds": 1794927349.7909179,
+      "deviceUptimeSeconds": 374746.85037095833,
+      "elapsedSeconds": 8.359592666674871,
+      "kind": "interface_probe_result",
+      "outcome": "timeout",
+      "path": {
+        "cellular": true,
+        "expensive": true,
+        "interfaces": [
+          {
+            "name": "pdp_ip0",
+            "type": "cellular"
+          }
+        ],
+        "pathAvailable": true,
+        "status": "satisfied",
+        "wifi": false,
+        "wired": false
+      },
+      "requiredInterface": "cellular",
+      "run": "h3-t13-selective-loss-preflight",
+      "hostReceivedMonotonic": 86109.286382791,
+      "hostReceivedUTC": "2026-11-17T14:55:49.799Z"
+    }
+  ],
+  "error": null,
+  "timingNote": "Interface-bound HTTP/1.1 reachability probes, not WebChannel h3 coverage; HTTP 400 on an unparameterized HEAD proves an HTTP response, not an SDK UnknownSessionID error.",
+  "validation": {
+    "operatorCondition": {
+      "profile": "Mobile 100% Loss",
+      "interface": "cellular",
+      "uplinkLossPercent": 100,
+      "downlinkLossPercent": 100,
+      "enabledReportedByOperator": true
+    },
+    "wifiHTTPStatus": 400,
+    "cellularOutcome": "timeout",
+    "cellularPath": {
+      "cellular": true,
+      "expensive": true,
+      "interfaces": [
+        {
+          "name": "pdp_ip0",
+          "type": "cellular"
+        }
+      ],
+      "pathAvailable": true,
+      "status": "satisfied",
+      "wifi": false,
+      "wired": false
+    },
+    "cellularTimeoutSeconds": 8.359592666674871,
+    "preflightHostUTC": "2026-11-17T14:55:49.799Z"
+  },
+  "outcome": "selective-cellular-loss-confirmed"
+}

@@ -20,7 +20,11 @@ final class InterfaceConnectivityProbe: @unchecked Sendable {
 
   private let queue = DispatchQueue(label: "nettest.interface-connectivity")
   private var attempts: [String: Attempt] = [:]
-  private let host = "webchannel.sandbox.google.com"
+  private var endpoint: URL {
+    URL(string: ProcessInfo.processInfo.environment["NETTEST_ENDPOINT"]
+      ?? "https://webchannel.sandbox.google.com/staging/channel/generator")!
+  }
+  private var host: String { endpoint.host! }
 
   private func pathFields(_ path: NWPath?) -> [String: Any] {
     guard let path else { return ["pathAvailable": false] }
@@ -41,7 +45,8 @@ final class InterfaceConnectivityProbe: @unchecked Sendable {
         return
       }
       let batch = UUID().uuidString
-      NetworkFailureLog.emit("interface_batch_start", ["batch": batch, "timeoutSeconds": 8])
+      NetworkFailureLog.emit("interface_batch_start", ["batch": batch, "timeoutSeconds": 8,
+                                                       "endpoint": self.endpoint.absoluteString])
       self.start(batch: batch, label: "wifi", type: .wifi)
       self.start(batch: batch, label: "cellular", type: .cellular)
     }
@@ -54,7 +59,8 @@ final class InterfaceConnectivityProbe: @unchecked Sendable {
     let key = batch + ":" + label
     let attempt = Attempt(connection: connection, batch: batch, label: label)
     attempts[key] = attempt
-    NetworkFailureLog.emit("interface_probe_start", ["batch": batch, "requiredInterface": label])
+    NetworkFailureLog.emit("interface_probe_start", ["batch": batch, "requiredInterface": label,
+                                                     "host": host])
     connection.pathUpdateHandler = { [weak self] path in
       guard let self, self.attempts[key] != nil else { return }
       NetworkFailureLog.emit(
@@ -69,7 +75,7 @@ final class InterfaceConnectivityProbe: @unchecked Sendable {
       switch state {
       case .ready:
         let request =
-          "HEAD /staging/channel/generator HTTP/1.1\r\nHost: \(self.host)\r\nConnection: close\r\nCache-Control: no-cache\r\n\r\n"
+          "HEAD \(self.endpoint.path) HTTP/1.1\r\nHost: \(self.host)\r\nConnection: close\r\nCache-Control: no-cache\r\n\r\n"
         connection.send(
           content: Data(request.utf8),
           completion: .contentProcessed { [weak self] error in

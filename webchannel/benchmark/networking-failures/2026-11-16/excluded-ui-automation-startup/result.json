@@ -1,0 +1,139 @@
+{
+  "run": "T15-165a345c26ea",
+  "scenario": "T15-idle-suspension",
+  "requestedSuspendSeconds": 45.0,
+  "outcome": "interrupted",
+  "milestones": {
+    "initialOpen": {
+      "deviceUnixSeconds": 1794834806.641317,
+      "deviceUptimeSeconds": 282202.16983412503,
+      "kind": "open",
+      "run": "T15-165a345c26ea",
+      "hostReceivedMonotonic": 31035.822572833,
+      "hostReceivedUTC": "2026-11-16T13:13:26.621Z"
+    }
+  },
+  "notes": [
+    "UI observer reports OS state asynchronously; observed state brackets are not exact kernel timestamps.",
+    "Application and UI observer both record device system uptime; host/device UTC is not subtracted.",
+    "No force-suspend, debugger pause, network condition, or UI-test app launch is used."
+  ],
+  "initialPID": 39780,
+  "uiTestExitCode": 65,
+  "error": "UI observer failed; no verified T15 result",
+  "errorCodes": [],
+  "openCount": 1,
+  "autorunStartCount": 1,
+  "taskMetrics": [
+    {
+      "deviceUnixSeconds": 1794834806.636172,
+      "deviceUptimeSeconds": 282202.1646884584,
+      "kind": "task_metrics",
+      "run": "T15-165a345c26ea",
+      "transactions": [
+        {
+          "fetchStart": 1794834806.335672,
+          "isCellular": false,
+          "localAddress": "192.168.10.15",
+          "localPort": 64440,
+          "method": "POST",
+          "protocol": "h2",
+          "remoteAddress": "142.251.169.81",
+          "remotePort": 443,
+          "requestEnd": 1794834806.492754,
+          "requestStart": 1794834806.4926429,
+          "responseEnd": 1794834806.634079,
+          "responseStart": 1794834806.633765,
+          "reusedConnection": false,
+          "rid": "59257",
+          "tcpConnectMs": 98.9999771118164,
+          "tlsMs": 51.99992656707764,
+          "url": "https://webchannel.sandbox.google.com/staging/channel/generator?VER=8&RID=59257&CVER=25&X-HTTP-Session-Id=gsessionid&t=1"
+        }
+      ],
+      "hostReceivedMonotonic": 31035.818294458,
+      "hostReceivedUTC": "2026-11-16T13:13:26.617Z"
+    },
+    {
+      "deviceUnixSeconds": 1794834866.90096,
+      "deviceUptimeSeconds": 282262.43038525,
+      "kind": "task_metrics",
+      "run": "T15-165a345c26ea",
+      "transactions": [
+        {
+          "fetchStart": 1794834806.63713,
+          "isCellular": false,
+          "localAddress": "192.168.10.15",
+          "localPort": 64440,
+          "method": "GET",
+          "protocol": "h2",
+          "remoteAddress": "142.251.169.81",
+          "remotePort": 443,
+          "requestEnd": 1794834806.637632,
+          "requestStart": 1794834806.637541,
+          "responseStart": 1794834806.773778,
+          "reusedConnection": true,
+          "rid": "rpc",
+          "url": "https://webchannel.sandbox.google.com/staging/channel/generator?gsessionid=2y3eqLpU_8iRFIP0iw-81AXgfmi_6fXrvymMVpsUVRc&VER=8&RID=rpc&SID=ZYsV49TGNEJC4VSQw8nFGA&CI=0&AID=0&TYPE=xmlhttp&t=1"
+        }
+      ],
+      "hostReceivedMonotonic": 31096.084257916,
+      "hostReceivedUTC": "2026-11-16T13:14:26.881Z"
+    },
+    {
+      "deviceUnixSeconds": 1794834871.736748,
+      "deviceUptimeSeconds": 282267.2662439167,
+      "kind": "task_metrics",
+      "run": "T15-165a345c26ea",
+      "transactions": [
+        {
+          "fetchStart": 1794834866.903376,
+          "isCellular": false,
+          "localAddress": "192.168.10.15",
+          "localPort": 64440,
+          "method": "GET",
+          "protocol": "h2",
+          "remoteAddress": "142.251.169.81",
+          "remotePort": 443,
+          "requestEnd": 1794834866.9044662,
+          "requestStart": 1794834866.904076,
+          "responseStart": 1794834867.07146,
+          "reusedConnection": true,
+          "rid": "rpc",
+          "url": "https://webchannel.sandbox.google.com/staging/channel/generator?gsessionid=2y3eqLpU_8iRFIP0iw-81AXgfmi_6fXrvymMVpsUVRc&VER=8&RID=rpc&SID=ZYsV49TGNEJC4VSQw8nFGA&CI=0&AID=2&TYPE=xmlhttp&t=1"
+        }
+      ],
+      "hostReceivedMonotonic": 31100.920392208,
+      "hostReceivedUTC": "2026-11-16T13:14:31.717Z"
+    },
+    {
+      "deviceUnixSeconds": 1794834872.018848,
+      "deviceUptimeSeconds": 282267.54835062503,
+      "kind": "task_metrics",
+      "run": "T15-165a345c26ea",
+      "transactions": [
+        {
+          "fetchStart": 1794834871.736501,
+          "isCellular": false,
+          "localAddress": "192.168.10.15",
+          "localPort": 64440,
+          "method": "GET",
+          "protocol": "h2",
+          "remoteAddress": "142.251.169.81",
+          "remotePort": 443,
+          "requestEnd": 1794834871.737694,
+          "requestStart": 1794834871.737465,
+          "responseEnd": 1794834872.0171819,
+          "responseStart": 1794834872.016386,
+          "reusedConnection": true,
+          "rid": "59258",
+          "url": "https://webchannel.sandbox.google.com/staging/channel/generator?VER=8&gsessionid=2y3eqLpU_8iRFIP0iw-81AXgfmi_6fXrvymMVpsUVRc&SID=ZYsV49TGNEJC4VSQw8nFGA&RID=59258&TYPE=terminate"
+        }
+      ],
+      "hostReceivedMonotonic": 31101.202959833,
+      "hostReceivedUTC": "2026-11-16T13:14:32.000Z"
+    }
+  ],
+  "uiEvents": [],
+  "finishedUTC": "2026-11-16T13:14:33.023Z"
+}

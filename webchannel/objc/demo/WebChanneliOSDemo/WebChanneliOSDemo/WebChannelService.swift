@@ -96,11 +96,39 @@ final class WebChannelService: NSObject, @unchecked Sendable {
     guard NetworkFailureLog.enabled, !networkFailureStarted else { return }
     networkFailureStarted = true
     networkFailureControl = NetworkFailureControl(service: self)
+    if let path = ProcessInfo.processInfo.environment["QUIC_LOG_DIRECTORY"] {
+      var isDirectory: ObjCBool = false
+      let exists = FileManager.default.fileExists(atPath: path, isDirectory: &isDirectory)
+      var fields: [String: Any] = ["environmentPath": path,
+        "directoryExists": exists && isDirectory.boolValue,
+        "writableProbeSucceeded": false]
+      do {
+        let probe = URL(fileURLWithPath: path).appendingPathComponent(".nettest-write-probe")
+        try Data("nettest".utf8).write(to: probe, options: .atomic)
+        try FileManager.default.removeItem(at: probe)
+        fields["writableProbeSucceeded"] = true
+      } catch { fields["error"] = String(describing: error) }
+      NetworkFailureLog.emit("qlog_runtime_configuration", fields)
+    }
+    if ProcessInfo.processInfo.environment["NETTEST_QLOG_PREPARE"] == "1" {
+      do {
+        let directory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+          .appendingPathComponent("NetworkFailureQlog", isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        NetworkFailureLog.emit("qlog_directory", ["path": directory.path])
+      } catch {
+        NetworkFailureLog.emit("qlog_prepare_error", ["error": String(describing: error)])
+      }
+      return
+    }
     if ProcessInfo.processInfo.environment["NETTEST_INTERFACE_ONLY"] == "1" {
       NetworkFailureLog.emit("interface_only_start")
       return
     }
-    connect(to: "https://webchannel.sandbox.google.com/staging/channel/generator")
+    let endpoint = ProcessInfo.processInfo.environment["NETTEST_ENDPOINT"]
+      ?? "https://webchannel.sandbox.google.com/staging/channel/generator"
+    NetworkFailureLog.emit("experiment_endpoint", ["url": endpoint])
+    connect(to: endpoint)
   }
 
   private var client: WCWebChannelClient?

@@ -1,0 +1,48 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -xctestrun /private/tmp/net-http-h3-build-20261116/Build/Products/T15-T15-165a345c26ea.xctestrun -destination platform=iOS,id=TEST_DEVICE_UDID -destination-timeout 20 -parallel-testing-enabled NO -resultBundlePath /private/tmp/net-http-expiry-20261116-02/T15-45s-r1/observer.xcresult "-only-testing:NetworkFailureUITests/SuspensionProbeTests/testOSReportedSuspensionAndResume" test-without-building
+
+Writing result bundle at path:
+	/private/tmp/net-http-expiry-20261116-02/T15-45s-r1/observer.xcresult
+
+--- xcodebuild: WARNING: Using the first of multiple matching destinations:
+{ platform:iOS, arch:arm64e, id:TEST_DEVICE_UDID, name:TEST_DEVICE_NAME }
+{ platform:iOS, arch:arm64, id:TEST_DEVICE_UDID, name:TEST_DEVICE_NAME }
+2026-11-16 22:13:30.668224+0900 NetworkFailureUITests-Runner[39785:2202471] [Default] Running tests...
+2026-11-16 22:14:30.807442+0900 NetworkFailureUITests-Runner[39785:2202471] [Default] Failed to initialize for UI testing: Error Domain=com.apple.dt.XCTest.XCTFuture Code=1000 "Timed out while enabling automation mode." UserInfo={NSLocalizedDescription=Timed out while enabling automation mode.}
+
+
+*** If you believe this error represents a bug, please attach the result bundle at /tmp/net-http-expiry-20261116-02/T15-45s-r1/observer.xcresult
+
+2026-11-16 22:14:31.402 xcodebuild[7451:329046]  IDETestOperationsObserverDebug: Failure collecting diagnostics from devices: Process exited with error 1:
+ ERROR: The operation couldn?t be completed. (CoreDeviceCLISupport.DiagnoseError error 0.)
+This tool generates files that allow Apple to investigate issues with your
+computer and help improve Apple products. The files might contain personal
+information found on your device or associated with your Apple Account(s),
+including but not limited to your name, serial numbers of your device,
+your device name, your device's location over the last one to two days,
+your attached peripheral devices, your user name, your email address and
+email settings, file paths, file names, Siri suggestions, your computer's
+IP addresses, and network connection information.
+
+This information is used by Apple in accordance with its privacy policy
+(www.apple.com/privacy) and is not shared with any other company. By using
+this tool and sending the results to Apple, you consent to Apple using the
+contents of these files to improve Apple products.
+
+An error occurred while running devicectl diagnose. Will archive the diagnostics collected thus far.
+Wrote file to /tmp/net-http-expiry-20261116-02/T15-45s-r1/observer.xcresult/Staging/1_Test/Diagnostics/devicectl_diagnostics.zip
+Partial devicectl diagnose bundle located here: /tmp/net-http-expiry-20261116-02/T15-45s-r1/observer.xcresult/Staging/1_Test/Diagnostics/devicectl_diagnostics.zip
+
+2026-11-16 22:14:31.422 xcodebuild[7451:328130] [MT] IDETestOperationsObserverDebug: 62.950 elapsed -- Testing started completed.
+2026-11-16 22:14:31.422 xcodebuild[7451:328130] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-11-16 22:14:31.422 xcodebuild[7451:328130] [MT] IDETestOperationsObserverDebug: 62.950 sec, +62.950 sec -- end
+
+Test session results, code coverage, and logs:
+	/tmp/net-http-expiry-20261116-02/T15-45s-r1/observer.xcresult
+
+Testing failed:
+	NetworkFailureUITests-Runner (39785) encountered an error (The test runner failed to initialize for UI testing. (Underlying Error: Timed out while enabling automation mode.))
+
+** TEST EXECUTE FAILED **
+
+Testing started

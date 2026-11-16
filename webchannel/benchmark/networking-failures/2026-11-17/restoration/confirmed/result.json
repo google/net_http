@@ -1,0 +1,67 @@
+{
+  "scenario": "post-test-restoration-check",
+  "diagnosticOnly": true,
+  "endpoint": "https://webchannel.googleapis.com/staging/channel/generator",
+  "operatorReportedMobile100PercentLossDisabled": true,
+  "SDKChannelOpened": false,
+  "probes": [
+    {
+      "batch": "333D1C20-3714-4E6D-93E7-04D9DAC72F0A",
+      "deviceUnixSeconds": 1794934958.368495,
+      "deviceUptimeSeconds": 382355.53619170835,
+      "elapsedSeconds": 0.1076688333414495,
+      "kind": "interface_probe_result",
+      "outcome": "http-response",
+      "path": {
+        "cellular": false,
+        "expensive": false,
+        "interfaces": [
+          {
+            "name": "en0",
+            "type": "wifi"
+          }
+        ],
+        "pathAvailable": true,
+        "status": "satisfied",
+        "wifi": true,
+        "wired": false
+      },
+      "requiredInterface": "wifi",
+      "run": "h3-post-test-restoration-check-retry",
+      "statusCode": 400,
+      "statusLine": "HTTP/1.1 400 Bad Request\r\nContent-Type: text/plain; charset=utf-8\r\nX-Content-Type-Options: nosniff\r\nDate: Tue, 17 Nov 2026 17:02:38 GMT\r\nServer: Example HTTPServer2 (non-blocking)\r\nX-XSS-Protection: 0\r\nX-Frame-Options: SAMEORIGIN\r\nTransfer-Encoding: chunked\r\nAlt-Svc: h3=\":443\"; ma=2592000,h3-29=\":443\"; ma=2592000\r\nAccept-Ranges: none\r\nVary: Accept-Encoding\r\nConnection: close",
+      "hostReceivedMonotonic": 93718.064167666,
+      "hostReceivedUTC": "2026-11-17T17:02:38.366Z"
+    },
+    {
+      "batch": "333D1C20-3714-4E6D-93E7-04D9DAC72F0A",
+      "deviceUnixSeconds": 1794934958.793536,
+      "deviceUptimeSeconds": 382355.9612419167,
+      "elapsedSeconds": 0.5313527916441672,
+      "kind": "interface_probe_result",
+      "outcome": "http-response",
+      "path": {
+        "cellular": true,
+        "expensive": true,
+        "interfaces": [
+          {
+            "name": "pdp_ip0",
+            "type": "cellular"
+          }
+        ],
+        "pathAvailable": true,
+        "status": "satisfied",
+        "wifi": false,
+        "wired": false
+      },
+      "requiredInterface": "cellular",
+      "run": "h3-post-test-restoration-check-retry",
+      "statusCode": 400,
+      "statusLine": "HTTP/1.1 400 Bad Request\r\nContent-Type: text/plain; charset=utf-8\r\nX-Content-Type-Options: nosniff\r\nDate: Tue, 17 Nov 2026 17:02:38 GMT\r\nServer: Example HTTPServer2 (non-blocking)\r\nX-XSS-Protection: 0\r\nX-Frame-Options: SAMEORIGIN\r\nTransfer-Encoding: chunked\r\nAlt-Svc: h3=\":443\"; ma=2592000,h3-29=\":443\"; ma=2592000\r\nAccept-Ranges: none\r\nVary: Accept-Encoding\r\nConnection: close",
+      "hostReceivedMonotonic": 93718.489631833,
+      "hostReceivedUTC": "2026-11-17T17:02:38.791Z"
+    }
+  ],
+  "error": null,
+  "outcome": "wifi-and-cellular-responsive"
+}

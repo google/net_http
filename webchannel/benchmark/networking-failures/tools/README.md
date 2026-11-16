@@ -400,3 +400,69 @@ It keeps observing after SDK errors and never reconnects the app. A matching
 post-restoration echo or terminal error is recorded, not treated as an automatic
 SDK pass. The operator must disable the condition profile when finished. See
 [the nine-trial report](../2026-11-14/t13-summary.md) for provenance and limits.
+
+## Opt-in HTTP/3 discovery and diagnostics
+
+Pass `NETTEST_HTTP3=1` together with `NETTEST_AUTORUN=1` in the device process
+launch environment to enable the demo's existing-fetcher decorator. It sets
+`assumesHTTP3Capable` on each WebChannel request and logs transport error
+domain/code for this opted-in mode. It does not modify the SDK or force h3.
+Inspect actual `task_metrics.transactions[].protocol`; h2 fallback is not h3
+coverage. The fault, handoff and suspension controllers accept `--http3` to
+enable this flag and select `https://webchannel.googleapis.com/staging/channel/generator`
+(PR #133); `--endpoint` overrides that test endpoint. Each controller requires
+a measured h3 handshake POST before the fault or suspension, and records any
+later h2 fallback and unknown transactions separately. A completed mixed
+sequence is retained as an observation, not counted as pure h3 coverage.
+
+For independent control-host diagnostics, launch with `NETTEST_INTERFACE_ONLY=1`
+and `NETTEST_AUTORUN=1`, then post
+`com.pmodular.webchannel.nettest.http3diagnostic`. The opt-in demo sends three
+HEAD requests each to the staging host and the www.google.com control host,
+with h3-capable requests, and emits diagnostic responses/transaction metrics.
+It opens no SDK channel; this is setup diagnosis, not a substitute for h3
+WebChannel cases. `.close` cancels diagnostic sessions.
+
+See [the current h3 setup report](../2026-11-16/h3-setup-summary.md) and retained
+preflight script copies for the tested launch/control method and limitations.
+
+For an idle observation, `run-handoff.py --scenario idle --http3 --hold 180`
+needs no manual switching. `--qlog-directory` passes `QUIC_LOG_DIRECTORY` to
+the app process. Create that absolute app-container directory first using
+`NETTEST_QLOG_PREPARE=1`; a successful idle trial does not prove qlog generation.
+On this iPhone the first idle observation produced no qlog files, even though
+all six WebChannel transactions were h3. Mac qlog generation alone does not
+validate the iPhone method.
+
+`decode-quic-initial.swift` uses Apple's CryptoKit/CommonCrypto to authenticate
+and decrypt client Initial packets with the public QUIC Initial secrets. Build:
+
+```sh
+swiftc -module-cache-path /private/tmp/net-http-swift-module-cache \
+  webchannel/benchmark/networking-failures/tools/decode-quic-initial.swift \
+  -o /private/tmp/net-http-decode-quic-initial
+python3 -B webchannel/benchmark/networking-failures/tools/extract-client-initial.py \
+  /path/to/local-capture.pcap --local-port OBSERVED_CLIENT_PORT \
+  --decoder /private/tmp/net-http-decode-quic-initial > /private/tmp/client-initial.jsonl
+python3 -B webchannel/benchmark/networking-failures/tools/analyze-client-initial.py \
+  /private/tmp/client-initial.jsonl
+```
+
+Select the UDP port from that trial's h3 task metrics and verify the packet
+owner/PID in RVI's PKTAP metadata before attributing it to the app. The extractor
+currently supports unfragmented IPv4 only and preserves the raw capture. The
+analyzer rejects unauthenticated data, missing/conflicting fragments and mixed
+DCIDs. The Swift decoder was checked against RFC 9001 Appendix A.2 (authenticated
+packet number 2 and expected CRYPTO bytes). It handles small client Initial
+packet numbers; it does not reconstruct wrapped packet numbers or Retry secrets.
+Only client transport parameters are exposed: server parameters and 1-RTT PING
+frames remain encrypted and cannot be inferred from packet sizes or timing.
+
+If a writable device-side qlog directory still remains empty, idle diagnostics
+also accept `--debugger`. This launches with `devicectl --start-stopped`, selects
+the device with Apple's LLDB, attaches to the uniquely identified demo PID and
+continues asynchronously. The runner detaches during cleanup and retains the
+debugger transcript. This is a separate instrumentation experiment; debugger
+launch is rejected for handoff/fault scenarios and is never used by the real
+OS-suspension controller. Retain the exact source snapshot and whether the
+debugger actually attached before interpreting any result.

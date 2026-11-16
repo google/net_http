@@ -1,4 +1,5 @@
 import Foundation
+import GTMSessionFetcher
 import Network
 import UIKit
 import WebChannel
@@ -84,7 +85,8 @@ final class TestAppLogger: NSObject, WCLogger, @unchecked Sendable {
 
 /// Custom WCSupport implementation providing the custom TestAppLogger and forwarding to WCDefaultSupport.
 final class TestAppSupport: NSObject, WCSupport, @unchecked Sendable {
-  private let defaultSupport = WCDefaultSupport()!
+  private let defaultSupport: WCDefaultSupport
+  private let transportDecorator: NetworkFailureHTTP3Decorator?
   private let metricsLock = NSLock()
   private var collectedTaskMetrics: [[String: Any]] = []
   let customLogger: TestAppLogger
@@ -97,6 +99,17 @@ final class TestAppSupport: NSObject, WCSupport, @unchecked Sendable {
 
   init(service: WebChannelService?) {
     self.customLogger = TestAppLogger(service: service)
+    if NetworkFailureLog.enabled && ProcessInfo.processInfo.environment["NETTEST_HTTP3"] == "1" {
+      let fetcherService = GTMSessionFetcherService()
+      fetcherService.cookieStorage = GTMSessionCookieStorage()
+      let decorator = NetworkFailureHTTP3Decorator()
+      fetcherService.addDecorator(decorator)
+      self.transportDecorator = decorator
+      self.defaultSupport = WCDefaultSupport(fetcherService: fetcherService)
+    } else {
+      self.transportDecorator = nil
+      self.defaultSupport = WCDefaultSupport()!
+    }
     super.init()
     defaultSupport.taskMetricsHandler = { [weak self] metrics in
       if let metrics { self?.recordTaskMetrics(metrics) }
@@ -188,6 +201,7 @@ final class TestAppSupport: NSObject, WCSupport, @unchecked Sendable {
   }
 
   func notifyHandshakeResponseHeaders(_ headers: [String: String]) {
+    NetworkFailureLog.emit("handshake_headers", ["headers": headers])
     defaultSupport.notifyHandshakeResponseHeaders(headers)
   }
 
@@ -209,6 +223,104 @@ final class TestAppSupport: NSObject, WCSupport, @unchecked Sendable {
 }
 
 // Opt-in networking experiment support. Normal launches do not enable this.
+
+/// Changes only protocol discovery for opted-in experiments; h3 adoption must be
+/// established separately from URLSession transaction metrics.
+private final class NetworkFailureHTTP3Decorator: NSObject, GTMFetcherDecoratorProtocol {
+  func fetcherWillStart(
+    _ fetcher: GTMSessionFetcher,
+    completionHandler handler: @escaping GTMFetcherDecoratorFetcherWillStartCompletionHandler
+  ) {
+    guard var request = fetcher.request else {
+      handler(nil, nil)
+      return
+    }
+    request.assumesHTTP3Capable = true
+    NetworkFailureLog.emit("http3_request", [
+      "url": request.url?.absoluteString ?? "", "method": request.httpMethod ?? "",
+      "assumesHTTP3Capable": true,
+    ])
+    handler(request, nil)
+  }
+
+  func fetcherDidFinish(
+    _ fetcher: GTMSessionFetcher, with data: Data?, error: Error?,
+    completionHandler handler: @escaping () -> Void
+  ) {
+    if let error = error as NSError? {
+      NetworkFailureLog.emit("transport_error", [
+        "url": fetcher.request?.url?.absoluteString ?? "",
+        "domain": error.domain, "code": error.code,
+      ])
+    }
+    handler()
+  }
+}
+
+/// Independent diagnostics only. A successful control-host request is not
+/// WebChannel HTTP/3 coverage and never substitutes for staging-host metrics.
+private final class NetworkFailureHTTP3Diagnostic: NSObject, URLSessionTaskDelegate, @unchecked Sendable {
+  private var session: URLSession?
+  private var pending = 0
+
+  func run() {
+    guard session == nil else { return }
+    let configuration = URLSessionConfiguration.ephemeral
+    configuration.timeoutIntervalForRequest = 12
+    configuration.timeoutIntervalForResource = 15
+    let session = URLSession(configuration: configuration, delegate: self, delegateQueue: nil)
+    self.session = session
+    let endpoint = ProcessInfo.processInfo.environment["NETTEST_ENDPOINT"]
+      ?? "https://webchannel.sandbox.google.com/staging/channel/generator"
+    let urls = [endpoint,
+                "https://www.google.com/generate_204"]
+    pending = urls.count * 3
+    NetworkFailureLog.emit("http3_diagnostic_start", ["requests": pending])
+    for text in urls {
+      for _ in 0..<3 {
+        var request = URLRequest(url: URL(string: text)!)
+        request.httpMethod = "HEAD"
+        request.assumesHTTP3Capable = true
+        session.dataTask(with: request) { [weak self] _, response, error in
+          var fields: [String: Any] = ["url": text]
+          if let response = response as? HTTPURLResponse {
+            fields["status"] = response.statusCode
+            fields["altSvc"] = response.value(forHTTPHeaderField: "Alt-Svc") ?? ""
+          }
+          if let error = error as NSError? {
+            fields["errorDomain"] = error.domain
+            fields["errorCode"] = error.code
+          }
+          NetworkFailureLog.emit("http3_diagnostic_response", fields)
+          DispatchQueue.main.async {
+            guard let self else { return }
+            self.pending -= 1
+            if self.pending == 0 {
+              self.session?.finishTasksAndInvalidate()
+              self.session = nil
+              NetworkFailureLog.emit("http3_diagnostic_complete")
+            }
+          }
+        }.resume()
+      }
+    }
+  }
+
+  func urlSession(_ session: URLSession, task: URLSessionTask,
+                  didFinishCollecting metrics: URLSessionTaskMetrics) {
+    NetworkFailureLog.emit("http3_diagnostic_metrics", [
+      "transactions": metrics.transactionMetrics.map {
+        ["url": $0.request.url?.absoluteString ?? "",
+         "protocol": $0.networkProtocolName ?? "unknown",
+         "isCellular": $0.isCellular, "reusedConnection": $0.isReusedConnection]
+      },
+    ])
+  }
+
+  func cancel() {
+    session?.invalidateAndCancel()
+  }
+}
 
 final class NetworkFailureLog: @unchecked Sendable {
   static let enabled = ProcessInfo.processInfo.environment["NETTEST_AUTORUN"] == "1"
@@ -237,6 +349,7 @@ final class NetworkFailureControl: @unchecked Sendable {
   private var timer: Timer?
   private var healthTimer: Timer?
   private var interfaceProbe: InterfaceConnectivityProbe?
+  private let http3Diagnostic = NetworkFailureHTTP3Diagnostic()
   init(service: WebChannelService) {
     self.service = service
     if ProcessInfo.processInfo.environment["NETTEST_INTERFACE_ONLY"] == "1" {
@@ -271,6 +384,7 @@ final class NetworkFailureControl: @unchecked Sendable {
       "com.pmodular.webchannel.nettest.send", "com.pmodular.webchannel.nettest.close",
       "com.pmodular.webchannel.nettest.probe",
       "com.pmodular.webchannel.nettest.interfaces",
+      "com.pmodular.webchannel.nettest.http3diagnostic",
     ] {
       CFNotificationCenterAddObserver(
         CFNotificationCenterGetDarwinNotifyCenter(),
@@ -296,11 +410,18 @@ final class NetworkFailureControl: @unchecked Sendable {
     if name.hasSuffix(".close") {
       timer?.invalidate()
       interfaceProbe?.cancel()
+      http3Diagnostic.cancel()
       service?.disconnect()
       return
     }
     if name.hasSuffix(".interfaces") {
       interfaceProbe?.run()
+      return
+    }
+    if name.hasSuffix(".http3diagnostic") {
+      if ProcessInfo.processInfo.environment["NETTEST_INTERFACE_ONLY"] == "1" {
+        http3Diagnostic.run()
+      }
       return
     }
     if name.hasSuffix(".probe") {
@@ -323,6 +444,7 @@ final class NetworkFailureControl: @unchecked Sendable {
   }
   deinit {
     interfaceProbe?.cancel()
+    http3Diagnostic.cancel()
     monitor.cancel()
     timer?.invalidate()
     healthTimer?.invalidate()
