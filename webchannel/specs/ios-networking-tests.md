@@ -138,9 +138,9 @@ In the tables below, times are measured from the start of the fault.
 | M1 | Server keep-alive from the handshake (first array, index 5), the observed noop spacing on the back channel, and the GET rotation interval | 30000 ms, 30 s, 45–60 s |
 | M2 | `NWPathMonitor` updates during Wi-Fi → cellular: does a transient "unsatisfied" path appear before cellular is "satisfied"? | To be measured |
 | M3 | Interface and connection reuse per request after cellular → Wi-Fi (`isCellular`, `isReusedConnection`, local address). When do requests move to Wi-Fi? | To be measured |
-| M4 | Protocol per request (`networkProtocolName`): h2, or h3 if URLSession learns Alt-Svc. If h3, any connection migration on interface changes. | h2 expected |
+| M4 | Protocol per request (`networkProtocolName`): h2, or h3 if URLSession learns Alt-Svc. If h3, any connection migration on interface changes. | h2 by default; h3 in the §9 variant |
 | M5 | Time to abort in a blackhole with no new sends, vs. one send every 5 s | Periodic sends reset the forward retry count, so the back channel bounds the abort (about 165–225 s) |
-| M6 | Only if h3: the QUIC `max_idle_timeout` iOS advertises, and the PING cadence on an idle connection (packet capture) | To be measured |
+| M6 | Over h3 (§9): the QUIC `max_idle_timeout` iOS advertises, and the PING cadence on an idle connection (packet capture) | To be measured |
 
 ## 8. Reporting
 
@@ -152,3 +152,24 @@ In the tables below, times are measured from the start of the fault.
 - **Deviations:** explain any deviation from the expected behavior with the data that
   shows it, such as request timelines, error codes and metrics.
 - **Environment:** record the iOS version, device, network, and the `main` commit used.
+
+## 9. HTTP/3 variant
+
+The cases above must also be run over HTTP/3 (QUIC). Its dead-connection detection,
+retry timing, connection migration on Wi-Fi ↔ cellular, and idle timeout can differ
+from HTTP/2.
+
+- **Enabling h3:**
+  - Use h3 if the endpoint advertises it (`Alt-Svc` or an HTTPS DNS record).
+  - Otherwise set `URLRequest.assumesHTTP3Capable` (iOS 14.5+) on the WebChannel
+    requests through an opt-in demo hook.
+  - A run counts only if the WebChannel requests report `networkProtocolName == "h3"`.
+- **Cases:**
+  - T2–T5, T7, T9–T15, and M6. M6 is required here (not conditional).
+- **What to compare with HTTP/2:**
+  - detection and abort times;
+  - how long a retry on a dead connection takes to fail;
+  - whether a Wi-Fi ↔ cellular change migrates the existing connection, and the
+    resulting recovery gap;
+  - the outcome after suspension.
+- **Reporting:** report HTTP/3 results separately, next to the matching HTTP/2 results.
