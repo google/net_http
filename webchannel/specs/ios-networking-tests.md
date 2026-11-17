@@ -19,6 +19,8 @@ to planned client changes that follow the principles in
   built from `main`.
 - **Endpoint:** the hosted staging generator endpoint, the app's default:
   `https://webchannel.sandbox.google.com/staging/channel/generator`.
+  This host serves HTTP/2 only (see §9). For the HTTP/3 runs, use
+  `https://webchannel.googleapis.com/staging/channel/generator` instead.
 - **Options:** the defaults (all `WCOptions` toggles off), unless a test says
   otherwise. In particular, `failFast` is off.
 - **Repetitions:** at least 3 runs per test. Report each run, not only the average.
@@ -159,6 +161,15 @@ The cases above must also be run over HTTP/3 (QUIC). Its dead-connection detecti
 retry timing, connection migration on Wi-Fi ↔ cellular, and idle timeout can differ
 from HTTP/2.
 
+- **Endpoint:** `https://webchannel.googleapis.com/staging/channel/generator`
+  (or `.../staging/channel/lens`). Enter it in the demo app's endpoint field.
+  - It reaches the same staging server as the default
+    `webchannel.sandbox.google.com` endpoint, and it serves HTTP/3
+    (`Alt-Svc: h3=":443"`).
+  - Don't use `webchannel.sandbox.google.com` for these runs: the server doesn't
+    answer QUIC handshakes for that host name, so every client (Safari, Chrome,
+    native apps) falls back to HTTP/2. This is a server-side limit, not an iOS
+    behavior.
 - **Enabling h3:**
   - Use h3 if the endpoint advertises it (`Alt-Svc` or an HTTPS DNS record).
   - Otherwise set `URLRequest.assumesHTTP3Capable` (iOS 14.5+) on the WebChannel
