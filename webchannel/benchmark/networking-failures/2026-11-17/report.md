@@ -7,6 +7,10 @@ with unknown protocols. They are observations, not a blanket specification pass.
 Fifty-one qualified sequences began with measured h3; 18 later include h2.
 M6's encrypted PING cadence remains unmeasured.
 
+Subsequent [November 18 qlog observations](../2026-11-18/h3-m6-qlog/report.md)
+resolve that M6 frame-visibility blocker and report three 180 s runs. The M6
+limitations below describe this earlier series.
+
 The series spans November 17–18, 2026 in JST. Raw event timestamps use UTC and
 record device uptime separately. The directory names identify the series start.
 

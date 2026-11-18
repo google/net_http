@@ -87,6 +87,8 @@ final class TestAppLogger: NSObject, WCLogger, @unchecked Sendable {
 final class TestAppSupport: NSObject, WCSupport, @unchecked Sendable {
   private let defaultSupport: WCDefaultSupport
   private let transportDecorator: NetworkFailureHTTP3Decorator?
+  private let experimentFetcherService: GTMSessionFetcherService?
+  private var invalidationObserver: NSObjectProtocol?
   private let metricsLock = NSLock()
   private var collectedTaskMetrics: [[String: Any]] = []
   let customLogger: TestAppLogger
@@ -105,14 +107,43 @@ final class TestAppSupport: NSObject, WCSupport, @unchecked Sendable {
       let decorator = NetworkFailureHTTP3Decorator()
       fetcherService.addDecorator(decorator)
       self.transportDecorator = decorator
+      self.experimentFetcherService = fetcherService
       self.defaultSupport = WCDefaultSupport(fetcherService: fetcherService)
     } else {
       self.transportDecorator = nil
+      self.experimentFetcherService = nil
       self.defaultSupport = WCDefaultSupport()!
     }
     super.init()
+    if ProcessInfo.processInfo.environment["NETTEST_QLOG_STARTUP"] == "1",
+      let fetcherService = experimentFetcherService {
+      invalidationObserver = NotificationCenter.default.addObserver(
+        forName: .gtmSessionFetcherServiceSessionBecameInvalid,
+        object: fetcherService, queue: nil
+      ) { _ in
+        // GTMSessionFetcher posts this from URLSession's didBecomeInvalid callback.
+        NetworkFailureLog.emit("qlog_session_invalidated")
+      }
+    }
     defaultSupport.taskMetricsHandler = { [weak self] metrics in
       if let metrics { self?.recordTaskMetrics(metrics) }
+    }
+  }
+
+  /// Called only after the experiment closes the channel. resetSession's existing
+  /// implementation calls finishTasksAndInvalidate on the shared URLSession.
+  func finishQlogSession() {
+    guard ProcessInfo.processInfo.environment["NETTEST_QLOG_STARTUP"] == "1",
+      let fetcherService = experimentFetcherService else { return }
+    defaultSupport.dispatchQueue.async {
+      NetworkFailureLog.emit("qlog_session_finish_requested")
+      fetcherService.resetSession()
+    }
+  }
+
+  deinit {
+    if let invalidationObserver {
+      NotificationCenter.default.removeObserver(invalidationObserver)
     }
   }
 
@@ -223,6 +254,26 @@ final class TestAppSupport: NSObject, WCSupport, @unchecked Sendable {
 }
 
 // Opt-in networking experiment support. Normal launches do not enable this.
+
+enum NetworkFailureQlog {
+  /// Run from App.init, before the view/service creates any network objects.
+  static func configureAtStartupIfRequested() {
+    guard ProcessInfo.processInfo.environment["NETTEST_AUTORUN"] == "1",
+      ProcessInfo.processInfo.environment["NETTEST_QLOG_STARTUP"] == "1" else { return }
+    do {
+      let directory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        .appendingPathComponent("NetworkFailureQlog", isDirectory: true)
+        .appendingPathComponent(UUID().uuidString, isDirectory: true)
+      try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+      let result = setenv("QUIC_LOG_DIRECTORY", directory.path, 1)
+      NetworkFailureLog.emit("qlog_startup_configuration", [
+        "path": directory.path, "setenvResult": result,
+      ])
+    } catch {
+      NetworkFailureLog.emit("qlog_prepare_error", ["error": String(describing: error)])
+    }
+  }
+}
 
 /// Changes only protocol discovery for opted-in experiments; h3 adoption must be
 /// established separately from URLSession transaction metrics.
@@ -385,6 +436,7 @@ final class NetworkFailureControl: @unchecked Sendable {
       "com.pmodular.webchannel.nettest.probe",
       "com.pmodular.webchannel.nettest.interfaces",
       "com.pmodular.webchannel.nettest.http3diagnostic",
+      "com.pmodular.webchannel.nettest.qlogfinish",
     ] {
       CFNotificationCenterAddObserver(
         CFNotificationCenterGetDarwinNotifyCenter(),
@@ -407,6 +459,12 @@ final class NetworkFailureControl: @unchecked Sendable {
   }
   private func handle(_ name: String) {
     NetworkFailureLog.emit("control", ["action": name])
+    if name.hasSuffix(".qlogfinish") {
+      timer?.invalidate()
+      service?.disconnect()
+      service?.testSupport?.finishQlogSession()
+      return
+    }
     if name.hasSuffix(".close") {
       timer?.invalidate()
       interfaceProbe?.cancel()
