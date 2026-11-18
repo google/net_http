@@ -1,0 +1,212 @@
+{
+  "diagnosticOnly": true,
+  "completeM6": false,
+  "runs": [
+    {
+      "capture": "launch",
+      "requestedSeconds": 30,
+      "keepaliveEvents": [
+        {
+          "traceSeconds": 1.375958916,
+          "message": "quic_conn_keepalive_configure [connection] [connection] started keep-alive timer for application (20 seconds)"
+        },
+        {
+          "traceSeconds": 1.44388825,
+          "message": "quic_conn_keepalive_configure [connection] [connection] stopped keep-alive timer"
+        },
+        {
+          "traceSeconds": 1.446850375,
+          "message": "quic_conn_keepalive_configure [connection] [connection] started keep-alive timer for application (20 seconds)"
+        },
+        {
+          "traceSeconds": 21.545528416,
+          "message": "quic_conn_keepalive_handler [connection] [connection] sending keep-alive frame (application), already have 0 outstanding"
+        },
+        {
+          "traceSeconds": 21.594829875,
+          "message": "quic_conn_keepalive_acked [connection] [connection] keep-alive frame acknowledged (application) with 0 outstanding"
+        }
+      ],
+      "sendSeconds": [
+        21.545528416
+      ],
+      "ackSeconds": [
+        21.594829875
+      ],
+      "interSendSeconds": [],
+      "httpVersions": [
+        "HTTP/3",
+        ""
+      ],
+      "qlogFiles": null
+    },
+    {
+      "capture": "extended",
+      "requestedSeconds": 70,
+      "keepaliveEvents": [
+        {
+          "traceSeconds": 1.067970166,
+          "message": "quic_conn_keepalive_configure [connection] [connection] started keep-alive timer for application (20 seconds)"
+        },
+        {
+          "traceSeconds": 1.1533415,
+          "message": "quic_conn_keepalive_configure [connection] [connection] stopped keep-alive timer"
+        },
+        {
+          "traceSeconds": 1.157367875,
+          "message": "quic_conn_keepalive_configure [connection] [connection] started keep-alive timer for application (20 seconds)"
+        },
+        {
+          "traceSeconds": 21.321831791,
+          "message": "quic_conn_keepalive_handler [connection] [connection] sending keep-alive frame (application), already have 0 outstanding"
+        },
+        {
+          "traceSeconds": 21.366149791,
+          "message": "quic_conn_keepalive_acked [connection] [connection] keep-alive frame acknowledged (application) with 0 outstanding"
+        },
+        {
+          "traceSeconds": 51.275514416,
+          "message": "quic_conn_keepalive_handler [connection] [connection] sending keep-alive frame (application), already have 0 outstanding"
+        },
+        {
+          "traceSeconds": 51.311548208,
+          "message": "quic_conn_keepalive_acked [connection] [connection] keep-alive frame acknowledged (application) with 0 outstanding"
+        },
+        {
+          "traceSeconds": 61.287696041,
+          "message": "quic_conn_keepalive_configure [connection] [connection] stopped keep-alive timer"
+        },
+        {
+          "traceSeconds": 61.29476375,
+          "message": "quic_conn_keepalive_configure [connection] [connection] started keep-alive timer for application (20 seconds)"
+        }
+      ],
+      "sendSeconds": [
+        21.321831791,
+        51.275514416
+      ],
+      "ackSeconds": [
+        21.366149791,
+        51.311548208
+      ],
+      "interSendSeconds": [
+        29.953682625
+      ],
+      "httpVersions": [
+        "HTTP/3",
+        "HTTP/3",
+        ""
+      ],
+      "qlogFiles": 0,
+      "appEvidence": {
+        "autorunTraffic": [
+          "idle"
+        ],
+        "openEvents": 1,
+        "completedTransactionProtocols": [
+          "h3",
+          "h3"
+        ],
+        "transportErrors": [
+          {
+            "traceSeconds": 61.288859583,
+            "domain": "NSURLErrorDomain",
+            "code": -1017
+          }
+        ],
+        "noopReceiptSeconds": [
+          1.270266125,
+          31.273514833,
+          61.379184041
+        ],
+        "qlogWritable": [
+          true
+        ]
+      }
+    },
+    {
+      "capture": "repeat",
+      "requestedSeconds": 70,
+      "keepaliveEvents": [
+        {
+          "traceSeconds": 0.972236,
+          "message": "quic_conn_keepalive_configure [connection] [connection] started keep-alive timer for application (20 seconds)"
+        },
+        {
+          "traceSeconds": 1.057515041,
+          "message": "quic_conn_keepalive_configure [connection] [connection] stopped keep-alive timer"
+        },
+        {
+          "traceSeconds": 1.061299833,
+          "message": "quic_conn_keepalive_configure [connection] [connection] started keep-alive timer for application (20 seconds)"
+        },
+        {
+          "traceSeconds": 21.179414916,
+          "message": "quic_conn_keepalive_handler [connection] [connection] sending keep-alive frame (application), already have 0 outstanding"
+        },
+        {
+          "traceSeconds": 21.217243333,
+          "message": "quic_conn_keepalive_acked [connection] [connection] keep-alive frame acknowledged (application) with 0 outstanding"
+        },
+        {
+          "traceSeconds": 51.194706833,
+          "message": "quic_conn_keepalive_handler [connection] [connection] sending keep-alive frame (application), already have 0 outstanding"
+        },
+        {
+          "traceSeconds": 51.233978375,
+          "message": "quic_conn_keepalive_acked [connection] [connection] keep-alive frame acknowledged (application) with 0 outstanding"
+        },
+        {
+          "traceSeconds": 61.192956166,
+          "message": "quic_conn_keepalive_configure [connection] [connection] stopped keep-alive timer"
+        },
+        {
+          "traceSeconds": 61.200696458,
+          "message": "quic_conn_keepalive_configure [connection] [connection] started keep-alive timer for application (20 seconds)"
+        }
+      ],
+      "sendSeconds": [
+        21.179414916,
+        51.194706833
+      ],
+      "ackSeconds": [
+        21.217243333,
+        51.233978375
+      ],
+      "interSendSeconds": [
+        30.015291917
+      ],
+      "httpVersions": [
+        "HTTP/3",
+        "HTTP/3",
+        ""
+      ],
+      "qlogFiles": 0,
+      "appEvidence": {
+        "autorunTraffic": [
+          "idle"
+        ],
+        "openEvents": 1,
+        "completedTransactionProtocols": [
+          "h3",
+          "h3"
+        ],
+        "transportErrors": [
+          {
+            "traceSeconds": 61.19400225,
+            "domain": "NSURLErrorDomain",
+            "code": -1017
+          }
+        ],
+        "noopReceiptSeconds": [
+          1.14072,
+          31.189649916,
+          61.264323
+        ],
+        "qlogWritable": [
+          true
+        ]
+      }
+    }
+  ]
+}

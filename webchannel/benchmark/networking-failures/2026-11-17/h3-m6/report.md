@@ -1,5 +1,9 @@
 # M6: first h3 idle observation and packet instrumentation
 
+Subsequent work successfully collected iPhone qlog and completed three 180 s
+observations; see the [session-invalidation follow-up](../../2026-11-18/h3-m6-qlog/report.md).
+The partial results below describe the earlier investigation.
+
 The first 180 s idle observation completed with one open session, no SDK error,
 no app sends during the idle interval, and six h3 task transactions (zero unknown
 or known fallback protocols). This is one valid idle observation, not three

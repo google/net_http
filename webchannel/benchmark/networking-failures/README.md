@@ -1,9 +1,14 @@
 # iOS networking-failure experiments
 
+[2026-11-18 M6 qlog follow-up](2026-11-18/h3-m6-qlog/report.md): three 180 s
+physical-iPhone h3 observations now include decoded PING frames and QUIC timeout
+values. PING timing varies within runs; transport errors and the qlog capture
+method are documented.
+
 [2026-11-17 h3 follow-up](2026-11-17/report.md): legacy-host retries used h2,
 then PR #133 identified the Google APIs endpoint. Actual WebChannel h3 is now
 confirmed there. Fifty-one h3-started observations and final restoration checks
-are recorded; 18 include h2 afterward. M6 PING cadence remains unmeasured.
+are recorded; 18 include h2 afterward. M6 PING cadence was still unmeasured at that stage; see the November 18 follow-up above.
 Control Center operation, packet-interface evidence and task metrics are
 reported separately; no blanket specification pass is claimed.
 
