@@ -131,6 +131,19 @@ python3 -u webchannel/benchmark/networking-failures/tools/run-handoff.py \
   --output /private/tmp/net-http-handoff-01 --hold 15
 ```
 
+For Settings-based operation, add `--wifi-operation settings`; the advance
+instructions and speech then request Settings → Wi-Fi OFF/ON. The default
+`disconnect` operation retains the existing disconnect/reconnect wording.
+Add `--expected-protocol h2` or `--expected-protocol h3` to require a measured
+POST task metric matching that protocol before the first switching cue.
+`--http3` also requires an h3 baseline and cannot be combined with an expected
+h2 baseline. Endpoint selection remains explicit through `--endpoint`.
+Unknown metrics cannot establish a baseline; known mixed protocols reject it.
+The expected baseline, endpoint, requested operation and observed protocol
+counts are retained in the result. See the
+[Buffalo-fixed series](../2026-11-24/buffalo-fixed/report.md) for the tested
+streaming comparison and its different-host limitation.
+
 Choose a new output directory for every attempt; existing data is never
 overwritten. `--transition-timeout` defaults to 90 s and `--probe-timeout` to
 30 s. `--silent` disables all audio for a visually guided run. Audio uses macOS

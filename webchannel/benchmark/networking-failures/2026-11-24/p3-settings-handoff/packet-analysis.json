@@ -1,0 +1,67 @@
+{
+  "rawSHA256": "03601dffb0028818fa4765256308524ca3693eea032452a0b3cdffc913269f46",
+  "rawBytes": 4042532,
+  "analysisCopyOmittedPrefixBytes": 24,
+  "pcapngPacketRecords": 4029,
+  "appPID": 2321,
+  "filteredAppServerPackets": 166,
+  "packetsPerInterface": {
+    "en0": 61,
+    "pdp_ip0": 105
+  },
+  "interfaceDetails": {
+    "en0": {
+      "packets": 61,
+      "incoming": 30,
+      "outgoing": 31,
+      "quicPackets": 61,
+      "outgoingInitialPackets": 4,
+      "firstPacketUnixSeconds": 1795499048.88874,
+      "lastPacketUnixSeconds": 1795499053.376436,
+      "outgoingSourceEndpoints": [
+        "2400:4050:b781:4c00:8865:34de:53ae:2bf3.57983"
+      ]
+    },
+    "pdp_ip0": {
+      "packets": 105,
+      "incoming": 53,
+      "outgoing": 52,
+      "quicPackets": 105,
+      "outgoingInitialPackets": 0,
+      "firstPacketUnixSeconds": 1795499058.38907,
+      "lastPacketUnixSeconds": 1795499119.328887,
+      "outgoingSourceEndpoints": [
+        "240a:61:7112:8a51:f1e4:5fef:457c:98d6.61151"
+      ]
+    }
+  },
+  "packetsAtOrAfterRestoredPathUnixSeconds": {
+    "pdp_ip0": 76
+  },
+  "protocolEvidence": {
+    "coverage": "h3-observed-no-known-fallback",
+    "h3Transactions": 12,
+    "unknownTransactions": 0,
+    "otherProtocols": [],
+    "h3ObservedWithoutKnownFallback": true,
+    "note": "Unknown transactions are not h3 evidence; baseline h3 is checked before faults."
+  },
+  "taskMetricCount": 12,
+  "allTaskMetricsReportNonCellular": true,
+  "taskMetricLocalEndpoints": [
+    "2400:4050:b781:4c00:8865:34de:53ae:2bf3.57983"
+  ],
+  "limits": [
+    "Only PID-owned records to/from task-metric remote addresses on port 443 are exported.",
+    "Packet/interface metadata is observed; encrypted QUIC PATH/PING frames are not decoded.",
+    "No new Initial in this capture is not a universal absence claim.",
+    "Restored-path comparison uses Unix timestamps; callbacks are not exact physical switch times."
+  ],
+  "operatorReportedCaptureStats": {
+    "packetsCaptured": 4029,
+    "packetsReceivedByFilter": 4599,
+    "packetsDroppedByKernel": 0
+  },
+  "operatorReportedSettingsWiFiSwitch": true,
+  "operatorReportedFinalRadioState": "Wi-Fi ON and cellular data ON"
+}

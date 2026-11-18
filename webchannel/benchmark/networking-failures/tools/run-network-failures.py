@@ -46,14 +46,22 @@ def protocol_evidence(records):
             "note": "Unknown transactions are not h3 evidence; baseline h3 is checked before faults."}
 
 
-def require_h3_baseline(capture):
+def require_protocol_baseline(capture, expected):
+    if expected not in ("h2", "h3"):
+        raise ValueError("Expected baseline protocol must be h2 or h3")
     event = capture.wait_for(lambda r: r.get("kind") == "task_metrics" and any(
         t.get("method") == "POST" and t.get("protocol") not in (None, "", "unknown")
         for t in r.get("transactions", [])), 20)
-    if (not any(t.get("method") == "POST" and t.get("protocol") == "h3"
+    known = {t.get("protocol") for t in event.get("transactions", [])
+             if t.get("protocol") not in (None, "", "unknown")}
+    if (not any(t.get("method") == "POST" and t.get("protocol") == expected
                 for t in event.get("transactions", []))
-            or protocol_evidence([event])["otherProtocols"]):
-        raise RuntimeError("Baseline WebChannel POST did not negotiate h3; no fault applied")
+            or known - {expected}):
+        raise RuntimeError(f"Baseline WebChannel POST did not negotiate {expected}; no fault applied")
+
+
+def require_h3_baseline(capture):
+    require_protocol_baseline(capture, "h3")
 
 
 def utc():

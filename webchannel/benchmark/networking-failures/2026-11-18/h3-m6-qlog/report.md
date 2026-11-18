@@ -5,6 +5,10 @@ iPhone qlog. Three 180 s h3 idle observations now provide explicit PING frame
 evidence and local/remote timeout values. This resolves the previous M6
 frame-visibility blocker; it is not a blanket networking-suite pass.
 
+The [P1 follow-up analysis](p1-get-rotation.md) (2026-11-24) identifies the
+first 60 s GET termination as a peer RESET_STREAM with error 0x101 in all
+three recordings, and documents received bytes and immediate continuation.
+
 ## Diagnostic method
 
 Apple DTS recommends configuring `QUIC_LOG_DIRECTORY` before networking and

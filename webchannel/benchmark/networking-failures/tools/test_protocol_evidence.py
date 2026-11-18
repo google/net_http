@@ -37,6 +37,39 @@ class ProtocolTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, 'no fault applied'):
             module.require_h3_baseline(Capture())
 
+    def test_h2_gate_requires_a_positive_post_metric(self):
+        class Capture:
+            def wait_for(self, predicate, timeout):
+                event = {'kind': 'task_metrics', 'transactions': [
+                    {'method': 'POST', 'protocol': 'h2'},
+                    {'method': 'GET', 'protocol': 'unknown'}]}
+                assert predicate(event)
+                return event
+        module.require_protocol_baseline(Capture(), 'h2')
+
+    def test_h2_gate_rejects_h3_and_mixed_transactions(self):
+        for protocols in [('h3',), ('h2', 'h3')]:
+            with self.subTest(protocols=protocols):
+                class Capture:
+                    def wait_for(self, predicate, timeout):
+                        event = {'kind': 'task_metrics', 'transactions': [
+                            {'method': 'POST', 'protocol': p} for p in protocols]}
+                        assert predicate(event)
+                        return event
+                with self.assertRaisesRegex(RuntimeError, 'no fault applied'):
+                    module.require_protocol_baseline(Capture(), 'h2')
+
+    def test_unknown_post_and_known_get_cannot_confirm_baseline(self):
+        class Capture:
+            def wait_for(self, predicate, timeout):
+                event = {'kind': 'task_metrics', 'transactions': [
+                    {'method': 'POST', 'protocol': 'unknown'},
+                    {'method': 'GET', 'protocol': 'h2'}]}
+                assert not predicate(event)
+                raise TimeoutError('No confirmed POST')
+        with self.assertRaises(TimeoutError):
+            module.require_protocol_baseline(Capture(), 'h2')
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -1,0 +1,73 @@
+{
+  "scenario": "P2",
+  "requestedRuns": 1,
+  "completedRuns": 1,
+  "operatorReportedCellularData": "OFF",
+  "operatorReportedWiFi": "ON",
+  "operatorReportedNLC": "disabled",
+  "operatorReportedAP": "direct to switching hub",
+  "openToStopControlSeconds": 180.2669810833322,
+  "protocolEvidence": {
+    "coverage": "h3-observed-no-known-fallback",
+    "h3Transactions": 6,
+    "unknownTransactions": 0,
+    "otherProtocols": [],
+    "h3ObservedWithoutKnownFallback": true,
+    "note": "Unknown transactions are not h3 evidence; baseline h3 is checked before faults."
+  },
+  "sdkErrorCount": 0,
+  "appSendCount": 0,
+  "cellularTransactionCount": 0,
+  "pathObservations": [
+    {
+      "status": "satisfied",
+      "wifi": true,
+      "cellular": false,
+      "expensive": false
+    },
+    {
+      "status": "satisfied",
+      "wifi": true,
+      "cellular": false,
+      "expensive": false
+    },
+    {
+      "status": "satisfied",
+      "wifi": true,
+      "cellular": false,
+      "expensive": false
+    }
+  ],
+  "postSetupPingSeconds": [
+    20.303398,
+    50.332566,
+    50.525641,
+    80.448438,
+    110.33707,
+    140.540847,
+    170.346544
+  ],
+  "preStopTransportErrors": [
+    {
+      "domain": "NSURLErrorDomain",
+      "code": -1017
+    }
+  ],
+  "shutdownTransportErrors": [
+    {
+      "domain": "com.google.GTMSessionFetcher",
+      "code": -7
+    }
+  ],
+  "sourceSHA256": "76f6b4d1fdf9e0b9393408ff85d09ddce9da344d803de19f172010f904d6eaa6",
+  "apSelectionClarification": {
+    "operatorReportedDate": "2026-11-24",
+    "observedDuring": "Settings-based Wi-Fi operations for PR #138 follow-ups",
+    "observedAP": "NEC Aterm WX3000HP2 in the adjacent room",
+    "intendedAP": "Buffalo WSR-3200AX4S-BK a few centimeters from the iPhone",
+    "perTrialAndPerPhaseAPIdentityRecorded": false,
+    "linuxBoxBypassReconfirmed": true,
+    "latencyImpactMeasured": false,
+    "details": "../../network-topology-note.md#ap-selection-correction-operator-report-2026-11-24"
+  }
+}
