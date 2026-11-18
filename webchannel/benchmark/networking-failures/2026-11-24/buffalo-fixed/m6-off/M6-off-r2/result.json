@@ -1,0 +1,72 @@
+{
+  "run": 2,
+  "scenario": "Buffalo-fixed-M6",
+  "requestedIdleSeconds": 180,
+  "operatorReportedAP": "Buffalo WSR-3200AX4S-BK",
+  "operatorReportedBand": "5 GHz",
+  "operatorReportedNECForgotten": true,
+  "operatorReportedOtherWiFiAutoJoin": "OFF",
+  "operatorReportedCellularData": "OFF",
+  "operatorReportedNLC": "OFF",
+  "operatorReportedUSB": "connected",
+  "operatorReportedAPWiring": "via LSW6-GT-8NS to central LSW5-GT-8EP/WH; no Linux box",
+  "openToStopControlSeconds": 180.47323429166136,
+  "protocolEvidence": {
+    "coverage": "h3-observed-no-known-fallback",
+    "h3Transactions": 6,
+    "unknownTransactions": 0,
+    "otherProtocols": [],
+    "h3ObservedWithoutKnownFallback": true,
+    "note": "Unknown transactions are not h3 evidence; baseline h3 is checked before faults."
+  },
+  "files": [
+    {
+      "name": "WebChanneliOSDemo-5479-C1.1.1.1:2.qlog",
+      "bytes": 39117
+    }
+  ],
+  "sessionInvalidationObserved": true,
+  "transportErrors": [
+    {
+      "code": -1017,
+      "deviceUnixSeconds": 1795530031.368423,
+      "deviceUptimeSeconds": 45492.535364958334,
+      "domain": "NSURLErrorDomain",
+      "kind": "transport_error",
+      "run": "Buffalo-fixed-M6-off-r2",
+      "url": "https://webchannel.googleapis.com/staging/channel/generator?gsessionid=ug051JPGgINy_FQhM5n5ay2vE1jaglCpKyoJCrvNiRQ&VER=8&RID=rpc&SID=PpKACQ4g4SVZ7xK-aBvezw&CI=0&AID=0&TYPE=xmlhttp&t=1",
+      "hostReceivedMonotonic": 151942.762199625,
+      "hostReceivedUTC": "2026-11-24T14:20:31.386Z"
+    },
+    {
+      "code": -7,
+      "deviceUnixSeconds": 1795530151.701105,
+      "deviceUptimeSeconds": 45612.87022104167,
+      "domain": "com.google.GTMSessionFetcher",
+      "kind": "transport_error",
+      "run": "Buffalo-fixed-M6-off-r2",
+      "url": "https://webchannel.googleapis.com/staging/channel/generator?gsessionid=ug051JPGgINy_FQhM5n5ay2vE1jaglCpKyoJCrvNiRQ&VER=8&RID=rpc&SID=PpKACQ4g4SVZ7xK-aBvezw&CI=0&AID=8&TYPE=xmlhttp&t=1",
+      "hostReceivedMonotonic": 152063.097648291,
+      "hostReceivedUTC": "2026-11-24T14:22:31.699Z"
+    }
+  ],
+  "sdkErrors": [],
+  "appSends": [],
+  "pathEvents": [
+    {
+      "cellular": false,
+      "constrained": false,
+      "deviceUnixSeconds": 1795529971.100848,
+      "deviceUptimeSeconds": 45432.266700500004,
+      "expensive": false,
+      "kind": "path",
+      "run": "Buffalo-fixed-M6-off-r2",
+      "status": "satisfied",
+      "wifi": true,
+      "wired": false,
+      "hostReceivedMonotonic": 151882.491998333,
+      "hostReceivedUTC": "2026-11-24T14:19:31.118Z"
+    }
+  ],
+  "inactiveHeartbeatsBeforeStop": []
+}

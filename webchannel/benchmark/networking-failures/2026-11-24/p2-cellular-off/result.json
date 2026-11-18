@@ -1,0 +1,51 @@
+{
+  "run": 1,
+  "requestedIdleSeconds": 180,
+  "scenario": "P2",
+  "operatorReportedCellularData": "OFF",
+  "operatorReportedWiFi": "ON",
+  "operatorReportedNLC": "disabled",
+  "operatorReportedAP": "direct to switching hub",
+  "openToFinishSeconds": 180.27199458333234,
+  "protocolEvidence": {
+    "coverage": "h3-observed-no-known-fallback",
+    "h3Transactions": 6,
+    "unknownTransactions": 0,
+    "otherProtocols": [],
+    "h3ObservedWithoutKnownFallback": true,
+    "note": "Unknown transactions are not h3 evidence; baseline h3 is checked before faults."
+  },
+  "files": [
+    {
+      "name": "WebChanneliOSDemo-2224-C1.1.1.1:2.qlog",
+      "bytes": 35069
+    }
+  ],
+  "sessionInvalidationObserved": true,
+  "transportErrors": [
+    {
+      "code": -1017,
+      "deviceUnixSeconds": 1795498618.663756,
+      "deviceUptimeSeconds": 14079.293297583334,
+      "domain": "NSURLErrorDomain",
+      "kind": "transport_error",
+      "run": "P2-cellular-off-r1",
+      "url": "https://webchannel.googleapis.com/staging/channel/generator?gsessionid=W92LSPZTVOyWu-XbRA0RWkqoi1rvecRHnxyeXWMXU7Y&VER=8&RID=rpc&SID=WcHl-V4tPLD6xhYkbcm0jg&CI=0&AID=0&TYPE=xmlhttp&t=1",
+      "hostReceivedMonotonic": 145257.124238833,
+      "hostReceivedUTC": "2026-11-24T05:36:58.661Z"
+    },
+    {
+      "code": -7,
+      "deviceUnixSeconds": 1795498738.792928,
+      "deviceUptimeSeconds": 14199.424600291668,
+      "domain": "com.google.GTMSessionFetcher",
+      "kind": "transport_error",
+      "run": "P2-cellular-off-r1",
+      "url": "https://webchannel.googleapis.com/staging/channel/generator?gsessionid=W92LSPZTVOyWu-XbRA0RWkqoi1rvecRHnxyeXWMXU7Y&VER=8&RID=rpc&SID=WcHl-V4tPLD6xhYkbcm0jg&CI=0&AID=8&TYPE=xmlhttp&t=1",
+      "hostReceivedMonotonic": 145377.256273666,
+      "hostReceivedUTC": "2026-11-24T05:38:58.789Z"
+    }
+  ],
+  "sdkErrors": [],
+  "appSends": []
+}

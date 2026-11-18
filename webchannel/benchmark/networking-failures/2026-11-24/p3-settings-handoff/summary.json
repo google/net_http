@@ -1,0 +1,43 @@
+{
+  "scenario": "P3 / T12",
+  "operation": "Settings > Wi-Fi switch OFF then ON (operator confirmed); Control Center not used",
+  "operatorReportedInitialRadioState": "Wi-Fi ON, cellular data ON",
+  "operatorReportedFinalRadioState": "Wi-Fi ON, cellular data ON",
+  "operatorReportedNLC": "disabled",
+  "outcome": "handoff-observed",
+  "protocolEvidence": {
+    "coverage": "h3-observed-no-known-fallback",
+    "h3Transactions": 12,
+    "unknownTransactions": 0,
+    "otherProtocols": [],
+    "h3ObservedWithoutKnownFallback": true,
+    "note": "Unknown transactions are not h3 evidence; baseline h3 is checked before faults."
+  },
+  "openCount": 1,
+  "sdkErrorCodes": [],
+  "observedCellularPathSeconds": 28.10164425000039,
+  "requestedHoldSeconds": 15.0,
+  "observedSecondsAtRestoreCue": 15.178260750000845,
+  "cellularPathToEchoSeconds": 0.6998529583343043,
+  "restoredPathToEchoSeconds": 0.4930420000000595,
+  "postRestoreProbeCount": 5,
+  "observedPostRestoreHostSeconds": 30.099460333993193,
+  "packetsPerInterface": {
+    "en0": 61,
+    "pdp_ip0": 105
+  },
+  "filteredAppServerPackets": 166,
+  "rawSHA256": "03601dffb0028818fa4765256308524ca3693eea032452a0b3cdffc913269f46",
+  "operatorReportedKernelDrops": 0,
+  "RVIremoved": true,
+  "apSelectionClarification": {
+    "operatorReportedDate": "2026-11-24",
+    "observedDuring": "Settings-based Wi-Fi operations for PR #138 follow-ups",
+    "observedAP": "NEC Aterm WX3000HP2 in the adjacent room",
+    "intendedAP": "Buffalo WSR-3200AX4S-BK a few centimeters from the iPhone",
+    "perTrialAndPerPhaseAPIdentityRecorded": false,
+    "linuxBoxBypassReconfirmed": true,
+    "latencyImpactMeasured": false,
+    "details": "../../network-topology-note.md#ap-selection-correction-operator-report-2026-11-24"
+  }
+}

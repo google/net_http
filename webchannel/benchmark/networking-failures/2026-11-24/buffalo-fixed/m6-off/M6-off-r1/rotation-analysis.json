@@ -1,0 +1,213 @@
+{
+  "run": "M6-off-r1",
+  "sourceSHA256": "413cf9cdeb4d4962c94a4454a8a327e10bb0995f221afe9a0d9c25b4f26f1b8c",
+  "qlogTimeOrigin": "first qlog event; separate from app open time",
+  "streamMapping": "Request order and timing: stream 0 handshake POST; stream 4 first GET; stream 8 next GET. No decoded HTTP/3 headers in qlog.",
+  "clientRequestStreamStarts": {
+    "0": 0.066352,
+    "4": 0.137506,
+    "8": 60.296766,
+    "12": 120.297855,
+    "16": 180.306852,
+    "20": 180.598452
+  },
+  "responseStream": 4,
+  "peerStreamFrames": [
+    {
+      "sourceEventIndex": 79,
+      "seconds": 0.137506,
+      "direction": "packet_sent",
+      "packetType": "1RTT",
+      "packetNumber": "9",
+      "frame": {
+        "fin": "true",
+        "frame_type": "stream",
+        "length": 212,
+        "offset": "0",
+        "stream_id": 4
+      }
+    },
+    {
+      "sourceEventIndex": 86,
+      "seconds": 0.207552,
+      "direction": "packet_received",
+      "packetType": "1RTT",
+      "packetNumber": "18",
+      "frame": {
+        "frame_type": "stream",
+        "length": 49,
+        "offset": "0",
+        "stream_id": 4
+      }
+    },
+    {
+      "sourceEventIndex": 108,
+      "seconds": 30.275062,
+      "direction": "packet_received",
+      "packetType": "1RTT",
+      "packetNumber": "22",
+      "frame": {
+        "frame_type": "stream",
+        "length": 14,
+        "offset": "49",
+        "stream_id": 4
+      }
+    },
+    {
+      "sourceEventIndex": 109,
+      "seconds": 30.282159,
+      "direction": "packet_received",
+      "packetType": "1RTT",
+      "packetNumber": "24",
+      "frame": {
+        "frame_type": "stream",
+        "length": 14,
+        "offset": "49",
+        "stream_id": 4
+      }
+    },
+    {
+      "sourceEventIndex": 117,
+      "seconds": 60.279211,
+      "direction": "packet_received",
+      "packetType": "1RTT",
+      "packetNumber": "26",
+      "frame": {
+        "error_code": 257,
+        "frame_type": "stop_sending",
+        "stream_id": "4"
+      }
+    },
+    {
+      "sourceEventIndex": 117,
+      "seconds": 60.279211,
+      "direction": "packet_received",
+      "packetType": "1RTT",
+      "packetNumber": "26",
+      "frame": {
+        "error_code": 257,
+        "final_size": "63",
+        "frame_type": "reset_stream",
+        "stream_id": "4"
+      }
+    },
+    {
+      "sourceEventIndex": 119,
+      "seconds": 60.279831,
+      "direction": "packet_received",
+      "packetType": "1RTT",
+      "packetNumber": "28",
+      "frame": {
+        "error_code": 257,
+        "frame_type": "stop_sending",
+        "stream_id": "4"
+      }
+    },
+    {
+      "sourceEventIndex": 119,
+      "seconds": 60.279831,
+      "direction": "packet_received",
+      "packetType": "1RTT",
+      "packetNumber": "28",
+      "frame": {
+        "error_code": 257,
+        "final_size": "63",
+        "frame_type": "reset_stream",
+        "stream_id": "4"
+      }
+    }
+  ],
+  "uniqueReceivedRanges": [
+    [
+      0,
+      63
+    ]
+  ],
+  "uniqueReceivedStreamBytes": 63,
+  "receivedStreamFrameLengthSumIncludingDuplicates": 77,
+  "peerResponseFinCount": 0,
+  "peerResetCountIncludingRepeatedFrames": 2,
+  "peerResetErrorCodes": [
+    257
+  ],
+  "peerStopSendingCountIncludingRepeatedFrames": 2,
+  "peerStopSendingErrorCodes": [
+    257
+  ],
+  "peerResetFinalSizes": [
+    63
+  ],
+  "firstResetQlogSeconds": 60.279211,
+  "requestToResetSeconds": 60.141704999999995,
+  "resetToNextRequestStreamMs": 17.55500000000154,
+  "appErrorSecondsAfterOpen": 60.15152066666633,
+  "errorToNextRequestCreationMs": 2.228708333859686,
+  "errorToNextRequestLogMs": 4.673625000577886,
+  "sdkCompleteToNextRequestCreationMs": 1.3045000014244579,
+  "sdkCompleteBeforeNextRequest": true,
+  "completedReadyState": 3,
+  "completedHTTPStatus": 200,
+  "sameSID": true,
+  "oldAID": "0",
+  "newAID": "2",
+  "oldAttemptQuery": "1",
+  "newAttemptQuery": "1",
+  "nextGETLoggedAttempt": 1,
+  "decodedNoopLogTexts": [
+    "[[1,[\"noop\"]]]",
+    "[[2,[\"noop\"]]]"
+  ],
+  "decodedNoopLogTextUTF8Bytes": 28,
+  "appRotationExcerpt": [
+    {
+      "secondsAfterOpen": 60.15152066666633,
+      "kind": "transport_error",
+      "domain": "NSURLErrorDomain",
+      "code": -1017,
+      "query": {
+        "RID": "rpc",
+        "AID": "0",
+        "t": "1"
+      }
+    },
+    {
+      "secondsAfterOpen": 60.15201579166751,
+      "kind": "http_state",
+      "method": "GET",
+      "readyState": 3,
+      "status": 200,
+      "attempt": 1,
+      "query": {
+        "RID": "rpc",
+        "AID": "0",
+        "t": "1"
+      }
+    },
+    {
+      "secondsAfterOpen": 60.152444874998764,
+      "kind": "sdk_debug",
+      "text": "Request Complete."
+    },
+    {
+      "secondsAfterOpen": 60.15374937500019,
+      "kind": "http3_request",
+      "method": "GET",
+      "query": {
+        "RID": "rpc",
+        "AID": "2",
+        "t": "1"
+      }
+    },
+    {
+      "secondsAfterOpen": 60.15619429166691,
+      "kind": "http_request_log",
+      "attempt": 1
+    }
+  ],
+  "limits": [
+    "63 stream bytes include HTTP/3 framing/headers; not HTTP body length.",
+    "Logged JSON text length excludes WebChannel framing/compression and is not a URLSession body-byte metric.",
+    "No cross-clock subtraction between qlog time and app uptime.",
+    "Immediate next GET means no observed SDK retry/backoff, not absence of QUIC retransmissions."
+  ]
+}

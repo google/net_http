@@ -1,0 +1,148 @@
+{
+  "rows": [
+    {
+      "folder": "NEC-B1",
+      "trial": "B1",
+      "ap": "NEC Aterm WX3000HP2",
+      "startedUTC": "2026-11-24T06:28:53.268770+00:00",
+      "transmitted": 120,
+      "received": 115,
+      "packetLossPercent": 4.2,
+      "minMs": 3.228,
+      "meanMs": 87.04892173913044,
+      "medianMs": 74.676,
+      "p95Ms": 215.846,
+      "maxMs": 296.747,
+      "missingSequences": [
+        27,
+        30,
+        43,
+        49,
+        63
+      ]
+    },
+    {
+      "folder": "Buffalo-A1",
+      "trial": "A1",
+      "ap": "Buffalo WSR-3200AX4S-BK",
+      "startedUTC": "2026-11-24T06:34:44.732321+00:00",
+      "transmitted": 120,
+      "received": 120,
+      "packetLossPercent": 0.0,
+      "minMs": 3.054,
+      "meanMs": 60.32716666666667,
+      "medianMs": 60.0205,
+      "p95Ms": 114.06,
+      "maxMs": 134.335,
+      "missingSequences": []
+    },
+    {
+      "folder": "Buffalo-A2",
+      "trial": "A2",
+      "ap": "Buffalo WSR-3200AX4S-BK",
+      "startedUTC": "2026-11-24T06:37:23.556556+00:00",
+      "transmitted": 120,
+      "received": 120,
+      "packetLossPercent": 0.0,
+      "minMs": 3.029,
+      "meanMs": 62.56098333333333,
+      "medianMs": 64.3325,
+      "p95Ms": 113.956,
+      "maxMs": 136.669,
+      "missingSequences": []
+    },
+    {
+      "folder": "NEC-B2-retry",
+      "trial": "B2",
+      "ap": "NEC Aterm WX3000HP2",
+      "startedUTC": "2026-11-24T06:44:23.088846+00:00",
+      "transmitted": 120,
+      "received": 114,
+      "packetLossPercent": 5.0,
+      "minMs": 3.311,
+      "meanMs": 85.12399122807018,
+      "medianMs": 72.29849999999999,
+      "p95Ms": 202.856,
+      "maxMs": 318.665,
+      "missingSequences": [
+        0,
+        33,
+        40,
+        52,
+        82,
+        116
+      ]
+    },
+    {
+      "folder": "NEC-B3",
+      "trial": "B3",
+      "ap": "NEC Aterm WX3000HP2",
+      "startedUTC": "2026-11-24T06:47:03.861336+00:00",
+      "transmitted": 120,
+      "received": 113,
+      "packetLossPercent": 5.8,
+      "minMs": 3.374,
+      "meanMs": 105.53146902654868,
+      "medianMs": 88.489,
+      "p95Ms": 265.149,
+      "maxMs": 492.71,
+      "missingSequences": [
+        0,
+        17,
+        85,
+        97,
+        98,
+        112,
+        115
+      ]
+    },
+    {
+      "folder": "Buffalo-A3",
+      "trial": "A3",
+      "ap": "Buffalo WSR-3200AX4S-BK",
+      "startedUTC": "2026-11-24T06:57:17.168178+00:00",
+      "transmitted": 120,
+      "received": 120,
+      "packetLossPercent": 0.0,
+      "minMs": 2.796,
+      "meanMs": 63.33419166666667,
+      "medianMs": 63.179500000000004,
+      "p95Ms": 115.25,
+      "maxMs": 176.308,
+      "missingSequences": []
+    }
+  ],
+  "groups": [
+    {
+      "ap": "NEC Aterm WX3000HP2",
+      "completedRuns": 3,
+      "medianOfRunMediansMs": 74.676,
+      "runMedianRangeMs": [
+        72.29849999999999,
+        88.489
+      ],
+      "transmitted": 360,
+      "received": 342,
+      "packetLossPercentFromTotals": 5.0
+    },
+    {
+      "ap": "Buffalo WSR-3200AX4S-BK",
+      "completedRuns": 3,
+      "medianOfRunMediansMs": 63.179500000000004,
+      "runMedianRangeMs": [
+        60.0205,
+        64.3325
+      ],
+      "transmitted": 360,
+      "received": 360,
+      "packetLossPercentFromTotals": 0.0
+    }
+  ],
+  "p95Method": "nearest rank of unique received replies per trial",
+  "limits": [
+    "LAN ICMP RTT includes the iPhone response schedule; this is not HTTP/WebChannel latency.",
+    "Current AP location, wiring and Wi-Fi conditions are compared together.",
+    "AP and screen state are operator-reported; SSID/BSSID are not captured by ping.",
+    "Run-to-run variation is retained; no significance claim from individual packet counts."
+  ]
+}

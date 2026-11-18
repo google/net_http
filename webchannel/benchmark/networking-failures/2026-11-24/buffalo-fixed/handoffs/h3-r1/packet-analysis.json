@@ -1,0 +1,63 @@
+{
+  "rawSHA256": "e8dd8a9ede30e144e6fc4dcac58b94cb989aa3aa08ddd1792eb10e1cba948706",
+  "rawBytes": 1338344,
+  "analysisCopyOmittedPrefixBytes": 24,
+  "pcapngPacketRecords": 3413,
+  "appPID": 5670,
+  "filteredAppServerPackets": 323,
+  "packetsPerInterface": {
+    "en0": 248,
+    "pdp_ip0": 75
+  },
+  "interfaceDetails": {
+    "en0": {
+      "packets": 248,
+      "incoming": 128,
+      "outgoing": 120,
+      "quicPackets": 248,
+      "outgoingInitialPackets": 4,
+      "outgoingTCPSynPackets": 0,
+      "firstPacketUnixSeconds": 1795531580.4264,
+      "lastPacketUnixSeconds": 1795531642.262915,
+      "outgoingSourceEndpoints": [
+        "2400:4050:b781:4c00:8865:34de:53ae:2bf3.52654",
+        "2400:4050:b781:4c00:8865:34de:53ae:2bf3.60490"
+      ]
+    },
+    "pdp_ip0": {
+      "packets": 75,
+      "incoming": 37,
+      "outgoing": 38,
+      "quicPackets": 75,
+      "outgoingInitialPackets": 0,
+      "outgoingTCPSynPackets": 0,
+      "firstPacketUnixSeconds": 1795531587.528074,
+      "lastPacketUnixSeconds": 1795531610.947009,
+      "outgoingSourceEndpoints": [
+        "240a:61:7112:8a51:f1e4:5fef:457c:98d6.64475"
+      ]
+    }
+  },
+  "packetsAtOrAfterRestoredPathUnixSeconds": {
+    "en0": 167
+  },
+  "protocolEvidence": {
+    "coverage": "h3-observed-no-known-fallback",
+    "h3Transactions": 13,
+    "unknownTransactions": 0,
+    "otherProtocols": [],
+    "h3ObservedWithoutKnownFallback": true,
+    "note": "Unknown transactions are not h3 evidence; baseline h3 is checked before faults."
+  },
+  "taskMetricCount": 13,
+  "allTaskMetricsReportNonCellular": true,
+  "taskMetricLocalEndpoints": [
+    "2400:4050:b781:4c00:8865:34de:53ae:2bf3.60490"
+  ],
+  "limits": [
+    "Only PID-owned records to/from task-metric remote addresses on port 443 are exported.",
+    "Packet/interface metadata is observed; encrypted QUIC PATH/PING frames are not decoded.",
+    "No new Initial in this capture is not a universal absence claim.",
+    "Restored-path comparison uses Unix timestamps; callbacks are not exact physical switch times."
+  ]
+}

@@ -1,0 +1,64 @@
+{
+  "rawSHA256": "e8dd8a9ede30e144e6fc4dcac58b94cb989aa3aa08ddd1792eb10e1cba948706",
+  "rawBytes": 1338344,
+  "analysisCopyOmittedPrefixBytes": 24,
+  "pcapngPacketRecords": 3413,
+  "appPID": 5736,
+  "filteredAppServerPackets": 359,
+  "packetsPerInterface": {
+    "en0": 198,
+    "pdp_ip0": 161
+  },
+  "interfaceDetails": {
+    "en0": {
+      "packets": 198,
+      "incoming": 114,
+      "outgoing": 84,
+      "quicPackets": 0,
+      "outgoingInitialPackets": 0,
+      "outgoingTCPSynPackets": 2,
+      "firstPacketUnixSeconds": 1795532202.129787,
+      "lastPacketUnixSeconds": 1795532262.27914,
+      "outgoingSourceEndpoints": [
+        "2400:4050:b781:4c00:8865:34de:53ae:2bf3.51421",
+        "2400:4050:b781:4c00:8865:34de:53ae:2bf3.53003"
+      ]
+    },
+    "pdp_ip0": {
+      "packets": 161,
+      "incoming": 84,
+      "outgoing": 77,
+      "quicPackets": 0,
+      "outgoingInitialPackets": 0,
+      "outgoingTCPSynPackets": 1,
+      "firstPacketUnixSeconds": 1795532211.750254,
+      "lastPacketUnixSeconds": 1795532257.538663,
+      "outgoingSourceEndpoints": [
+        "240a:61:7112:8a51:f1e4:5fef:457c:98d6.53107"
+      ]
+    }
+  },
+  "packetsAtOrAfterRestoredPathUnixSeconds": {
+    "en0": 119,
+    "pdp_ip0": 79
+  },
+  "protocolEvidence": {
+    "expectedBaseline": "h2",
+    "observedProtocolCounts": {
+      "h2": 14
+    }
+  },
+  "taskMetricCount": 14,
+  "allTaskMetricsReportNonCellular": false,
+  "taskMetricLocalEndpoints": [
+    "2400:4050:b781:4c00:8865:34de:53ae:2bf3.51421",
+    "2400:4050:b781:4c00:8865:34de:53ae:2bf3.53003",
+    "240a:61:7112:8a51:f1e4:5fef:457c:98d6.53107"
+  ],
+  "limits": [
+    "Only PID-owned records to/from task-metric remote addresses on port 443 are exported.",
+    "Packet/interface metadata is observed; encrypted QUIC PATH/PING frames are not decoded.",
+    "No new Initial in this capture is not a universal absence claim.",
+    "Restored-path comparison uses Unix timestamps; callbacks are not exact physical switch times."
+  ]
+}

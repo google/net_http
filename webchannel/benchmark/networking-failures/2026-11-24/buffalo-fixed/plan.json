@@ -1,0 +1,41 @@
+{
+  "seriesDate": "2026-11-24",
+  "operatorReportedAP": "Buffalo WSR-3200AX4S-BK",
+  "operatorReportedBand": "5 GHz",
+  "operatorReportedNECForgotten": true,
+  "M6": {
+    "cellularOFF": {
+      "runs": 3,
+      "secondsEach": 180
+    },
+    "cellularON": {
+      "runs": 3,
+      "secondsEach": 180
+    },
+    "traffic": "no application sends; server noops and QUIC keepalive remain"
+  },
+  "T12T14": {
+    "traffic": "streaming, 1 s requested message interval",
+    "operatorMethod": "Settings Wi-Fi switch OFF/ON",
+    "requestedCellularHoldSeconds": 15,
+    "requestedPostRestoreObservationSeconds": 30,
+    "order": [
+      "h2-r1",
+      "h3-r1",
+      "h3-r2",
+      "h2-r2",
+      "h2-r3",
+      "h3-r3"
+    ],
+    "h2Endpoint": "https://webchannel.sandbox.google.com/staging/channel/generator",
+    "h3Endpoint": "https://webchannel.googleapis.com/staging/channel/generator",
+    "protocolEvidence": "positive measured baseline POST required before switch cue; all transaction protocols reported afterward"
+  },
+  "limits": [
+    "AP and band are operator-reported; SSID/BSSID are not automatically observed.",
+    "The h2 and h3 endpoints differ, matching the established test setup; this is not a same-host protocol-isolation experiment.",
+    "M6 OFF and ON are separate consecutive batches; time/order effects are not eliminated.",
+    "Handoff streaming variant is selected; this series does not repeat every idle-only variant."
+  ],
+  "wiredTransport": "Mandatory for all measured trials. M6 verifies before launch, every 30 s and before qlog copy; handoff runner verifies before launch/arming and after observation."
+}
