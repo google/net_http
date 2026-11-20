@@ -57,6 +57,14 @@ pointer, client ownership where applicable, receive credit, EOF, and pending
 operations. `Listener` owns a C++ server. Server streams remain owned by that
 server, not by `State`.
 
+The queue is also a memory-safety boundary: send (text, binary, and metadata),
+EOF, receive-credit updates, and release must execute on the worker together
+with receive callbacks and transport destruction. Calling a borrowed stream
+directly from the asyncio thread would race its wslay context and lifetime;
+libevent threading initialization or `BEV_OPT_THREADSAFE` alone cannot protect
+those objects. Commands capture identifiers and owned data, and resolve stream
+pointers only when the worker executes them.
+
 `Attach` installs callbacks on `BufferEventWebStream`. `Progress` handles queued
 send/drain/EOF operations and resumes from `SetOnWritable` notifications.
 `Consume` returns receive credit. `Release`, `RemoveListener`, and `Shutdown`
@@ -130,6 +138,7 @@ and framing/transport failures into a stream failure. Error translation lives in
 | [test_integration.py](tests/fastapi/test_integration.py) | FastAPI/Starlette routing, dependencies, middleware, and externally managed lifespan. |
 | [test_fastapi_mount.py](tests/fastapi/test_fastapi_mount.py) | FastAPI mounting via the ASGI lifespan protocol, routing/dependencies/middleware, state, startup failure/cancellation, multiple listeners, and ordered shutdown. |
 | [test_runtime.py](tests/core/test_runtime.py) | Shared/default Runtime ownership, custom worker factory, asyncio progress during native waits, receive/send backpressure, message types, half-close, size limits, cancellation, self-shutdown, GC, and interpreter exit. |
+| [test_native_threading.py](tests/core/test_native_threading.py) | Commands submitted while a native receive callback is paused must wait for the worker; native notifications stay on that worker. Concurrent bidirectional plain/TLS traffic checks message types, ordering, backpressure, and clean EOF across separate workers. |
 | [test_connect_cancellation.py](tests/core/test_connect_cancellation.py), [test_recv_termination.py](tests/core/test_recv_termination.py) | Failed/cancelled connect cleanup, repeated cancellation, late notifications, buffered messages, receive exclusion, and persistent termination errors. |
 | [test_python_server.py](tests/core/test_python_server.py), [test_server_close.py](tests/core/test_server_close.py) | Server echo/routing, waiting-handler shutdown, clean protocol EOF, and cleanup failure reporting. |
 | [test_e2e.py](tests/core/test_e2e.py), [test_idle_connection.py](tests/core/test_idle_connection.py), [test_tls_identity.py](tests/core/test_tls_identity.py) | Plain/TLS integration, idle survival, certificate identity/chain verification, and SNI. |
