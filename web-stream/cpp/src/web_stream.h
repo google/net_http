@@ -26,6 +26,11 @@
 // Both BufferEventWebStream (HTTP/1.1 upgrade over libevent) and
 // NGHTTP2WebStream (HTTP/2 DATA frames) implement this interface so that
 // callers can write transport-agnostic code.
+//
+// Instances are not thread-safe. Send, Close, callback configuration, and
+// destruction must be serialized on the owning event-loop thread. Submit work
+// from other threads through an event-loop command queue (as the Python Runtime
+// does); a thread-safe bufferevent alone does not protect framing or lifetime.
 class WebStream {
  public:
   using MessageCallback = std::function<void(uint8_t, const std::string&)>;
