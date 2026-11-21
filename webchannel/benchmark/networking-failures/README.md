@@ -1,5 +1,8 @@
 # iOS networking-failure experiments
 
+**Start here:** the [2026-11-21 HTTP/3 results and close-out](summary-2026-11-21.md)
+(earlier: [2026-11-15 summary](summary-2026-11-15.md)).
+
 [2026-11-18 M6 qlog follow-up](2026-11-18/h3-m6-qlog/report.md): three 180 s
 physical-iPhone h3 observations now include decoded PING frames and QUIC timeout
 values. PING timing varies within runs; transport errors and the qlog capture
@@ -18,8 +21,6 @@ suspension holds each at 45/60/75 s. All nine suspension trials resumed their
 original sessions. HTTP/3 setup is recorded separately: the same iPhone uses h3
 for a control host while the old sandbox endpoint used h2. That historical
 endpoint blocker was resolved by PR #133; see the November 17 follow-up above.
-
-**Start here:** the [2026-11-15 summary and next steps](summary-2026-11-15.md).
 
 **Network topology clarification:** T1–T8 traversed a Linux box. The operator
 subsequently connected the AP directly to the switching hub, bypassing that box.
