@@ -1,5 +1,8 @@
 # iOS networking-failure experiments
 
+**Start here:** the [2026-11-21 HTTP/3 results and close-out](summary-2026-11-21.md)
+(earlier: [2026-11-15 summary](summary-2026-11-15.md)).
+
 [Buffalo-fixed priority repeats](2026-11-24/buffalo-fixed/report.md): six M6
 observations and six streaming h2/h3 handoffs after forgetting NEC and selecting
 Buffalo 5 GHz. No sustained approximately 1 s PINGs were reproduced; every
@@ -31,8 +34,6 @@ suspension holds each at 45/60/75 s. All nine suspension trials resumed their
 original sessions. HTTP/3 setup is recorded separately: the same iPhone uses h3
 for a control host while the old sandbox endpoint used h2. That historical
 endpoint blocker was resolved by PR #133; see the November 17 follow-up above.
-
-**Start here:** the [2026-11-15 summary and next steps](summary-2026-11-15.md).
 
 **Network topology clarification:** T1–T8 traversed a Linux box. The operator
 subsequently connected the AP directly to the switching hub, bypassing that box.
