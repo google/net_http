@@ -1,0 +1,12 @@
+{
+  "sourceSHA256": {
+    "webchannel/benchmark/networking-failures/tools/run-handoff.py": "81d0fa074cc5dfc8ac30308af241a0b47d7e74ad65255158ab7f52c6b28a44e6",
+    "webchannel/benchmark/networking-failures/tools/run-network-failures.py": "d3220b9c73445c76d4484d288d65a4e04325f80e2844ab199fb9518466a2670a",
+    "webchannel/objc/demo/WebChanneliOSDemo/WebChanneliOSDemo/TestAppSupport.swift": "2a99691d374e174e2d6f347f88b402ea997dc35249132d2b3aa7b54979bbb77c",
+    "webchannel/objc/demo/WebChanneliOSDemo/WebChanneliOSDemo/WebChanneliOSDemoApp.swift": "1b933666dd46c52796be712811454d1c7e7885f495ac9b843d2bd09b1f2ddede",
+    "webchannel/benchmark/networking-failures/2026-11-24/analyze-p3-packets.py": "4dfb1dbc1eaeb2bd82e81c68084aead518cf11745c6be3b3780c53fd3b85495b"
+  },
+  "command": "python3 -B -u webchannel/benchmark/networking-failures/tools/run-handoff.py --device TEST_DEVICE_UDID --scenario handoff --http3 --traffic idle --hold 15 --observe-after 30 --output /private/tmp/net-http-p3-settings-handoff-20261124",
+  "captureCommand": "sudo /usr/sbin/tcpdump -i rvi0 -s 0 -U -Z \"$USER\" -w /private/tmp/net-http-p3-settings-handoff-20261124.pcap 'port 443'",
+  "captureStop": "SIGINT delivered to the single matching tcpdump process after outcome; normal process exit verified"
+}

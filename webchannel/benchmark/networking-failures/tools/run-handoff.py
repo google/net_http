@@ -184,6 +184,13 @@ class Runner:
         temp.replace(self.folder / "status.json")
 
     def cue(self, text, sound="Glass", speech=None):
+        if getattr(self.args, "wifi_operation", "disconnect") == "settings":
+            if speech == "Wi-Fi を切断してください":
+                speech = "設定で Wi-Fi をオフにしてください"
+                text = "設定 → Wi-Fi のスイッチを OFF にして、すぐ試験アプリへ戻ってください。"
+            elif speech == "Wi-Fi を戻してください":
+                speech = "設定で Wi-Fi をオンにしてください"
+                text = "設定 → Wi-Fi のスイッチを ON にして、Buffalo 接続後すぐ試験アプリへ戻ってください。"
         record = self.event("cue", text=text, sound=sound, speech=speech)
         print("\n" + text, flush=True)
         if not self.args.silent:
@@ -202,6 +209,10 @@ class Runner:
         return record["hostMonotonic"]
 
     def instructions(self):
+        if getattr(self.args, "wifi_operation", "disconnect") == "settings":
+            note = "今回はコントロールセンターを使わず、設定 → Wi-Fi のスイッチを OFF → ON にします。"
+            self.event("instructions", text=note)
+            print(note, flush=True)
         if self.scenario == "broken-cellular":
             text = (
                 "T13: Wi-Fi とモバイルデータ通信を ON、Mobile 100% Loss を有効にして準備してください。\n"
@@ -343,7 +354,9 @@ class Runner:
         if start.get("controlProtocolVersion", 0) < 2:
             raise RuntimeError("Rebuild and install the demo from this checkout (control protocol 2 required)")
         self.wait(lambda: self.observer.latest("open"), 60, "channel open")
-        if getattr(self.args, "http3", False):
+        if getattr(self.args, "expected_protocol", None):
+            _support.require_protocol_baseline(self.app, self.args.expected_protocol)
+        elif getattr(self.args, "http3", False):
             _support.require_h3_baseline(self.app)
         self.milestone("baselinePath", self.path(self.baseline_interface, 0))
         self.milestone("baselineEcho", self.probe(self.baseline_interface))
@@ -415,7 +428,9 @@ class Runner:
             self.attach_idle_debugger()
         self.wait(lambda: self.observer.latest("autorun_start"), 30, "autorun_start")
         self.wait(lambda: self.observer.latest("open"), 60, "channel open")
-        if getattr(self.args, "http3", False):
+        if getattr(self.args, "expected_protocol", None):
+            _support.require_protocol_baseline(self.app, self.args.expected_protocol)
+        elif getattr(self.args, "http3", False):
             _support.require_h3_baseline(self.app)
         start = self.wait(lambda: self.observer.latest("heartbeat")
                           if self.observer.active(time.monotonic()) else None, 15, "active heartbeat")
@@ -700,6 +715,16 @@ class Runner:
                 pass
         self.detach_idle_debugger()
         records = self.observer.records if self.observer else []
+        if getattr(self.args, "expected_protocol", None):
+            self.result["baselineExpectedProtocol"] = self.args.expected_protocol
+            self.result["endpoint"] = self.args.endpoint or (
+                _support.HTTP3_ENDPOINT if getattr(self.args, "http3", False)
+                else "https://webchannel.sandbox.google.com/staging/channel/generator")
+            protocols = [t.get("protocol") or "unknown" for r in records
+                         if r.get("kind") == "task_metrics" for t in r.get("transactions", [])]
+            self.result["observedProtocolCounts"] = {p: protocols.count(p) for p in sorted(set(protocols))}
+        if getattr(self.args, "wifi_operation", "disconnect") == "settings":
+            self.result["requestedWiFiOperation"] = "Settings Wi-Fi switch OFF/ON"
         if getattr(self.args, "http3", False):
             self.result["requestedHTTP3"] = True
             self.result["endpoint"] = self.args.endpoint or _support.HTTP3_ENDPOINT
@@ -782,10 +807,16 @@ def main():
     parser.add_argument("--silent", action="store_true", help="Visual cues only")
     parser.add_argument("--no-speech", action="store_true", help="Play sounds without spoken instructions")
     parser.add_argument("--http3", action="store_true", help="Require baseline h3; use PR #133 endpoint")
+    parser.add_argument("--expected-protocol", choices=("h2", "h3"),
+                        help="Reject a mismatched measured baseline before any Wi-Fi cue")
+    parser.add_argument("--wifi-operation", choices=("disconnect", "settings"), default="disconnect",
+                        help="Operator method; settings adds explicit switch instructions and speech")
     parser.add_argument("--endpoint", help="Opt-in demo endpoint override")
     parser.add_argument("--qlog-directory", help="Device-side directory already prepared for Apple's QUIC qlog")
     parser.add_argument("--debugger", action="store_true", help="Diagnostic idle only: start stopped, attach Apple LLDB, then continue")
     args = parser.parse_args()
+    if args.http3 and args.expected_protocol == "h2":
+        parser.error("--http3 conflicts with --expected-protocol h2")
     if args.debugger and args.scenario != "idle":
         parser.error("--debugger is supported only for idle diagnostics, never suspension or handoff")
     if args.scenario == "broken-cellular":

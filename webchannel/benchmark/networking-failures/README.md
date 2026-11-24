@@ -3,6 +3,19 @@
 **Start here:** the [2026-11-21 HTTP/3 results and close-out](summary-2026-11-21.md)
 (earlier: [2026-11-15 summary](summary-2026-11-15.md)).
 
+[Buffalo-fixed priority repeats](2026-11-24/buffalo-fixed/report.md): six M6
+observations and six streaming h2/h3 handoffs after forgetting NEC and selecting
+Buffalo 5 GHz. No sustained approximately 1 s PINGs were reproduced; every
+handoff retained its SID without an SDK error, with cellular interface evidence.
+
+[2026-11-24 PR #138 follow-ups](2026-11-24/report.md): P1 analyzes the first
+GET's peer reset and immediate continuation; P2 adds one cellular-disabled M6
+observation; P3 records a Settings-switch T12 handoff with actual cellular
+packets despite non-cellular task metrics. Limits and cleanup are documented.
+The supplementary [AP latency comparison](2026-11-24/ap-latency/report.md)
+records three LAN ICMP trials per AP in the current placement, with the original
+AP-selection limitation retained.
+
 [2026-11-18 M6 qlog follow-up](2026-11-18/h3-m6-qlog/report.md): three 180 s
 physical-iPhone h3 observations now include decoded PING frames and QUIC timeout
 values. PING timing varies within runs; transport errors and the qlog capture
@@ -25,6 +38,9 @@ endpoint blocker was resolved by PR #133; see the November 17 follow-up above.
 **Network topology clarification:** T1–T8 traversed a Linux box. The operator
 subsequently connected the AP directly to the switching hub, bypassing that box.
 See the [operator-reported wiring change](network-topology-note.md) before comparing phases.
+The [November 24 AP-selection correction](network-topology-note.md#ap-selection-correction-operator-report-2026-11-24)
+records an unexpected NEC AP association. Linux bypass was reconfirmed, but
+per-trial AP identity and identical radio conditions were not established.
 
 The [2026-11-14 T13 report](2026-11-14/t13-summary.md) adds nine idle handoffs
 to cellular with operator-configured cellular-only 100% packet loss. All three

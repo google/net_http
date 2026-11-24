@@ -1,0 +1,63 @@
+{
+  "rawSHA256": "e8dd8a9ede30e144e6fc4dcac58b94cb989aa3aa08ddd1792eb10e1cba948706",
+  "rawBytes": 1338344,
+  "analysisCopyOmittedPrefixBytes": 24,
+  "pcapngPacketRecords": 3413,
+  "appPID": 5702,
+  "filteredAppServerPackets": 334,
+  "packetsPerInterface": {
+    "en0": 260,
+    "pdp_ip0": 74
+  },
+  "interfaceDetails": {
+    "en0": {
+      "packets": 260,
+      "incoming": 130,
+      "outgoing": 130,
+      "quicPackets": 260,
+      "outgoingInitialPackets": 4,
+      "outgoingTCPSynPackets": 0,
+      "firstPacketUnixSeconds": 1795531886.029374,
+      "lastPacketUnixSeconds": 1795531949.815458,
+      "outgoingSourceEndpoints": [
+        "2400:4050:b781:4c00:8865:34de:53ae:2bf3.49375",
+        "2400:4050:b781:4c00:8865:34de:53ae:2bf3.49732"
+      ]
+    },
+    "pdp_ip0": {
+      "packets": 74,
+      "incoming": 36,
+      "outgoing": 38,
+      "quicPackets": 74,
+      "outgoingInitialPackets": 0,
+      "outgoingTCPSynPackets": 0,
+      "firstPacketUnixSeconds": 1795531894.148628,
+      "lastPacketUnixSeconds": 1795531918.127918,
+      "outgoingSourceEndpoints": [
+        "240a:61:7112:8a51:f1e4:5fef:457c:98d6.64668"
+      ]
+    }
+  },
+  "packetsAtOrAfterRestoredPathUnixSeconds": {
+    "en0": 174
+  },
+  "protocolEvidence": {
+    "coverage": "h3-observed-no-known-fallback",
+    "h3Transactions": 13,
+    "unknownTransactions": 0,
+    "otherProtocols": [],
+    "h3ObservedWithoutKnownFallback": true,
+    "note": "Unknown transactions are not h3 evidence; baseline h3 is checked before faults."
+  },
+  "taskMetricCount": 13,
+  "allTaskMetricsReportNonCellular": true,
+  "taskMetricLocalEndpoints": [
+    "2400:4050:b781:4c00:8865:34de:53ae:2bf3.49732"
+  ],
+  "limits": [
+    "Only PID-owned records to/from task-metric remote addresses on port 443 are exported.",
+    "Packet/interface metadata is observed; encrypted QUIC PATH/PING frames are not decoded.",
+    "No new Initial in this capture is not a universal absence claim.",
+    "Restored-path comparison uses Unix timestamps; callbacks are not exact physical switch times."
+  ]
+}
