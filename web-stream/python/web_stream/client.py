@@ -14,6 +14,12 @@ from .runtime import (
 
 
 class WebStreamConnection(Connection):
+    """Client connection; prefer ``async with web_stream.connect(uri)``.
+
+    Direct construction requires a running asyncio loop. Await connect() once
+    and close in finally. Public options are documented in docs/asyncio-api.md.
+    """
+
     def __init__(self, host, port, tls, ca_file="", cert_file="", key_file="",
                  path="/", *, runtime=None, limits=None, close_timeout=5.0,
                  open_timeout=10.0, max_size=_UNSET, max_queue=_UNSET,
@@ -29,6 +35,7 @@ class WebStreamConnection(Connection):
         self._connect_started = False
 
     async def connect(self) -> "WebStreamConnection":
+        """Open once, returning self; failed/cancelled opens finish cleanup."""
         self._check_loop()
         if self._connect_started or self._closing or self._released:
             raise RuntimeError("Connection can only be opened once")
@@ -126,6 +133,22 @@ def connect(uri: str, ca_file: str = "", cert_file: str = "", key_file: str = ""
             close_timeout: Optional[float] = 5.0, open_timeout: Optional[float] = 10.0,
             max_size=_UNSET, max_queue=_UNSET, write_limit=_UNSET,
             process_exception=process_exception, reconnect_delays=backoff) -> _ConnectContextManager:
+    """Create an awaitable, async context manager, or retrying async iterator.
+
+    Prefer ``async with connect(uri) as conn`` for automatic close. Direct await
+    transfers cleanup to the caller. Retry iteration handles opening failures;
+    application errors in its body need an application decision. Explicitly
+    close its async generator when exiting iteration early.
+
+    URI schemes webstream/http select plain transport; webstreams/https select
+    TLS. The peer must speak web-stream. Supply ca_file and, for mutual TLS,
+    cert_file/key_file. runtime=None shares a default worker per asyncio loop.
+
+    Use either limits=Limits(...) or individual max_size/max_queue/write_limit
+    options: supplying any individual option selects different queue/write
+    defaults and removes the outgoing size cap. See docs/asyncio-api.md for
+    defaults, retry hooks, TLS, deadlines, cancellation, and resource ownership.
+    """
     resolved = resolve_limits(
         limits, max_size=max_size, max_queue=max_queue, write_limit=write_limit)
     return _ConnectContextManager(

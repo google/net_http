@@ -6,10 +6,30 @@ including their supported behavior and transport compatibility limits. See the
 Runtime, TLS, flow-control, and shutdown options, and the
 [development guide](development.md) for build and test commands.
 
+- [Compatibility at a glance](#compatibility-at-a-glance)
 - [FastAPI integration](#fastapi-integration)
 - [Experimental ASGI WebSocket adapter](#experimental-asgi-websocket-adapter)
 
 Run installation and test commands from `web-stream/python`.
+
+## Compatibility at a glance
+
+Use the asyncio connection API directly when your protocol needs metadata or
+directional EOF. Use this adapter when an existing ASGI 3 WebSocket application
+fits the following constraints. The detailed contracts remain in the sections
+below; `websocket` scope/event names describe the application interface, while
+the client still speaks web-stream on the wire.
+
+| Application requirement | Current behavior |
+| --- | --- |
+| Text/binary WebSocket routes, routing and path/query dependencies | Supported through the app's usual routing and middleware. |
+| Request headers/cookies, Origin/Host checks, peer address authentication | Native request information is unavailable; scopes have empty headers and `None` addresses. Middleware/dependency execution does not establish compatibility with these authentication schemes. |
+| Accept/reject during the HTTP handshake | The handshake is already complete before the app runs. A rejection closes the established stream; HTTP denial responses are unavailable. |
+| Selected subprotocols, accept headers, extensions | No subprotocols or extensions advertised; nonempty accept headers or a selected subprotocol raise `ValueError`. |
+| WebSocket close codes/reasons sent to the peer | Unavailable; locally recorded codes/reasons are not transmitted. |
+| Metadata, half-close, ping/pong keepalive | Metadata terminates the adapter; inbound EOF ends the adapted connection. Python ping/pong support is pending. |
+| App startup, shared resources, lifespan state | `mount_web_stream()` composes the host's lifespan; standalone adapter use requires an explicit lifespan owner. |
+| Multiple host workers on a fixed web-stream port | Each worker creates a listener; distinct ports or external routing are required. |
 
 ## FastAPI integration
 
@@ -18,6 +38,14 @@ Install the optional framework dependency with `pip install '.[fastapi]'`.
 web-stream through `ASGIWebSocketAdapter`. Requests pass through FastAPI routing,
 dependencies, and ASGI middleware. Register routes with `@app.websocket()` or a
 FastAPI `APIRouter.websocket()` as usual.
+
+`mount_web_stream(app, port, tls=False, ca_file="", cert_file="", key_file="",
+**server_options) -> WebStreamServer` configures the listener but does not start
+it immediately. Pass `host`, `runtime`, limits, and timeouts as
+[server options](asyncio-api.md#server-serve-and-webstreamserver). The host's
+lifespan starts/stops the returned server; applications should not separately
+start it before app startup. Install an ASGI host separately (for this example,
+`python -m pip install uvicorn`).
 
 ```python
 from contextlib import asynccontextmanager
@@ -89,6 +117,14 @@ routes can handle text and binary messages, including their normal routing,
 dependencies, and ASGI middleware. Clients still use web-stream, not RFC 6455
 WebSocket. This is an application compatibility experiment, **not full ASGI
 WebSocket protocol conformance**.
+
+`ASGIWebSocketAdapter(app, *, scheme="ws", root_path="", state=None)` accepts an
+ASGI 3 async callable `app(scope, receive, send)`. `scheme` must be `"ws"` or
+`"wss"` when using the adapter directly as a handler; `create_server()` infers
+it from the server's TLS option. `root_path` defaults to an empty string;
+`state` is an optional dictionary shallow-copied into each connection scope.
+`create_server(port, **server_options)` returns an unstarted `WebStreamServer`;
+its caller owns startup and shutdown. The adapter itself does not own lifespan.
 
 ```python
 import asyncio

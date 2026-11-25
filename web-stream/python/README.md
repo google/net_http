@@ -1,102 +1,101 @@
-# WebStream Python Bindings
+# WebStream for Python
 
-Python bindings for the web-stream protocol (C++).
+Exchange text, binary, and metadata messages over web-stream with asyncio
+clients and servers. The API includes flow control, TLS, half-close, and
+connection cleanup through async context managers. An experimental adapter can
+also run FastAPI WebSocket routes over web-stream.
 
-These bindings provide an asyncio-compatible API and utilize `nanobind` for
-efficient C++-to-Python interoperability. The `libevent` event loop runs in a
-background thread, integrated with the Python `asyncio` event loop.
+Message boundaries are preserved, and each direction can end independently.
+Use it when both peers implement web-stream and need a sequence of typed
+messages, including protocols that finish a request before receiving a reply.
 
-## Documentation
+## Choosing an interface
 
-- [Asyncio API](docs/asyncio-api.md): connections and servers, TLS, Runtime,
-  message types, limits, cancellation, EOF, and shutdown contracts.
-- [FastAPI and ASGI integration](docs/asgi.md): usage, lifespan, migration, and
-  experimental adapter compatibility limits.
-- [Development guide](docs/development.md): build/test commands and prerequisites
-  for the core, ASGI, and FastAPI suites.
-- [Code map](CODE_MAP.md): implementation structure, thread/ownership boundaries,
-  and test locations.
+| Your application needs | Start with |
+| --- | --- |
+| An asyncio message client or server | `connect()` and `serve()` in the [asyncio API](docs/asyncio-api.md#asyncio-entry-points) |
+| Metadata messages or a response after request EOF | `recv_message()` and `write_eof()` in the [connection API](docs/asyncio-api.md#connection-methods) |
+| Existing FastAPI WebSocket routes | `mount_web_stream()` in the [ASGI guide](docs/asgi.md#fastapi-integration), after checking its compatibility table |
 
-## Installation / Setup
+The peer must implement web-stream. This package does not connect to an ordinary
+HTTP endpoint or RFC 6455 WebSocket server; browser `WebSocket` clients cannot
+connect directly. The Python Runtime currently exposes HTTP/1.1 plain/TLS
+transports. The C++ implementation's HTTP/2 transports are not exposed here.
 
-This sub-project is intended to be used with a Python virtual environment (`venv`).
+The ASGI adapter is experimental: applications requiring request headers,
+cookies, WebSocket handshake negotiation, or WebSocket close frames need to
+check the [compatibility limits](docs/asgi.md#compatibility-at-a-glance).
+Ping/pong keepalive is not yet available in the Python API.
 
-### Prerequisites
+## Installation
 
-- Python 3.9+
-- CMake 3.24+ (including CMake 4)
-- A working C++17 compiler
-- Background libraries like BoringSSL and libevent
+Build from this checkout with Python 3.9+, CMake 3.24+ (CMake 4 is supported),
+and a C++17 toolchain. Keep the sibling `web-stream/cpp` source directory:
+the Python build compiles the native implementation using nanobind. CMake
+fetches native dependencies, including BoringSSL and libevent; a first build
+needs network access and Git. See the
+[dependency configuration](../cpp/cmake/Dependencies.cmake).
 
-### Building within a Virtual Environment
+Run from `web-stream/python`:
 
-1. Create a virtual environment and activate it:
-   ```bash
-   python3 -m venv venv
-   source venv/bin/activate
-   ```
+```bash
+python3 -m venv venv
+source venv/bin/activate
+python -m pip install .
+```
 
-2. Upgrade your build tools (optional but recommended):
-   ```bash
-   pip install --upgrade pip
-   ```
+For an editable development install, use `python -m pip install -e .`.
+FastAPI integration additionally needs `python -m pip install '.[fastapi]'`;
+an ASGI host such as Uvicorn is installed separately. Build/test commands are
+in the [development guide](docs/development.md).
 
-3. Install the module (which will trigger the CMake build):
-   ```bash
-   pip install .
-   ```
+## Try a local exchange
 
-4. For development, you can install it in editable mode:
-   ```bash
-   pip install -e .
-   ```
-
-## Usage Example
+With the package installed, save this as `quickstart.py` and run
+`python quickstart.py`. It starts a loopback server on an available port,
+prints `hello`, and closes the connections, listener, and default worker.
+No external service or certificates are needed.
 
 ```python
 import asyncio
-from web_stream.client import connect
+from web_stream import connect, serve
 
-async def test_web_stream_client():
-    uri = "webstreams://example.com:443"
-    
-    # Establish connection
-    async with connect(
-        uri, 
-        ca_file="ca.pem", 
-        cert_file="client.pem", 
-        key_file="client.key"
-    ) as conn:
-        
-        # Send a message
-        await conn.send("Hello over web-stream!")
-        
-        # Receive a message
-        msg = await conn.recv()
-        print("Received:", msg)
+
+async def echo(conn):
+    async for message in conn:
+        await conn.send(message)
+
+
+async def main():
+    async with serve(echo, "127.0.0.1", 0) as server:
+        async with connect(f"webstream://127.0.0.1:{server.port}") as conn:
+            await conn.send("hello")
+            print(await conn.recv())
+
 
 if __name__ == "__main__":
-    asyncio.run(test_web_stream_client())
+    asyncio.run(main())
 ```
 
-## Important behavior and limitations
+For a remote TLS peer, use `webstreams://host:port/path` and configure trusted
+certificates. The native TLS server requires client certificates. Read
+[TLS setup and identity verification](docs/asyncio-api.md#tls-identity-verification)
+before adapting this example.
 
-- The Python Runtime currently supports HTTP/1.1 plain/TLS transports; the C++
-  HTTP/2 implementations are not exposed by this Runtime.
-- TLS verifies the certificate chain and the URI host using Subject Alternative
-  Names; a Common Name alone is not accepted. See
-  [TLS identity verification](docs/asyncio-api.md#tls-identity-verification).
-- Connections belong to one asyncio loop. Use async context managers to manage
-  resources. Receive calls allow only one waiting receiver per connection;
-  queued messages remain readable before the first terminal error. See
-  [receiving and termination](docs/asyncio-api.md#receiving-and-termination) and
-  [Runtime and threading](docs/asyncio-api.md#runtime-and-threading).
-- Send completion does not acknowledge peer receipt. Cancelling a submitted send
-  may still send bytes. Buffer limits are not an exact process memory bound.
-  See [flow control and shutdown](docs/asyncio-api.md#flow-control-and-shutdown)
-  for limits, cancellation, half-close, and cleanup guarantees.
-- The ASGI adapter is experimental and does not provide full ASGI WebSocket
-  protocol conformance. Header/cookie authentication, handshake negotiation,
-  metadata, and half-close have compatibility limits. Read the
-  [ASGI guide](docs/asgi.md#experimental-asgi-websocket-adapter) before integrating
-  an application. Ping/pong keepalive is pending in the Python API.
+## Documentation
+
+Both application authors and coding agents can use the same references:
+
+- [Asyncio API](docs/asyncio-api.md): public entry points, argument defaults,
+  message types, errors, ownership, and threading.
+- [Limit configuration](docs/asyncio-api.md#flow-control-and-shutdown): byte
+  budgets versus message-count watermarks. Selecting one individual limit
+  option changes the defaults for the other individual options too.
+- [EOF, cleanup, and cancellation](docs/asyncio-api.md#eof-and-cleanup): choose
+  `write_eof()`, `close()`, or `abort()`; understand what send completion means.
+- [Runnable recipes](examples/README.md): text/binary exchange, metadata with a
+  shared Runtime, half-close, reconnection, and receive timeouts.
+- [FastAPI and ASGI](docs/asgi.md): integration, lifespan, and compatibility.
+- [Development guide](docs/development.md): build and test commands.
+- [Code map](CODE_MAP.md): implementation boundaries and relevant tests, when
+  you need to inspect or modify the library.

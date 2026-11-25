@@ -30,6 +30,14 @@ atexit.register(_shutdown_workers)
 
 @dataclass(frozen=True)
 class Limits:
+    """Immutable per-connection byte budgets, including an outgoing size cap.
+
+    Values are positive integers. max_message_size must be <= half the write
+    budget, whose minimum is 1024 bytes. Budgets are not exact RSS bounds.
+    Do not combine with max_size/max_queue/write_limit. See the configuration
+    comparison in docs/asyncio-api.md before choosing a limit style.
+    """
+
     max_message_size: int = 1024 * 1024
     receive_buffer_limit: int = 4 * 1024 * 1024
     write_buffer_limit: int = 4 * 1024 * 1024
@@ -137,6 +145,9 @@ class Runtime:
 
     A Runtime belongs to the asyncio loop that first starts it. thread_factory
     accepts the same target/name/daemon keywords as threading.Thread.
+    An explicit Runtime stays running until its owner closes it, including
+    after its last connection closes. Closure cleans up registered objects and
+    joins the worker; a closed Runtime cannot restart. See docs/asyncio-api.md.
     """
 
     def __init__(self, *, thread_factory: Callable[..., threading.Thread] = threading.Thread):
@@ -159,9 +170,11 @@ class Runtime:
 
     @property
     def is_running(self) -> bool:
+        """Whether the worker is alive and Runtime shutdown has not begun."""
         return self._thread is not None and self._thread.is_alive() and self._close_task is None
 
     async def start(self) -> "Runtime":
+        """Start on the current asyncio loop and return self; cannot restart."""
         if self._close_task is not None:
             raise RuntimeError("Runtime is closed")
         loop = asyncio.get_running_loop()
@@ -283,6 +296,7 @@ class Runtime:
         return await future
 
     async def close(self) -> None:
+        """Clean up owned objects and join the worker, despite cancellation."""
         if self._loop is None:
             self._loop = asyncio.get_running_loop()
         self._check_loop()
