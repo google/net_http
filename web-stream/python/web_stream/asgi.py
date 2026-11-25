@@ -1,7 +1,7 @@
 """Experimental ASGI WebSocket interface over an established web-stream.
 
 This is an application compatibility adapter, not an RFC 6455 transport or a
-complete ASGI server. See README.md for handshake and connection-info limits.
+complete ASGI server. See docs/asgi.md for handshake and connection-info limits.
 """
 
 import asyncio
@@ -17,6 +17,9 @@ class ASGIWebSocketAdapter:
     Install as a WebStreamServer stream handler, or use create_server(). The
     host owns application lifespan; this adapter never sends lifespan events.
     ``state``, when provided, is shallow-copied into each connection's scope.
+    Metadata and half-close are unavailable through this interface. Scopes lack
+    request headers and peer addresses; accept cannot negotiate the completed
+    native handshake. Check docs/asgi.md before adapting authentication/routes.
     """
 
     def __init__(self, app, *, scheme="ws", root_path="", state=None):

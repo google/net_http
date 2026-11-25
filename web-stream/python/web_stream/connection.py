@@ -17,6 +17,8 @@ WEB_STREAM_OPCODE_METADATA = 3
 
 @dataclass(frozen=True)
 class Message:
+    """Immutable opcode and raw payload; metadata remains distinct from binary."""
+
     opcode: int
     data: bytes
 
@@ -130,21 +132,36 @@ class Connection:
                 self._raise_closed()
 
     async def send_text(self, text: str) -> None:
+        """Send one UTF-8 text message; completion is not peer acknowledgement."""
         if not isinstance(text, str):
             raise TypeError("send_text expects str")
         await self._send(WEB_STREAM_OPCODE_TEXT, text.encode("utf-8"))
 
     async def send_binary(self, data: Union[bytes, bytearray, memoryview]) -> None:
+        """Send one bytes-like binary message using connection flow control."""
         if not isinstance(data, (bytes, bytearray, memoryview)):
             raise TypeError("send_binary expects bytes-like data")
         await self._send(WEB_STREAM_OPCODE_BINARY, bytes(data))
 
     async def send_metadata(self, data: Union[bytes, bytearray, memoryview]) -> None:
+        """Send bytes-like metadata; use recv_message() to preserve its opcode."""
         if not isinstance(data, (bytes, bytearray, memoryview)):
             raise TypeError("send_metadata expects bytes-like data")
         await self._send(WEB_STREAM_OPCODE_METADATA, bytes(data))
 
     async def send(self, data: object, *, text: Optional[bool] = None) -> None:
+        """Send text/bytes, or collect same-kind iterable parts into one message.
+
+        str selects text; bytes-like data selects binary. text overrides the
+        opcode, with UTF-8 validation for text. Empty iterables send nothing;
+        mappings and mixed text/binary parts raise TypeError. Iterable input is
+        fully buffered before submission, not streamed incrementally.
+
+        Sends serialize. Cancelling before native submission drops the send;
+        after submission bytes may still be sent. Completion follows output
+        watermarks, not peer receipt. See docs/asyncio-api.md for limits and
+        cancellation; use drain() to wait for zero native output.
+        """
         def encode(item):
             if isinstance(item, str):
                 return True, item.encode("utf-8")
@@ -189,7 +206,12 @@ class Connection:
         await self._send(opcode, payload)
 
     async def recv_message(self) -> Message:
-        """Receive opcode and bytes without losing metadata message identity."""
+        """Receive Message(opcode, bytes), retaining metadata identity.
+
+        Only one receive may wait; another raises ConcurrencyError. Cancelling
+        a waiting receive consumes nothing. Queued messages precede the first
+        terminal error, which persists after cleanup. See docs/asyncio-api.md.
+        """
         self._check_loop()
         if self._receiving:
             raise ConcurrencyError("Another coroutine is already receiving")
@@ -210,6 +232,12 @@ class Connection:
         return message
 
     async def recv(self, decode: Optional[bool] = None) -> Union[str, bytes]:
+        """Receive str for text, bytes for binary/metadata; discard the opcode.
+
+        decode=True forces UTF-8 decoding; False returns bytes for any opcode.
+        Invalid UTF-8 raises UnicodeDecodeError after consuming that message.
+        Shares recv_message()'s concurrency, cancellation, and EOF behavior.
+        """
         message = await self.recv_message()
         if decode is None:
             decode = message.opcode == WEB_STREAM_OPCODE_TEXT
@@ -232,22 +260,39 @@ class Connection:
                                          -1 if eof else 0, b"")
 
     async def write_eof(self) -> None:
-        """Flush outbound EOF while keeping the receive direction available."""
+        """Flush outbound EOF, retaining receiving; repeated calls share a task.
+
+        No built-in timeout. Cancelling a waiter does not cancel the flush.
+        Use close() afterwards to release resources. See docs/asyncio-api.md.
+        """
         self._check_loop()
         if self._eof_task is None:
             self._eof_task = self._write_task(self._flush(True))
         await asyncio.shield(self._eof_task)
 
     async def drain(self) -> None:
-        """Wait until preceding sends have left the native output buffer."""
+        """Wait for zero native output after preceding writes, not peer receipt.
+
+        No built-in timeout; cancelling the waiter does not cancel the drain.
+        """
         self._check_loop()
         await asyncio.shield(self._write_task(self._flush(False)))
 
     async def wait_closed(self) -> None:
+        """Wait for native teardown without initiating close; EOF alone may wait.
+
+        Cancellation stops this wait without cancelling transport teardown.
+        """
         self._check_loop()
         await asyncio.shield(self._native_closed)
 
     async def close(self) -> None:
+        """Flush EOF within close_timeout, then release native resources.
+
+        Cleanup finishes despite caller cancellation; flush failure or timeout
+        is reported after release. Buffered receive messages remain readable.
+        Repeated calls join the same close task. See docs/asyncio-api.md.
+        """
         self._check_loop()
         if self._close_task is None:
             self._closing = True
@@ -301,7 +346,10 @@ class Connection:
                 self._native_closed.set_result(None)
 
     async def abort(self) -> None:
-        """Release the transport immediately, without flushing pending data."""
+        """Release without flushing pending output; finish despite cancellation.
+
+        Buffered receives still precede the first terminal error.
+        """
         self._check_loop()
         self._closing = True
         self._terminate(ConnectionAbortedError("Connection aborted locally"))

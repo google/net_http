@@ -58,6 +58,34 @@ Wheel builds compile the extension target and install only the `python` CMake
 component. Third-party headers, tools, and static libraries are excluded from
 the wheel.
 
+## Checking documentation examples
+
+The [recipes](../examples/README.md) are finite local programs with documented
+output. After installing the current checkout with `python -m pip install -e .`,
+run them from `web-stream/python` using the same virtual environment:
+
+```bash
+python examples/echo.py
+python examples/metadata.py
+python examples/half_close.py
+python examples/reconnect.py
+python examples/receive_timeout.py
+```
+
+Compare their output with the recipes' table. Each should exit after releasing
+its clients/listeners and joining its worker. Also run the README quick start
+as a standalone script when editing it. These examples require the native
+extension and a working IPv4 loopback interface; framework dependencies and
+external services are unnecessary.
+
+Keep public defaults and behavioral contracts in `asyncio-api.md` / `asgi.md`,
+short local guidance in docstrings, and implementation details in `CODE_MAP.md`.
+When changing an API, update its reference and affected examples together.
+The existing core/ASGI/FastAPI tests remain the regression checks for limits,
+cancellation, TLS, and shutdown; recipes demonstrate how to use those contracts.
+
+## Direct test discovery
+
 For an installed package, direct unittest discovery is also supported with
 `python -m unittest discover -s tests -t . -v`, or `-s tests/core` (similarly
 `tests/asgi` and `tests/fastapi`) to select a suite. Keep `-t .` so the test package

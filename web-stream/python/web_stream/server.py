@@ -9,11 +9,20 @@ from .runtime import (
 
 
 class WebStreamServerConnection(Connection):
+    """Accepted connection; its server closes it when the handler exits."""
+
     def __init__(self, runtime, identifier, path="/", *, limits=None, close_timeout=5.0):
         self._initialize(runtime, identifier, path, limits, close_timeout)
 
 
 class WebStreamServer:
+    """Own a listener, accepted connections, and async handler tasks.
+
+    Prefer ``async with serve(handler, host, port)``. For direct construction,
+    set_stream_handler() before start(), and stop() in finally. A stopped
+    server cannot restart. See docs/asyncio-api.md for options and shutdown.
+    """
+
     def __init__(self, port, tls=False, ca_file="", cert_file="", key_file="",
                  connection_cls=WebStreamServerConnection, *, runtime=None,
                  limits=None, max_connections=10000, shutdown_timeout=5.0,
@@ -53,19 +62,23 @@ class WebStreamServer:
 
     @property
     def connections(self):
+        """Snapshot set of active connections; modifying it has no server effect."""
         return set(self._connections)
 
     def is_serving(self):
+        """Whether startup has finished and the listener is accepting."""
         return (self._start_task is not None and self._start_task.done() and
                 not self._stopping and self._runtime is not None and
                 self._runtime.is_running and self._identifier is not None)
 
     def set_stream_handler(self, handler):
+        """Set an async callable receiving a connection, or None to close on accept."""
         if handler is not None and not callable(handler):
             raise TypeError("handler must be callable")
         self._stream_handler = handler
 
     async def start(self):
+        """Start the listener on this loop; port 0 updates self.port after binding."""
         loop = asyncio.get_running_loop()
         if self._loop is not None and loop is not self._loop:
             raise RuntimeError("Server must be used from its owning asyncio loop")
@@ -144,12 +157,20 @@ class WebStreamServer:
             task.cancel()
 
     async def stop(self):
-        """Stop accepting, close connections, and join handler tasks."""
+        """Stop accepting, close connections, and join handlers despite cancellation.
+
+        Remaining handlers are cancelled after shutdown_timeout and must
+        cooperate. This timeout is not a total shutdown deadline.
+        """
         self.close()
         await finish_cleanup(self._stop_task)
 
     def close(self, close_connections=True):
-        """Schedule shutdown; await wait_closed() to join it."""
+        """Schedule shutdown synchronously; await wait_closed() to join it.
+
+        False stops accepting and waits for handlers to finish naturally.
+        A later close() or stop() escalates to closing existing connections.
+        """
         loop = asyncio.get_running_loop()
         if self._loop is None:
             self._loop = loop
@@ -165,6 +186,7 @@ class WebStreamServer:
             self._stop_task = loop.create_task(self._stop(caller))
 
     async def wait_closed(self):
+        """Join scheduled shutdown; cancellation leaves shared shutdown running."""
         loop = asyncio.get_running_loop()
         if self._loop is not None and loop is not self._loop:
             raise RuntimeError("Server must be used from its owning asyncio loop")
@@ -173,6 +195,7 @@ class WebStreamServer:
             await asyncio.shield(self._stop_task)
 
     async def serve_forever(self):
+        """Start, wait for shutdown, and run stop() on exit or cancellation."""
         await self.start()
         try:
             await self.wait_closed()
@@ -293,5 +316,14 @@ class _Serve:
 
 
 def serve(handler, host=None, port=None, **options):
-    """Create a server with a handler, as an awaitable or async context manager."""
+    """Create an awaitable/async context manager returning a started server.
+
+    Prefer ``async with serve(handler, host, port) as server`` for automatic
+    stop(). Direct await transfers cleanup to the caller. Handler exit closes
+    its connection. host=None listens on the IPv4 wildcard; port=None or 0
+    selects an available port, exposed as server.port after startup.
+
+    options are WebStreamServer constructor options, including runtime, TLS,
+    limits, and timeouts. See docs/asyncio-api.md for defaults and contracts.
+    """
     return _Serve(handler, host, 0 if port is None else port, **options)
