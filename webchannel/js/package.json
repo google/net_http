@@ -1,14 +1,46 @@
 {
   "name": "webchannel-js",
   "version": "1.0.0",
-  "description": "Google Closure-based WebChannel JavaScript client library",
-  "main": "dist/webchannel_blob_es2022.js",
-  "types": "dist/webchannel_blob_es2022.d.ts",
+  "description": "Closure-independent TypeScript WebChannel client",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "files": [
+    "lib",
+    "src"
+  ],
   "scripts": {
-    "build": "node compile.js"
+    "build": "tsdown",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p demo/tsconfig.json",
+    "test": "npm run build && node --test test/*.test.cjs",
+    "test:live": "npm run build && node test/live.cjs",
+    "build:legacy": "node compile.js",
+    "test:legacy": "npm run build && npm run build:legacy && node legacy/check.cjs",
+    "prepack": "npm run build",
+    "build:demo": "npm run build --prefix demo",
+    "deps:check": "node scripts/check-dependency-age.mjs",
+    "deps:install": "npm run deps:check && npm ci"
   },
   "devDependencies": {
-    "google-closure-compiler": "^20240317.0.0",
-    "google-closure-library": "^20230802.0.0"
+    "tsdown": "0.23.7",
+    "typescript": "5.9.3"
+  },
+  "license": "Apache-2.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./lib/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "engines": {
+    "node": "^22.13.0 || >=24.0.0"
+  },
+  "devEngines": {
+    "packageManager": {
+      "name": "npm",
+      "version": ">=11.17.0",
+      "onFail": "error"
+    }
   }
 }

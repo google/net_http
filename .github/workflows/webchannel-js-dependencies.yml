@@ -1,0 +1,41 @@
+name: Audit WebChannel JavaScript dependencies
+
+on:
+  pull_request:
+    paths:
+      - 'webchannel/js/**'
+      - '.github/workflows/webchannel-js-dependencies.yml'
+  push:
+    branches: ['main']
+    paths:
+      - 'webchannel/js/**'
+      - '.github/workflows/webchannel-js-dependencies.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@1d0ff469b7ec7b3cb9d8673fde0c81c44821de2a # v4.2.0
+        with:
+          node-version: 26
+
+      - name: Test and check dependency policy before installation
+        run: |
+          node --test webchannel/js/test/dependency-age.test.cjs
+          node webchannel/js/scripts/check-dependency-age.mjs
+
+      - name: Install and audit the locked dependencies
+        run: |
+          for project in webchannel/js webchannel/js/demo webchannel/js/legacy; do
+            npm ci --prefix "$project"
+            npm audit --prefix "$project"
+            npm audit signatures --prefix "$project"
+          done

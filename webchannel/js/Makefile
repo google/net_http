@@ -1,12 +1,18 @@
-.PHONY: all install build clean
+.PHONY: all install build test typecheck clean
 
 all: build
 
 install:
-	npm install
+	npm run deps:install
 
 build:
 	npm run build
 
+test:
+	npm test
+
+typecheck:
+	npm run typecheck
+
 clean:
-	rm -rf node_modules dist/webchannel_blob_es2022.js
+	rm -rf lib legacy-build
