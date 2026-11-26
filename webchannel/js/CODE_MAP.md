@@ -541,6 +541,12 @@ or page errors after the CORS header fix. Other engines, minimum browser
 versions, browser Fetch/fast-handshake variants, unload/beacon delivery,
 HTTP/2 or HTTP/3 negotiation and intermediary buffering still need coverage.
 
+`demo/browser-smoke.mjs` preserves these six scenarios as an optional live test.
+Run `npm run test:browser -- --playwright /path/to/playwright/index.mjs` in
+`demo/`, following its [setup instructions](demo/README.md#optional-browser-smoke-test).
+It manages Vite dev/preview servers, checks browser errors and exits nonzero on
+failure. It saves no test artifacts and adds no Playwright dependency or CI job.
+
 On 2026-11-25, the optional native-Fetch smoke test against the demo's public
 echo endpoint succeeded for streaming, long polling and fast handshake with an
 initial queued ASCII message, both for the TypeScript port and for the original

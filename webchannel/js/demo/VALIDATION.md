@@ -60,8 +60,9 @@ XHR requests and rejected both uncaught page errors and console errors:
 | Built static demo served by Vite preview | Connect/send/five replies succeeded |
 
 All six scenarios passed with no page or console errors after the header fix
-below. These were one-off Playwright checks; a persistent browser test runner
-or scheduled browser CI has not been added. Coverage of Firefox/Safari,
+below. The six scenarios can now be rerun with the optional
+[`browser-smoke.mjs`](browser-smoke.mjs); see the [setup instructions](README.md#optional-browser-smoke-test).
+Scheduled browser CI has not been added. Coverage of Firefox/Safari,
 minimum-version engines, browser Fetch/fast-handshake variants, unload behavior
 and negotiated HTTP/2/3 remains separate work.
 
