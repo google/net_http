@@ -9,6 +9,29 @@ async function opened(options) {
   return {...h, ...c};
 }
 
+test('XHR does not probe response headers absent from the exposed header list', async () => {
+  const h = harness();
+  const {channel, events} = h.channel();
+  channel.open(); await flush();
+  const probed = [];
+  h.requests[0].getResponseHeader = name => { probed.push(name); return null; };
+  h.handshake(); await flush();
+  assert.deepEqual(probed, []);
+  assert.deepEqual(events, [{type: 'OPEN'}]);
+  channel.close();
+});
+
+test('injected XHR without getAllResponseHeaders retains single-header support', async () => {
+  const h = harness();
+  const {channel, events} = h.channel({httpSessionIdParam: 'gsessionid'});
+  channel.open(); await flush();
+  h.requests[0].getAllResponseHeaders = undefined;
+  h.handshake(h.requests[0], {'X-HTTP-Session-Id': 'sticky'}); await flush();
+  assert.deepEqual(events, [{type: 'OPEN'}]);
+  assert.equal(new URL(h.requests[1].url).searchParams.get('gsessionid'), 'sticky');
+  channel.close();
+});
+
 test('chunk decoder accepts every possible split of a Unicode response', () => {
   const values = ['雪😀', '[1,2]', ''];
   const input = values.map(chunk).join('');
