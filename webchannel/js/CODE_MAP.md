@@ -530,10 +530,13 @@ provenance have not been established by these tests.
   strict TypeScript settings. `npm run build` in `demo/` bundles the new source.
 
 The local HTTP peer is a protocol fixture, not the production server. Browser
-XHR is exercised with an injected XHR in the comparison/regression suites;
-real browser CORS enforcement, unload/beacon delivery, HTTP/2 or HTTP/3 network
-negotiation and intermediary buffering still require browser/server integration
-runs. They are not established by the simulated headers or local HTTP/1 tests.
+XHR is exercised with an injected XHR in the comparison/regression suites.
+A separate [user-reported browser smoke test](demo/VALIDATION.md), recorded on
+2026-11-26, confirmed Connect → Send Message → five replies in the Vite dev demo
+on Chrome 158.0.8127.37 / Windows 11 26H2. Additional browser/transport/CORS
+cases, unload/beacon delivery, HTTP/2 or HTTP/3 negotiation and intermediary
+buffering still need integration coverage; the manual report does not identify
+transport options or the negotiated protocol.
 
 On 2026-11-25, the optional native-Fetch smoke test against the demo's public
 echo endpoint succeeded for streaming, long polling and fast handshake with an
