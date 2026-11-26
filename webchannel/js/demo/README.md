@@ -58,7 +58,9 @@ from the parent directory and emits ESM and declarations into `../lib/`.
 
 The demo's Connect → Send Message → five replies flow was manually confirmed
 by the user on Chrome 158.0.8127.37 / Windows 11. The exact environment and
-scope are recorded in [manual browser validation](VALIDATION.md).
+scope are recorded in [browser validation](VALIDATION.md). Six additional
+Playwright/Chromium scenarios passed, including long polling, map messages,
+disconnect/reconnect, Echo and the built static demo.
 
 
 Use npm 11.17+ for the shared dependency policy. This project applies a 14-day

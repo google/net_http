@@ -186,16 +186,21 @@ export class ChannelRequest {
     xhr.send(this.body);
   }
   private readXhrHeaders(xhr: XMLHttpRequest): void {
+    // Real XHR lists exactly the headers visible under CORS. Probing omitted
+    // names individually emits "Refused to get unsafe header" in Chromium.
+    if (typeof xhr.getAllResponseHeaders !== 'function') {
+      // Keep the fallback for injected implementations without enumeration.
+      for (const name of ['X-Client-Wire-Protocol', 'X-HTTP-Session-Id', 'X-HTTP-Initial-Response']) {
+        const value = xhr.getResponseHeader(name);
+        if (value !== null) this.responseHeaders[name.toLowerCase()] = value;
+      }
+      return;
+    }
     for (const line of xhr.getAllResponseHeaders().split(/\r?\n/)) {
       const colon = line.indexOf(':');
       if (colon > 0) {
         this.responseHeaders[line.slice(0, colon).trim().toLowerCase()] = line.slice(colon + 1).trim();
       }
-    }
-    // Some injected XHR implementations only expose getResponseHeader().
-    for (const name of ['X-Client-Wire-Protocol', 'X-HTTP-Session-Id', 'X-HTTP-Initial-Response']) {
-      const value = xhr.getResponseHeader(name);
-      if (value !== null) this.responseHeaders[name.toLowerCase()] = value;
     }
   }
   private async sendFetch(url: URL, headers: Record<string, string>): Promise<void> {

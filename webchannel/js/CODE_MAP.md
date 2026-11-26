@@ -531,12 +531,15 @@ provenance have not been established by these tests.
 
 The local HTTP peer is a protocol fixture, not the production server. Browser
 XHR is exercised with an injected XHR in the comparison/regression suites.
-A separate [user-reported browser smoke test](demo/VALIDATION.md), recorded on
-2026-11-26, confirmed Connect → Send Message → five replies in the Vite dev demo
-on Chrome 158.0.8127.37 / Windows 11 26H2. Additional browser/transport/CORS
-cases, unload/beacon delivery, HTTP/2 or HTTP/3 negotiation and intermediary
-buffering still need integration coverage; the manual report does not identify
-transport options or the negotiated protocol.
+The [browser validation record](demo/VALIDATION.md) also includes a user-reported
+Connect → Send Message → five replies check on Chrome 158.0.8127.37 / Windows 11
+26H2, plus six agent-run Playwright checks on Linux Chromium 158.0.8127.18.
+The automated checks used real cross-origin XHR against the public generator
+and echo endpoints, covering streaming, long polling, map messages,
+disconnect/reconnect, multiple echoes and Vite's built output, with no console
+or page errors after the CORS header fix. Other engines, minimum browser
+versions, browser Fetch/fast-handshake variants, unload/beacon delivery,
+HTTP/2 or HTTP/3 negotiation and intermediary buffering still need coverage.
 
 On 2026-11-25, the optional native-Fetch smoke test against the demo's public
 echo endpoint succeeded for streaming, long polling and fast handshake with an
@@ -652,3 +655,14 @@ vulnerabilities. The age-compliant trees passed 73 library tests, 32 Closure
 comparisons, strict type checking and the Vite build. See
 [DEPENDENCY_POLICY.md](DEPENDENCY_POLICY.md) for the dated audit, signature
 coverage, version choices, the 14-day tradeoff and the update workflow.
+
+
+### Browser-discovered XHR header fix (2026-11-26)
+
+The automated browser checks found unnecessary single-header probes after
+`getAllResponseHeaders`, which emitted Chromium console errors for CORS-hidden
+headers despite successful communication. Native XHR now trusts the enumerated
+visible headers; single-header lookups are retained only for injected
+implementations without enumeration. Both regression tests reproduced the old
+behavior and pass after the fix. All 75 Node tests, strict type checking and all
+six real-browser scenarios passed. See the [validation record](demo/VALIDATION.md).
