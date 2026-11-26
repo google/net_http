@@ -62,6 +62,45 @@ scope are recorded in [browser validation](VALIDATION.md). Six additional
 Playwright/Chromium scenarios passed, including long polling, map messages,
 disconnect/reconnect, Echo and the built static demo.
 
+## Optional browser smoke test
+
+[`browser-smoke.mjs`](browser-smoke.mjs) reruns those six scenarios using
+headless Chromium. It starts and stops Vite on free loopback ports and rebuilds
+`dist/` to test the static site. It contacts the public Google sandbox, so it
+requires network access and the service to be available. It is opt-in and is
+not part of the library's `npm test` or CI.
+
+Install Playwright separately, outside this checkout. Version 1.65.0 was used
+for the original checks and met the 14-day release delay. With npm 11.17+:
+
+```sh
+PLAYWRIGHT_TOOLS=/absolute/path/to/playwright-tools
+npm install --prefix "$PLAYWRIGHT_TOOLS" --save-exact --min-release-age=14 --ignore-scripts playwright@1.65.0
+npm audit --prefix "$PLAYWRIGHT_TOOLS"
+npm audit signatures --prefix "$PLAYWRIGHT_TOOLS"
+node "$PLAYWRIGHT_TOOLS/node_modules/playwright/cli.js" install chromium --only-shell
+```
+
+Use a fresh tooling directory for this setup; an existing lockfile can bypass
+npm's release delay. Review audit/signature failures before running the tool.
+The browser also needs Playwright's platform-specific Chromium system libraries.
+Playwright remains outside the library/demo dependency trees.
+
+After installing the demo's dependencies with `npm run deps:install`, run from
+this directory:
+
+```sh
+npm run test:browser -- --playwright "$PLAYWRIGHT_TOOLS/node_modules/playwright/index.mjs"
+```
+
+`--playwright` accepts an absolute or working-directory-relative module path;
+it can be omitted if Node can already resolve `playwright`. Standard Playwright
+settings such as `PLAYWRIGHT_BROWSERS_PATH` apply. Each scenario rejects console
+and page errors. Results and failure diagnostics go to the terminal, with a
+nonzero exit status on failure; no screenshots, traces or result files are
+written. Browser coverage remains Chromium only, with the limits described in
+[browser validation](VALIDATION.md).
+
 
 Use npm 11.17+ for the shared dependency policy. This project applies a 14-day
 release delay, checks every locked dependency before installation, and rejects
