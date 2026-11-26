@@ -1,4 +1,4 @@
-import { createWebChannelTransport, WebChannel } from '../dist/webchannel_blob_es2022';
+import {createWebChannelTransport, WebChannel, type WebChannelOptions} from '../src/index.js';
 
 const logElement = document.getElementById('log') as HTMLTextAreaElement;
 const endpointSelect = document.getElementById('endpoint') as HTMLSelectElement;
@@ -43,7 +43,7 @@ function log(msg: string) {
 log('Initializing WebChannel demo...');
 
 const channelFactory = createWebChannelTransport();
-let activeChannel: any = null;
+let activeChannel: WebChannel | null = null;
 let lastSendTime: number = 0;
 let isPendingEcho: boolean = false;
 
@@ -67,7 +67,7 @@ connectButton?.addEventListener('click', () => {
       ? (customEndpointInput?.value || '')
       : (endpointSelect?.value || 'https://webchannel.sandbox.google.com/staging/channel/generator');
     
-    const options: any = {
+    const options: WebChannelOptions = {
       supportsCrossDomainXhr: true,
       httpSessionIdParam: 'gsessionid',
       sendRawJson: sendRawJsonCheckbox?.checked,
@@ -88,7 +88,7 @@ connectButton?.addEventListener('click', () => {
       updateStatus('connected');
     });
     
-    channel.listen(WebChannel.EventType.MESSAGE, (event: any) => {
+    channel.listen(WebChannel.EventType.MESSAGE, (event) => {
       const inbound = event.data;
       log(`<<< Received message event. Raw data: ${JSON.stringify(inbound)}`);
       
@@ -98,18 +98,18 @@ connectButton?.addEventListener('click', () => {
         isPendingEcho = false;
       }
 
-      const result = Array.isArray(inbound) ? inbound[0] : inbound;
-      if (result) {
-        if (result.error) {
-          log(`<<< ERROR from server: ${result.error.message}`);
-        } else if (result.message) {
-          log(`<<< Echo response message: "${result.message}"`);
+      const result: unknown = Array.isArray(inbound) ? inbound[0] : inbound;
+      if (result && typeof result === 'object') {
+        if ('error' in result) {
+          log(`<<< ERROR from server: ${JSON.stringify(result.error)}`);
+        } else if ('message' in result) {
+          log(`<<< Echo response message: "${String(result.message)}"`);
         }
       }
     });
     
-    channel.listen(WebChannel.EventType.ERROR, (error: any) => {
-      log(`<<< WebChannel error: ${JSON.stringify(error)}`);
+    channel.listen(WebChannel.EventType.ERROR, (error) => {
+      log(`<<< WebChannel error: ${JSON.stringify({status: error.status, errorCode: error.errorCode})}`);
       if (activeChannel === channel) {
         activeChannel = null;
         updateUIState(false);
@@ -128,8 +128,8 @@ connectButton?.addEventListener('click', () => {
     
     updateStatus('connecting');
     channel.open();
-  } catch (err: any) {
-    log(`!!! Exception caught during connect: ${err.message}\n${err.stack}`);
+  } catch (err) {
+    log(`!!! Exception caught during connect: ${err instanceof Error ? err.message : String(err)}`);
     updateStatus('disconnected');
   }
 });
@@ -149,7 +149,7 @@ sendButton?.addEventListener('click', () => {
     ? (customEndpointInput?.value || '')
     : (endpointSelect?.value || '');
   
-  let payload: any;
+  let payload: {message: string; num_messages?: number; message_interval?: number};
   if (endpoint.includes('/staging/channel/generator')) {
     payload = {
       message: text,

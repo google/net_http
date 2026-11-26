@@ -27,7 +27,10 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@1d0ff469b7ec7b3cb9d8673fde0c81c44821de2a # v4.2.0
         with:
-          node-version: 20
+          node-version: 26
+
+      - name: Check locked dependency ages before installation
+        run: node webchannel/js/scripts/check-dependency-age.mjs demo
 
       - name: Install dependencies and Build Demo
         run: |
@@ -38,7 +41,7 @@ jobs:
       - name: Prepare site directory
         run: |
           mkdir -p _site/webchannel/message_generator
-          cp -r webchannel/js/demo/index.html webchannel/js/demo/dist _site/webchannel/message_generator/
+          cp -r webchannel/js/demo/dist/. _site/webchannel/message_generator/
 
       - name: Setup Pages
         uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5.0.0

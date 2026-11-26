@@ -7,7 +7,7 @@ This directory is the multi-language home for WebChannel client implementations.
 ## Directory Structure
 
 - [java/](java/) - Java client implementation.
-- [js/](js/) - JavaScript client implementation (based on Closure Library).
+- [js/](js/) - Closure-independent TypeScript client implementation.
   - [imported_src/](js/imported_src/) - Imported source files from Closure Library.
   - [demo/](js/demo/) - WebChannel demo web application.
 - [objc/](objc/) - Objective-C client implementation.
@@ -21,9 +21,20 @@ The Java implementation provides `WebChannelBase` and pluggable transport suppor
 
 ## JavaScript Client (`webchannel/js`)
 
-The JavaScript implementation of the WebChannel client is based on the Google Closure Library.
+The active client is a Closure-independent TypeScript implementation in
+`js/src/`, with native XHR and Fetch streaming support. The package distributes
+ESM; both `import` and CommonJS `require()` use the same implementation on
+Node 22.13+ (22.x) or 24+. See the [package README](js/README.md).
+Build its distribution with tsdown using `npm run deps:install`
+and `npm run build` in `js/`; `npm test` runs protocol comparisons against the
+original bundle and local HTTP integration tests. The Vite demo builds a
+complete static site into `js/demo/dist/`; see its [README](js/demo/README.md).
 
-The raw imported source files are located in `js/imported_src/`.
+The Closure sources (`js/imported_src/`) also have a maintained, separate build:
+`npm run deps:install --prefix legacy && npm run build:legacy` regenerates `js/dist/`. The
+original bundle is archived under `js/test/fixtures/` for regression comparisons. See the
+[JavaScript code map](js/CODE_MAP.md) for architecture, migration, build commands
+and validation limits.
 
 ## Objective-C Client & iOS Demo (`webchannel/objc`)
 

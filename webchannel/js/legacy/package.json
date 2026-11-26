@@ -1,0 +1,19 @@
+{
+  "name": "webchannel-closure-build-reference",
+  "private": true,
+  "devDependencies": {
+    "google-closure-compiler": "20240317.0.0",
+    "google-closure-library": "20230802.0.0"
+  },
+  "devEngines": {
+    "packageManager": {
+      "name": "npm",
+      "version": ">=11.17.0",
+      "onFail": "error"
+    }
+  },
+  "scripts": {
+    "deps:check": "node ../scripts/check-dependency-age.mjs legacy",
+    "deps:install": "npm run deps:check && npm ci"
+  }
+}

@@ -61,7 +61,7 @@
 <body>
   <div class="container">
     <h1>WebChannel TypeScript Web Demo</h1>
-    <p>This demo uses the compiled Closure WebChannel JS bundle to talk to the local echo server backend.</p>
+    <p>This demo uses the TypeScript WebChannel client with a generator, echo, or custom server.</p>
     
     <div class="input-group" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
       <label for="endpoint" style="font-weight: bold;">Endpoint:</label>
@@ -99,6 +99,6 @@
     <textarea id="log" readonly></textarea>
   </div>
   
-  <script src="dist/message_generator.js"></script>
+  <script type="module" src="./message_generator.ts"></script>
 </body>
 </html>
